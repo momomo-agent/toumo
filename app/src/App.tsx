@@ -736,6 +736,51 @@ const App = () => {
     );
   };
 
+  const alignElements = (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
+    if (selectedElementIds.length < 2) return;
+    const elements = selectedKeyframe.keyElements.filter(el => selectedElementIds.includes(el.id));
+    if (elements.length < 2) return;
+
+    let targetValue: number;
+    if (alignment === 'left') {
+      targetValue = Math.min(...elements.map(el => el.position.x));
+    } else if (alignment === 'right') {
+      targetValue = Math.max(...elements.map(el => el.position.x + el.size.width));
+    } else if (alignment === 'center') {
+      const minX = Math.min(...elements.map(el => el.position.x));
+      const maxX = Math.max(...elements.map(el => el.position.x + el.size.width));
+      targetValue = (minX + maxX) / 2;
+    } else if (alignment === 'top') {
+      targetValue = Math.min(...elements.map(el => el.position.y));
+    } else if (alignment === 'bottom') {
+      targetValue = Math.max(...elements.map(el => el.position.y + el.size.height));
+    } else {
+      const minY = Math.min(...elements.map(el => el.position.y));
+      const maxY = Math.max(...elements.map(el => el.position.y + el.size.height));
+      targetValue = (minY + maxY) / 2;
+    }
+
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (!selectedElementIds.includes(el.id)) return el;
+            let newPos = { ...el.position };
+            if (alignment === 'left') newPos.x = targetValue;
+            else if (alignment === 'right') newPos.x = targetValue - el.size.width;
+            else if (alignment === 'center') newPos.x = targetValue - el.size.width / 2;
+            else if (alignment === 'top') newPos.y = targetValue;
+            else if (alignment === 'bottom') newPos.y = targetValue - el.size.height;
+            else newPos.y = targetValue - el.size.height / 2;
+            return { ...el, position: newPos };
+          }),
+        };
+      })
+    );
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1231,6 +1276,25 @@ const App = () => {
               <div className="canvas-heading">
                 <h3>Canvas</h3>
                 <div className="canvas-controls">
+                  {selectedElementIds.length >= 2 && (
+                    <div className="align-buttons">
+                      <button className="icon-btn" onClick={() => alignElements('left')} title="Align left">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="4" y1="4" x2="4" y2="20"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/>
+                        </svg>
+                      </button>
+                      <button className="icon-btn" onClick={() => alignElements('center')} title="Align center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="12" y1="4" x2="12" y2="20"/><rect x="4" y="6" width="16" height="4"/><rect x="6" y="14" width="12" height="4"/>
+                        </svg>
+                      </button>
+                      <button className="icon-btn" onClick={() => alignElements('right')} title="Align right">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="20" y1="4" x2="20" y2="20"/><rect x="4" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/>
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                   <span className="zoom-indicator">{Math.round(canvasScale * 100)}%</span>
                   <button className="ghost small" onClick={() => { setCanvasScale(1); setCanvasOffset({ x: 0, y: 0 }); }}>Reset</button>
                 </div>
