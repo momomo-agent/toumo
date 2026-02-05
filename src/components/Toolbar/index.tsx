@@ -11,6 +11,7 @@ const tools: { id: ToolType; icon: string; label: string }[] = [
   { id: 'line', icon: '╱', label: 'Line (L)' },
   { id: 'frame', icon: '⬚', label: 'Frame (F)' },
   { id: 'hand', icon: '✋', label: 'Hand (H)' },
+  { id: 'eyedropper', icon: '💧', label: 'Eyedropper (E)' },
 ];
 
 export function Toolbar() {
