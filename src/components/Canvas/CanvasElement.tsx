@@ -43,10 +43,14 @@ export function CanvasElement({
     setIsResizing,
     pushHistory,
     updateElement,
+    deleteElement,
+    copySelectedElements,
+    pasteElements,
   } = useEditorStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(element.text || '');
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const dragStartRef = useRef<{
     pointerX: number;
@@ -354,6 +358,11 @@ export function CanvasElement({
   return (
     <div
       onMouseDown={handlePointerDown}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setSelectedElementId(element.id);
+        setContextMenu({ x: e.clientX, y: e.clientY });
+      }}
       style={{
         position: 'absolute',
         left: element.position.x,
@@ -456,6 +465,41 @@ export function CanvasElement({
         )
       ) : null}
       {renderHandles()}
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <div
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            background: '#1a1a1a',
+            border: '1px solid #333',
+            borderRadius: 6,
+            padding: 4,
+            zIndex: 1000,
+            minWidth: 120,
+          }}
+          onClick={() => setContextMenu(null)}
+        >
+          <button onClick={() => { copySelectedElements(); setContextMenu(null); }} style={menuItemStyle}>Copy</button>
+          <button onClick={() => { pasteElements(); setContextMenu(null); }} style={menuItemStyle}>Paste</button>
+          <div style={{ height: 1, background: '#333', margin: '4px 0' }} />
+          <button onClick={() => { deleteElement(element.id); setContextMenu(null); }} style={{ ...menuItemStyle, color: '#f43f5e' }}>Delete</button>
+        </div>
+      )}
     </div>
   );
 }
+
+const menuItemStyle: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  padding: '6px 12px',
+  background: 'transparent',
+  border: 'none',
+  color: '#fff',
+  fontSize: 12,
+  textAlign: 'left',
+  cursor: 'pointer',
+};
