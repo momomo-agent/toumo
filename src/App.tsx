@@ -844,15 +844,42 @@ export default function App() {
 
         {/* Blur Filter */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Blur</Label>
-          <input
-            type="range"
-            min={0}
-            max={20}
-            value={currentStyle.blur ?? 0}
-            onChange={(e) => handleStyleChange({ blur: Number(e.target.value) })}
-            style={{ width: '100%' }}
-          />
+          <Label>Filters</Label>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ fontSize: 10, color: '#666' }}>Blur</span>
+            <input
+              type="range"
+              min={0}
+              max={20}
+              value={currentStyle.blur ?? 0}
+              onChange={(e) => handleStyleChange({ blur: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ fontSize: 10, color: '#666' }}>Brightness</span>
+            <input
+              type="range"
+              min={0}
+              max={2}
+              step={0.1}
+              value={currentStyle.brightness ?? 1}
+              onChange={(e) => handleStyleChange({ brightness: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <span style={{ fontSize: 10, color: '#666' }}>Contrast</span>
+            <input
+              type="range"
+              min={0}
+              max={2}
+              step={0.1}
+              value={currentStyle.contrast ?? 1}
+              onChange={(e) => handleStyleChange({ contrast: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
 
         {/* Border Radius Control */}
