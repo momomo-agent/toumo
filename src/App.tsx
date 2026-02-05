@@ -1,7 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useEditorStore } from './store';
+import type { ShapeStyle } from './types';
 
 type Tool = 'select' | 'rectangle' | 'ellipse' | 'text' | 'hand';
+
+const DEFAULT_STYLE: ShapeStyle = {
+  fill: '#3b82f6',
+  fillOpacity: 1,
+  stroke: '',
+  strokeWidth: 0,
+  strokeOpacity: 1,
+  borderRadius: 8,
+};
+
+const COLOR_PALETTE = ['#6366f1', '#22d3ee', '#22c55e', '#f97316', '#f43f5e', '#eab308', '#a855f7'];
+
+const TEXT_ALIGNMENTS: Array<{ id: NonNullable<ShapeStyle['textAlign']>; label: string }> = [
+  { id: 'left', label: 'L' },
+  { id: 'center', label: 'C' },
+  { id: 'right', label: 'R' },
+];
+
+const mergeStyle = (style?: ShapeStyle, overrides: Partial<ShapeStyle> = {}): ShapeStyle => ({
+  ...DEFAULT_STYLE,
+  ...style,
+  ...overrides,
+});
 
 export default function App() {
   const { 
@@ -391,87 +415,186 @@ export default function App() {
             Inspector
           </div>
           <div style={{ padding: 16 }}>
-            {selectedElement ? (
-              <div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Name</label>
-                  <input 
-                    type="text" 
-                    value={selectedElement.name} 
-                    onChange={(e) => updateElement(selectedElement.id, { name: e.target.value })}
-                    style={{
-                      width: '100%', padding: '8px 10px', background: '#0d0d0e',
-                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
-                    }} 
-                  />
-                </div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Position</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="number" value={selectedElement.position.x} 
-                      onChange={(e) => updateElement(selectedElement.id, { 
-                        position: { ...selectedElement.position, x: Number(e.target.value) }
-                      })}
-                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
-                      }} />
-                    <input type="number" value={selectedElement.position.y} 
-                      onChange={(e) => updateElement(selectedElement.id, { 
-                        position: { ...selectedElement.position, y: Number(e.target.value) }
-                      })}
-                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
-                      }} />
-                  </div>
-                </div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Size</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="number" value={selectedElement.size.width} 
-                      onChange={(e) => updateElement(selectedElement.id, { 
-                        size: { ...selectedElement.size, width: Number(e.target.value) }
-                      })}
-                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
-                      }} />
-                    <input type="number" value={selectedElement.size.height} 
-                      onChange={(e) => updateElement(selectedElement.id, { 
-                        size: { ...selectedElement.size, height: Number(e.target.value) }
-                      })}
-                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
-                      }} />
-                  </div>
-                </div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Fill</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input
-                      type="color"
-                      value={selectedElement.style?.fill || '#3b82f6'}
-                      onChange={(e) => updateElement(selectedElement.id, { 
-                        style: { 
-                          fill: e.target.value,
-                          fillOpacity: 1,
-                          stroke: '',
-                          strokeWidth: 0,
-                          strokeOpacity: 1,
-                          borderRadius: selectedElement.style?.borderRadius ?? 8,
-                        }
-                      })}
+            {selectedElement ? ((() => {
+              const currentStyle = mergeStyle(selectedElement.style);
+              const handleStyleChange = (overrides: Partial<ShapeStyle>) => {
+                updateElement(selectedElement.id, {
+                  style: mergeStyle(selectedElement.style, overrides),
+                });
+              };
+              const isTextElement = selectedElement.shapeType === 'text';
+              const activeAlign = currentStyle.textAlign ?? 'left';
+
+              return (
+                <>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Name</label>
+                    <input 
+                      type="text" 
+                      value={selectedElement.name} 
+                      onChange={(e) => updateElement(selectedElement.id, { name: e.target.value })}
                       style={{
-                        width: 28, height: 28,
-                        padding: 0, border: '1px solid #2a2a2a',
-                        borderRadius: 6, cursor: 'pointer',
-                      }}
+                        width: '100%', padding: '8px 10px', background: '#0d0d0e',
+                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                      }} 
                     />
-                    <span style={{ color: '#888', fontSize: 11 }}>
-                      {selectedElement.style?.fill || '#3b82f6'}
-                    </span>
                   </div>
-                </div>
-              </div>
-            ) : (
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Position</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input type="number" value={selectedElement.position.x} 
+                        onChange={(e) => updateElement(selectedElement.id, { 
+                          position: { ...selectedElement.position, x: Number(e.target.value) }
+                        })}
+                        style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                          border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                        }} />
+                      <input type="number" value={selectedElement.position.y} 
+                        onChange={(e) => updateElement(selectedElement.id, { 
+                          position: { ...selectedElement.position, y: Number(e.target.value) }
+                        })}
+                        style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                          border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                        }} />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Size</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input type="number" value={selectedElement.size.width} 
+                        onChange={(e) => updateElement(selectedElement.id, { 
+                          size: { ...selectedElement.size, width: Number(e.target.value) }
+                        })}
+                        style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                          border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                        }} />
+                      <input type="number" value={selectedElement.size.height} 
+                        onChange={(e) => updateElement(selectedElement.id, { 
+                          size: { ...selectedElement.size, height: Number(e.target.value) }
+                        })}
+                        style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                          border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                        }} />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Fill</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        type="color"
+                        value={currentStyle.fill}
+                        onChange={(e) => handleStyleChange({ fill: e.target.value })}
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 8,
+                          border: '1px solid #2a2a2a',
+                          background: 'transparent',
+                          padding: 0,
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={currentStyle.fill}
+                        onChange={(e) => handleStyleChange({ fill: e.target.value })}
+                        style={{
+                          flex: 1,
+                          padding: '8px 10px',
+                          background: '#0d0d0e',
+                          border: '1px solid #2a2a2a',
+                          borderRadius: 6,
+                          color: '#e5e5e5',
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginTop: 8 }}>
+                      {COLOR_PALETTE.map((hex) => (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => handleStyleChange({ fill: hex })}
+                          style={{
+                            width: '100%',
+                            aspectRatio: '1 / 1',
+                            borderRadius: 6,
+                            border: currentStyle.fill === hex ? '2px solid #fff' : '1px solid #2a2a2a',
+                            background: hex,
+                            cursor: 'pointer',
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {isTextElement && (
+                    <>
+                      <div style={{ marginBottom: 14 }}>
+                        <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Content</label>
+                        <textarea
+                          value={selectedElement.text || ''}
+                          onChange={(e) => updateElement(selectedElement.id, { text: e.target.value })}
+                          style={{
+                            width: '100%',
+                            minHeight: 72,
+                            background: '#0d0d0e',
+                            border: '1px solid #2a2a2a',
+                            borderRadius: 6,
+                            color: '#e5e5e5',
+                            fontSize: 13,
+                            fontFamily: 'inherit',
+                            padding: '8px 10px',
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: 14 }}>
+                        <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Font Size</label>
+                        <input
+                          type="number"
+                          value={currentStyle.fontSize ?? 16}
+                          onChange={(e) => handleStyleChange({ fontSize: Number(e.target.value) })}
+                          style={{
+                            width: '100%',
+                            padding: '8px 10px',
+                            background: '#0d0d0e',
+                            border: '1px solid #2a2a2a',
+                            borderRadius: 6,
+                            color: '#e5e5e5',
+                            fontSize: 12,
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Alignment</label>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          {TEXT_ALIGNMENTS.map((option) => (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => handleStyleChange({ textAlign: option.id })}
+                              style={{
+                                flex: 1,
+                                padding: '6px 0',
+                                borderRadius: 6,
+                                border: activeAlign === option.id ? '1px solid #2563eb' : '1px solid #2a2a2a',
+                                background: activeAlign === option.id ? '#2563eb20' : 'transparent',
+                                color: activeAlign === option.id ? '#fff' : '#888',
+                                fontSize: 12,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              );
+            })()) : (
               <div style={{ color: '#555', fontSize: 12 }}>Select a layer</div>
             )}
           </div>
