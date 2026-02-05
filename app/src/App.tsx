@@ -624,6 +624,30 @@ const App = () => {
     setSelectedElementId(null);
   };
 
+  const duplicateElement = (elementId: string) => {
+    const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
+    if (!element) return;
+    
+    const newElement: KeyElement = {
+      ...element,
+      id: `el-${Date.now()}`,
+      name: `${element.name} copy`,
+      position: { x: element.position.x + 20, y: element.position.y + 20 },
+      attributes: element.attributes.map((attr) => ({
+        ...attr,
+        id: `attr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      })),
+    };
+
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return { ...frame, keyElements: [...frame.keyElements, newElement] };
+      })
+    );
+    setSelectedElementId(newElement.id);
+  };
+
   const updateKeyframeMeta = (field: "name" | "summary" | "functionalState", value: string) => {
     setKeyframes((prev) =>
       prev.map((frame) =>
@@ -910,6 +934,10 @@ const App = () => {
       }
       if ((e.key === "Delete" || e.key === "Backspace") && selectedElementId) {
         deleteElement(selectedElementId);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
+        e.preventDefault();
+        duplicateElement(selectedElementId);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
