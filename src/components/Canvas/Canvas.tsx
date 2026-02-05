@@ -34,6 +34,8 @@ export function Canvas() {
   const isPanningRef = useRef(false);
   const panStartRef = useRef<{ pointerX: number; pointerY: number; startX: number; startY: number } | null>(null);
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLine[]>([]);
+  const handOverrideRef = useRef(false);
+  const previousToolRef = useRef<ToolType>(currentTool);
 
   const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
@@ -94,6 +96,12 @@ export function Canvas() {
       document.removeEventListener('mouseleave', clear);
     };
   }, []);
+
+  useEffect(() => {
+    if (!handOverrideRef.current) {
+      previousToolRef.current = currentTool;
+    }
+  }, [currentTool]);
 
   const handleCanvasMouseDown = useCallback((event: ReactMouseEvent) => {
     const coords = toCanvasSpace(event);
@@ -219,6 +227,61 @@ export function Canvas() {
       drawStartRef.current = null;
     }
   }, [addElement, currentTool, elements, selectionBox, setIsSelecting, setSelectedElementIds, setSelectionBox]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+      if (event.code === 'Space' && !handOverrideRef.current && !isTyping) {
+        handOverrideRef.current = true;
+        previousToolRef.current = currentTool;
+        setCurrentTool('hand');
+        event.preventDefault();
+        return;
+      }
+
+      if (isTyping) return;
+
+      const step = event.shiftKey ? 10 : 1;
+      switch (event.key) {
+        case 'ArrowUp':
+          nudgeSelectedElements(0, -step);
+          event.preventDefault();
+          break;
+        case 'ArrowDown':
+          nudgeSelectedElements(0, step);
+          event.preventDefault();
+          break;
+        case 'ArrowLeft':
+          nudgeSelectedElements(-step, 0);
+          event.preventDefault();
+          break;
+        case 'ArrowRight':
+          nudgeSelectedElements(step, 0);
+          event.preventDefault();
+          break;
+        default:
+          break;
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.code === 'Space' && handOverrideRef.current) {
+        handOverrideRef.current = false;
+        const nextTool = previousToolRef.current ?? 'select';
+        setCurrentTool(nextTool);
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [currentTool, nudgeSelectedElements, setCurrentTool]);
 
   return (
     <div
