@@ -42,6 +42,11 @@ export default function App() {
   const [tool, setTool] = useState<Tool>('select');
   const [previewState, setPreviewState] = useState('kf-idle');
   const [interactionTab, setInteractionTab] = useState<'states' | 'timeline'>('states');
+  
+  // 拖拽状态
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [elementStart, setElementStart] = useState({ x: 0, y: 0 });
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
@@ -77,16 +82,50 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedElementId, deleteElement]);
 
+  // 拖拽处理
+  const handleElementMouseDown = (e: React.MouseEvent, elId: string, _scale: number) => {
+    e.stopPropagation();
+    const el = elements.find(el => el.id === elId);
+    if (!el) return;
+    setSelectedElementId(elId);
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setElementStart({ x: el.position.x, y: el.position.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !selectedElement) return;
+    const scale = 0.55; // 关键帧内的缩放比例
+    const dx = (e.clientX - dragStart.x) / scale;
+    const dy = (e.clientY - dragStart.y) / scale;
+    updateElement(selectedElement.id, {
+      position: {
+        x: Math.max(0, Math.round(elementStart.x + dx)),
+        y: Math.max(0, Math.round(elementStart.y + dy))
+      }
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      background: '#0a0a0b',
-      color: '#e5e5e5',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      fontSize: 13,
-    }}>
+    <div 
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        background: '#0a0a0b',
+        color: '#e5e5e5',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontSize: 13,
+        userSelect: 'none',
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       {/* Header */}
       <header style={{
         height: 48,
@@ -291,6 +330,7 @@ export default function App() {
                     {kfElements.map(el => (
                       <div
                         key={el.id}
+                        onMouseDown={(e) => handleElementMouseDown(e, el.id, 0.55)}
                         style={{
                           position: 'absolute',
                           left: el.position.x * 0.55,
@@ -301,6 +341,9 @@ export default function App() {
                           borderRadius: el.shapeType === 'ellipse' 
                             ? '50%' 
                             : (el.style?.borderRadius || 8) * 0.55,
+                          cursor: 'move',
+                          boxShadow: selectedElementId === el.id 
+                            ? '0 0 0 2px #2563eb' : 'none',
                         }}
                       />
                     ))}
