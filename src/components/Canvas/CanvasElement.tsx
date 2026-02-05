@@ -383,7 +383,7 @@ export function CanvasElement({
           element.style?.flipX ? 'scaleX(-1)' : '',
           element.style?.flipY ? 'scaleY(-1)' : '',
         ].filter(Boolean).join(' ') || undefined,
-        color: '#fff',
+        color: element.style?.textColor || '#fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: isText ? (element.style?.textAlign || 'center') : 'center',

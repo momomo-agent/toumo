@@ -809,6 +809,15 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Text Color</Label>
+              <input
+                type="color"
+                value={currentStyle.textColor || '#ffffff'}
+                onChange={(e) => handleStyleChange({ textColor: e.target.value })}
+                style={{ width: '100%', height: 32 }}
+              />
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Font Weight</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button

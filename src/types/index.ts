@@ -36,6 +36,7 @@ export type ShapeStyle = {
   fontSize?: number;
   fontWeight?: string;
   textAlign?: "left" | "center" | "right";
+  textColor?: string;
   // Shadow
   shadowColor?: string;
   shadowOffsetX?: number;
