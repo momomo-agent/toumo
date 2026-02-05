@@ -1272,6 +1272,10 @@ const App = () => {
         e.preventDefault();
         pasteElements();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "l" && selectedElementId) {
+        e.preventDefault();
+        toggleElementLock(selectedElementId);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
         duplicateElement(selectedElementId);
