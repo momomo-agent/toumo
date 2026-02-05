@@ -8,6 +8,14 @@ interface NodePosition {
   y: number;
 }
 
+interface DragConnection {
+  fromId: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}
+
 const CURVE_OPTIONS = [
   { id: 'linear', label: 'Linear' },
   { id: 'ease', label: 'Ease' },
@@ -31,6 +39,8 @@ export function StateGraph() {
   const [nodePositions, setNodePositions] = useState<NodePosition[]>([]);
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragConnection, setDragConnection] = useState<DragConnection | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; transitionId: string } | null>(null);
 
   const {
     keyframes,
@@ -40,6 +50,7 @@ export function StateGraph() {
     setSelectedKeyframeId,
     setSelectedTransitionId,
     updateTransition,
+    addTransition,
     deleteTransition,
   } = useEditorStore();
 
@@ -69,7 +80,10 @@ export function StateGraph() {
         })),
       ]);
     }
-  }, [keyframes, nodePositions]);
+    // Remove positions for deleted keyframes
+    const keyframeIds = new Set(keyframes.map(kf => kf.id));
+    setNodePositions(prev => prev.filter(n => keyframeIds.has(n.id)));
+  }, [keyframes]);
 
   const getNodePosition = (id: string): NodePosition => {
     return nodePositions.find(n => n.id === id) || { id, x: 0, y: 0 };
@@ -85,22 +99,74 @@ export function StateGraph() {
     });
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!draggingNode || !containerRef.current) return;
+  // Handle connection drag start (from node edge)
+  const handleConnectionDragStart = (e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!containerRef.current) return;
+    
     const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(40, Math.min(e.clientX - rect.left - dragOffset.x, rect.width - 100));
-    const y = Math.max(20, Math.min(e.clientY - rect.top - dragOffset.y, rect.height - 40));
-    setNodePositions(prev =>
-      prev.map(n => (n.id === draggingNode ? { ...n, x, y } : n))
-    );
-  }, [draggingNode, dragOffset]);
+    const pos = getNodePosition(nodeId);
+    
+    setDragConnection({
+      fromId: nodeId,
+      fromX: pos.x + 120, // Right edge of node
+      fromY: pos.y + 16,
+      toX: e.clientX - rect.left,
+      toY: e.clientY - rect.top,
+    });
+  };
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+
+    if (draggingNode) {
+      const x = Math.max(40, Math.min(e.clientX - rect.left - dragOffset.x, rect.width - 100));
+      const y = Math.max(20, Math.min(e.clientY - rect.top - dragOffset.y, rect.height - 40));
+      setNodePositions(prev =>
+        prev.map(n => (n.id === draggingNode ? { ...n, x, y } : n))
+      );
+    }
+
+    if (dragConnection) {
+      setDragConnection(prev => prev ? {
+        ...prev,
+        toX: e.clientX - rect.left,
+        toY: e.clientY - rect.top,
+      } : null);
+    }
+  }, [draggingNode, dragOffset, dragConnection]);
+
+  const handleMouseUp = useCallback((e: MouseEvent) => {
+    if (dragConnection && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Check if dropped on a node
+      const targetNode = nodePositions.find(n => {
+        return mouseX >= n.x && mouseX <= n.x + 120 &&
+               mouseY >= n.y && mouseY <= n.y + 40;
+      });
+      
+      if (targetNode && targetNode.id !== dragConnection.fromId) {
+        // Check if transition already exists
+        const exists = transitions.some(
+          t => t.from === dragConnection.fromId && t.to === targetNode.id
+        );
+        if (!exists) {
+          addTransition(dragConnection.fromId, targetNode.id);
+        }
+      }
+    }
+    
     setDraggingNode(null);
-  }, []);
+    setDragConnection(null);
+  }, [dragConnection, nodePositions, transitions, addTransition]);
 
   useEffect(() => {
-    if (draggingNode) {
+    if (draggingNode || dragConnection) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -108,21 +174,36 @@ export function StateGraph() {
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [draggingNode, handleMouseMove, handleMouseUp]);
+  }, [draggingNode, dragConnection, handleMouseMove, handleMouseUp]);
 
   const handleNodeClick = (e: React.MouseEvent, kfId: string) => {
     e.stopPropagation();
     setSelectedKeyframeId(kfId);
     setSelectedTransitionId(null);
+    setContextMenu(null);
   };
 
   const handleTransitionClick = (e: React.MouseEvent, trId: string) => {
     e.stopPropagation();
     setSelectedTransitionId(trId);
+    setContextMenu(null);
+  };
+
+  const handleTransitionContextMenu = (e: React.MouseEvent, trId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setContextMenu({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      transitionId: trId,
+    });
   };
 
   const handleBackgroundClick = () => {
     setSelectedTransitionId(null);
+    setContextMenu(null);
   };
 
   const selectedTransition = transitions.find(t => t.id === selectedTransitionId);
@@ -134,13 +215,13 @@ export function StateGraph() {
     const cy1 = from.y;
     const cx2 = from.x + dx * 0.6;
     const cy2 = to.y;
-    return `M ${from.x + 60} ${from.y + 16} C ${cx1 + 60} ${cy1 + 16}, ${cx2} ${cy2 + 16}, ${to.x} ${to.y + 16}`;
+    return `M ${from.x + 120} ${from.y + 16} C ${cx1 + 60} ${cy1 + 16}, ${cx2} ${cy2 + 16}, ${to.x} ${to.y + 16}`;
   };
 
   // Get midpoint for transition label
   const getEdgeMidpoint = (from: NodePosition, to: NodePosition) => {
     return {
-      x: (from.x + 60 + to.x) / 2,
+      x: (from.x + 120 + to.x) / 2,
       y: (from.y + to.y) / 2 + 16,
     };
   };
@@ -190,7 +271,19 @@ export function StateGraph() {
           >
             <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" />
           </marker>
+          <marker
+            id="arrowhead-drag"
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+          </marker>
         </defs>
+
+        {/* Existing transitions */}
         {transitions.map(tr => {
           const fromPos = getNodePosition(tr.from);
           const toPos = getNodePosition(tr.to);
@@ -207,6 +300,7 @@ export function StateGraph() {
                 markerEnd={isSelected ? 'url(#arrowhead-selected)' : 'url(#arrowhead)'}
                 style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
                 onClick={(e) => handleTransitionClick(e, tr.id)}
+                onContextMenu={(e) => handleTransitionContextMenu(e, tr.id)}
               />
               {/* Clickable hit area */}
               <path
@@ -216,6 +310,7 @@ export function StateGraph() {
                 strokeWidth={16}
                 style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
                 onClick={(e) => handleTransitionClick(e, tr.id)}
+                onContextMenu={(e) => handleTransitionContextMenu(e, tr.id)}
               />
               {/* Transition label */}
               <text
@@ -231,6 +326,20 @@ export function StateGraph() {
             </g>
           );
         })}
+
+        {/* Drag connection preview */}
+        {dragConnection && (
+          <line
+            x1={dragConnection.fromX}
+            y1={dragConnection.fromY}
+            x2={dragConnection.toX}
+            y2={dragConnection.toY}
+            stroke="#22c55e"
+            strokeWidth={2}
+            strokeDasharray="5,5"
+            markerEnd="url(#arrowhead-drag)"
+          />
+        )}
       </svg>
 
       {/* State nodes */}
@@ -281,12 +390,97 @@ export function StateGraph() {
             <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
               {kf.functionalState || 'state'}
             </div>
+            
+            {/* Connection handle (right side) */}
+            <div
+              onMouseDown={(e) => handleConnectionDragStart(e, kf.id)}
+              style={{
+                position: 'absolute',
+                right: -6,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 12,
+                height: 12,
+                background: '#22c55e',
+                borderRadius: '50%',
+                cursor: 'crosshair',
+                border: '2px solid #0a0a0b',
+                opacity: 0.8,
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.8')}
+              title="Drag to create transition"
+            />
           </div>
         );
       })}
 
+      {/* Context menu for transitions */}
+      {contextMenu && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            background: '#1a1a1b',
+            border: '1px solid #333',
+            borderRadius: 6,
+            padding: 4,
+            zIndex: 200,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          }}
+        >
+          <button
+            onClick={() => {
+              setSelectedTransitionId(contextMenu.transitionId);
+              setContextMenu(null);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '6px 12px',
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              fontSize: 11,
+              textAlign: 'left',
+              cursor: 'pointer',
+              borderRadius: 4,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#2a2a2a')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            Edit Transition
+          </button>
+          <button
+            onClick={() => {
+              deleteTransition(contextMenu.transitionId);
+              setContextMenu(null);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '6px 12px',
+              background: 'transparent',
+              border: 'none',
+              color: '#dc2626',
+              fontSize: 11,
+              textAlign: 'left',
+              cursor: 'pointer',
+              borderRadius: 4,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#2a2a2a')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            Delete Transition
+          </button>
+        </div>
+      )}
+
       {/* Inline transition editor */}
-      {selectedTransition && (
+      {selectedTransition && !contextMenu && (
         <TransitionEditor
           transition={selectedTransition}
           onUpdate={(updates) => updateTransition(selectedTransition.id, updates)}
@@ -298,7 +492,7 @@ export function StateGraph() {
         />
       )}
 
-      {/* Add transition hint */}
+      {/* Help text */}
       <div
         style={{
           position: 'absolute',
@@ -308,7 +502,7 @@ export function StateGraph() {
           color: '#555',
         }}
       >
-        Drag nodes to reposition • Click edge to edit transition
+        Drag nodes to reposition • Drag green handle to create transition • Right-click edge to delete
       </div>
     </div>
   );
