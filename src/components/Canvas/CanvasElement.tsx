@@ -409,6 +409,7 @@ export function CanvasElement({
           element.style?.blur ? `blur(${element.style.blur}px)` : '',
           element.style?.brightness ? `brightness(${element.style.brightness})` : '',
           element.style?.contrast ? `contrast(${element.style.contrast})` : '',
+          element.style?.saturate ? `saturate(${element.style.saturate})` : '',
         ].filter(Boolean).join(' ') || undefined,
         userSelect: 'none',
       }}

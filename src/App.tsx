@@ -880,6 +880,18 @@ export default function App() {
               style={{ width: '100%' }}
             />
           </div>
+          <div style={{ marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: '#666' }}>Saturate</span>
+            <input
+              type="range"
+              min={0}
+              max={2}
+              step={0.1}
+              value={currentStyle.saturate ?? 1}
+              onChange={(e) => handleStyleChange({ saturate: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
 
         {/* Border Radius Control */}
