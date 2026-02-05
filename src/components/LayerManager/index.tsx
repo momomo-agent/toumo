@@ -15,6 +15,8 @@ export function LayerManager() {
   
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
   
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
@@ -143,7 +145,21 @@ export function LayerManager() {
             }} />
           )}
           
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{el.name}</span>
+          <span 
+            onDoubleClick={() => { setEditingId(el.id); setEditName(el.name); }}
+            style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {editingId === el.id ? (
+              <input
+                autoFocus
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={() => { updateElement(el.id, { name: editName }); setEditingId(null); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { updateElement(el.id, { name: editName }); setEditingId(null); } }}
+                style={{ width: '100%', background: '#222', border: 'none', color: '#fff', fontSize: 12 }}
+              />
+            ) : el.name}
+          </span>
           
           <span onClick={(e) => toggleLock(el.id, e)} style={{ cursor: 'pointer', opacity: el.locked ? 1 : 0.3, fontSize: 10 }}>🔒</span>
           <span onClick={(e) => toggleVisibility(el.id, e)} style={{ cursor: 'pointer', opacity: el.visible === false ? 0.3 : 1, fontSize: 10 }}>👁</span>
