@@ -895,6 +895,16 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Line Height</Label>
+              <input
+                type="number"
+                step="0.1"
+                value={currentStyle.lineHeight ?? 1.4}
+                onChange={(e) => handleStyleChange({ lineHeight: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Alignment</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {TEXT_ALIGNMENTS.map((option) => (
