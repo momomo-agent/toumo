@@ -55,6 +55,9 @@ type Transition = {
   duration: number;
   delay: number;
   curve: string;
+  // Spring animation params
+  springDamping?: number;  // dampingRatio: 0-1 (1=critically damped)
+  springResponse?: number; // response time in seconds
   description?: string;
 };
 
@@ -1102,7 +1105,7 @@ const App = () => {
 
   const updateTransition = (
     transitionId: string,
-    field: keyof Pick<Transition, "trigger" | "duration" | "delay" | "curve" | "description">,
+    field: keyof Pick<Transition, "trigger" | "duration" | "delay" | "curve" | "description" | "springDamping" | "springResponse">,
     value: string
   ) => {
     setTransitions((prev) =>
@@ -1110,7 +1113,7 @@ const App = () => {
         transition.id === transitionId
           ? {
               ...transition,
-              [field]: field === "duration" || field === "delay" ? Number(value) : value,
+              [field]: ["duration", "delay", "springDamping", "springResponse"].includes(field) ? Number(value) : value,
             }
           : transition
       )
@@ -1777,6 +1780,35 @@ const App = () => {
                     <option value="overshoot">Overshoot</option>
                   </select>
                 </label>
+                {selectedTransition.curve === "spring" && (
+                  <div className="two-col">
+                    <label className="field">
+                      <span>Damping (0-1)</span>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="1"
+                        value={selectedTransition.springDamping ?? 0.8}
+                        onChange={(e) =>
+                          updateTransition(selectedTransition.id, "springDamping", e.target.value)
+                        }
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Response (s)</span>
+                      <input
+                        type="number"
+                        step="0.05"
+                        min="0.1"
+                        value={selectedTransition.springResponse ?? 0.5}
+                        onChange={(e) =>
+                          updateTransition(selectedTransition.id, "springResponse", e.target.value)
+                        }
+                      />
+                    </label>
+                  </div>
+                )}
                 <label className="field">
                   <span>Description</span>
                   <textarea
