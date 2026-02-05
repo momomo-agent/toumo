@@ -327,42 +327,48 @@ textarea {
 }
 
 .board {
-  border-radius: 24px;
-  background: #070a12;
-  padding: 20px;
-  min-height: 400px;
+  border-radius: 12px;
+  background: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+    #0a0c14;
+  background-size: 20px 20px;
+  min-height: 500px;
   position: relative;
   overflow: hidden;
+  cursor: crosshair;
 }
 
 .board-element {
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(30, 35, 50, 0.9);
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   user-select: none;
-  transition: box-shadow 0.15s ease;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .board-element:hover {
-  box-shadow: 0 0 0 2px rgba(127, 241, 185, 0.4);
+  border-color: rgba(99, 179, 237, 0.6);
 }
 
 .board-element.selected {
-  box-shadow: 0 0 0 2px rgba(127, 241, 185, 0.9);
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 1px #63b3ed, 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .resize-handle {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 12px;
-  height: 12px;
-  background: #7ff1b9;
-  border-radius: 3px;
+  right: -4px;
+  bottom: -4px;
+  width: 8px;
+  height: 8px;
+  background: #63b3ed;
+  border-radius: 2px;
   cursor: se-resize;
 }
 
@@ -585,4 +591,12 @@ button:focus {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.canvas-transform {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2000px;
+  height: 2000px;
 }

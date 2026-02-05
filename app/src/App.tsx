@@ -316,6 +316,10 @@ const App = () => {
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [canvasScale, setCanvasScale] = useState(1);
+  const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
   const resizeRef = useRef<{ elementId: string; startX: number; startY: number; origW: number; origH: number; corner: string } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -372,9 +376,20 @@ const App = () => {
   }, [selectedKeyframe]);
 
   const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
+    // Handle panning
+    if (isPanning && panRef.current) {
+      const dx = e.clientX - panRef.current.startX;
+      const dy = e.clientY - panRef.current.startY;
+      setCanvasOffset({
+        x: panRef.current.origX + dx,
+        y: panRef.current.origY + dy,
+      });
+      return;
+    }
+
     if (isResizing && resizeRef.current) {
-      const dx = e.clientX - resizeRef.current.startX;
-      const dy = e.clientY - resizeRef.current.startY;
+      const dx = (e.clientX - resizeRef.current.startX) / canvasScale;
+      const dy = (e.clientY - resizeRef.current.startY) / canvasScale;
       
       setKeyframes((prev) =>
         prev.map((frame) => {
@@ -399,8 +414,8 @@ const App = () => {
     
     if (!isDragging || !dragRef.current) return;
     
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
+    const dx = (e.clientX - dragRef.current.startX) / canvasScale;
+    const dy = (e.clientY - dragRef.current.startY) / canvasScale;
     
     setKeyframes((prev) =>
       prev.map((frame) => {
@@ -420,13 +435,44 @@ const App = () => {
         };
       })
     );
-  }, [isDragging, isResizing, selectedKeyframeId]);
+  }, [isDragging, isResizing, isPanning, selectedKeyframeId, canvasScale]);
 
   const handleCanvasMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
+    setIsPanning(false);
     dragRef.current = null;
     resizeRef.current = null;
+    panRef.current = null;
+  }, []);
+
+  const handleCanvasPanStart = useCallback((e: MouseEvent) => {
+    if (e.button === 1 || e.altKey) {
+      e.preventDefault();
+      setIsPanning(true);
+      panRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: canvasOffset.x,
+        origY: canvasOffset.y,
+      };
+    }
+  }, [canvasOffset]);
+
+  const handleCanvasPanMove = useCallback((e: MouseEvent) => {
+    if (!isPanning || !panRef.current) return;
+    const dx = e.clientX - panRef.current.startX;
+    const dy = e.clientY - panRef.current.startY;
+    setCanvasOffset({
+      x: panRef.current.origX + dx,
+      y: panRef.current.origY + dy,
+    });
+  }, [isPanning]);
+
+  const handleCanvasWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setCanvasScale((prev) => Math.min(3, Math.max(0.25, prev * delta)));
   }, []);
 
   const handleResizeStart = useCallback((e: MouseEvent, elementId: string) => {
@@ -592,6 +638,20 @@ const App = () => {
           ...frame,
           keyElements: frame.keyElements.map((el) =>
             el.id === elementId ? { ...el, name } : el
+          ),
+        };
+      })
+    );
+  };
+
+  const updateElementCategory = (elementId: string, category: "content" | "component" | "system") => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.id === elementId ? { ...el, category } : el
           ),
         };
       })
@@ -934,36 +994,47 @@ const App = () => {
                 <div 
                   className="board"
                   ref={canvasRef}
-                  onMouseMove={handleCanvasMouseMove}
+                  onMouseDown={handleCanvasPanStart}
+                  onMouseMove={(e) => { handleCanvasMouseMove(e); handleCanvasPanMove(e); }}
                   onMouseUp={handleCanvasMouseUp}
                   onMouseLeave={handleCanvasMouseUp}
+                  onWheel={handleCanvasWheel}
+                  style={{ cursor: isPanning ? "grabbing" : "crosshair" }}
                 >
-                  {previewElements.map((element) => (
-                    <div
-                      key={`board-${element.id}`}
-                      className={`board-element element-${element.id} ${
-                        element.isKeyElement ? "is-key" : ""
-                      } ${selectedElementId === element.id ? "selected" : ""}`}
-                      style={{
-                        position: "absolute",
-                        left: element.position.x,
-                        top: element.position.y,
-                        width: element.size.width,
-                        height: element.size.height,
-                        cursor: isDragging ? "grabbing" : "grab",
-                      }}
-                      onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
-                    >
+                  <div
+                    className="canvas-transform"
+                    style={{
+                      transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasScale})`,
+                      transformOrigin: "0 0",
+                    }}
+                  >
+                    {previewElements.map((element) => (
+                      <div
+                        key={`board-${element.id}`}
+                        className={`board-element element-${element.id} ${
+                          element.isKeyElement ? "is-key" : ""
+                        } ${selectedElementId === element.id ? "selected" : ""}`}
+                        style={{
+                          position: "absolute",
+                          left: element.position.x,
+                          top: element.position.y,
+                          width: element.size.width,
+                          height: element.size.height,
+                          cursor: isDragging ? "grabbing" : "grab",
+                        }}
+                        onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
+                      >
                       <span>{element.name}</span>
                       {element.isKeyElement && <small>Key</small>}
-                      {selectedElementId === element.id && (
-                        <div
-                          className="resize-handle"
-                          onMouseDown={(e) => handleResizeStart(e, element.id)}
-                        />
-                      )}
-                    </div>
-                  ))}
+                        {selectedElementId === element.id && (
+                          <div
+                            className="resize-handle"
+                            onMouseDown={(e) => handleResizeStart(e, element.id)}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="functional-graph">
                   <h4>Functional states</h4>
@@ -1038,6 +1109,17 @@ const App = () => {
                     />
                     <button className="ghost small danger" onClick={() => deleteElement(selectedElement.id)}>Delete</button>
                   </div>
+                  <label className="field" style={{ marginTop: 8 }}>
+                    <span>Category</span>
+                    <select
+                      value={selectedElement.category}
+                      onChange={(e) => updateElementCategory(selectedElement.id, e.target.value as "content" | "component" | "system")}
+                    >
+                      <option value="content">Content</option>
+                      <option value="component">Component</option>
+                      <option value="system">System</option>
+                    </select>
+                  </label>
                   <div className="panel-heading" style={{ marginTop: 8 }}>
                     <span>Transform</span>
                   </div>
