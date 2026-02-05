@@ -96,16 +96,37 @@ export function CanvasElement({
       const dx = (moveEvent.clientX - dragStartRef.current.pointerX) / scale;
       const dy = (moveEvent.clientY - dragStartRef.current.pointerY) / scale;
 
-      dragStartRef.current.elements.forEach((elState) => {
-        const newPos = {
+      const pendingPositions = dragStartRef.current.elements.map((elState) => ({
+        id: elState.id,
+        size: elState.size,
+        position: {
           x: Math.round(elState.startX + dx),
           y: Math.round(elState.startY + dy),
-        };
-        updateElementPosition(elState.id, newPos);
+        },
+      }));
 
-        if (elState.id === element.id) {
-          onAlignmentCheck(elState.id, newPos, elState.size);
+      let snapDx = 0;
+      let snapDy = 0;
+
+      const primary = pendingPositions.find((entry) => entry.id === element.id);
+      if (primary) {
+        const result = onAlignmentCheck(element.id, primary.position, primary.size);
+        const snapped = result?.snappedPosition;
+        if (snapped) {
+          snapDx = snapped.x - primary.position.x;
+          snapDy = snapped.y - primary.position.y;
+          primary.position = snapped;
         }
+      }
+
+      pendingPositions.forEach((entry) => {
+        if (entry.id !== element.id) {
+          entry.position = {
+            x: Math.round(entry.position.x + snapDx),
+            y: Math.round(entry.position.y + snapDy),
+          };
+        }
+        updateElementPosition(entry.id, entry.position);
       });
     };
 

@@ -44,6 +44,7 @@ export default function App() {
     pasteElements,
     undo,
     redo,
+    updateElement,
   } = useEditorStore();
 
   const [previewState, setPreviewState] = useState(keyframes[0]?.id ?? 'kf-idle');
@@ -359,7 +360,6 @@ export default function App() {
     );
   };
 
-  }, [keyframes, previewState]);
 
   return (
     <div
@@ -639,26 +639,7 @@ export default function App() {
           >
             Inspector
           </div>
-          <div style={{ padding: 16 }}>
-            {selectedElement ? (
-              <div>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 4 }}>Name</label>
-                  <div style={{ fontSize: 13 }}>{selectedElement.name}</div>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 4 }}>Position</label>
-                  <div style={{ fontSize: 13 }}>X: {selectedElement.position.x}, Y: {selectedElement.position.y}</div>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 4 }}>Size</label>
-                  <div style={{ fontSize: 13 }}>W: {selectedElement.size.width}, H: {selectedElement.size.height}</div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ color: '#555' }}>Select a layer</div>
-            )}
-          </div>
+          <div style={{ padding: 16 }}>{renderInspector()}</div>
         </div>
       </div>
     </div>
