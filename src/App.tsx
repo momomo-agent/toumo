@@ -842,9 +842,17 @@ export default function App() {
           </div>
         </div>
 
-        {/* Blur Filter */}
+        {/* Filters */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Filters</Label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Label>Filters</Label>
+            <button
+              onClick={() => handleStyleChange({ blur: 0, brightness: 1, contrast: 1, saturate: 1, hueRotate: 0 })}
+              style={{ background: 'none', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer' }}
+            >
+              Reset
+            </button>
+          </div>
           <div style={{ marginBottom: 8 }}>
             <span style={{ fontSize: 10, color: '#666' }}>Blur</span>
             <input
