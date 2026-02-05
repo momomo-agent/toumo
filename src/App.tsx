@@ -809,6 +809,42 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Font Weight</Label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => handleStyleChange({ fontWeight: 'normal' })}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 6,
+                    border: (currentStyle.fontWeight ?? 'normal') === 'normal' ? '1px solid #2563eb' : '1px solid #2a2a2a',
+                    background: (currentStyle.fontWeight ?? 'normal') === 'normal' ? '#2563eb20' : 'transparent',
+                    color: '#fff',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Normal
+                </button>
+                <button
+                  onClick={() => handleStyleChange({ fontWeight: 'bold' })}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 6,
+                    border: currentStyle.fontWeight === 'bold' ? '1px solid #2563eb' : '1px solid #2a2a2a',
+                    background: currentStyle.fontWeight === 'bold' ? '#2563eb20' : 'transparent',
+                    color: '#fff',
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Bold
+                </button>
+              </div>
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Alignment</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {TEXT_ALIGNMENTS.map((option) => (
