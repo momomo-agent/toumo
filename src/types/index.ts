@@ -48,6 +48,12 @@ export type ShapeStyle = {
   shadowOffsetY?: number;
   shadowBlur?: number;
   shadowSpread?: number;
+  // Inner shadow
+  innerShadowEnabled?: boolean;
+  innerShadowColor?: string;
+  innerShadowX?: number;
+  innerShadowY?: number;
+  innerShadowBlur?: number;
   // Image specific
   imageSrc?: string;
   imageOriginalWidth?: number;

@@ -344,6 +344,14 @@ export function CanvasElement({
       shadows.push(`${x}px ${y}px ${blur}px ${spread}px ${element.style.shadowColor}`);
     }
     
+    // Inner shadow
+    if (element.style?.innerShadowEnabled && element.style.innerShadowColor) {
+      const x = element.style.innerShadowX || 0;
+      const y = element.style.innerShadowY || 0;
+      const blur = element.style.innerShadowBlur || 4;
+      shadows.push(`inset ${x}px ${y}px ${blur}px ${element.style.innerShadowColor}`);
+    }
+    
     // Selection outline
     if (isSelected) {
       shadows.push('0 0 0 2px #3b82f6');

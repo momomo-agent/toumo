@@ -682,6 +682,38 @@ export default function App() {
           </div>
         </div>
 
+        {/* Inner Shadow Controls */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Inner Shadow</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <input
+              type="checkbox"
+              checked={currentStyle.innerShadowEnabled ?? false}
+              onChange={(e) => handleStyleChange({ innerShadowEnabled: e.target.checked })}
+            />
+            <input
+              type="color"
+              value={currentStyle.innerShadowColor || '#000000'}
+              onChange={(e) => handleStyleChange({ innerShadowColor: e.target.value })}
+              style={{ width: 34, height: 34, border: '1px solid #2a2a2a', borderRadius: 8 }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>X</span>
+              <input type="number" value={currentStyle.innerShadowX ?? 0} onChange={(e) => handleStyleChange({ innerShadowX: Number(e.target.value) })} style={inputStyle} />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Y</span>
+              <input type="number" value={currentStyle.innerShadowY ?? 0} onChange={(e) => handleStyleChange({ innerShadowY: Number(e.target.value) })} style={inputStyle} />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Blur</span>
+              <input type="number" min={0} value={currentStyle.innerShadowBlur ?? 4} onChange={(e) => handleStyleChange({ innerShadowBlur: Number(e.target.value) })} style={inputStyle} />
+            </div>
+          </div>
+        </div>
+
         {/* Border Radius Control */}
         <div style={{ marginBottom: 20 }}>
           <Label>Border Radius</Label>
