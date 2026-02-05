@@ -411,6 +411,7 @@ export function CanvasElement({
           element.style?.contrast ? `contrast(${element.style.contrast})` : '',
           element.style?.saturate ? `saturate(${element.style.saturate})` : '',
           element.style?.hueRotate ? `hue-rotate(${element.style.hueRotate}deg)` : '',
+          element.style?.invert ? `invert(${element.style.invert})` : '',
         ].filter(Boolean).join(' ') || undefined,
         userSelect: 'none',
       }}
