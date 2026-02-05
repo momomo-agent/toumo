@@ -623,6 +623,49 @@ const App = () => {
     );
   };
 
+  const addAttribute = (elementId: string) => {
+    const newAttr: KeyAttribute = {
+      id: `attr-${Date.now()}`,
+      label: "New Attribute",
+      value: "0",
+      targeted: true,
+      curve: "global",
+    };
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.id === elementId
+              ? { ...el, attributes: [...el.attributes, newAttr] }
+              : el
+          ),
+        };
+      })
+    );
+  };
+
+  const updateAttributeLabel = (elementId: string, attrId: string, label: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== elementId) return el;
+            return {
+              ...el,
+              attributes: el.attributes.map((attr) =>
+                attr.id === attrId ? { ...attr, label } : attr
+              ),
+            };
+          }),
+        };
+      })
+    );
+  };
+
   const updateAttributeValue = (elementId: string, attributeId: string, value: string) => {
     setKeyframes((prev) =>
       prev.map((frame) => {
@@ -987,11 +1030,17 @@ const App = () => {
                   </div>
                   <div className="panel-heading" style={{ marginTop: 16 }}>
                     <span>Attributes</span>
+                    <button className="ghost small" onClick={() => addAttribute(selectedElement.id)}>+ Add</button>
                   </div>
                   {selectedElement.attributes.map((attribute) => (
                     <div className="attribute-row" key={attribute.id}>
                       <label>
-                        <span>{attribute.label}</span>
+                        <input
+                          type="text"
+                          className="attr-label-input"
+                          value={attribute.label}
+                          onChange={(e) => updateAttributeLabel(selectedElement.id, attribute.id, e.target.value)}
+                        />
                         <input
                           type="text"
                           value={attribute.value}

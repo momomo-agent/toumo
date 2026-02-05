@@ -566,3 +566,17 @@ button:focus {
   outline: none;
   border-bottom-color: #7ff1b9;
 }
+
+.attr-label-input {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  padding: 2px 0;
+  width: 100%;
+}
+
+.attr-label-input:focus {
+  outline: none;
+  color: #fff;
+}
