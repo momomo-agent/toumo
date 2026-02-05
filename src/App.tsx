@@ -1317,6 +1317,7 @@ export default function App() {
               const kf = selectedKeyframe;
               if (!kf) return;
               let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${frameSize.width}" height="${frameSize.height}">`;
+              svg += `<rect width="100%" height="100%" fill="${canvasBackground}"/>`;
               kf.keyElements.forEach(el => {
                 if (el.shapeType === 'rectangle') {
                   svg += `<rect x="${el.position.x}" y="${el.position.y}" width="${el.size.width}" height="${el.size.height}" fill="${el.style?.fill || '#333'}" rx="${el.style?.borderRadius || 0}"/>`;
