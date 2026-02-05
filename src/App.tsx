@@ -418,6 +418,21 @@ export default function App() {
             >
               {selected.visible === false ? '👁️‍🗨️' : '👁️'}
             </button>
+            <button
+              onClick={() => navigator.clipboard.writeText(selected.id)}
+              style={{
+                padding: '6px 10px',
+                background: 'transparent',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: '#666',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+              title="Copy ID"
+            >
+              ID
+            </button>
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
