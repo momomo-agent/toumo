@@ -1,9 +1,10 @@
-@import './base.css';
-@import './header.css';
+/* Toumo Design System */
+@import './theme.css';
 @import './layout.css';
-@import './canvas.css';
-@import './element.css';
-@import './panels.css';
+@import './buttons.css';
+@import './inputs.css';
 @import './layers.css';
 @import './inspector.css';
+@import './color-picker.css';
+@import './keyframes.css';
 @import './preview.css';

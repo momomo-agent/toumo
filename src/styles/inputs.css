@@ -1,0 +1,75 @@
+/* Inspector 输入组件 */
+
+/* 属性行 */
+.property-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.property-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+/* 数值输入框 */
+.number-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.number-input {
+  width: 100%;
+  padding: 6px 8px;
+  padding-right: 24px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  transition: all var(--transition-fast);
+}
+
+.number-input:hover {
+  border-color: var(--border-default);
+}
+
+.number-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.number-input-unit {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* 双列输入 */
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-group-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
