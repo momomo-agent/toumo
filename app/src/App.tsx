@@ -829,6 +829,27 @@ const App = () => {
     );
   };
 
+  const nudgeElement = (elementId: string, dx: number, dy: number) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== elementId) return el;
+            return {
+              ...el,
+              position: {
+                x: Math.max(0, el.position.x + dx),
+                y: Math.max(0, el.position.y + dy),
+              },
+            };
+          }),
+        };
+      })
+    );
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1182,6 +1203,14 @@ const App = () => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "g") {
         e.preventDefault();
         ungroupElements();
+      }
+      // Arrow keys nudge
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) && selectedElementId) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
+        const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+        nudgeElement(selectedElementId, dx, dy);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
