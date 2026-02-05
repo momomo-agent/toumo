@@ -63,6 +63,9 @@ export type KeyElement = {
   locked?: boolean;
   visible?: boolean;
   groupId?: string;
+  parentId?: string; // For nested layers
+  collapsed?: boolean; // For groups/frames
+  zIndex?: number; // Layer order
   attributes: KeyAttribute[];
   position: Position;
   size: Size;
