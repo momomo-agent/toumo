@@ -550,3 +550,19 @@ button:focus {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 }
+
+.element-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 4px 0;
+  width: 100%;
+}
+
+.element-name-input:focus {
+  outline: none;
+  border-bottom-color: #7ff1b9;
+}

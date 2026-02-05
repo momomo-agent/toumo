@@ -573,6 +573,20 @@ const App = () => {
     );
   };
 
+  const updateElementName = (elementId: string, name: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.id === elementId ? { ...el, name } : el
+          ),
+        };
+      })
+    );
+  };
+
   const updateElementPosition = (elementId: string, axis: "x" | "y", value: number) => {
     setKeyframes((prev) =>
       prev.map((frame) => {
@@ -926,7 +940,12 @@ const App = () => {
               {selectedElement ? (
                 <div className="attributes">
                   <div className="panel-heading">
-                    <h4>{selectedElement.name}</h4>
+                    <input
+                      type="text"
+                      className="element-name-input"
+                      value={selectedElement.name}
+                      onChange={(e) => updateElementName(selectedElement.id, e.target.value)}
+                    />
                     <button className="ghost small danger" onClick={() => deleteElement(selectedElement.id)}>Delete</button>
                   </div>
                   <div className="panel-heading" style={{ marginTop: 8 }}>
