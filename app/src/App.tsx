@@ -365,6 +365,7 @@ const App = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
+  const [showHelp, setShowHelp] = useState(false);
   const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}>; altCopy?: boolean } | null>(null);
   const resizeRef = useRef<{ elementId: string; startX: number; startY: number; origW: number; origH: number; corner: string } | null>(null);
@@ -1257,9 +1258,13 @@ const App = () => {
         e.preventDefault();
         redo();
       }
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+        setShowHelp(prev => !prev);
+      }
       if (e.key === "Escape") {
         setSelectedElementId(null);
         setSelectedElementIds([]);
+        setShowHelp(false);
       }
       if ((e.key === "Delete" || e.key === "Backspace") && selectedElementId) {
         deleteElement(selectedElementId);
@@ -1325,6 +1330,33 @@ const App = () => {
 
   return (
     <div className="app-shell">
+      {showHelp && (
+        <div className="help-overlay" onClick={() => setShowHelp(false)}>
+          <div className="help-panel" onClick={e => e.stopPropagation()}>
+            <h2>Keyboard Shortcuts</h2>
+            <div className="help-grid">
+              <div><kbd>Ctrl+Z</kbd> Undo</div>
+              <div><kbd>Ctrl+Y</kbd> Redo</div>
+              <div><kbd>Ctrl+C</kbd> Copy</div>
+              <div><kbd>Ctrl+V</kbd> Paste</div>
+              <div><kbd>Ctrl+D</kbd> Duplicate</div>
+              <div><kbd>Ctrl+A</kbd> Select All</div>
+              <div><kbd>Ctrl+G</kbd> Group</div>
+              <div><kbd>Ctrl+Shift+G</kbd> Ungroup</div>
+              <div><kbd>Ctrl+L</kbd> Lock</div>
+              <div><kbd>Ctrl+H</kbd> Hide</div>
+              <div><kbd>Ctrl+]</kbd> Bring Forward</div>
+              <div><kbd>Ctrl+[</kbd> Send Backward</div>
+              <div><kbd>Delete</kbd> Delete</div>
+              <div><kbd>Escape</kbd> Deselect</div>
+              <div><kbd>↑↓←→</kbd> Nudge 1px</div>
+              <div><kbd>Shift+↑↓←→</kbd> Nudge 10px</div>
+              <div><kbd>Shift+Drag</kbd> Constrain H/V</div>
+              <div><kbd>?</kbd> Toggle Help</div>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="top-bar">
         <div>
           <span className="logo">Toumo</span>
