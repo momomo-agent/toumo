@@ -1370,6 +1370,10 @@ const App = () => {
               <div><kbd>↑↓←→</kbd> Nudge 1px</div>
               <div><kbd>Shift+↑↓←→</kbd> Nudge 10px</div>
               <div><kbd>Shift+Drag</kbd> Constrain H/V</div>
+              <div><kbd>Ctrl+=</kbd> Zoom In</div>
+              <div><kbd>Ctrl+-</kbd> Zoom Out</div>
+              <div><kbd>Ctrl+0</kbd> Reset View</div>
+              <div><kbd>Ctrl+1</kbd> Zoom 100%</div>
               <div><kbd>?</kbd> Toggle Help</div>
             </div>
           </div>
