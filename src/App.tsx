@@ -1087,6 +1087,24 @@ export default function App() {
             style={{ display: 'none' }}
           />
           <button
+            onClick={() => {
+              const w = prompt('Width:', String(frameSize.width));
+              const h = prompt('Height:', String(frameSize.height));
+              if (w && h) setFrameSize({ width: Number(w), height: Number(h) });
+            }}
+            style={{
+              padding: '6px 12px',
+              background: 'transparent',
+              border: '1px solid #333',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            Resize
+          </button>
+          <button
             onClick={() => projectInputRef.current?.click()}
             style={{
               padding: '6px 12px',
