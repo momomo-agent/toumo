@@ -127,6 +127,17 @@ export function LayerManager() {
             {!el.shapeType && '□'}
           </span>
           
+          {el.style?.fill && (
+            <span style={{ 
+              width: 12, 
+              height: 12, 
+              borderRadius: 2, 
+              background: el.style.fill,
+              border: '1px solid #333',
+              flexShrink: 0,
+            }} />
+          )}
+          
           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{el.name}</span>
           
           <span onClick={(e) => toggleLock(el.id, e)} style={{ cursor: 'pointer', opacity: el.locked ? 1 : 0.3, fontSize: 10 }}>🔒</span>
