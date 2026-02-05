@@ -383,12 +383,28 @@ export default function App() {
         <SectionHeader>Element Properties</SectionHeader>
         <div style={{ marginBottom: 16 }}>
           <Label>Name</Label>
-          <input
-            type="text"
-            value={selected.name}
-            onChange={(e) => updateElement(selected.id, { name: e.target.value })}
-            style={inputStyle}
-          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              value={selected.name}
+              onChange={(e) => updateElement(selected.id, { name: e.target.value })}
+              style={{ ...inputStyle, flex: 1 }}
+            />
+            <button
+              onClick={() => updateElement(selected.id, { locked: !selected.locked })}
+              style={{
+                padding: '6px 10px',
+                background: selected.locked ? '#f59e0b30' : 'transparent',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: selected.locked ? '#f59e0b' : '#666',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              {selected.locked ? '🔒' : '🔓'}
+            </button>
+          </div>
         </div>
         <div style={{ marginBottom: 16 }}>
           <Label>Position</Label>
