@@ -242,6 +242,12 @@ export default function App() {
         return;
       }
 
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
+        copySelectedElements();
+        pasteElements();
+        event.preventDefault();
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key === '0') {
         setCanvasScale(1);
         event.preventDefault();
