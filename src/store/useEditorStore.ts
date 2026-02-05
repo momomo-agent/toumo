@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 
 interface HistoryEntry {
@@ -31,6 +31,7 @@ interface EditorState {
   selectedTransitionId: string | null;
   currentTool: ToolType;
   clipboard: KeyElement[];
+  copiedStyle: ShapeStyle | null;
   canvasOffset: Position;
   canvasScale: number;
   frameSize: Size;
@@ -93,6 +94,10 @@ interface EditorActions {
   distributeElements: (direction: 'horizontal' | 'vertical') => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size }) => void;
+  // Style clipboard
+  copiedStyle: ShapeStyle | null;
+  copyStyle: () => void;
+  pasteStyle: () => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -113,6 +118,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectedTransitionId: null,
   currentTool: 'select',
   clipboard: [],
+  copiedStyle: null,
   canvasOffset: { x: 0, y: 0 },
   canvasScale: 1,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
@@ -750,6 +756,29 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementIds: [],
       history: [{ keyframes: data.keyframes }],
       historyIndex: 0,
+    });
+  },
+
+  // Copy style from selected element
+  copyStyle: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (element?.style) {
+      set({ copiedStyle: { ...element.style } });
+    }
+  },
+
+  // Paste style to selected elements
+  pasteStyle: () => {
+    const state = get();
+    if (!state.copiedStyle || state.selectedElementIds.length === 0) return;
+    
+    get().pushHistory();
+    state.selectedElementIds.forEach(id => {
+      get().updateElement(id, { style: { ...state.copiedStyle! } });
     });
   },
 }));

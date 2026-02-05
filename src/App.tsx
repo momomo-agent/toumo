@@ -71,6 +71,8 @@ export default function App() {
     alignElements,
     distributeElements,
     loadProject,
+    copyStyle,
+    pasteStyle,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -196,12 +198,19 @@ export default function App() {
       const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
 
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c') {
-        copySelectedElements();
+        if (event.altKey) {
+          copyStyle();
+        } else {
+          copySelectedElements();
+        }
         event.preventDefault();
         return;
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'v') {
-        if (!isTyping) {
+        if (event.altKey) {
+          pasteStyle();
+          event.preventDefault();
+        } else if (!isTyping) {
           pasteElements();
           event.preventDefault();
         }
