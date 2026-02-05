@@ -1,0 +1,29 @@
+.interaction-manager {
+  height: 200px;
+  border-top: 1px solid #222;
+  background: #0d0d0d;
+}
+
+.im-tabs {
+  display: flex;
+  border-bottom: 1px solid #222;
+  padding: 0 16px;
+}
+
+.im-tabs button {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+}
+
+.im-tabs button.active {
+  color: #e5e5e5;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.im-content {
+  padding: 16px;
+  color: #666;
+}
