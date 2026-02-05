@@ -27,6 +27,7 @@ type KeyElement = {
   isKeyElement: boolean;
   locked?: boolean;
   visible?: boolean;
+  groupId?: string;
   attributes: KeyAttribute[];
   position: Position;
   size: Size;
@@ -684,6 +685,40 @@ const App = () => {
     );
   };
 
+  const groupElements = () => {
+    if (selectedElementIds.length < 2) return;
+    const groupId = `group-${Date.now()}`;
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            selectedElementIds.includes(el.id) ? { ...el, groupId } : el
+          ),
+        };
+      })
+    );
+  };
+
+  const ungroupElements = () => {
+    if (!selectedElementId) return;
+    const element = selectedKeyframe.keyElements.find((el) => el.id === selectedElementId);
+    if (!element?.groupId) return;
+    const groupId = element.groupId;
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.groupId === groupId ? { ...el, groupId: undefined } : el
+          ),
+        };
+      })
+    );
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1030,10 +1065,18 @@ const App = () => {
         e.preventDefault();
         duplicateElement(selectedElementId);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "g" && !e.shiftKey) {
+        e.preventDefault();
+        groupElements();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "g") {
+        e.preventDefault();
+        ungroupElements();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedElementId]);
+  }, [selectedElementId, selectedElementIds]);
 
   const previewElements = selectedKeyframe.keyElements;
   const previewStateLabel =
