@@ -862,6 +862,17 @@ export default function App() {
               Reset
             </button>
           </div>
+          <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+            {[90, 180, 270].map(deg => (
+              <button
+                key={deg}
+                onClick={() => handleStyleChange({ rotation: deg })}
+                style={{ flex: 1, padding: '4px', background: '#222', border: 'none', borderRadius: 4, color: '#666', fontSize: 10, cursor: 'pointer' }}
+              >
+                {deg}°
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Flip Controls */}
