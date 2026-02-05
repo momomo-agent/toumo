@@ -410,6 +410,13 @@ const App = () => {
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
   const [showHelp, setShowHelp] = useState(false);
+  
+  // Animation state for smooth transitions
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationProgress, setAnimationProgress] = useState(0);
+  const [animatingFromKeyframe, setAnimatingFromKeyframe] = useState<Keyframe | null>(null);
+  const [animatingToKeyframe, setAnimatingToKeyframe] = useState<Keyframe | null>(null);
+  const animationRef = useRef<number>();
   const [contextMenu, setContextMenu] = useState<{x: number; y: number; elementId: string} | null>(null);
   const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}>; altCopy?: boolean } | null>(null);
@@ -1398,10 +1405,59 @@ const App = () => {
   };
 
   const stepPreview = () => {
+    if (isAnimating) return; // 防止动画重叠
+    
     const currentIndex = keyframes.findIndex((frame) => frame.id === selectedKeyframeId);
     const nextIndex = (currentIndex + 1) % keyframes.length;
+    const currentFrame = keyframes[currentIndex];
     const nextFrame = keyframes[nextIndex];
-    selectKeyframe(nextFrame.id);
+    
+    // 查找对应的过渡配置
+    const transition = transitions.find(
+      t => t.from === currentFrame.id && t.to === nextFrame.id
+    );
+    
+    const duration = transition?.duration || 300;
+    const easing = transition?.curve || 'ease-out';
+    
+    // 开始动画
+    setIsAnimating(true);
+    setAnimatingFromKeyframe(currentFrame);
+    setAnimatingToKeyframe(nextFrame);
+    setAnimationProgress(0);
+    
+    const startTime = performance.now();
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const rawProgress = Math.min(elapsed / duration, 1);
+      
+      // 应用缓动
+      let easedProgress = rawProgress;
+      if (easing === 'ease-out') {
+        easedProgress = rawProgress * (2 - rawProgress);
+      } else if (easing === 'ease-in') {
+        easedProgress = rawProgress * rawProgress;
+      } else if (easing === 'ease-in-out') {
+        easedProgress = rawProgress < 0.5 
+          ? 2 * rawProgress * rawProgress 
+          : -1 + (4 - 2 * rawProgress) * rawProgress;
+      }
+      
+      setAnimationProgress(easedProgress);
+      
+      if (rawProgress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // 动画完成
+        setIsAnimating(false);
+        setAnimatingFromKeyframe(null);
+        setAnimatingToKeyframe(null);
+        selectKeyframe(nextFrame.id);
+      }
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
   };
 
   // Keyboard shortcuts
