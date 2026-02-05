@@ -36,6 +36,7 @@ export type ShapeStyle = {
   fontSize?: number;
   fontWeight?: string;
   fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
   textAlign?: "left" | "center" | "right";
   textColor?: string;
   // Shadow

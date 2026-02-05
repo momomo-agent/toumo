@@ -867,6 +867,22 @@ export default function App() {
                 >
                   Italic
                 </button>
+                <button
+                  onClick={() => handleStyleChange({ textDecoration: currentStyle.textDecoration === 'underline' ? 'none' : 'underline' })}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 6,
+                    border: currentStyle.textDecoration === 'underline' ? '1px solid #2563eb' : '1px solid #2a2a2a',
+                    background: currentStyle.textDecoration === 'underline' ? '#2563eb20' : 'transparent',
+                    color: '#fff',
+                    fontSize: 12,
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                >
+                  U
+                </button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
