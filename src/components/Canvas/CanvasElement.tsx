@@ -284,7 +284,23 @@ export function CanvasElement({
     if (isText) return 'transparent';
     if (isImage) return 'transparent';
     if (isLine) return 'transparent';
-    return element.style?.fill || '#3b82f6';
+    
+    const style = element.style;
+    // Check for gradient
+    if (style?.gradientType && style.gradientType !== 'none' && style.gradientStops?.length) {
+      const stops = style.gradientStops
+        .map(s => `${s.color} ${s.position}%`)
+        .join(', ');
+      if (style.gradientType === 'linear') {
+        const angle = style.gradientAngle ?? 180;
+        return `linear-gradient(${angle}deg, ${stops})`;
+      }
+      if (style.gradientType === 'radial') {
+        return `radial-gradient(circle, ${stops})`;
+      }
+    }
+    
+    return style?.fill || '#3b82f6';
   };
 
   const getBorderRadius = () => {

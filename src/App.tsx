@@ -328,6 +328,71 @@ export default function App() {
           </div>
         </div>
 
+        {/* Gradient Control */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Gradient</Label>
+          <select
+            value={currentStyle.gradientType || 'none'}
+            onChange={(e) => {
+              const type = e.target.value as 'none' | 'linear' | 'radial';
+              handleStyleChange({
+                gradientType: type,
+                gradientStops: type !== 'none' && !currentStyle.gradientStops?.length
+                  ? [{ color: '#3b82f6', position: 0 }, { color: '#8b5cf6', position: 100 }]
+                  : currentStyle.gradientStops,
+              });
+            }}
+            style={selectStyle}
+          >
+            <option value="none">None</option>
+            <option value="linear">Linear</option>
+            <option value="radial">Radial</option>
+          </select>
+          {currentStyle.gradientType === 'linear' && (
+            <div style={{ marginTop: 8 }}>
+              <span style={{ fontSize: 10, color: '#666' }}>Angle</span>
+              <input
+                type="range"
+                min={0}
+                max={360}
+                value={currentStyle.gradientAngle ?? 180}
+                onChange={(e) => handleStyleChange({ gradientAngle: Number(e.target.value) })}
+                style={{ width: '100%' }}
+              />
+            </div>
+          )}
+          {currentStyle.gradientType && currentStyle.gradientType !== 'none' && (
+            <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 10, color: '#666' }}>Start</span>
+                <input
+                  type="color"
+                  value={currentStyle.gradientStops?.[0]?.color || '#3b82f6'}
+                  onChange={(e) => {
+                    const stops = [...(currentStyle.gradientStops || [])];
+                    stops[0] = { color: e.target.value, position: 0 };
+                    handleStyleChange({ gradientStops: stops });
+                  }}
+                  style={{ width: '100%', height: 28 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 10, color: '#666' }}>End</span>
+                <input
+                  type="color"
+                  value={currentStyle.gradientStops?.[1]?.color || '#8b5cf6'}
+                  onChange={(e) => {
+                    const stops = [...(currentStyle.gradientStops || [])];
+                    stops[1] = { color: e.target.value, position: 100 };
+                    handleStyleChange({ gradientStops: stops });
+                  }}
+                  style={{ width: '100%', height: 28 }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Opacity Control */}
         <div style={{ marginBottom: 20 }}>
           <Label>Opacity</Label>
@@ -999,6 +1064,16 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 10px',
+  background: '#0d0d0e',
+  border: '1px solid #2a2a2a',
+  borderRadius: 6,
+  color: '#e5e5e5',
+  fontSize: 12,
+};
+
+const selectStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
   background: '#0d0d0e',

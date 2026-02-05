@@ -17,6 +17,10 @@ export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "k
 export type ShapeStyle = {
   fill: string;
   fillOpacity: number;
+  // Gradient
+  gradientType?: 'none' | 'linear' | 'radial';
+  gradientAngle?: number;
+  gradientStops?: { color: string; position: number }[];
   stroke: string;
   strokeWidth: number;
   strokeOpacity: number;
