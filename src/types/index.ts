@@ -24,6 +24,12 @@ export type ShapeStyle = {
   fontSize?: number;
   fontWeight?: string;
   textAlign?: "left" | "center" | "right";
+  // Shadow
+  shadowColor?: string;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowBlur?: number;
+  shadowSpread?: number;
   // Image specific
   imageSrc?: string;
   imageOriginalWidth?: number;

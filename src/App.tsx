@@ -299,6 +299,74 @@ export default function App() {
           </div>
         </div>
 
+        {/* Shadow Controls */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Shadow</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <input
+              type="color"
+              value={currentStyle.shadowColor || '#000000'}
+              onChange={(e) => handleStyleChange({ shadowColor: e.target.value })}
+              style={{
+                width: 34,
+                height: 34,
+                padding: 0,
+                border: '1px solid #2a2a2a',
+                borderRadius: 8,
+                cursor: 'pointer',
+                background: 'transparent',
+              }}
+            />
+            <input
+              type="text"
+              value={currentStyle.shadowColor || '#000000'}
+              onChange={(e) => handleStyleChange({ shadowColor: e.target.value })}
+              style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>X Offset</span>
+              <input
+                type="number"
+                value={currentStyle.shadowOffsetX ?? 0}
+                onChange={(e) => handleStyleChange({ shadowOffsetX: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Y Offset</span>
+              <input
+                type="number"
+                value={currentStyle.shadowOffsetY ?? 4}
+                onChange={(e) => handleStyleChange({ shadowOffsetY: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Blur</span>
+              <input
+                type="number"
+                min={0}
+                value={currentStyle.shadowBlur ?? 0}
+                onChange={(e) => handleStyleChange({ shadowBlur: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Spread</span>
+              <input
+                type="number"
+                value={currentStyle.shadowSpread ?? 0}
+                onChange={(e) => handleStyleChange({ shadowSpread: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+
         {isTextElement && (
           <>
             <div style={{ marginBottom: 16 }}>

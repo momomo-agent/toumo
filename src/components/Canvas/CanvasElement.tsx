@@ -290,6 +290,26 @@ export function CanvasElement({
     return element.style?.borderRadius || 8;
   };
 
+  const getBoxShadow = () => {
+    const shadows: string[] = [];
+    
+    // Element shadow
+    if (element.style?.shadowColor && element.style.shadowBlur) {
+      const x = element.style.shadowOffsetX || 0;
+      const y = element.style.shadowOffsetY || 0;
+      const blur = element.style.shadowBlur || 0;
+      const spread = element.style.shadowSpread || 0;
+      shadows.push(`${x}px ${y}px ${blur}px ${spread}px ${element.style.shadowColor}`);
+    }
+    
+    // Selection outline
+    if (isSelected) {
+      shadows.push('0 0 0 2px #3b82f6');
+    }
+    
+    return shadows.length > 0 ? shadows.join(', ') : 'none';
+  };
+
   return (
     <div
       onMouseDown={handlePointerDown}
@@ -309,7 +329,7 @@ export function CanvasElement({
         fontSize: element.style?.fontSize || 14,
         overflow: 'hidden',
         cursor: currentTool === 'select' ? 'move' : 'default',
-        boxShadow: isSelected ? '0 0 0 2px #3b82f6' : 'none',
+        boxShadow: getBoxShadow(),
         userSelect: 'none',
       }}
     >
