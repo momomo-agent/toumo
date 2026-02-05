@@ -93,7 +93,7 @@ textarea {
 .body-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 300px 1fr;
   height: calc(100vh - 72px);
 }
 
@@ -265,7 +265,7 @@ textarea {
 
 .edit-grid {
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: 220px 1fr 300px;
   gap: 16px;
 }
 
