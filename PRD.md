@@ -52,17 +52,23 @@
 
 ## 4. Key Concepts
 
-### 状态 (State)
-一个 UI 的静态快照，包含所有图层的属性值
+### 功能状态 (Functional State)
+用于逻辑判断的状态（例如 Idle / Loading / Success），驱动状态机、触发条件判定，可与组件状态、变量联动。
+
+### 显示状态 (Display State / Keyframe)
+具体的画面快照（关键帧），代表同一功能状态下的不同外观（例如按钮按下动画的多个显示状态）。一个功能状态可以映射到一个或多个显示状态，以满足微动画但不改变逻辑。
 
 ### 过渡 (Transition)
-从一个状态到另一个状态的动画，包含触发条件和动画曲线
+从一个功能状态到另一个功能状态的动画，包含触发条件和动画曲线，同时可以指定切换到哪一个显示状态。
 
 ### 关键帧 (Keyframe)
-标记哪些元素/属性在过渡中需要动画
+标记某个显示状态中哪些元素/属性需要动画；非关键元素保持原状。
 
 ### 触发器 (Trigger)
-启动过渡的条件：tap、drag、hover、scroll、timer 等
+启动过渡的条件：tap、drag、hover、scroll、timer、变量变化等，可组合条件。
+
+### 组件 (Component)
+支持多状态组件（功能状态 + 显示状态组合），组件内的状态机可复用，组件实例可继承或覆盖状态逻辑/显示状态。
 
 ---
 
@@ -81,7 +87,7 @@
               └─────────┘
 ```
 
-- 每个状态是一个节点
+- 每个功能状态是一个节点
 - 过渡是带条件的有向边
 - 支持多状态、多路径
 - 可视化状态图编辑
@@ -103,7 +109,7 @@
 │                  │  │         │                     │          │  │
 │                  │  │         ├─────────────────────┤          │  │
 │                  │  │         │ Interaction Manager │          │  │
-│                  │  │         │ (状态图 / 关键帧图) │          │  │
+│                  │  │         │ (状态图 / 组件视图) │          │  │
 └──────────────────┴──┴─────────┴─────────────────────┴──────────┴──┘
 ```
 
@@ -115,26 +121,16 @@
 ### 2. Layer Manager (编辑区左)
 - Figma 风格的图层树
 - 支持：重命名、隐藏、重排序、嵌套 Frame
-- 每个图层可标记为当前关键帧的「关键元素」
+- 每个图层可标记为当前显示状态的「关键元素」
 
 ### 3. Canvas + Interaction Manager (编辑区中)
-- **Canvas**: 关键帧从左到右线性排列，像 Figma 的 Frame 一样
-  - 每个关键帧是一个固定尺寸的 Frame（可设置画布尺寸，如 390×844 iPhone 14）
-  - 支持 Figma 风格的完整操作：
-    - 选择工具 (V)：点击选中、拖拽移动、Shift 多选
-    - 矩形工具 (R)：点击拖拽创建矩形
-    - 椭圆工具 (O)：点击拖拽创建椭圆
-    - 文本工具 (T)：点击创建文本
-    - 手型工具 (H)：拖拽平移画布
-    - 缩放：滚轮缩放、Cmd+0 适应屏幕、Cmd+1 100%
-  - 元素操作：
-    - 拖拽移动、8 个控制点调整大小
-    - 对齐辅助线（智能吸附）
-    - Delete 删除、Cmd+C/V 复制粘贴
-    - 方向键微调位置
+- **Canvas**: 功能状态对应的显示状态 Frame 从左到右线性排列，像 Figma 的 Frame 一样
+  - 每个显示状态是一个固定尺寸的 Frame（可设置画布尺寸，如 390×844 iPhone 14）
+  - 支持 Figma 风格的完整操作：选择/矩形/椭圆/文本/手型工具，拖拽、智能吸附、快捷键
+  - 元素操作：拖拽移动、缩放、Delete、Cmd+C/V、方向键微调
 - **Interaction Manager**: 紧贴画布下方，与多状态画布同屏
-  - Tab 1: 功能状态图（状态机可视化）：节点按照画布帧顺序自动排布，连线展示 transitions，可点击节点/边查看与编辑触发器、时长、曲线
-  - Tab 2: 关键帧图（时间轴视图）：展示状态切换顺序、延迟与占位，可作为后续曲线/触发器的可视化入口
+  - 仅保留「功能状态图」Tab（完全状态驱动，取消传统 timeline）
+  - 功能状态节点按逻辑关系排布，连线展示 transitions，可点击节点/边查看/编辑触发器、时长、曲线，并映射到具体显示状态
   - 右侧 Transition 列表：列出所有 from → to 关系，支持选择某条连线进入 Inspector 设置触发器、延迟、曲线覆盖
 
 ### 画布尺寸预设
@@ -148,27 +144,17 @@
 ### 4. Inspector (编辑区右)
 - 属性设置：位置、大小、颜色、透明度、圆角等
 - 曲线覆盖：全局 → 元素 → 属性 三级覆盖
-- 过渡设置：触发条件、持续时间、延迟
+- 过渡设置：触发条件、持续时间、延迟，区分功能状态之间的逻辑 vs 显示状态切换
 - 关键属性开关：标记哪些属性参与动画
+- 组件面板：查看/编辑组件的多状态（功能状态 + 显示状态）配置
 
 ---
 
-## 7. 竞品分析
+## 7. 组件与状态映射
 
-| 工具 | 优势 | 劣势 | Toumo 如何超越 |
-|------|------|------|----------------|
-| **Figma** | 协作强、UI 设计标准 | 动效能力弱、无状态机 | 专注动效，状态机驱动 |
-| **Principle** | 三帧预览直观 | 交互逻辑有限、Mac only | Web 跨平台 + 更强逻辑 |
-| **Origami** | 逻辑灵活强大 | 学习曲线陡峭、节点复杂 | 状态机比节点更直观 |
-| **ProtoPie** | 交互丰富、跨平台 | 界面臃肿、状态管理弱 | 更轻量、状态机清晰 |
-| **Framer** | 代码能力强 | 偏开发、设计师门槛高 | 零代码、设计师友好 |
-
-### Toumo 的差异化
-1. **状态机驱动** - 用状态图思维设计交互，清晰可控
-2. **三帧预览** - 借鉴 Principle，同时看到多个关键帧
-3. **灵活触发器** - 借鉴 Origami，支持复杂条件组合
-4. **实时预览** - 左侧始终可交互，所见即所得
-5. **Web 原生** - 跨平台、无需安装、易于分享
+- 组件可以拥有自己的功能状态机（例如 Button 组件有 Idle / Pressed / Disabled 等功能状态），并为每个功能状态定义一个或多个显示状态 Frame。
+- 组件实例可以覆写显示状态或继承父组件定义，让组合式状态机成为复用基础。
+- 工程中可以引用组件并保留其功能状态逻辑，以更快搭建多状态交互。
 
 ---
 
@@ -179,49 +165,44 @@ interface Project {
   id: string;
   name: string;
   layers: Layer[];           // 单一图层树
-  states: State[];           // 状态列表
-  transitions: Transition[]; // 过渡列表
-  variables: Variable[];     // 变量
-  globalCurve: Curve;        // 全局默认曲线
-}
-
-interface Layer {
-  id: string;
-  name: string;
-  type: 'frame' | 'rect' | 'ellipse' | 'text' | 'image' | 'group';
-  properties: Properties;    // 基础属性
-  children?: Layer[];        // 嵌套子图层
+  states: State[];           // 功能状态列表
+  displayStates: DisplayState[]; // 显示状态（关键帧）列表
+  transitions: Transition[];
+  components: Component[];
+  variables: Variable[];
+  globalCurve: Curve;
 }
 
 interface State {
   id: string;
   name: string;
   isInitial: boolean;
-  keyframes: Keyframe[];     // 该状态下的关键帧数据
+  componentId?: string;      // 所属组件
 }
 
-interface Keyframe {
-  layerId: string;
-  isKey: boolean;            // 是否为关键元素
-  properties: Partial<Properties>;  // 覆盖的属性值
-  keyAttributes: string[];   // 标记为关键的属性名
+interface DisplayState {
+  id: string;
+  stateId: string;           // 对应的功能状态
+  layerOverrides: Keyframe[];
 }
 
 interface Transition {
   id: string;
-  from: string;              // state id
-  to: string;                // state id
+  from: string;              // 功能状态 id
+  to: string;                // 功能状态 id
+  displayTarget?: string;    // 要切换到的显示状态 id
   trigger: Trigger;
   duration: number;
   delay: number;
-  curve: Curve;              // 可覆盖全局曲线
-  elementCurves?: Record<string, Curve>;  // 元素级覆盖
+  curve: Curve;
 }
 
-interface Trigger {
-  type: 'tap' | 'longPress' | 'drag' | 'hover' | 'scroll' | 'timer' | 'variable';
-  conditions?: Condition[];  // AND/OR 组合
-  params?: Record<string, any>;  // 手势参数等
+interface Component {
+  id: string;
+  name: string;
+  states: State[];
+  displayStates: DisplayState[];
+  transitions: Transition[];
 }
 ```
 
@@ -230,24 +211,17 @@ interface Trigger {
 ## 9. 技术架构
 
 ### 前端
-- **框架**: React 18 + TypeScript
-- **状态管理**: Zustand
-- **画布渲染**: 自研 Canvas 2D（后期可升级 WebGL）
-- **动画引擎**: 自研（基于 requestAnimationFrame）
-- **样式**: Tailwind CSS
+- React 18 + TypeScript
+- Zustand 状态管理
+- 自研 Canvas 2D（可升级 WebGL）
+- requestAnimationFrame 动画引擎
+- Tailwind CSS 组件库
 
 ### 设计原则
-- **深色主题** - 专业感、护眼
-- **高对比度** - 清晰的层次
-- **微妙动效** - 界面本身就是动效的展示
-- **直接操作** - 拖拽优先，减少弹窗
-- **即时反馈** - 修改立即生效
-- **渐进披露** - 简单入门，深度可探索
-
-### 品味参考
-- Linear 的简洁克制
-- Figma 的专业高效
-- Apple 的细节打磨
+- 深色主题、高对比度、线性品牌感
+- 直接操作 + 所见即所得
+- 状态机驱动，取消传统 timeline
+- 组件化与可复用状态逻辑
 
 ---
 
@@ -255,18 +229,18 @@ interface Trigger {
 
 | 版本 | 目标 | 核心功能 |
 |------|------|----------|
-| **v0.1** | MVP 基础可用 | 画布编辑、图层管理、两个状态、Tap 触发、基础缓动 |
-| **v0.2** | 多关键帧 | 关键帧横向排列、时间轴视图、属性错开 |
-| **v0.3** | 完整触发器 | Drag/Scroll/Hover/Timer、条件组合 |
-| **v0.4** | 状态机可视化 | 可视化状态图编辑、多状态流程 |
-| **v0.5** | 组件系统 | 组件复用、多状态组件 |
+| **v0.1** | MVP 基础可用 | 画布编辑、图层管理、两个功能状态、Tap 触发、基础缓动 |
+| **v0.2** | 多显示状态 | 多帧并排、Frame 尺寸预设、组件显示状态映射 |
+| **v0.3** | 触发器体系 | Drag/Scroll/Hover/Timer、条件组合、Transition Inspector |
+| **v0.4** | 状态机可视化 | Interaction Manager 状态图、Transition 列表、组件状态图 |
+| **v0.5** | 组件系统 | 多状态组件、状态继承/覆写、组件库 |
 | **v1.0** | 公开发布 | 分享链接、设备预览、性能优化 |
 
 ---
 
 ## 11. 成功指标
 
-1. **易用性** - 新用户 5 分钟内完成第一个动效
-2. **表现力** - 能复现 Dribbble 上 80% 的 UI 动效
-3. **性能** - 60fps 流畅预览
-4. **分享** - 一键生成可交互原型链接
+1. 易用性：新用户 5 分钟内完成第一个动效
+2. 表现力：复现 Dribbble 80% UI 动效
+3. 性能：60fps 流畅预览
+4. 分享：一键生成可交互原型链接
