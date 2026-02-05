@@ -391,6 +391,7 @@ export function CanvasElement({
         fontWeight: element.style?.fontWeight || 'normal',
         fontStyle: element.style?.fontStyle || 'normal',
         textDecoration: element.style?.textDecoration || 'none',
+        letterSpacing: element.style?.letterSpacing ?? 0,
         overflow: 'hidden',
         cursor: currentTool === 'select' ? 'move' : 'default',
         boxShadow: getBoxShadow(),

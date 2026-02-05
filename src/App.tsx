@@ -886,6 +886,15 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Letter Spacing</Label>
+              <input
+                type="number"
+                value={currentStyle.letterSpacing ?? 0}
+                onChange={(e) => handleStyleChange({ letterSpacing: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Alignment</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {TEXT_ALIGNMENTS.map((option) => (
