@@ -5,6 +5,7 @@ import { InteractionManager } from './components/InteractionManager';
 import { StateInspector } from './components/Inspector/StateInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { LivePreview } from './components/LivePreview';
+import { ShortcutsPanel } from './components/ShortcutsPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -1424,6 +1425,7 @@ export default function App() {
         <span>Tool: {currentTool}</span>
         <span>{selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
       </div>
+      <ShortcutsPanel />
     </div>
   );
 }
