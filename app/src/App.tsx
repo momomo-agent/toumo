@@ -538,6 +538,42 @@ const App = () => {
     );
   };
 
+  const updateElementPosition = (elementId: string, axis: "x" | "y", value: number) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== elementId) return el;
+            return {
+              ...el,
+              position: { ...el.position, [axis]: Math.max(0, value) },
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const updateElementSize = (elementId: string, dim: "width" | "height", value: number) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== elementId) return el;
+            return {
+              ...el,
+              size: { ...el.size, [dim]: Math.max(20, value) },
+            };
+          }),
+        };
+      })
+    );
+  };
+
   const updateAttributeValue = (elementId: string, attributeId: string, value: string) => {
     setKeyframes((prev) =>
       prev.map((frame) => {
@@ -856,6 +892,43 @@ const App = () => {
                 <div className="attributes">
                   <div className="panel-heading">
                     <h4>{selectedElement.name}</h4>
+                    <span>Transform</span>
+                  </div>
+                  <div className="transform-grid">
+                    <label className="field">
+                      <span>X</span>
+                      <input
+                        type="number"
+                        value={selectedElement.position.x}
+                        onChange={(e) => updateElementPosition(selectedElement.id, "x", Number(e.target.value))}
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Y</span>
+                      <input
+                        type="number"
+                        value={selectedElement.position.y}
+                        onChange={(e) => updateElementPosition(selectedElement.id, "y", Number(e.target.value))}
+                      />
+                    </label>
+                    <label className="field">
+                      <span>W</span>
+                      <input
+                        type="number"
+                        value={selectedElement.size.width}
+                        onChange={(e) => updateElementSize(selectedElement.id, "width", Number(e.target.value))}
+                      />
+                    </label>
+                    <label className="field">
+                      <span>H</span>
+                      <input
+                        type="number"
+                        value={selectedElement.size.height}
+                        onChange={(e) => updateElementSize(selectedElement.id, "height", Number(e.target.value))}
+                      />
+                    </label>
+                  </div>
+                  <div className="panel-heading" style={{ marginTop: 16 }}>
                     <span>Attributes</span>
                   </div>
                   {selectedElement.attributes.map((attribute) => (

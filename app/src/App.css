@@ -493,6 +493,21 @@ textarea {
   gap: 12px;
 }
 
+.transform-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.transform-grid .field {
+  margin-bottom: 0;
+}
+
+.transform-grid .field input {
+  width: 100%;
+  text-align: center;
+}
+
 textarea:focus,
 input:focus,
 select:focus,
