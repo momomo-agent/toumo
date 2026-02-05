@@ -1278,21 +1278,12 @@ const App = () => {
                 <div className="canvas-controls">
                   {selectedElementIds.length >= 2 && (
                     <div className="align-buttons">
-                      <button className="icon-btn" onClick={() => alignElements('left')} title="Align left">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="4" y1="4" x2="4" y2="20"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/>
-                        </svg>
-                      </button>
-                      <button className="icon-btn" onClick={() => alignElements('center')} title="Align center">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="12" y1="4" x2="12" y2="20"/><rect x="4" y="6" width="16" height="4"/><rect x="6" y="14" width="12" height="4"/>
-                        </svg>
-                      </button>
-                      <button className="icon-btn" onClick={() => alignElements('right')} title="Align right">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="20" y1="4" x2="20" y2="20"/><rect x="4" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/>
-                        </svg>
-                      </button>
+                      <button className="icon-btn" onClick={() => alignElements('left')} title="Align left">⫷</button>
+                      <button className="icon-btn" onClick={() => alignElements('center')} title="Align center H">⫿</button>
+                      <button className="icon-btn" onClick={() => alignElements('right')} title="Align right">⫸</button>
+                      <button className="icon-btn" onClick={() => alignElements('top')} title="Align top">⊤</button>
+                      <button className="icon-btn" onClick={() => alignElements('middle')} title="Align middle">⊝</button>
+                      <button className="icon-btn" onClick={() => alignElements('bottom')} title="Align bottom">⊥</button>
                     </div>
                   )}
                   <span className="zoom-indicator">{Math.round(canvasScale * 100)}%</span>
