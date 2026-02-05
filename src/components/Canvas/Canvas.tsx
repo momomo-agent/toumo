@@ -38,6 +38,7 @@ export function Canvas() {
     nudgeSelectedElements,
     setCurrentTool,
     frameSize,
+    canvasBackground,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -622,7 +623,7 @@ export function Canvas() {
                   width: layout.width,
                   height: layout.height,
                   position: 'relative',
-                  background: '#050506',
+                  background: canvasBackground,
                   borderRadius: 32,
                   border: '1px solid #2f2f2f',
                   boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
