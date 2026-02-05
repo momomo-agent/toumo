@@ -2,12 +2,15 @@
   height: 200px;
   border-top: 1px solid #222;
   background: #0d0d0d;
+  display: flex;
+  flex-direction: column;
 }
 
 .im-tabs {
   display: flex;
   border-bottom: 1px solid #222;
   padding: 0 16px;
+  flex-shrink: 0;
 }
 
 .im-tabs button {
@@ -16,6 +19,11 @@
   border: none;
   color: #666;
   cursor: pointer;
+  font-size: 12px;
+}
+
+.im-tabs button:hover {
+  color: #999;
 }
 
 .im-tabs button.active {
@@ -24,6 +32,138 @@
 }
 
 .im-content {
-  padding: 16px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* State Graph */
+.state-graph {
+  display: block;
+}
+
+.state-graph .node circle {
+  fill: #1a1a1a;
+  stroke: #444;
+  stroke-width: 2;
+  transition: all 0.15s ease;
+}
+
+.state-graph .node:hover circle {
+  stroke: #666;
+}
+
+.state-graph .node.selected circle {
+  stroke: #3b82f6;
+  fill: #1e3a5f;
+}
+
+.state-graph .node text {
+  fill: #999;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.state-graph .node.selected text {
+  fill: #e5e5e5;
+}
+
+.state-graph .edge {
+  stroke: #444;
+  stroke-width: 2;
+  transition: stroke 0.15s ease;
+}
+
+.state-graph .edge.selected {
+  stroke: #3b82f6;
+  stroke-width: 2.5;
+}
+
+.state-graph .edge-label {
+  fill: #666;
+  font-size: 9px;
+  text-anchor: middle;
+}
+
+/* Timeline */
+.timeline-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+}
+
+.timeline-header {
+  display: flex;
+  border-bottom: 1px solid #222;
+  padding: 6px 0;
+  flex-shrink: 0;
+}
+
+.timeline-label-col {
+  width: 80px;
+  padding: 0 12px;
   color: #666;
+  flex-shrink: 0;
+}
+
+.timeline-track-col {
+  flex: 1;
+  position: relative;
+}
+
+.time-markers {
+  display: flex;
+  justify-content: space-between;
+  padding-right: 16px;
+  color: #444;
+  font-size: 9px;
+}
+
+.timeline-rows {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.timeline-row {
+  display: flex;
+  height: 28px;
+  align-items: center;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.timeline-row:hover {
+  background: #111;
+}
+
+.timeline-row .timeline-label-col {
+  color: #999;
+}
+
+.timeline-track {
+  height: 16px;
+  background: #1a1a1a;
+  border-radius: 2px;
+  margin-right: 16px;
+  position: relative;
+}
+
+.keyframe-marker {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 2px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.transition-bar {
+  position: absolute;
+  height: 6px;
+  background: #3b82f6;
+  opacity: 0.4;
+  border-radius: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
 }

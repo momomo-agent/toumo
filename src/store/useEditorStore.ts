@@ -67,6 +67,7 @@ interface EditorActions {
   undo: () => void;
   redo: () => void;
   pushHistory: () => void;
+  setSelectedTransitionId: (id: string | null) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -343,5 +344,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       keyframes: JSON.parse(JSON.stringify(state.history[newIndex].keyframes)),
       historyIndex: newIndex,
     };
+  }),
+
+  setSelectedTransitionId: (id) => set({ 
+    selectedTransitionId: id,
+    // Clear element selection when selecting a transition
+    selectedElementId: id ? null : undefined,
+    selectedElementIds: id ? [] : undefined,
   }),
 }));
