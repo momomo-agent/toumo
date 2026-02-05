@@ -14,11 +14,16 @@ export function LayerManager() {
   } = useEditorStore();
   
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
 
-  const rootElements = elements
+  const filteredElements = searchQuery 
+    ? elements.filter(el => el.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : elements;
+
+  const rootElements = filteredElements
     .filter(el => !el.parentId)
     .sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0));
 
@@ -154,6 +159,22 @@ export function LayerManager() {
       <h3 style={{ fontSize: 11, fontWeight: 600, color: '#888', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         Layers
       </h3>
+      <input
+        type="text"
+        placeholder="Search layers..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '6px 8px',
+          marginBottom: 8,
+          background: '#1a1a1a',
+          border: '1px solid #333',
+          borderRadius: 4,
+          color: '#fff',
+          fontSize: 11,
+        }}
+      />
       <div className="layer-list" style={{ fontSize: 12 }}>
         {elements.length === 0 
           ? <p style={{ color: '#555', fontSize: 11 }}>No layers yet</p>
