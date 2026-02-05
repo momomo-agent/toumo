@@ -619,3 +619,8 @@ button:focus {
   background: rgba(99, 179, 237, 0.1);
   pointer-events: none;
 }
+
+.element-actions {
+  display: flex;
+  gap: 4px;
+}

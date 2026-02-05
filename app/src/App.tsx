@@ -624,6 +624,32 @@ const App = () => {
     setSelectedElementId(null);
   };
 
+  const moveElementUp = (elementId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        const idx = frame.keyElements.findIndex((el) => el.id === elementId);
+        if (idx <= 0) return frame;
+        const arr = [...frame.keyElements];
+        [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+        return { ...frame, keyElements: arr };
+      })
+    );
+  };
+
+  const moveElementDown = (elementId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        const idx = frame.keyElements.findIndex((el) => el.id === elementId);
+        if (idx < 0 || idx >= frame.keyElements.length - 1) return frame;
+        const arr = [...frame.keyElements];
+        [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+        return { ...frame, keyElements: arr };
+      })
+    );
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1243,7 +1269,11 @@ const App = () => {
                       value={selectedElement.name}
                       onChange={(e) => updateElementName(selectedElement.id, e.target.value)}
                     />
-                    <button className="ghost small danger" onClick={() => deleteElement(selectedElement.id)}>Delete</button>
+                    <div className="element-actions">
+                      <button className="ghost small" onClick={() => moveElementUp(selectedElement.id)}>↑</button>
+                      <button className="ghost small" onClick={() => moveElementDown(selectedElement.id)}>↓</button>
+                      <button className="ghost small danger" onClick={() => deleteElement(selectedElement.id)}>×</button>
+                    </div>
                   </div>
                   <label className="field" style={{ marginTop: 8 }}>
                     <span>Category</span>
