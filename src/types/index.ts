@@ -67,16 +67,41 @@ export type Keyframe = {
   keyElements: KeyElement[];
 };
 
+// Trigger types for transitions
+export type TriggerType = 'tap' | 'drag' | 'scroll' | 'hover' | 'timer' | 'variable';
+
+export type TriggerConfig = {
+  type: TriggerType;
+  // Drag-specific
+  direction?: 'any' | 'horizontal' | 'vertical' | 'up' | 'down' | 'left' | 'right';
+  threshold?: number;
+  // Scroll-specific
+  scrollOffset?: number;
+  scrollDirection?: 'up' | 'down';
+  // Timer-specific
+  timerDelay?: number;
+  // Variable-specific
+  variableName?: string;
+  variableCondition?: 'equals' | 'greater' | 'less' | 'changed';
+  variableValue?: string | number;
+};
+
 export type Transition = {
   id: string;
   from: string;
   to: string;
-  trigger: string;
+  trigger: string; // Legacy simple trigger
+  triggers?: TriggerConfig[]; // New: combo triggers
   duration: number;
   delay: number;
   curve: string;
+  // Spring parameters
   springDamping?: number;
   springResponse?: number;
+  springMass?: number;
+  springStiffness?: number;
+  // Cubic bezier for custom curves
+  cubicBezier?: [number, number, number, number];
   description?: string;
 };
 

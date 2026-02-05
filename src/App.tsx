@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Canvas } from './components/Canvas';
 import { InteractionManager } from './components/InteractionManager';
 import { StateInspector } from './components/Inspector/StateInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
+import { LivePreview } from './components/LivePreview';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -61,14 +62,9 @@ export default function App() {
     setFrameSize,
   } = useEditorStore();
 
-  const [previewState, setPreviewState] = useState(keyframes[0]?.id ?? 'kf-idle');
-
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
   const selectedElement = elements.find((el) => el.id === selectedElementId);
-
-  const previewKeyframe = keyframes.find((kf) => kf.id === previewState);
-  const previewElements = previewKeyframe?.keyElements || [];
 
   const activePresetId = FRAME_PRESETS.find(
     (preset) => preset.size.width === frameSize.width && preset.size.height === frameSize.height
@@ -88,15 +84,8 @@ export default function App() {
     setFrameSize({ ...frameSize, [dimension]: safeValue });
   };
 
-  const previewScale = Math.min(
-    (320 - 40) / frameSize.width,
-    520 / frameSize.height,
-    1
-  );
-
   const handleSelectKeyframe = (keyframeId: string) => {
     setSelectedKeyframeId(keyframeId);
-    setPreviewState(keyframeId);
   };
 
   const handleAddKeyframe = () => {
@@ -171,18 +160,6 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [copySelectedElements, deleteSelectedElements, pasteElements, redo, setCurrentTool, undo]);
-
-  useEffect(() => {
-    if (!keyframes.find((kf) => kf.id === previewState) && keyframes[0]) {
-      setPreviewState(keyframes[0].id);
-    }
-  }, [keyframes, previewState]);
-
-  useEffect(() => {
-    if (selectedKeyframeId && previewState !== selectedKeyframeId) {
-      setPreviewState(selectedKeyframeId);
-    }
-  }, [previewState, selectedKeyframeId]);
 
   // Render element properties inspector
   const renderElementInspector = () => {
@@ -425,63 +402,7 @@ export default function App() {
             flexDirection: 'column',
           }}
         >
-          <div
-            style={{
-              padding: '12px 16px',
-              borderBottom: '1px solid #2a2a2a',
-              fontSize: 11,
-              fontWeight: 600,
-              color: '#888',
-              textTransform: 'uppercase',
-            }}
-          >
-            Live Preview
-          </div>
-          <div
-            style={{
-              flex: 1,
-              margin: 16,
-              background: '#0d0d0e',
-              borderRadius: 12,
-              position: 'relative',
-              border: '1px solid #2a2a2a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                width: frameSize.width * previewScale,
-                height: frameSize.height * previewScale,
-                position: 'relative',
-                borderRadius: 28,
-                border: '1px solid #2f2f2f',
-                background: '#050506',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
-                overflow: 'hidden',
-              }}
-            >
-              {previewElements.map((el) => (
-                <div
-                  key={el.id}
-                  style={{
-                    position: 'absolute',
-                    left: el.position.x * previewScale,
-                    top: el.position.y * previewScale,
-                    width: el.size.width * previewScale,
-                    height: el.size.height * previewScale,
-                    background: el.style?.fill || '#3b82f6',
-                    borderRadius: el.shapeType === 'ellipse'
-                      ? '50%'
-                      : (el.style?.borderRadius || 8) * previewScale,
-                    transition: 'all 0.3s ease',
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+          <LivePreview />
         </div>
 
         {/* Main Editor Area */}
