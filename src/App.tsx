@@ -46,6 +46,16 @@ export default function App() {
     { id: 'hand', icon: '✋', label: 'Hand (H)' },
   ];
 
+  const clampScale = (value: number) => Math.min(4, Math.max(0.25, value));
+  const zoomPercent = Math.round(canvasScale * 100);
+
+  const zoomIn = () => setCanvasScale(clampScale(canvasScale * 1.1));
+  const zoomOut = () => setCanvasScale(clampScale(canvasScale * 0.9));
+  const resetView = () => {
+    setCanvasScale(1);
+    setCanvasOffset({ x: 0, y: 0 });
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -247,7 +257,13 @@ export default function App() {
                 {tool.icon}
               </button>
             ))}
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #333', borderRadius: 999, padding: '4px 10px' }}>
+                <button onClick={zoomOut} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 14 }}>−</button>
+                <span style={{ fontSize: 12, minWidth: 48, textAlign: 'center' }}>{zoomPercent}%</span>
+                <button onClick={zoomIn} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 14 }}>+</button>
+                <button onClick={resetView} style={{ marginLeft: 6, background: '#2563eb20', border: '1px solid #2563eb', borderRadius: 999, color: '#fff', fontSize: 11, padding: '2px 8px' }}>Reset</button>
+              </div>
               <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={undo}>Undo</button>
               <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={redo}>Redo</button>
             </div>
