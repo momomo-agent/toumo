@@ -17,6 +17,14 @@ const TEXT_ALIGNMENTS: Array<{ id: NonNullable<ShapeStyle['textAlign']>; label: 
   { id: 'right', label: 'R' },
 ];
 
+const FRAME_PRESETS = [
+  { id: 'iphone14', label: 'iPhone 14', size: { width: 390, height: 844 } },
+  { id: 'iphone14pro', label: 'iPhone 14 Pro', size: { width: 393, height: 852 } },
+  { id: 'iphonese', label: 'iPhone SE', size: { width: 375, height: 667 } },
+  { id: 'android', label: 'Android', size: { width: 360, height: 800 } },
+  { id: 'ipad', label: 'iPad', size: { width: 820, height: 1180 } },
+];
+
 const mergeStyle = (style?: ShapeStyle, overrides: Partial<ShapeStyle> = {}): ShapeStyle => ({
   ...DEFAULT_STYLE,
   ...style,
@@ -45,6 +53,8 @@ export default function App() {
     undo,
     redo,
     updateElement,
+    frameSize,
+    setFrameSize,
   } = useEditorStore();
 
   const [previewState, setPreviewState] = useState(keyframes[0]?.id ?? 'kf-idle');
@@ -55,6 +65,30 @@ export default function App() {
 
   const previewKeyframe = keyframes.find((kf) => kf.id === previewState);
   const previewElements = previewKeyframe?.keyElements || [];
+
+  const activePresetId = FRAME_PRESETS.find(
+    (preset) => preset.size.width === frameSize.width && preset.size.height === frameSize.height
+  )?.id ?? 'custom';
+
+  const handlePresetChange = (id: string) => {
+    if (id === 'custom') return;
+    const preset = FRAME_PRESETS.find((preset) => preset.id === id);
+    if (preset) {
+      setFrameSize(preset.size);
+    }
+  };
+
+  const handleFrameSizeInputChange = (dimension: 'width' | 'height', value: number) => {
+    const numericValue = Number.isFinite(value) ? value : frameSize[dimension];
+    const safeValue = Math.max(100, Math.min(2000, numericValue));
+    setFrameSize({ ...frameSize, [dimension]: safeValue });
+  };
+
+  const previewScale = Math.min(
+    (320 - 40) / frameSize.width,
+    520 / frameSize.height,
+    1
+  );
 
   const tools: ToolButton[] = [
     { id: 'select', icon: '↖', label: 'Select (V)' },
@@ -419,24 +453,43 @@ export default function App() {
               background: '#0d0d0e',
               borderRadius: 12,
               position: 'relative',
+              border: '1px solid #2a2a2a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               overflow: 'hidden',
             }}
           >
-            {previewElements.map((el) => (
-              <div
-                key={el.id}
-                style={{
-                  position: 'absolute',
-                  left: el.position.x * 0.7,
-                  top: el.position.y * 0.7,
-                  width: el.size.width * 0.7,
-                  height: el.size.height * 0.7,
-                  background: el.style?.fill || '#3b82f6',
-                  borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8) * 0.7,
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
+            <div
+              style={{
+                width: frameSize.width * previewScale,
+                height: frameSize.height * previewScale,
+                position: 'relative',
+                borderRadius: 28,
+                border: '1px solid #2f2f2f',
+                background: '#050506',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+                overflow: 'hidden',
+              }}
+            >
+              {previewElements.map((el) => (
+                <div
+                  key={el.id}
+                  style={{
+                    position: 'absolute',
+                    left: el.position.x * previewScale,
+                    top: el.position.y * previewScale,
+                    width: el.size.width * previewScale,
+                    height: el.size.height * previewScale,
+                    background: el.style?.fill || '#3b82f6',
+                    borderRadius: el.shapeType === 'ellipse'
+                      ? '50%'
+                      : (el.style?.borderRadius || 8) * previewScale,
+                    transition: 'all 0.3s ease',
+                  }}
+                />
+              ))}
+            </div>
           </div>
           <div style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
             <div style={{ fontSize: 11, color: '#666', marginBottom: 8 }}>State</div>
@@ -495,6 +548,61 @@ export default function App() {
                 {tool.icon}
               </button>
             ))}
+            <div style={{ width: 1, height: 24, background: '#2a2a2a', margin: '0 12px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ fontSize: 10, color: '#666', textTransform: 'uppercase' }}>Frame</label>
+                <select
+                  value={activePresetId}
+                  onChange={(event) => handlePresetChange(event.target.value)}
+                  style={{
+                    background: '#111',
+                    color: '#fff',
+                    borderRadius: 6,
+                    border: '1px solid #2a2a2a',
+                    padding: '4px 8px',
+                    fontSize: 12,
+                  }}
+                >
+                  {FRAME_PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.label} ({preset.size.width}×{preset.size.height})
+                    </option>
+                  ))}
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, color: '#666' }}>W</span>
+                <input
+                  type="number"
+                  value={frameSize.width}
+                  onChange={(event) => handleFrameSizeInputChange('width', Number(event.target.value))}
+                  style={{
+                    width: 72,
+                    padding: '6px 8px',
+                    background: '#101010',
+                    border: '1px solid #2a2a2a',
+                    borderRadius: 6,
+                    color: '#e5e5e5',
+                  }}
+                />
+                <span style={{ fontSize: 11, color: '#666' }}>H</span>
+                <input
+                  type="number"
+                  value={frameSize.height}
+                  onChange={(event) => handleFrameSizeInputChange('height', Number(event.target.value))}
+                  style={{
+                    width: 72,
+                    padding: '6px 8px',
+                    background: '#101010',
+                    border: '1px solid #2a2a2a',
+                    borderRadius: 6,
+                    color: '#e5e5e5',
+                  }}
+                />
+              </div>
+            </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
               <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={undo}>Undo</button>
               <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={redo}>Redo</button>

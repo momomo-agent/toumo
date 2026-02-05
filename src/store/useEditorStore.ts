@@ -6,6 +6,20 @@ interface HistoryEntry {
   keyframes: Keyframe[];
 }
 
+const clampElementToFrame = (element: KeyElement, frame: Size): KeyElement => {
+  const width = Math.max(1, Math.min(element.size.width, frame.width));
+  const height = Math.max(1, Math.min(element.size.height, frame.height));
+  const maxX = Math.max(0, frame.width - width);
+  const maxY = Math.max(0, frame.height - height);
+  const x = Math.max(0, Math.min(element.position.x, maxX));
+  const y = Math.max(0, Math.min(element.position.y, maxY));
+  return {
+    ...element,
+    position: { x, y },
+    size: { width, height },
+  };
+};
+
 interface EditorState {
   keyframes: Keyframe[];
   transitions: Transition[];
@@ -117,15 +131,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   addElement: (element) => {
     get().pushHistory();
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? { ...kf, keyElements: [...kf.keyElements, element] }
-          : kf
-      ),
-      selectedElementId: element.id,
-      selectedElementIds: [element.id],
-    }));
+    set((state) => {
+      const nextElement = clampElementToFrame(element, state.frameSize);
+      return {
+        keyframes: state.keyframes.map((kf) =>
+          kf.id === state.selectedKeyframeId
+            ? { ...kf, keyElements: [...kf.keyElements, nextElement] }
+            : kf
+        ),
+        selectedElementId: nextElement.id,
+        selectedElementIds: [nextElement.id],
+      };
+    });
   },
 
   deleteElement: (id) => {
@@ -161,9 +178,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       kf.id === state.selectedKeyframeId
         ? {
             ...kf,
-            keyElements: kf.keyElements.map((el) =>
-              el.id === id ? { ...el, ...updates } : el
-            ),
+            keyElements: kf.keyElements.map((el) => {
+              if (el.id !== id) return el;
+              const nextElement = {
+                ...el,
+                ...updates,
+                position: updates.position ?? el.position,
+                size: updates.size ?? el.size,
+              } as KeyElement;
+              return clampElementToFrame(nextElement, state.frameSize);
+            }),
           }
         : kf
     ),
@@ -175,7 +199,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         ? {
             ...kf,
             keyElements: kf.keyElements.map((el) =>
-              el.id === id ? { ...el, position } : el
+              el.id === id
+                ? clampElementToFrame({ ...el, position }, state.frameSize)
+                : el
             ),
           }
         : kf
@@ -188,7 +214,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         ? {
             ...kf,
             keyElements: kf.keyElements.map((el) =>
-              el.id === id ? { ...el, size } : el
+              el.id === id
+                ? clampElementToFrame({ ...el, size }, state.frameSize)
+                : el
             ),
           }
         : kf
@@ -219,13 +247,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
               ...kf,
               keyElements: kf.keyElements.map((el) =>
                 state.selectedElementIds.includes(el.id)
-                  ? {
-                      ...el,
-                      position: {
-                        x: el.position.x + dx,
-                        y: el.position.y + dy,
+                  ? clampElementToFrame(
+                      {
+                        ...el,
+                        position: {
+                          x: el.position.x + dx,
+                          y: el.position.y + dy,
+                        },
                       },
-                    }
+                      state.frameSize
+                    )
                   : el
               ),
             }
@@ -241,7 +272,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
   setSelectionBox: (selectionBox) => set({ selectionBox }),
-  setFrameSize: (frameSize) => set({ frameSize }),
+  setFrameSize: (frameSize) => set((state) => ({
+    frameSize,
+    keyframes: state.keyframes.map((kf) => ({
+      ...kf,
+      keyElements: kf.keyElements.map((el) => clampElementToFrame(el, frameSize)),
+    })),
+  })),
 
   copySelectedElements: () => {
     const state = get();
@@ -258,11 +295,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (state.clipboard.length === 0) return;
     get().pushHistory();
     const timestamp = Date.now();
-    const newElements = state.clipboard.map((el, index) => ({
-      ...el,
-      id: `el-${timestamp}-${index}`,
-      position: { x: el.position.x + 20, y: el.position.y + 20 },
-    }));
+    const newElements = state.clipboard.map((el, index) =>
+      clampElementToFrame(
+        {
+          ...el,
+          id: `el-${timestamp}-${index}`,
+          position: { x: el.position.x + 20, y: el.position.y + 20 },
+        },
+        state.frameSize
+      )
+    );
     set((state) => ({
       keyframes: state.keyframes.map((kf) =>
         kf.id === state.selectedKeyframeId

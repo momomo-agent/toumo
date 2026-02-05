@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react';
 import { useEditorStore } from '../../store';
-import type { KeyElement, Position, ToolType } from '../../types';
+import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
-import { CanvasElement } from './CanvasElement';
+import { CanvasElement, type ResizeHandle } from './CanvasElement';
 import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
+const MIN_SIZE = 16;
 
 type AlignmentResult = {
   snappedPosition: Position | null;
+  snappedSize?: Size | null;
 };
 
 export function Canvas() {
@@ -32,6 +34,7 @@ export function Canvas() {
     setIsSelecting,
     nudgeSelectedElements,
     setCurrentTool,
+    frameSize,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,18 @@ export function Canvas() {
   const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
 
+  const clampPointToFrame = useCallback((point: Position) => ({
+    x: Math.max(0, Math.min(point.x, frameSize.width)),
+    y: Math.max(0, Math.min(point.y, frameSize.height)),
+  }), [frameSize.height, frameSize.width]);
+
+  const isInsideFrame = useCallback((point: Position) => {
+    return point.x >= 0 && point.x <= frameSize.width && point.y >= 0 && point.y <= frameSize.height;
+  }, [frameSize.height, frameSize.width]);
+
+  const stageWidth = Math.max(CANVAS_SIZE, frameSize.width + 600);
+  const stageHeight = Math.max(CANVAS_SIZE, frameSize.height + 600);
+
   const toCanvasSpace = (event: ReactMouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
@@ -54,7 +69,16 @@ export function Canvas() {
     };
   };
 
-  const checkAlignment = useCallback((draggedId: string, position: Position, size: { width: number; height: number }): AlignmentResult => {
+  const checkAlignment = useCallback((
+    draggedId: string,
+    position: Position,
+    size: Size,
+    options?: { mode?: 'move' | 'resize'; handle?: ResizeHandle }
+  ): AlignmentResult => {
+    const mode = options?.mode ?? 'move';
+    const handle = options?.handle;
+    const isResize = mode === 'resize';
+
     const lines: AlignmentLine[] = [];
     const draggedRight = position.x + size.width;
     const draggedBottom = position.y + size.height;
@@ -64,25 +88,55 @@ export function Canvas() {
     let snapDeltaX: number | null = null;
     let snapDeltaY: number | null = null;
 
+    type Edge = 'left' | 'right' | 'top' | 'bottom';
+    type EdgeSnap = { target: number; delta: number };
+    const edgeSnaps: Record<Edge, EdgeSnap | null> = {
+      left: null,
+      right: null,
+      top: null,
+      bottom: null,
+    };
+
+    const updateEdgeSnap = (edge: Edge, target: number, delta: number) => {
+      const current = edgeSnaps[edge];
+      if (!current || Math.abs(delta) < Math.abs(current.delta)) {
+        edgeSnaps[edge] = { target, delta };
+      }
+    };
+
     const considerSnap = (
       target: number,
       current: number,
       axis: 'x' | 'y',
       line: AlignmentLine,
+      resizeEdge?: Edge,
     ) => {
       const delta = target - current;
       if (Math.abs(delta) > SNAP_THRESHOLD) return;
-      if (axis === 'x') {
-        if (snapDeltaX === null || Math.abs(delta) < Math.abs(snapDeltaX)) {
-          snapDeltaX = delta;
-        }
-      } else {
-        if (snapDeltaY === null || Math.abs(delta) < Math.abs(snapDeltaY)) {
-          snapDeltaY = delta;
-        }
-      }
+
       lines.push(line);
+
+      if (!isResize) {
+        if (axis === 'x') {
+          if (snapDeltaX === null || Math.abs(delta) < Math.abs(snapDeltaX)) {
+            snapDeltaX = delta;
+          }
+        } else {
+          if (snapDeltaY === null || Math.abs(delta) < Math.abs(snapDeltaY)) {
+            snapDeltaY = delta;
+          }
+        }
+      } else if (resizeEdge) {
+        updateEdgeSnap(resizeEdge, target, delta);
+      }
     };
+
+    const trackLeft = !isResize || handle?.includes('w');
+    const trackRight = !isResize || handle?.includes('e');
+    const trackTop = !isResize || handle?.includes('n');
+    const trackBottom = !isResize || handle?.includes('s');
+    const allowCenterX = !isResize;
+    const allowCenterY = !isResize;
 
     elements.forEach((element) => {
       if (element.id === draggedId) return;
@@ -92,16 +146,95 @@ export function Canvas() {
       const elCenterX = element.position.x + element.size.width / 2;
       const elCenterY = element.position.y + element.size.height / 2;
 
-      considerSnap(element.position.x, position.x, 'x', { type: 'vertical', position: element.position.x });
-      considerSnap(elRight, draggedRight, 'x', { type: 'vertical', position: elRight });
-      considerSnap(elCenterX, draggedCenterX, 'x', { type: 'vertical', position: elCenterX });
+      if (trackLeft) {
+        considerSnap(
+          element.position.x,
+          position.x,
+          'x',
+          { type: 'vertical', position: element.position.x },
+          isResize && handle?.includes('w') ? 'left' : undefined,
+        );
+      }
 
-      considerSnap(element.position.y, position.y, 'y', { type: 'horizontal', position: element.position.y });
-      considerSnap(elBottom, draggedBottom, 'y', { type: 'horizontal', position: elBottom });
-      considerSnap(elCenterY, draggedCenterY, 'y', { type: 'horizontal', position: elCenterY });
+      if (trackRight) {
+        considerSnap(
+          elRight,
+          draggedRight,
+          'x',
+          { type: 'vertical', position: elRight },
+          isResize && handle?.includes('e') ? 'right' : undefined,
+        );
+      }
+
+      if (allowCenterX) {
+        considerSnap(elCenterX, draggedCenterX, 'x', { type: 'vertical', position: elCenterX });
+      }
+
+      if (trackTop) {
+        considerSnap(
+          element.position.y,
+          position.y,
+          'y',
+          { type: 'horizontal', position: element.position.y },
+          isResize && handle?.includes('n') ? 'top' : undefined,
+        );
+      }
+
+      if (trackBottom) {
+        considerSnap(
+          elBottom,
+          draggedBottom,
+          'y',
+          { type: 'horizontal', position: elBottom },
+          isResize && handle?.includes('s') ? 'bottom' : undefined,
+        );
+      }
+
+      if (allowCenterY) {
+        considerSnap(elCenterY, draggedCenterY, 'y', { type: 'horizontal', position: elCenterY });
+      }
     });
 
     setAlignmentLines(lines);
+
+    if (isResize) {
+      let nextX = position.x;
+      let nextY = position.y;
+      let nextWidth = size.width;
+      let nextHeight = size.height;
+
+      const rightEdge = position.x + size.width;
+      const bottomEdge = position.y + size.height;
+
+      if (handle?.includes('w') && edgeSnaps.left) {
+        nextX = edgeSnaps.left.target;
+        nextWidth = Math.max(MIN_SIZE, rightEdge - nextX);
+      }
+
+      if (handle?.includes('e') && edgeSnaps.right) {
+        const newRight = edgeSnaps.right.target;
+        nextWidth = Math.max(MIN_SIZE, newRight - nextX);
+      }
+
+      if (handle?.includes('n') && edgeSnaps.top) {
+        nextY = edgeSnaps.top.target;
+        nextHeight = Math.max(MIN_SIZE, bottomEdge - nextY);
+      }
+
+      if (handle?.includes('s') && edgeSnaps.bottom) {
+        const newBottom = edgeSnaps.bottom.target;
+        nextHeight = Math.max(MIN_SIZE, newBottom - nextY);
+      }
+
+      const posChanged = nextX !== position.x || nextY !== position.y;
+      const sizeChanged = nextWidth !== size.width || nextHeight !== size.height;
+
+      return {
+        snappedPosition: posChanged ? { x: nextX, y: nextY } : null,
+        snappedSize: sizeChanged ? { width: nextWidth, height: nextHeight } : undefined,
+      };
+    }
+
     if (snapDeltaX === null && snapDeltaY === null) {
       return { snappedPosition: null };
     }
@@ -145,16 +278,18 @@ export function Canvas() {
     }
 
     if (currentTool === 'select') {
+      const clamped = clampPointToFrame(coords);
       setSelectedElementId(null);
       setIsSelecting(true);
-      setSelectionBox({ start: coords, end: coords });
+      setSelectionBox({ start: clamped, end: clamped });
       return;
     }
 
     if (['rectangle', 'ellipse', 'text'].includes(currentTool)) {
-      drawStartRef.current = coords;
+      if (!isInsideFrame(coords)) return;
+      drawStartRef.current = clampPointToFrame(coords);
     }
-  }, [canvasOffset.x, canvasOffset.y, canvasScale, currentTool, setSelectedElementId, setSelectionBox, setIsSelecting]);
+  }, [canvasOffset.x, canvasOffset.y, canvasScale, clampPointToFrame, currentTool, isInsideFrame, setSelectedElementId, setSelectionBox, setIsSelecting]);
 
   const handleCanvasMouseMove = useCallback((event: ReactMouseEvent) => {
     const coords = toCanvasSpace(event);
@@ -167,10 +302,10 @@ export function Canvas() {
     }
 
     if (selectionBox) {
-      setSelectionBox({ ...selectionBox, end: coords });
+      setSelectionBox({ ...selectionBox, end: clampPointToFrame(coords) });
       return;
     }
-  }, [selectionBox, setCanvasOffset, setSelectionBox]);
+  }, [clampPointToFrame, selectionBox, setCanvasOffset, setSelectionBox]);
 
   const handleCanvasMouseUp = useCallback((event: ReactMouseEvent) => {
     const coords = toCanvasSpace(event);
@@ -203,8 +338,9 @@ export function Canvas() {
 
     if (drawStartRef.current && ['rectangle', 'ellipse', 'text'].includes(currentTool)) {
       const start = drawStartRef.current;
-      const width = Math.abs(coords.x - start.x);
-      const height = Math.abs(coords.y - start.y);
+      const clampedEnd = clampPointToFrame(coords);
+      const width = Math.abs(clampedEnd.x - start.x);
+      const height = Math.abs(clampedEnd.y - start.y);
 
       if (width < 5 && height < 5) {
         drawStartRef.current = null;
@@ -220,8 +356,8 @@ export function Canvas() {
         isKeyElement: true,
         attributes: [],
         position: {
-          x: Math.min(start.x, coords.x),
-          y: Math.min(start.y, coords.y),
+          x: Math.min(start.x, clampedEnd.x),
+          y: Math.min(start.y, clampedEnd.y),
         },
         size: {
           width: Math.max(width, shapeType === 'text' ? 140 : 48),
@@ -253,7 +389,7 @@ export function Canvas() {
       addElement(newElement);
       drawStartRef.current = null;
     }
-  }, [addElement, currentTool, elements, selectionBox, setIsSelecting, setSelectedElementIds, setSelectionBox]);
+  }, [addElement, clampPointToFrame, currentTool, elements, selectionBox, setIsSelecting, setSelectedElementIds, setSelectionBox]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -358,24 +494,46 @@ export function Canvas() {
       <div
         style={{
           position: 'absolute',
-          width: CANVAS_SIZE,
-          height: CANVAS_SIZE,
+          width: stageWidth,
+          height: stageHeight,
           transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasScale})`,
           transformOrigin: '0 0',
         }}
       >
-        {elements.map((element) => (
-          <CanvasElement
-            key={element.id}
-            element={element}
-            allElements={elements}
-            scale={canvasScale}
-            isSelected={selectedElementIds.includes(element.id)}
-            onAlignmentCheck={checkAlignment}
-          />
-        ))}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: frameSize.width,
+            height: frameSize.height,
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              background: '#050506',
+              borderRadius: 32,
+              border: '1px solid #2f2f2f',
+              boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+            }}
+          >
+            {elements.map((element) => (
+              <CanvasElement
+                key={element.id}
+                element={element}
+                allElements={elements}
+                scale={canvasScale}
+                isSelected={selectedElementIds.includes(element.id)}
+                onAlignmentCheck={checkAlignment}
+              />
+            ))}
+          </div>
+        </div>
 
-        <AlignmentGuides lines={alignmentLines} canvasWidth={CANVAS_SIZE} canvasHeight={CANVAS_SIZE} />
+        <AlignmentGuides lines={alignmentLines} canvasWidth={stageWidth} canvasHeight={stageHeight} />
 
         {selectionBox && <SelectionBox start={selectionBox.start} end={selectionBox.end} />}
       </div>

@@ -5,14 +5,24 @@ import { useEditorStore } from '../../store';
 
 const MIN_SIZE = 16;
 
-type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+
+type AlignmentResult = {
+  snappedPosition: Position | null;
+  snappedSize?: { width: number; height: number } | null;
+};
 
 interface CanvasElementProps {
   element: KeyElement;
   isSelected: boolean;
   scale: number;
   allElements: KeyElement[];
-  onAlignmentCheck: (id: string, pos: Position, size: { width: number; height: number }) => { snappedPosition: Position | null } | void;
+  onAlignmentCheck: (
+    id: string,
+    pos: Position,
+    size: { width: number; height: number },
+    options?: { mode?: 'move' | 'resize'; handle?: ResizeHandle }
+  ) => AlignmentResult | void;
 }
 
 export function CanvasElement({
@@ -170,19 +180,42 @@ export function CanvasElement({
       const handleDir = resizeStartRef.current.handle;
 
       if (handleDir.includes('e')) {
-        nextWidth = Math.max(MIN_SIZE, resizeStartRef.current.startWidth + deltaX);
+        nextWidth = resizeStartRef.current.startWidth + deltaX;
       }
       if (handleDir.includes('w')) {
-        nextWidth = Math.max(MIN_SIZE, resizeStartRef.current.startWidth - deltaX);
+        nextWidth = resizeStartRef.current.startWidth - deltaX;
         nextX = resizeStartRef.current.startX + (resizeStartRef.current.startWidth - nextWidth);
       }
       if (handleDir.includes('s')) {
-        nextHeight = Math.max(MIN_SIZE, resizeStartRef.current.startHeight + deltaY);
+        nextHeight = resizeStartRef.current.startHeight + deltaY;
       }
       if (handleDir.includes('n')) {
-        nextHeight = Math.max(MIN_SIZE, resizeStartRef.current.startHeight - deltaY);
+        nextHeight = resizeStartRef.current.startHeight - deltaY;
         nextY = resizeStartRef.current.startY + (resizeStartRef.current.startHeight - nextHeight);
       }
+
+      // Clamp before snapping so we don't pass sub-minimum sizes to the alignment logic
+      nextWidth = Math.max(MIN_SIZE, nextWidth);
+      nextHeight = Math.max(MIN_SIZE, nextHeight);
+
+      const snapped = onAlignmentCheck(
+        element.id,
+        { x: Math.round(nextX), y: Math.round(nextY) },
+        { width: Math.round(nextWidth), height: Math.round(nextHeight) },
+        { mode: 'resize', handle: handleDir }
+      );
+
+      if (snapped?.snappedPosition) {
+        nextX = snapped.snappedPosition.x;
+        nextY = snapped.snappedPosition.y;
+      }
+      if (snapped?.snappedSize) {
+        nextWidth = snapped.snappedSize.width;
+        nextHeight = snapped.snappedSize.height;
+      }
+
+      nextWidth = Math.max(MIN_SIZE, nextWidth);
+      nextHeight = Math.max(MIN_SIZE, nextHeight);
 
       updateElementSize(element.id, {
         width: Math.round(nextWidth),
@@ -192,7 +225,6 @@ export function CanvasElement({
         x: Math.round(nextX),
         y: Math.round(nextY),
       });
-      onAlignmentCheck(element.id, { x: Math.round(nextX), y: Math.round(nextY) }, { width: Math.round(nextWidth), height: Math.round(nextHeight) });
     };
 
     const handleUp = () => {
