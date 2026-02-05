@@ -74,6 +74,7 @@ export default function App() {
     copyStyle,
     pasteStyle,
     nudgeSelectedElements,
+    setCanvasScale,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -237,6 +238,22 @@ export default function App() {
         } else {
           groupSelectedElements();
         }
+        event.preventDefault();
+        return;
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key === '0') {
+        setCanvasScale(1);
+        event.preventDefault();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === '1') {
+        setCanvasScale(1);
+        event.preventDefault();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === '=') {
+        setCanvasScale(Math.min(3, 1.25));
         event.preventDefault();
         return;
       }
