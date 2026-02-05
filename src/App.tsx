@@ -1155,7 +1155,14 @@ export default function App() {
     }
     
     // Default: show state mapping for current keyframe
-    return <StateInspector />;
+    return (
+      <>
+        <div style={{ padding: 16, color: '#666', textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 11 }}>Select an element to edit</div>
+        </div>
+        <StateInspector />
+      </>
+    );
   };
 
   return (
