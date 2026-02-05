@@ -1400,6 +1400,8 @@ const App = () => {
               <div><kbd>Ctrl+-</kbd> Zoom Out</div>
               <div><kbd>Ctrl+0</kbd> Reset View</div>
               <div><kbd>Ctrl+1</kbd> Zoom 100%</div>
+              <div><kbd>Ctrl+Shift+1</kbd> Zoom to Fit</div>
+              <div><kbd>Ctrl+2</kbd> Zoom to Selection</div>
               <div><kbd>?</kbd> Toggle Help</div>
             </div>
           </div>
