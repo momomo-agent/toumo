@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import type { MouseEvent } from "react";
 import "./App.css";
+import { ColorPicker } from "./components/ColorPicker";
 
 type KeyAttribute = {
   id: string;
@@ -2122,17 +2123,9 @@ const App = () => {
                         <span>Fill</span>
                       </div>
                       <div className="style-row">
-                        <input
-                          type="color"
-                          value={selectedElement.style?.fill || defaultStyle.fill}
-                          onChange={(e) => updateElementStyle(selectedElement.id, "fill", e.target.value)}
-                          className="color-input"
-                        />
-                        <input
-                          type="text"
-                          value={selectedElement.style?.fill || defaultStyle.fill}
-                          onChange={(e) => updateElementStyle(selectedElement.id, "fill", e.target.value)}
-                          className="color-text"
+                        <ColorPicker
+                          color={selectedElement.style?.fill || defaultStyle.fill}
+                          onChange={(c) => updateElementStyle(selectedElement.id, "fill", c)}
                         />
                         <input
                           type="number"
@@ -2151,17 +2144,9 @@ const App = () => {
                             <span>Stroke</span>
                           </div>
                           <div className="style-row">
-                            <input
-                              type="color"
-                              value={selectedElement.style?.stroke || defaultStyle.stroke}
-                              onChange={(e) => updateElementStyle(selectedElement.id, "stroke", e.target.value)}
-                              className="color-input"
-                            />
-                            <input
-                              type="text"
-                              value={selectedElement.style?.stroke || defaultStyle.stroke}
-                              onChange={(e) => updateElementStyle(selectedElement.id, "stroke", e.target.value)}
-                              className="color-text"
+                            <ColorPicker
+                              color={selectedElement.style?.stroke || defaultStyle.stroke}
+                              onChange={(c) => updateElementStyle(selectedElement.id, "stroke", c)}
                             />
                             <input
                               type="number"

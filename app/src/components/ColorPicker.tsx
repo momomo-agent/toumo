@@ -6,6 +6,13 @@ type ColorPickerProps = {
   label?: string;
 };
 
+// Preset colors
+const PRESET_COLORS = [
+  "#FF6B6B", "#FF8E53", "#FFC93C", "#6BCB77", "#4D96FF",
+  "#9B59B6", "#E91E63", "#00BCD4", "#8BC34A", "#FF5722",
+  "#607D8B", "#795548", "#9E9E9E", "#000000", "#FFFFFF",
+];
+
 // Convert hex to HSL
 function hexToHsl(hex: string): [number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -76,6 +83,17 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
       />
       {isOpen && (
         <div className="color-picker-popup">
+          {/* Preset colors */}
+          <div className="preset-colors">
+            {PRESET_COLORS.map((c) => (
+              <button
+                key={c}
+                className={`preset-color ${c === color ? "active" : ""}`}
+                style={{ backgroundColor: c }}
+                onClick={() => onChange(c)}
+              />
+            ))}
+          </div>
           <div className="color-picker-saturation"
             style={{ background: `linear-gradient(to right, #fff, hsl(${hsl[0]}, 100%, 50%))` }}
             onClick={(e) => {
