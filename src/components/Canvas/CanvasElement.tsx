@@ -1,8 +1,8 @@
 import { useEditorStore } from '../../store';
-import type { KeyElement as StoreKeyElement } from '../../store/useEditorStore';
+import type { KeyElement } from '../../types';
 
 interface Props {
-  element: StoreKeyElement;
+  element: KeyElement;
   isSelected: boolean;
 }
 

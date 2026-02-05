@@ -1,5 +1,5 @@
 import { useEditorStore } from '../../store';
-import type { KeyElement } from '../../store/useEditorStore';
+import type { KeyElement } from '../../types';
 
 interface Props {
   keyframeId: string;

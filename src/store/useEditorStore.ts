@@ -1,124 +1,112 @@
 import { create } from 'zustand';
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface Size {
-  width: number;
-  height: number;
-}
-
-interface ShapeStyle {
-  fill: string;
-  fillOpacity: number;
-  stroke: string;
-  strokeWidth: number;
-  borderRadius: number;
-}
-
-export interface KeyElement {
-  id: string;
-  name: string;
-  position: Position;
-  size: Size;
-  style?: ShapeStyle;
-  isKeyElement?: boolean;
-  locked?: boolean;
-  visible?: boolean;
-}
-
-export interface Keyframe {
-  id: string;
-  name: string;
-  keyElements: KeyElement[];
-}
-
-export interface Transition {
-  id: string;
-  from: string;
-  to: string;
-  trigger: string;
-  duration: number;
-  curve: string;
-}
-
-type ToolType = 'select' | 'rectangle' | 'ellipse' | 'text' | 'hand';
+import type { Keyframe, Transition, KeyElement, ToolType, Position } from '../types';
+import { initialKeyframes, initialTransitions } from './initialData';
 
 interface EditorState {
   keyframes: Keyframe[];
   transitions: Transition[];
   selectedKeyframeId: string;
   selectedElementId: string | null;
+  selectedElementIds: string[];
+  selectedTransitionId: string | null;
   currentTool: ToolType;
+  clipboard: KeyElement[];
+  canvasOffset: Position;
+  canvasScale: number;
 }
 
 interface EditorActions {
   setSelectedKeyframeId: (id: string) => void;
-  setSelectedElementId: (id: string | null) => void;
-  setCurrentTool: (tool: ToolType) => void;
   addKeyframe: () => void;
+  deleteKeyframe: (id: string) => void;
+  setSelectedElementId: (id: string | null) => void;
+  setSelectedElementIds: (ids: string[]) => void;
+  addElement: (element: KeyElement) => void;
+  deleteElement: (id: string) => void;
+  updateElementName: (id: string, name: string) => void;
+  setCurrentTool: (tool: ToolType) => void;
+  setCanvasOffset: (offset: Position) => void;
+  setCanvasScale: (scale: number) => void;
 }
 
-const initialKeyframes: Keyframe[] = [
-  {
-    id: 'kf-1',
-    name: 'Idle',
-    keyElements: [
-      {
-        id: 'el-1',
-        name: 'Card',
-        position: { x: 40, y: 40 },
-        size: { width: 200, height: 120 },
-        style: { fill: '#3b82f6', fillOpacity: 1, stroke: '', strokeWidth: 0, borderRadius: 12 },
-      },
-    ],
-  },
-  {
-    id: 'kf-2',
-    name: 'Active',
-    keyElements: [
-      {
-        id: 'el-1',
-        name: 'Card',
-        position: { x: 40, y: 20 },
-        size: { width: 200, height: 140 },
-        style: { fill: '#10b981', fillOpacity: 1, stroke: '', strokeWidth: 0, borderRadius: 16 },
-      },
-    ],
-  },
-];
+export type EditorStore = EditorState & EditorActions;
 
-const initialTransitions: Transition[] = [
-  {
-    id: 'tr-1',
-    from: 'kf-1',
-    to: 'kf-2',
-    trigger: 'tap',
-    duration: 300,
-    curve: 'ease-out',
-  },
-];
-
-export const useEditorStore = create<EditorState & EditorActions>((set) => ({
+export const useEditorStore = create<EditorStore>((set) => ({
+  // Initial state
   keyframes: initialKeyframes,
   transitions: initialTransitions,
-  selectedKeyframeId: 'kf-1',
+  selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
+  selectedElementIds: [],
+  selectedTransitionId: null,
   currentTool: 'select',
+  clipboard: [],
+  canvasOffset: { x: 0, y: 0 },
+  canvasScale: 1,
 
+  // Actions
   setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
-  setSelectedElementId: (id) => set({ selectedElementId: id }),
-  setCurrentTool: (tool) => set({ currentTool: tool }),
+  
   addKeyframe: () => set((state) => {
     const newId = `kf-${Date.now()}`;
+    const newKeyframe: Keyframe = {
+      id: newId,
+      name: `State ${state.keyframes.length + 1}`,
+      summary: 'New state',
+      keyElements: [],
+    };
     return {
-      keyframes: [...state.keyframes, {
-        id: newId,
-        name: `State ${state.keyframes.length + 1}`,
-        keyElements: [],
-      }],
+      keyframes: [...state.keyframes, newKeyframe],
+      selectedKeyframeId: newId,
     };
   }),
+
+  deleteKeyframe: (id) => set((state) => {
+    if (state.keyframes.length <= 1) return state;
+    const newKeyframes = state.keyframes.filter((kf) => kf.id !== id);
+    return {
+      keyframes: newKeyframes,
+      selectedKeyframeId: state.selectedKeyframeId === id 
+        ? newKeyframes[0].id 
+        : state.selectedKeyframeId,
+    };
+  }),
+
+  setSelectedElementId: (id) => set({ selectedElementId: id }),
+  setSelectedElementIds: (ids) => set({ selectedElementIds: ids }),
+
+  addElement: (element) => set((state) => ({
+    keyframes: state.keyframes.map((kf) =>
+      kf.id === state.selectedKeyframeId
+        ? { ...kf, keyElements: [...kf.keyElements, element] }
+        : kf
+    ),
+    selectedElementId: element.id,
+  })),
+
+  deleteElement: (id) => set((state) => ({
+    keyframes: state.keyframes.map((kf) =>
+      kf.id === state.selectedKeyframeId
+        ? { ...kf, keyElements: kf.keyElements.filter((el) => el.id !== id) }
+        : kf
+    ),
+    selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
+  })),
+
+  updateElementName: (id, name) => set((state) => ({
+    keyframes: state.keyframes.map((kf) =>
+      kf.id === state.selectedKeyframeId
+        ? {
+            ...kf,
+            keyElements: kf.keyElements.map((el) =>
+              el.id === id ? { ...el, name } : el
+            ),
+          }
+        : kf
+    ),
+  })),
+
+  setCurrentTool: (tool) => set({ currentTool: tool }),
+  setCanvasOffset: (offset) => set({ canvasOffset: offset }),
+  setCanvasScale: (scale) => set({ canvasScale: scale }),
 }));

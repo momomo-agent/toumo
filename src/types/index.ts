@@ -58,3 +58,24 @@ export const DEFAULT_STYLE: ShapeStyle = {
   strokeOpacity: 1,
   borderRadius: 8,
 };
+
+export type Keyframe = {
+  id: string;
+  name: string;
+  summary: string;
+  functionalState?: string;
+  keyElements: KeyElement[];
+};
+
+export type Transition = {
+  id: string;
+  from: string;
+  to: string;
+  trigger: string;
+  duration: number;
+  delay: number;
+  curve: string;
+  springDamping?: number;
+  springResponse?: number;
+  description?: string;
+};
