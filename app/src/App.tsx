@@ -1294,6 +1294,19 @@ const App = () => {
         e.preventDefault();
         moveElementDown(selectedElementId);
       }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "=" || e.key === "+")) {
+        e.preventDefault();
+        setCanvasScale(prev => Math.min(3, prev * 1.2));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "-") {
+        e.preventDefault();
+        setCanvasScale(prev => Math.max(0.25, prev / 1.2));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+        e.preventDefault();
+        setCanvasScale(1);
+        setCanvasOffset({ x: 0, y: 0 });
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
         duplicateElement(selectedElementId);
