@@ -12,14 +12,11 @@ export function LayerManager() {
   const elements = selectedKeyframe?.keyElements || [];
 
   return (
-    <section className="panel layer-panel">
-      <div className="panel-heading">
-        <h3>Layers</h3>
-        <span className="count">{elements.length}</span>
-      </div>
+    <section className="layer-panel">
+      <h3>Layers</h3>
       <div className="layer-list">
         {elements.length === 0 ? (
-          <p className="muted">No layers yet.</p>
+          <p style={{ color: '#666' }}>No layers yet.</p>
         ) : (
           elements.map((el) => (
             <div
@@ -27,11 +24,6 @@ export function LayerManager() {
               className={`layer-item ${selectedElementId === el.id ? 'selected' : ''}`}
               onClick={() => setSelectedElementId(el.id)}
             >
-              <span className="layer-icon">
-                {el.shapeType === 'rectangle' && '▢'}
-                {el.shapeType === 'ellipse' && '○'}
-                {el.shapeType === 'text' && 'T'}
-              </span>
               <span className="layer-name">{el.name}</span>
             </div>
           ))

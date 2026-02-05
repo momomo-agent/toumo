@@ -1,12 +1,7 @@
 import { useEditorStore } from '../../store';
 
 export function Inspector() {
-  const {
-    keyframes,
-    selectedKeyframeId,
-    selectedElementId,
-    updateElementName,
-  } = useEditorStore();
+  const { keyframes, selectedKeyframeId, selectedElementId } = useEditorStore();
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const selectedElement = selectedKeyframe?.keyElements.find(
@@ -15,29 +10,19 @@ export function Inspector() {
 
   if (!selectedElement) {
     return (
-      <section className="panel inspector-panel">
-        <div className="panel-heading">
-          <h3>Inspector</h3>
-        </div>
-        <p className="muted">Select a layer to edit.</p>
+      <section className="inspector-panel">
+        <h3>Inspector</h3>
+        <p style={{ color: '#666' }}>Select a layer to edit.</p>
       </section>
     );
   }
 
   return (
-    <section className="panel inspector-panel">
-      <div className="panel-heading">
-        <h3>Inspector</h3>
-      </div>
-      <div className="inspector-content">
-        <label className="field">
-          <span>Name</span>
-          <input
-            type="text"
-            value={selectedElement.name}
-            onChange={(e) => updateElementName(selectedElement.id, e.target.value)}
-          />
-        </label>
+    <section className="inspector-panel">
+      <h3>Inspector</h3>
+      <div>
+        <label>Name</label>
+        <input type="text" value={selectedElement.name} readOnly />
       </div>
     </section>
   );

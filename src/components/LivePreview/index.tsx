@@ -1,5 +1,4 @@
 import { useEditorStore } from '../../store';
-import { DEFAULT_STYLE } from '../../types';
 
 export function LivePreview() {
   const { keyframes, selectedKeyframeId } = useEditorStore();
@@ -8,32 +7,23 @@ export function LivePreview() {
 
   return (
     <section className="live-preview">
-      <div className="preview-header">
-        <h3>Live Preview</h3>
-        <span className="state-badge">{keyframe?.name}</span>
-      </div>
-      <div className="preview-device">
-        <div className="device-frame">
-          {elements.map((el) => {
-            const style = { ...DEFAULT_STYLE, ...el.style };
-            return (
-              <div
-                key={el.id}
-                style={{
-                  position: 'absolute',
-                  left: el.position.x * 0.5,
-                  top: el.position.y * 0.5,
-                  width: el.size.width * 0.5,
-                  height: el.size.height * 0.5,
-                  backgroundColor: style.fill,
-                  borderRadius: el.shapeType === 'ellipse' 
-                    ? '50%' 
-                    : style.borderRadius * 0.5,
-                }}
-              />
-            );
-          })}
-        </div>
+      <h3>Live Preview</h3>
+      <span>{keyframe?.name}</span>
+      <div className="device-frame">
+        {elements.map((el) => (
+          <div
+            key={el.id}
+            style={{
+              position: 'absolute',
+              left: el.position.x * 0.5,
+              top: el.position.y * 0.5,
+              width: el.size.width * 0.5,
+              height: el.size.height * 0.5,
+              backgroundColor: el.style?.fill || '#3b82f6',
+              borderRadius: (el.style?.borderRadius || 8) * 0.5,
+            }}
+          />
+        ))}
       </div>
     </section>
   );

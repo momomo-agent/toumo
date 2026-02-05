@@ -1,14 +1,13 @@
 import { useEditorStore } from '../../store';
-import { DEFAULT_STYLE } from '../../types';
-import type { KeyElement } from '../../types';
+import type { KeyElement as StoreKeyElement } from '../../store/useEditorStore';
 
 interface Props {
-  element: KeyElement;
+  element: StoreKeyElement;
   isSelected: boolean;
 }
 
 export function CanvasElement({ element, isSelected }: Props) {
-  const style = { ...DEFAULT_STYLE, ...element.style };
+  const style = element.style || { fill: '#3b82f6', borderRadius: 8 };
   const { setSelectedElementId } = useEditorStore();
 
   return (
@@ -21,17 +20,13 @@ export function CanvasElement({ element, isSelected }: Props) {
         width: element.size.width,
         height: element.size.height,
         backgroundColor: style.fill,
-        borderRadius: element.shapeType === 'ellipse' ? '50%' : style.borderRadius,
+        borderRadius: style.borderRadius || 8,
         cursor: 'pointer',
       }}
       onClick={(e) => { 
         e.stopPropagation(); 
         setSelectedElementId(element.id); 
       }}
-    >
-      {element.shapeType === 'text' && (
-        <span style={{ color: '#fff' }}>{element.text || 'Text'}</span>
-      )}
-    </div>
+    />
   );
 }
