@@ -393,6 +393,28 @@ export default function App() {
           </div>
         </div>
 
+        {/* Rotation Control */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Rotation</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="range"
+              min={-180}
+              max={180}
+              value={currentStyle.rotation ?? 0}
+              onChange={(e) => handleStyleChange({ rotation: Number(e.target.value) })}
+              style={{ flex: 1 }}
+            />
+            <input
+              type="number"
+              value={currentStyle.rotation ?? 0}
+              onChange={(e) => handleStyleChange({ rotation: Number(e.target.value) })}
+              style={{ ...inputStyle, width: 60 }}
+            />
+            <span style={{ fontSize: 11, color: '#666' }}>°</span>
+          </div>
+        </div>
+
         {isTextElement && (
           <>
             <div style={{ marginBottom: 16 }}>

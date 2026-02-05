@@ -322,6 +322,7 @@ export function CanvasElement({
         background: getBackground(),
         borderRadius: getBorderRadius(),
         border: isText ? '1px dashed rgba(255,255,255,0.4)' : undefined,
+        transform: element.style?.rotation ? `rotate(${element.style.rotation}deg)` : undefined,
         color: '#fff',
         display: 'flex',
         alignItems: 'center',

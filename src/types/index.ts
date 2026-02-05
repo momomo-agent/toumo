@@ -21,6 +21,7 @@ export type ShapeStyle = {
   strokeWidth: number;
   strokeOpacity: number;
   borderRadius: number;
+  rotation?: number; // degrees
   fontSize?: number;
   fontWeight?: string;
   textAlign?: "left" | "center" | "right";
