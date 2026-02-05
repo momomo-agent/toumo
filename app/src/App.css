@@ -612,3 +612,10 @@ button:focus {
   color: rgba(255, 255, 255, 0.6);
   min-width: 40px;
 }
+
+.selection-box {
+  position: absolute;
+  border: 1px solid #63b3ed;
+  background: rgba(99, 179, 237, 0.1);
+  pointer-events: none;
+}

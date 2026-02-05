@@ -306,6 +306,10 @@ const App = () => {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(
     keyframes[0].keyElements[0]?.id ?? null
   );
+  const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
+  const [isBoxSelecting, setIsBoxSelecting] = useState(false);
+  const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
+  const [boxSelectEnd, setBoxSelectEnd] = useState<{ x: number; y: number } | null>(null);
   const [selectedFunctionalState, setSelectedFunctionalState] = useState(
     keyframes[0].functionalState ?? functionalStates[0].id
   );
@@ -438,13 +442,37 @@ const App = () => {
   }, [isDragging, isResizing, isPanning, selectedKeyframeId, canvasScale]);
 
   const handleCanvasMouseUp = useCallback(() => {
+    // Handle box selection end
+    if (isBoxSelecting && boxSelectStart && boxSelectEnd) {
+      const minX = Math.min(boxSelectStart.x, boxSelectEnd.x);
+      const maxX = Math.max(boxSelectStart.x, boxSelectEnd.x);
+      const minY = Math.min(boxSelectStart.y, boxSelectEnd.y);
+      const maxY = Math.max(boxSelectStart.y, boxSelectEnd.y);
+      
+      const selected = selectedKeyframe.keyElements
+        .filter((el) => {
+          const elRight = el.position.x + el.size.width;
+          const elBottom = el.position.y + el.size.height;
+          return el.position.x < maxX && elRight > minX && el.position.y < maxY && elBottom > minY;
+        })
+        .map((el) => el.id);
+      
+      setSelectedElementIds(selected);
+      if (selected.length === 1) {
+        setSelectedElementId(selected[0]);
+      }
+    }
+    
     setIsDragging(false);
     setIsResizing(false);
     setIsPanning(false);
+    setIsBoxSelecting(false);
+    setBoxSelectStart(null);
+    setBoxSelectEnd(null);
     dragRef.current = null;
     resizeRef.current = null;
     panRef.current = null;
-  }, []);
+  }, [isBoxSelecting, boxSelectStart, boxSelectEnd, selectedKeyframe]);
 
   const handleCanvasPanStart = useCallback((e: MouseEvent) => {
     if (e.button === 1 || e.altKey) {
@@ -456,18 +484,38 @@ const App = () => {
         origX: canvasOffset.x,
         origY: canvasOffset.y,
       };
+    } else if (e.button === 0 && e.target === canvasRef.current) {
+      // Start box selection on empty canvas click
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        const x = (e.clientX - rect.left - canvasOffset.x) / canvasScale;
+        const y = (e.clientY - rect.top - canvasOffset.y) / canvasScale;
+        setIsBoxSelecting(true);
+        setBoxSelectStart({ x, y });
+        setBoxSelectEnd({ x, y });
+        setSelectedElementId(null);
+        setSelectedElementIds([]);
+      }
     }
-  }, [canvasOffset]);
+  }, [canvasOffset, canvasScale]);
 
   const handleCanvasPanMove = useCallback((e: MouseEvent) => {
-    if (!isPanning || !panRef.current) return;
-    const dx = e.clientX - panRef.current.startX;
-    const dy = e.clientY - panRef.current.startY;
-    setCanvasOffset({
-      x: panRef.current.origX + dx,
-      y: panRef.current.origY + dy,
-    });
-  }, [isPanning]);
+    if (isPanning && panRef.current) {
+      const dx = e.clientX - panRef.current.startX;
+      const dy = e.clientY - panRef.current.startY;
+      setCanvasOffset({
+        x: panRef.current.origX + dx,
+        y: panRef.current.origY + dy,
+      });
+      return;
+    }
+    if (isBoxSelecting && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left - canvasOffset.x) / canvasScale;
+      const y = (e.clientY - rect.top - canvasOffset.y) / canvasScale;
+      setBoxSelectEnd({ x, y });
+    }
+  }, [isPanning, isBoxSelecting, canvasOffset, canvasScale]);
 
   const handleCanvasWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -1016,7 +1064,7 @@ const App = () => {
                         key={`board-${element.id}`}
                         className={`board-element element-${element.id} ${
                           element.isKeyElement ? "is-key" : ""
-                        } ${selectedElementId === element.id ? "selected" : ""}`}
+                        } ${selectedElementId === element.id || selectedElementIds.includes(element.id) ? "selected" : ""}`}
                         style={{
                           position: "absolute",
                           left: element.position.x,
@@ -1038,6 +1086,17 @@ const App = () => {
                       </div>
                     ))}
                   </div>
+                  {isBoxSelecting && boxSelectStart && boxSelectEnd && (
+                    <div
+                      className="selection-box"
+                      style={{
+                        left: Math.min(boxSelectStart.x, boxSelectEnd.x),
+                        top: Math.min(boxSelectStart.y, boxSelectEnd.y),
+                        width: Math.abs(boxSelectEnd.x - boxSelectStart.x),
+                        height: Math.abs(boxSelectEnd.y - boxSelectStart.y),
+                      }}
+                    />
+                  )}
                 </div>
                 <div className="functional-graph">
                   <h4>Functional states</h4>
