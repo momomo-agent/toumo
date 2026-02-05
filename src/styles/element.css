@@ -1,0 +1,12 @@
+/* Canvas Element */
+.canvas-element {
+  transition: box-shadow 0.15s;
+}
+
+.canvas-element.selected {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.canvas-element.key {
+  box-shadow: 0 0 0 2px #f59e0b;
+}

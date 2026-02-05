@@ -1,37 +1,21 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import './EditorLayout.css';
 
-interface EditorLayoutProps {
+interface Props {
   preview: ReactNode;
   layers: ReactNode;
   canvas: ReactNode;
   inspector: ReactNode;
 }
 
-export function EditorLayout({ preview, layers, canvas, inspector }: EditorLayoutProps) {
+export function EditorLayout({ preview, layers, canvas, inspector }: Props) {
   return (
     <div className="editor-layout">
-      {/* 左侧：Live Preview */}
-      <aside className="editor-preview">
-        {preview}
-      </aside>
-      
-      {/* 右侧：编辑区三栏 */}
+      <aside className="editor-preview">{preview}</aside>
       <div className="editor-workspace">
-        {/* 图层管理器 */}
-        <aside className="editor-layers">
-          {layers}
-        </aside>
-        
-        {/* 画布 + 交互管理器 */}
-        <main className="editor-canvas-area">
-          {canvas}
-        </main>
-        
-        {/* Inspector */}
-        <aside className="editor-inspector">
-          {inspector}
-        </aside>
+        <aside className="editor-layers">{layers}</aside>
+        <main className="editor-canvas-area">{canvas}</main>
+        <aside className="editor-inspector">{inspector}</aside>
       </div>
     </div>
   );

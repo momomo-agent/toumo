@@ -1,0 +1,32 @@
+/* Layer List */
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.layer-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.layer-item.selected {
+  background: var(--accent);
+}
+
+.layer-icon {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.layer-name {
+  font-size: 13px;
+}

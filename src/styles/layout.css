@@ -1,0 +1,36 @@
+/* Layout */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar-left {
+  width: 280px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+}
+
+.editor-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.editor-layers {
+  width: 200px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+}
+
+.editor-canvas {
+  flex: 1;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.editor-inspector {
+  width: 260px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+}

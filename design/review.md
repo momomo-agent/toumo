@@ -67,3 +67,65 @@ background: rgba(255, 255, 255, 0.08);
 **问题**: `background: #252526` 与主背景对比不够
 
 **建议**: 改为 `--bg-surface` (#111113)
+
+---
+
+## 🟢 低优先级建议
+
+### 7. Logo 渐变可以更精致
+
+**当前**:
+```css
+background: linear-gradient(135deg, #fff 0%, #a0aec0 100%);
+```
+
+**建议**:
+```css
+background: linear-gradient(135deg, #fafafa 0%, #71717a 100%);
+```
+
+### 8. 圆角统一
+
+**问题**: 代码中圆角值不统一 (6px, 8px, 12px, 16px, 28px)
+
+**建议**: 使用设计令牌中的圆角系统
+
+---
+
+## 具体修改清单
+
+### App.css 需要修改的地方
+
+| 行 | 当前值 | 建议值 |
+|----|--------|--------|
+| `.top-bar` | `#2c2c2c` | `var(--bg-surface)` |
+| `.preview-pane` | `#252526` | `var(--bg-surface)` |
+| 边框 | `rgba(255,255,255,0.08)` | `var(--border-subtle)` |
+
+### 需要添加的 CSS 变量
+
+```css
+:root {
+  /* Backgrounds */
+  --bg-base: #0a0a0b;
+  --bg-surface: #111113;
+  --bg-elevated: #18181b;
+  --bg-hover: #1f1f23;
+  --bg-active: #27272b;
+  
+  /* Borders */
+  --border-subtle: #1f1f23;
+  --border-default: #27272b;
+  --border-strong: #3f3f46;
+  
+  /* Text */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  
+  /* Accent */
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-subtle: rgba(99,102,241,0.15);
+}
+```

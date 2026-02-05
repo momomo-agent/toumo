@@ -1,0 +1,44 @@
+/* Triple Canvas - 三帧并排核心布局 */
+.triple-canvas {
+  height: 100%;
+  padding: 24px;
+  overflow: auto;
+}
+
+.canvas-container {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+  min-width: fit-content;
+}
+
+.canvas-frame {
+  flex: 0 0 360px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.canvas-frame.active {
+  border-color: var(--accent);
+}
+
+.frame-header {
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+}
+
+.frame-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.frame-content {
+  position: relative;
+  height: 480px;
+  background: var(--bg-primary);
+}
