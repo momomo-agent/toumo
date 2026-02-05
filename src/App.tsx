@@ -53,6 +53,7 @@ export default function App() {
     addKeyframe,
     selectedElementId,
     setSelectedElementId,
+    selectedElementIds,
     selectedTransitionId,
     deleteSelectedElements,
     currentTool,
@@ -67,6 +68,8 @@ export default function App() {
     addImageElement,
     groupSelectedElements,
     ungroupSelectedElements,
+    alignElements,
+    distributeElements,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -257,6 +260,26 @@ export default function App() {
 
     return (
       <>
+        {/* Alignment Tools */}
+        {selectedElementIds.length >= 2 && (
+          <div style={{ marginBottom: 16 }}>
+            <Label>Align</Label>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+              <button onClick={() => alignElements('left')} style={alignBtnStyle} title="Align Left">⬅</button>
+              <button onClick={() => alignElements('center')} style={alignBtnStyle} title="Align Center H">↔</button>
+              <button onClick={() => alignElements('right')} style={alignBtnStyle} title="Align Right">➡</button>
+              <button onClick={() => alignElements('top')} style={alignBtnStyle} title="Align Top">⬆</button>
+              <button onClick={() => alignElements('middle')} style={alignBtnStyle} title="Align Center V">↕</button>
+              <button onClick={() => alignElements('bottom')} style={alignBtnStyle} title="Align Bottom">⬇</button>
+            </div>
+            {selectedElementIds.length >= 3 && (
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => distributeElements('horizontal')} style={{ ...alignBtnStyle, flex: 1 }}>Distribute H</button>
+                <button onClick={() => distributeElements('vertical')} style={{ ...alignBtnStyle, flex: 1 }}>Distribute V</button>
+              </div>
+            )}
+          </div>
+        )}
         <SectionHeader>Element Properties</SectionHeader>
         <div style={{ marginBottom: 16 }}>
           <Label>Name</Label>
@@ -1127,4 +1150,14 @@ const selectStyle: React.CSSProperties = {
   borderRadius: 6,
   color: '#e5e5e5',
   fontSize: 12,
+};
+
+const alignBtnStyle: React.CSSProperties = {
+  padding: '6px 8px',
+  background: '#0d0d0e',
+  border: '1px solid #2a2a2a',
+  borderRadius: 4,
+  color: '#888',
+  fontSize: 11,
+  cursor: 'pointer',
 };

@@ -88,6 +88,9 @@ interface EditorActions {
   // Group actions
   groupSelectedElements: () => void;
   ungroupSelectedElements: () => void;
+  // Alignment actions
+  alignElements: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
+  distributeElements: (direction: 'horizontal' | 'vertical') => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -639,5 +642,96 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementIds: children.map(c => c.id),
       selectedElementId: children.length === 1 ? children[0].id : null,
     }));
+  },
+
+  // Align elements
+  alignElements: (alignment) => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selected = currentKeyframe.keyElements.filter(
+      el => state.selectedElementIds.includes(el.id)
+    );
+    
+    get().pushHistory();
+    
+    let targetValue: number;
+    switch (alignment) {
+      case 'left':
+        targetValue = Math.min(...selected.map(el => el.position.x));
+        selected.forEach(el => get().updateElementPosition(el.id, { ...el.position, x: targetValue }));
+        break;
+      case 'right':
+        targetValue = Math.max(...selected.map(el => el.position.x + el.size.width));
+        selected.forEach(el => get().updateElementPosition(el.id, { ...el.position, x: targetValue - el.size.width }));
+        break;
+      case 'center':
+        const minX = Math.min(...selected.map(el => el.position.x));
+        const maxX = Math.max(...selected.map(el => el.position.x + el.size.width));
+        const centerX = (minX + maxX) / 2;
+        selected.forEach(el => get().updateElementPosition(el.id, { ...el.position, x: centerX - el.size.width / 2 }));
+        break;
+      case 'top':
+        targetValue = Math.min(...selected.map(el => el.position.y));
+        selected.forEach(el => get().updateElementPosition(el.id, { ...el.position, y: targetValue }));
+        break;
+      case 'bottom':
+        targetValue = Math.max(...selected.map(el => el.position.y + el.size.height));
+        selected.forEach(el => get().updateElementPosition(el.id, { ...el.position, y: targetValue - el.size.height }));
+        break;
+      case 'middle':
+        const minY = Math.min(...selected.map(el => el.position.y));
+        const maxY = Math.max(...selected.map(el => el.position.y + el.size.height));
+        const centerY = (minY + maxY) / 2;
+        selected.forEach(el => get().updateElementPosition(el.id, { ...el.position, y: centerY - el.size.height / 2 }));
+        break;
+    }
+  },
+
+  // Distribute elements
+  distributeElements: (direction) => {
+    const state = get();
+    if (state.selectedElementIds.length < 3) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selected = currentKeyframe.keyElements
+      .filter(el => state.selectedElementIds.includes(el.id))
+      .sort((a, b) => direction === 'horizontal' 
+        ? a.position.x - b.position.x 
+        : a.position.y - b.position.y
+      );
+    
+    get().pushHistory();
+    
+    if (direction === 'horizontal') {
+      const first = selected[0];
+      const last = selected[selected.length - 1];
+      const totalWidth = selected.reduce((sum, el) => sum + el.size.width, 0);
+      const totalSpace = (last.position.x + last.size.width) - first.position.x - totalWidth;
+      const gap = totalSpace / (selected.length - 1);
+      
+      let currentX = first.position.x + first.size.width + gap;
+      for (let i = 1; i < selected.length - 1; i++) {
+        get().updateElementPosition(selected[i].id, { ...selected[i].position, x: currentX });
+        currentX += selected[i].size.width + gap;
+      }
+    } else {
+      const first = selected[0];
+      const last = selected[selected.length - 1];
+      const totalHeight = selected.reduce((sum, el) => sum + el.size.height, 0);
+      const totalSpace = (last.position.y + last.size.height) - first.position.y - totalHeight;
+      const gap = totalSpace / (selected.length - 1);
+      
+      let currentY = first.position.y + first.size.height + gap;
+      for (let i = 1; i < selected.length - 1; i++) {
+        get().updateElementPosition(selected[i].id, { ...selected[i].position, y: currentY });
+        currentY += selected[i].size.height + gap;
+      }
+    }
   },
 }));
