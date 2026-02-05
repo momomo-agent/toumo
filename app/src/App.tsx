@@ -735,6 +735,12 @@ const App = () => {
     );
   };
 
+  const updateTransitionTarget = (transitionId: string, field: "from" | "to", value: string) => {
+    setTransitions((prev) =>
+      prev.map((t) => (t.id === transitionId ? { ...t, [field]: value } : t))
+    );
+  };
+
   const updateTransition = (
     transitionId: string,
     field: keyof Pick<Transition, "trigger" | "duration" | "delay" | "curve" | "description">,
@@ -1171,6 +1177,30 @@ const App = () => {
             </div>
             {selectedTransition && (
               <div className="transition-editor">
+                <div className="two-col">
+                  <label className="field">
+                    <span>From</span>
+                    <select
+                      value={selectedTransition.from}
+                      onChange={(e) => updateTransitionTarget(selectedTransition.id, "from", e.target.value)}
+                    >
+                      {keyframes.map((kf) => (
+                        <option key={kf.id} value={kf.id}>{kf.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>To</span>
+                    <select
+                      value={selectedTransition.to}
+                      onChange={(e) => updateTransitionTarget(selectedTransition.id, "to", e.target.value)}
+                    >
+                      {keyframes.map((kf) => (
+                        <option key={kf.id} value={kf.id}>{kf.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
                 <label className="field">
                   <span>Trigger</span>
                   <input
