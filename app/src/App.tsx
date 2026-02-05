@@ -25,6 +25,7 @@ type KeyElement = {
   name: string;
   category: "content" | "component" | "system";
   isKeyElement: boolean;
+  locked?: boolean;
   attributes: KeyAttribute[];
   position: Position;
   size: Size;
@@ -369,6 +370,10 @@ const App = () => {
     if (!element) return;
     
     setSelectedElementId(elementId);
+    
+    // Don't allow dragging locked elements
+    if (element.locked) return;
+    
     setIsDragging(true);
     dragRef.current = {
       elementId,
@@ -646,6 +651,20 @@ const App = () => {
         const arr = [...frame.keyElements];
         [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
         return { ...frame, keyElements: arr };
+      })
+    );
+  };
+
+  const toggleElementLock = (elementId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.id === elementId ? { ...el, locked: !el.locked } : el
+          ),
+        };
       })
     );
   };
@@ -1270,6 +1289,9 @@ const App = () => {
                       onChange={(e) => updateElementName(selectedElement.id, e.target.value)}
                     />
                     <div className="element-actions">
+                      <button className="ghost small" onClick={() => toggleElementLock(selectedElement.id)}>
+                        {selectedElement.locked ? "🔒" : "🔓"}
+                      </button>
                       <button className="ghost small" onClick={() => moveElementUp(selectedElement.id)}>↑</button>
                       <button className="ghost small" onClick={() => moveElementDown(selectedElement.id)}>↓</button>
                       <button className="ghost small danger" onClick={() => deleteElement(selectedElement.id)}>×</button>
