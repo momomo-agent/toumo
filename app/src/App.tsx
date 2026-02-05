@@ -310,6 +310,7 @@ const App = () => {
     keyframes[0].keyElements[0]?.id ?? null
   );
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
+  const [editingElementId, setEditingElementId] = useState<string | null>(null);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
   const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
   const [boxSelectEnd, setBoxSelectEnd] = useState<{ x: number; y: number } | null>(null);
@@ -1412,8 +1413,20 @@ const App = () => {
                           opacity: element.visible === false ? 0.3 : 1,
                         }}
                         onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
+                        onDoubleClick={() => setEditingElementId(element.id)}
                       >
-                      <span>{element.name}</span>
+                      {editingElementId === element.id ? (
+                        <input
+                          autoFocus
+                          defaultValue={element.name}
+                          onBlur={(e) => { updateElementName(element.id, e.target.value); setEditingElementId(null); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { updateElementName(element.id, (e.target as HTMLInputElement).value); setEditingElementId(null); } }}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit', outline: 'none' }}
+                        />
+                      ) : (
+                        <span>{element.name}</span>
+                      )}
                       {element.isKeyElement && <small>Key</small>}
                         {selectedElementId === element.id && (
                           <div
