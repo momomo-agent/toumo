@@ -484,6 +484,41 @@ const App = () => {
     setSelectedElementId(newFrame.keyElements[0]?.id ?? null);
   };
 
+  const addElement = () => {
+    const newElement: KeyElement = {
+      id: `el-${Date.now()}`,
+      name: `Element ${selectedKeyframe.keyElements.length + 1}`,
+      category: "component",
+      isKeyElement: true,
+      position: { x: 50, y: 50 },
+      size: { width: 120, height: 60 },
+      attributes: [
+        { id: `attr-${Date.now()}`, label: "Opacity", value: "1", targeted: true, curve: "global" },
+      ],
+    };
+
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return { ...frame, keyElements: [...frame.keyElements, newElement] };
+      })
+    );
+    setSelectedElementId(newElement.id);
+  };
+
+  const deleteElement = (elementId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.filter((el) => el.id !== elementId),
+        };
+      })
+    );
+    setSelectedElementId(null);
+  };
+
   const updateKeyframeMeta = (field: "name" | "summary" | "functionalState", value: string) => {
     setKeyframes((prev) =>
       prev.map((frame) =>
@@ -757,7 +792,7 @@ const App = () => {
             <div className="panel layers-panel">
               <div className="panel-heading">
                 <h3>Layer tree</h3>
-                <span>Aligned to Figma</span>
+                <button className="ghost small" onClick={addElement}>+ Add</button>
               </div>
               <ul>
                 {selectedKeyframe.keyElements.map((element) => (
@@ -892,6 +927,9 @@ const App = () => {
                 <div className="attributes">
                   <div className="panel-heading">
                     <h4>{selectedElement.name}</h4>
+                    <button className="ghost small danger" onClick={() => deleteElement(selectedElement.id)}>Delete</button>
+                  </div>
+                  <div className="panel-heading" style={{ marginTop: 8 }}>
                     <span>Transform</span>
                   </div>
                   <div className="transform-grid">
