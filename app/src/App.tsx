@@ -929,6 +929,26 @@ const App = () => {
     URL.revokeObjectURL(url);
   };
 
+  const importJSON = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target?.result as string);
+          if (data.keyframes) setKeyframes(data.keyframes);
+          if (data.transitions) setTransitions(data.transitions);
+        } catch { /* ignore */ }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   const stepPreview = () => {
     const currentIndex = keyframes.findIndex((frame) => frame.id === selectedKeyframeId);
     const nextIndex = (currentIndex + 1) % keyframes.length;
@@ -968,6 +988,7 @@ const App = () => {
           <strong>Motion Editor</strong>
         </div>
         <div className="top-actions">
+          <button className="ghost" onClick={importJSON}>Import</button>
           <button className="ghost" onClick={exportJSON}>Export</button>
           <button className="primary">Publish</button>
         </div>
