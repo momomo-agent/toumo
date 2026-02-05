@@ -384,17 +384,18 @@ textarea {
 }
 
 .board-element.selected {
-  border-color: #63b3ed;
-  box-shadow: 0 0 0 1px #63b3ed, 0 2px 8px rgba(0,0,0,0.3);
+  border-color: #0d99ff;
+  box-shadow: 0 0 0 2px #0d99ff, 0 4px 12px rgba(0,0,0,0.4);
 }
 
 .resize-handle {
   position: absolute;
-  right: -4px;
-  bottom: -4px;
-  width: 8px;
-  height: 8px;
-  background: #63b3ed;
+  right: -5px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2px solid #0d99ff;
   border-radius: 2px;
   cursor: se-resize;
 }
@@ -457,7 +458,15 @@ textarea {
 .field input:hover,
 .field textarea:hover,
 .field select:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: #0d99ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(13, 153, 255, 0.2);
 }
 
 .field textarea {
