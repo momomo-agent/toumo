@@ -79,6 +79,7 @@ export default function App() {
     bringForward,
     sendBackward,
     canvasScale,
+    deleteElement,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -432,6 +433,21 @@ export default function App() {
               title="Copy ID"
             >
               ID
+            </button>
+            <button
+              onClick={() => deleteElement(selected.id)}
+              style={{
+                padding: '6px 10px',
+                background: '#ef444420',
+                border: '1px solid #ef4444',
+                borderRadius: 6,
+                color: '#ef4444',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+              title="Delete"
+            >
+              🗑️
             </button>
           </div>
         </div>
