@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import type { MouseEvent } from "react";
 import "./App.css";
 
@@ -900,6 +900,21 @@ const App = () => {
     const nextFrame = keyframes[nextIndex];
     selectKeyframe(nextFrame.id);
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedElementId(null);
+        setSelectedElementIds([]);
+      }
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedElementId) {
+        deleteElement(selectedElementId);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedElementId]);
 
   const previewElements = selectedKeyframe.keyElements;
   const previewStateLabel =
