@@ -347,6 +347,7 @@ const App = () => {
     keyframes[0].keyElements[0]?.id ?? null
   );
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
+  const [clipboard, setClipboard] = useState<KeyElement[]>([]);
   const [editingElementId, setEditingElementId] = useState<string | null>(null);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
   const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
@@ -888,6 +889,30 @@ const App = () => {
     );
   };
 
+  const copyElements = () => {
+    const elementsToCopy = selectedElementIds.length > 0 
+      ? selectedKeyframe.keyElements.filter(el => selectedElementIds.includes(el.id))
+      : selectedElementId 
+        ? selectedKeyframe.keyElements.filter(el => el.id === selectedElementId)
+        : [];
+    setClipboard(elementsToCopy);
+  };
+
+  const pasteElements = () => {
+    if (clipboard.length === 0) return;
+    const newElements = clipboard.map(el => ({
+      ...el,
+      id: `el-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: `${el.name} copy`,
+      position: { x: el.position.x + 20, y: el.position.y + 20 },
+    }));
+    setKeyframes(prev => prev.map(frame => {
+      if (frame.id !== selectedKeyframeId) return frame;
+      return { ...frame, keyElements: [...frame.keyElements, ...newElements] };
+    }));
+    setSelectedElementIds(newElements.map(el => el.id));
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1238,6 +1263,14 @@ const App = () => {
       }
       if ((e.key === "Delete" || e.key === "Backspace") && selectedElementId) {
         deleteElement(selectedElementId);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+        e.preventDefault();
+        copyElements();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        e.preventDefault();
+        pasteElements();
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
