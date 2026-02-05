@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement, Position, Size, ToolType } from '../../types';
@@ -10,6 +10,8 @@ import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
 const MIN_SIZE = 16;
+const FRAME_GAP = 200;
+const FRAME_MARGIN = 100;
 
 type AlignmentResult = {
   snappedPosition: Position | null;
@@ -23,6 +25,7 @@ export function Canvas() {
     selectedElementIds,
     setSelectedElementId,
     setSelectedElementIds,
+    setSelectedKeyframeId,
     currentTool,
     canvasOffset,
     canvasScale,
@@ -48,6 +51,22 @@ export function Canvas() {
   const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
 
+  const frameLayouts = useMemo(() => {
+    return keyframes.map((kf, index) => ({
+      id: kf.id,
+      x: index * (frameSize.width + FRAME_GAP) + FRAME_MARGIN,
+      y: FRAME_MARGIN,
+      width: frameSize.width,
+      height: frameSize.height,
+    }));
+  }, [frameSize.height, frameSize.width, keyframes]);
+
+  const frameLayoutMap = useMemo(() => {
+    const map = new Map<string, { x: number; y: number; width: number; height: number }>();
+    frameLayouts.forEach((layout) => map.set(layout.id, layout));
+    return map;
+  }, [frameLayouts]);
+
   const clampPointToFrame = useCallback((point: Position) => ({
     x: Math.max(0, Math.min(point.x, frameSize.width)),
     y: Math.max(0, Math.min(point.y, frameSize.height)),
@@ -57,8 +76,22 @@ export function Canvas() {
     return point.x >= 0 && point.x <= frameSize.width && point.y >= 0 && point.y <= frameSize.height;
   }, [frameSize.height, frameSize.width]);
 
-  const stageWidth = Math.max(CANVAS_SIZE, frameSize.width + 600);
-  const stageHeight = Math.max(CANVAS_SIZE, frameSize.height + 600);
+  const getFrameUnderPoint = useCallback((point: Position) => {
+    return frameLayouts.find(
+      (layout) =>
+        point.x >= layout.x &&
+        point.x <= layout.x + layout.width &&
+        point.y >= layout.y &&
+        point.y <= layout.y + layout.height,
+    );
+  }, [frameLayouts]);
+
+  const activeFrameLayout = selectedKeyframeId ? frameLayoutMap.get(selectedKeyframeId) : undefined;
+
+  const stageWidth = frameLayouts.length
+    ? frameLayouts[frameLayouts.length - 1].x + frameSize.width + FRAME_MARGIN
+    : Math.max(CANVAS_SIZE, frameSize.width + FRAME_MARGIN * 2);
+  const stageHeight = frameSize.height + FRAME_MARGIN * 2 + 80;
 
   const toCanvasSpace = (event: ReactMouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -66,6 +99,14 @@ export function Canvas() {
     return {
       x: (event.clientX - rect.left - canvasOffset.x) / canvasScale,
       y: (event.clientY - rect.top - canvasOffset.y) / canvasScale,
+    };
+  };
+
+  const translateToFrameSpace = (point: Position, layout?: { x: number; y: number }) => {
+    if (!layout) return point;
+    return {
+      x: point.x - layout.x,
+      y: point.y - layout.y,
     };
   };
 
@@ -264,7 +305,13 @@ export function Canvas() {
   }, [currentTool]);
 
   const handleCanvasMouseDown = useCallback((event: ReactMouseEvent) => {
-    const coords = toCanvasSpace(event);
+    const stagePoint = toCanvasSpace(event);
+    const hitFrame = getFrameUnderPoint(stagePoint);
+
+    if (hitFrame && hitFrame.id !== selectedKeyframeId) {
+      setSelectedKeyframeId(hitFrame.id);
+      setSelectedElementId(null);
+    }
 
     if (currentTool === 'hand') {
       isPanningRef.current = true;
@@ -277,22 +324,26 @@ export function Canvas() {
       return;
     }
 
+    const activeLayout = hitFrame && hitFrame.id === selectedKeyframeId ? hitFrame : activeFrameLayout;
+    if (!activeLayout) return;
+
+    const framePoint = translateToFrameSpace(stagePoint, activeLayout);
+
     if (currentTool === 'select') {
-      const clamped = clampPointToFrame(coords);
       setSelectedElementId(null);
       setIsSelecting(true);
-      setSelectionBox({ start: clamped, end: clamped });
+      setSelectionBox({ start: clampPointToFrame(framePoint), end: clampPointToFrame(framePoint) });
       return;
     }
 
     if (['rectangle', 'ellipse', 'text'].includes(currentTool)) {
-      if (!isInsideFrame(coords)) return;
-      drawStartRef.current = clampPointToFrame(coords);
+      if (!isInsideFrame(framePoint)) return;
+      drawStartRef.current = clampPointToFrame(framePoint);
     }
-  }, [canvasOffset.x, canvasOffset.y, canvasScale, clampPointToFrame, currentTool, isInsideFrame, setSelectedElementId, setSelectionBox, setIsSelecting]);
+  }, [activeFrameLayout, canvasOffset.x, canvasOffset.y, canvasScale, clampPointToFrame, currentTool, getFrameUnderPoint, isInsideFrame, selectedKeyframeId, setSelectedElementId, setSelectedKeyframeId, setSelectionBox, setIsSelecting]);
 
   const handleCanvasMouseMove = useCallback((event: ReactMouseEvent) => {
-    const coords = toCanvasSpace(event);
+    const stagePoint = toCanvasSpace(event);
 
     if (isPanningRef.current && panStartRef.current) {
       const dx = event.clientX - panStartRef.current.pointerX;
@@ -301,20 +352,24 @@ export function Canvas() {
       return;
     }
 
-    if (selectionBox) {
-      setSelectionBox({ ...selectionBox, end: clampPointToFrame(coords) });
+    if (selectionBox && activeFrameLayout) {
+      const framePoint = translateToFrameSpace(stagePoint, activeFrameLayout);
+      setSelectionBox({ ...selectionBox, end: clampPointToFrame(framePoint) });
       return;
     }
-  }, [clampPointToFrame, selectionBox, setCanvasOffset, setSelectionBox]);
+  }, [activeFrameLayout, clampPointToFrame, selectionBox, setCanvasOffset, setSelectionBox]);
 
   const handleCanvasMouseUp = useCallback((event: ReactMouseEvent) => {
-    const coords = toCanvasSpace(event);
+    const stagePoint = toCanvasSpace(event);
 
     if (isPanningRef.current) {
       isPanningRef.current = false;
       panStartRef.current = null;
       return;
     }
+
+    if (!activeFrameLayout) return;
+    const framePoint = translateToFrameSpace(stagePoint, activeFrameLayout);
 
     if (selectionBox) {
       const minX = Math.min(selectionBox.start.x, selectionBox.end.x);
@@ -338,7 +393,7 @@ export function Canvas() {
 
     if (drawStartRef.current && ['rectangle', 'ellipse', 'text'].includes(currentTool)) {
       const start = drawStartRef.current;
-      const clampedEnd = clampPointToFrame(coords);
+      const clampedEnd = clampPointToFrame(framePoint);
       const width = Math.abs(clampedEnd.x - start.x);
       const height = Math.abs(clampedEnd.y - start.y);
 
@@ -389,7 +444,7 @@ export function Canvas() {
       addElement(newElement);
       drawStartRef.current = null;
     }
-  }, [addElement, clampPointToFrame, currentTool, elements, selectionBox, setIsSelecting, setSelectedElementIds, setSelectionBox]);
+  }, [activeFrameLayout, addElement, clampPointToFrame, currentTool, elements, selectionBox, setIsSelecting, setSelectedElementIds, setSelectionBox]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -500,42 +555,87 @@ export function Canvas() {
           transformOrigin: '0 0',
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: frameSize.width,
-            height: frameSize.height,
-          }}
-        >
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
-              background: '#050506',
-              borderRadius: 32,
-              border: '1px solid #2f2f2f',
-              boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
-            }}
-          >
-            {elements.map((element) => (
-              <CanvasElement
-                key={element.id}
-                element={element}
-                allElements={elements}
-                scale={canvasScale}
-                isSelected={selectedElementIds.includes(element.id)}
-                onAlignmentCheck={checkAlignment}
-              />
-            ))}
+        {frameLayouts.map((layout, index) => {
+          const keyframe = keyframes[index];
+          if (!keyframe) return null;
+          const isActive = keyframe.id === selectedKeyframeId;
+          const frameElements = keyframe.keyElements || [];
+          return (
+            <div key={keyframe.id} style={{ position: 'absolute', left: layout.x, top: layout.y - 60, width: layout.width }}>
+              <button
+                onClick={() => setSelectedKeyframeId(keyframe.id)}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '8px 12px',
+                  marginBottom: 12,
+                  textAlign: 'left',
+                  background: isActive ? '#2563eb30' : '#141416',
+                  color: '#fff',
+                  borderColor: 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{keyframe.name}</div>
+                  <div style={{ fontSize: 11, color: '#7d7d7d' }}>{keyframe.summary ?? 'State description'}</div>
+                </div>
+                {isActive && <span style={{ fontSize: 11, color: '#8ab4ff' }}>Editing</span>}
+              </button>
+              <div
+                style={{
+                  width: layout.width,
+                  height: layout.height,
+                  position: 'relative',
+                  background: '#050506',
+                  borderRadius: 32,
+                  border: '1px solid #2f2f2f',
+                  boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+                  overflow: 'hidden',
+                  cursor: isActive ? 'default' : 'pointer',
+                }}
+              >
+                {isActive
+                  ? frameElements.map((element) => (
+                      <CanvasElement
+                        key={element.id}
+                        element={element}
+                        allElements={frameElements}
+                        scale={canvasScale}
+                        isSelected={selectedElementIds.includes(element.id)}
+                        onAlignmentCheck={checkAlignment}
+                      />
+                    ))
+                  : frameElements.map((element) => (
+                      <div
+                        key={element.id}
+                        style={{
+                          position: 'absolute',
+                          left: element.position.x,
+                          top: element.position.y,
+                          width: element.size.width,
+                          height: element.size.height,
+                          background: element.style?.fill || '#3b82f6',
+                          borderRadius: element.shapeType === 'ellipse' ? '50%' : element.style?.borderRadius || 8,
+                          opacity: 0.7,
+                        }}
+                      />
+                    ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {activeFrameLayout && (
+          <div style={{ position: 'absolute', left: activeFrameLayout.x, top: activeFrameLayout.y }}>
+            <AlignmentGuides lines={alignmentLines} canvasWidth={frameSize.width} canvasHeight={frameSize.height} />
+            {selectionBox && <SelectionBox start={selectionBox.start} end={selectionBox.end} />}
           </div>
-        </div>
-
-        <AlignmentGuides lines={alignmentLines} canvasWidth={stageWidth} canvasHeight={stageHeight} />
-
-        {selectionBox && <SelectionBox start={selectionBox.start} end={selectionBox.end} />}
+        )}
       </div>
     </div>
   );
