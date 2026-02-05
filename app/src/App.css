@@ -61,19 +61,30 @@ textarea {
 
 .ghost,
 .primary {
-  border-radius: 999px;
-  padding: 8px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background: transparent;
   color: inherit;
   cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .primary {
-  background: linear-gradient(120deg, #6be9c3, #4b6ef5);
+  background: #0d99ff;
   border: none;
-  color: #05130e;
-  font-weight: 600;
+  color: #fff;
+  font-weight: 500;
+}
+
+.primary:hover {
+  background: #0c8ce9;
 }
 
 .ghost.small {
