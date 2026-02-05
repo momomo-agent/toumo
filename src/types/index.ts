@@ -79,3 +79,26 @@ export type Transition = {
   springResponse?: number;
   description?: string;
 };
+
+// Functional State - for logic/state machine
+export type FunctionalState = {
+  id: string;
+  name: string;
+  isInitial: boolean;
+  componentId?: string;
+};
+
+// Display State mapping
+export type DisplayStateMapping = {
+  functionalStateId: string;
+  displayStateIds: string[]; // keyframe ids
+};
+
+// Component with multi-state support
+export type Component = {
+  id: string;
+  name: string;
+  functionalStates: FunctionalState[];
+  displayStateMappings: DisplayStateMapping[];
+  transitions: Transition[];
+};

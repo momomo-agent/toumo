@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Canvas } from './components/Canvas';
+import { InteractionManager } from './components/InteractionManager';
+import { StateInspector } from './components/Inspector/StateInspector';
+import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -45,6 +48,7 @@ export default function App() {
     addKeyframe,
     selectedElementId,
     setSelectedElementId,
+    selectedTransitionId,
     deleteSelectedElements,
     currentTool,
     setCurrentTool,
@@ -180,11 +184,10 @@ export default function App() {
     }
   }, [previewState, selectedKeyframeId]);
 
-  const renderInspector = () => {
+  // Render element properties inspector
+  const renderElementInspector = () => {
     const selected = selectedElement;
-    if (!selected) {
-      return <div style={{ color: '#555' }}>Select a layer</div>;
-    }
+    if (!selected) return null;
 
     const currentStyle = mergeStyle(selected.style);
     const handleStyleChange = (overrides: Partial<ShapeStyle>) => {
@@ -197,24 +200,18 @@ export default function App() {
 
     return (
       <>
+        <SectionHeader>Element Properties</SectionHeader>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Name</label>
+          <Label>Name</Label>
           <input
             type="text"
             value={selected.name}
             onChange={(e) => updateElement(selected.id, { name: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px 10px',
-              background: '#0d0d0e',
-              border: '1px solid #2a2a2a',
-              borderRadius: 6,
-              color: '#e5e5e5',
-            }}
+            style={inputStyle}
           />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Position</label>
+          <Label>Position</Label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
@@ -224,14 +221,7 @@ export default function App() {
                   position: { ...selected.position, x: Number(e.target.value) },
                 })
               }
-              style={{
-                flex: 1,
-                padding: '8px',
-                background: '#0d0d0e',
-                border: '1px solid #2a2a2a',
-                borderRadius: 6,
-                color: '#e5e5e5',
-              }}
+              style={{ ...inputStyle, flex: 1 }}
             />
             <input
               type="number"
@@ -241,19 +231,12 @@ export default function App() {
                   position: { ...selected.position, y: Number(e.target.value) },
                 })
               }
-              style={{
-                flex: 1,
-                padding: '8px',
-                background: '#0d0d0e',
-                border: '1px solid #2a2a2a',
-                borderRadius: 6,
-                color: '#e5e5e5',
-              }}
+              style={{ ...inputStyle, flex: 1 }}
             />
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Size</label>
+          <Label>Size</Label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
@@ -263,14 +246,7 @@ export default function App() {
                   size: { ...selected.size, width: Number(e.target.value) },
                 })
               }
-              style={{
-                flex: 1,
-                padding: '8px',
-                background: '#0d0d0e',
-                border: '1px solid #2a2a2a',
-                borderRadius: 6,
-                color: '#e5e5e5',
-              }}
+              style={{ ...inputStyle, flex: 1 }}
             />
             <input
               type="number"
@@ -280,19 +256,12 @@ export default function App() {
                   size: { ...selected.size, height: Number(e.target.value) },
                 })
               }
-              style={{
-                flex: 1,
-                padding: '8px',
-                background: '#0d0d0e',
-                border: '1px solid #2a2a2a',
-                borderRadius: 6,
-                color: '#e5e5e5',
-              }}
+              style={{ ...inputStyle, flex: 1 }}
             />
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Fill</label>
+          <Label>Fill</Label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="color"
@@ -312,16 +281,7 @@ export default function App() {
               type="text"
               value={currentStyle.fill}
               onChange={(e) => handleStyleChange({ fill: e.target.value })}
-              style={{
-                flex: 1,
-                padding: '8px 10px',
-                background: '#0d0d0e',
-                border: '1px solid #2a2a2a',
-                borderRadius: 6,
-                color: '#e5e5e5',
-                fontFamily: 'monospace',
-                fontSize: 12,
-              }}
+              style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginTop: 8 }}>
@@ -346,7 +306,7 @@ export default function App() {
         {isTextElement && (
           <>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Content</label>
+              <Label>Content</Label>
               <textarea
                 value={selected.text || ''}
                 onChange={(e) => updateElement(selected.id, { text: e.target.value })}
@@ -363,24 +323,16 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Font Size</label>
+              <Label>Font Size</Label>
               <input
                 type="number"
                 value={currentStyle.fontSize ?? 18}
                 onChange={(e) => handleStyleChange({ fontSize: Number(e.target.value) })}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  background: '#0d0d0e',
-                  border: '1px solid #2a2a2a',
-                  borderRadius: 6,
-                  color: '#e5e5e5',
-                  fontSize: 12,
-                }}
+                style={inputStyle}
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Alignment</label>
+              <Label>Alignment</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {TEXT_ALIGNMENTS.map((option) => (
                   <button
@@ -409,6 +361,28 @@ export default function App() {
     );
   };
 
+  // Determine what to show in inspector
+  const renderInspector = () => {
+    // If a transition is selected, show transition inspector
+    if (selectedTransitionId) {
+      return <TransitionInspector />;
+    }
+    
+    // If an element is selected, show element properties + state mapping
+    if (selectedElement) {
+      return (
+        <>
+          {renderElementInspector()}
+          <div style={{ marginTop: 24 }}>
+            <StateInspector />
+          </div>
+        </>
+      );
+    }
+    
+    // Default: show state mapping for current keyframe
+    return <StateInspector />;
+  };
 
   return (
     <div
@@ -422,6 +396,7 @@ export default function App() {
         fontSize: 13,
       }}
     >
+      {/* Header */}
       <header
         style={{
           height: 48,
@@ -440,6 +415,7 @@ export default function App() {
       </header>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Live Preview Panel */}
         <div
           style={{
             width: 320,
@@ -508,7 +484,9 @@ export default function App() {
           </div>
         </div>
 
+        {/* Main Editor Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Toolbar */}
           <div
             style={{
               height: 48,
@@ -600,14 +578,18 @@ export default function App() {
               <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={redo}>Redo</button>
             </div>
           </div>
-          <div style={{ flex: 1, display: 'flex' }}>
+
+          {/* Editor Content */}
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            {/* Layer Manager */}
             <aside
               style={{
-                width: 260,
+                width: 220,
                 borderRight: '1px solid #2a2a2a',
                 background: '#151515',
                 display: 'flex',
                 flexDirection: 'column',
+                overflow: 'hidden',
               }}
             >
               <div style={{ padding: 16, borderBottom: '1px solid #2a2a2a' }}>
@@ -629,6 +611,7 @@ export default function App() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
+                          textAlign: 'left',
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -647,9 +630,9 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <div style={{ padding: 16, overflowY: 'auto' }}>
-                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8 }}>Keyframes</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
+                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8 }}>Display States</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {keyframes.map((kf) => (
                     <button
                       key={kf.id}
@@ -657,14 +640,16 @@ export default function App() {
                       style={{
                         padding: '10px 12px',
                         background: selectedKeyframeId === kf.id ? '#2563eb20' : 'transparent',
-                        border: '1px solid #2a2a2a',
+                        border: selectedKeyframeId === kf.id ? '1px solid #2563eb' : '1px solid #2a2a2a',
                         borderRadius: 8,
                         color: '#fff',
                         textAlign: 'left',
                       }}
                     >
                       <strong style={{ display: 'block', fontSize: 12 }}>{kf.name}</strong>
-                      <span style={{ fontSize: 11, color: '#777' }}>{kf.summary ?? 'State description'}</span>
+                      <span style={{ fontSize: 10, color: '#666' }}>
+                        {kf.functionalState ? `→ ${kf.functionalState}` : 'No mapping'}
+                      </span>
                     </button>
                   ))}
                   <button
@@ -677,17 +662,20 @@ export default function App() {
                       background: 'transparent',
                     }}
                   >
-                    + Add Keyframe
+                    + Add Display State
                   </button>
                 </div>
               </div>
             </aside>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+
+            {/* Canvas + Interaction Manager */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {/* Canvas Header */}
               <div
                 style={{
                   borderBottom: '1px solid #2a2a2a',
                   padding: '0 20px',
-                  height: 56,
+                  height: 48,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -695,19 +683,21 @@ export default function App() {
               >
                 <div>
                   <h2 style={{ margin: 0, fontSize: 14 }}>{selectedKeyframe?.name ?? 'Untitled state'}</h2>
-                  <span style={{ fontSize: 12, color: '#777' }}>{selectedKeyframe?.summary}</span>
+                  <span style={{ fontSize: 11, color: '#777' }}>{selectedKeyframe?.summary}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={copySelectedElements} style={{ border: '1px solid #333', padding: '6px 12px', borderRadius: 6, background: 'transparent', color: '#fff' }}>Copy</button>
-                  <button onClick={pasteElements} style={{ border: '1px solid #333', padding: '6px 12px', borderRadius: 6, background: 'transparent', color: '#fff' }}>Paste</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={copySelectedElements} style={{ border: '1px solid #333', padding: '6px 12px', borderRadius: 6, background: 'transparent', color: '#fff', fontSize: 11 }}>Copy</button>
+                  <button onClick={pasteElements} style={{ border: '1px solid #333', padding: '6px 12px', borderRadius: 6, background: 'transparent', color: '#fff', fontSize: 11 }}>Paste</button>
                 </div>
               </div>
-              <div style={{ flex: 1, padding: 20, display: 'flex' }}>
+
+              {/* Canvas Area */}
+              <div style={{ flex: 1, padding: 16, minHeight: 0 }}>
                 <div
                   style={{
-                    flex: 1,
+                    height: '100%',
                     border: '1px solid #222',
-                    borderRadius: 16,
+                    borderRadius: 12,
                     background: '#0d0d0e',
                     position: 'relative',
                     overflow: 'hidden',
@@ -716,15 +706,30 @@ export default function App() {
                   <Canvas />
                 </div>
               </div>
+
+              {/* Interaction Manager */}
+              <div
+                style={{
+                  height: 220,
+                  borderTop: '1px solid #2a2a2a',
+                  background: '#111',
+                }}
+              >
+                <InteractionManager />
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Inspector Panel */}
         <div
           style={{
             width: 280,
             background: '#161617',
             borderLeft: '1px solid #2a2a2a',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           }}
         >
           <div
@@ -739,9 +744,48 @@ export default function App() {
           >
             Inspector
           </div>
-          <div style={{ padding: 16 }}>{renderInspector()}</div>
+          <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
+            {renderInspector()}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+// Helper components
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        color: '#888',
+        textTransform: 'uppercase',
+        marginBottom: 12,
+        paddingBottom: 8,
+        borderBottom: '1px solid #2a2a2a',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>
+      {children}
+    </label>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 10px',
+  background: '#0d0d0e',
+  border: '1px solid #2a2a2a',
+  borderRadius: 6,
+  color: '#e5e5e5',
+  fontSize: 12,
+};

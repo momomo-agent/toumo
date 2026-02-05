@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 
 interface HistoryEntry {
@@ -23,6 +23,8 @@ const clampElementToFrame = (element: KeyElement, frame: Size): KeyElement => {
 interface EditorState {
   keyframes: Keyframe[];
   transitions: Transition[];
+  functionalStates: FunctionalState[];
+  components: Component[];
   selectedKeyframeId: string;
   selectedElementId: string | null;
   selectedElementIds: string[];
@@ -71,6 +73,16 @@ interface EditorActions {
   updateTransition: (id: string, updates: Partial<Transition>) => void;
   addTransition: (from: string, to: string) => void;
   deleteTransition: (id: string) => void;
+  // Functional state actions
+  addFunctionalState: (name: string) => void;
+  updateFunctionalState: (id: string, updates: Partial<FunctionalState>) => void;
+  deleteFunctionalState: (id: string) => void;
+  // Keyframe functional state mapping
+  updateKeyframeFunctionalState: (keyframeId: string, functionalStateId: string | undefined) => void;
+  // Component actions
+  addComponent: (name: string) => void;
+  updateComponent: (id: string, updates: Partial<Component>) => void;
+  deleteComponent: (id: string) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -79,6 +91,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   // Initial state
   keyframes: initialKeyframes,
   transitions: initialTransitions,
+  functionalStates: [
+    { id: 'fs-idle', name: 'Idle', isInitial: true },
+    { id: 'fs-loading', name: 'Loading', isInitial: false },
+    { id: 'fs-success', name: 'Success', isInitial: false },
+  ],
+  components: [],
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -382,5 +400,64 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   deleteTransition: (id) => set((state) => ({
     transitions: state.transitions.filter((tr) => tr.id !== id),
     selectedTransitionId: state.selectedTransitionId === id ? null : state.selectedTransitionId,
+  })),
+
+  // Functional state actions
+  addFunctionalState: (name) => set((state) => {
+    const newId = `fs-${Date.now()}`;
+    const newState: FunctionalState = {
+      id: newId,
+      name,
+      isInitial: state.functionalStates.length === 0,
+    };
+    return {
+      functionalStates: [...state.functionalStates, newState],
+    };
+  }),
+
+  updateFunctionalState: (id, updates) => set((state) => ({
+    functionalStates: state.functionalStates.map((fs) =>
+      fs.id === id ? { ...fs, ...updates } : fs
+    ),
+  })),
+
+  deleteFunctionalState: (id) => set((state) => ({
+    functionalStates: state.functionalStates.filter((fs) => fs.id !== id),
+    // Also clear references in keyframes
+    keyframes: state.keyframes.map((kf) =>
+      kf.functionalState === id ? { ...kf, functionalState: undefined } : kf
+    ),
+  })),
+
+  // Keyframe functional state mapping
+  updateKeyframeFunctionalState: (keyframeId, functionalStateId) => set((state) => ({
+    keyframes: state.keyframes.map((kf) =>
+      kf.id === keyframeId ? { ...kf, functionalState: functionalStateId } : kf
+    ),
+  })),
+
+  // Component actions
+  addComponent: (name) => set((state) => {
+    const newId = `comp-${Date.now()}`;
+    const newComponent: Component = {
+      id: newId,
+      name,
+      functionalStates: [],
+      displayStateMappings: [],
+      transitions: [],
+    };
+    return {
+      components: [...state.components, newComponent],
+    };
+  }),
+
+  updateComponent: (id, updates) => set((state) => ({
+    components: state.components.map((c) =>
+      c.id === id ? { ...c, ...updates } : c
+    ),
+  })),
+
+  deleteComponent: (id) => set((state) => ({
+    components: state.components.filter((c) => c.id !== id),
   })),
 }));
