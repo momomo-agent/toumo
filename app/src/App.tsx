@@ -435,8 +435,14 @@ const App = () => {
     
     if (!isDragging || !dragRef.current) return;
     
-    const dx = (e.clientX - dragRef.current.startX) / canvasScale;
-    const dy = (e.clientY - dragRef.current.startY) / canvasScale;
+    let dx = (e.clientX - dragRef.current.startX) / canvasScale;
+    let dy = (e.clientY - dragRef.current.startY) / canvasScale;
+    
+    // Shift key constrains to horizontal or vertical
+    if (e.shiftKey) {
+      if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+      else dx = 0;
+    }
     
     // Get all elements to move (selected + same group)
     const elementsToMove = new Set<string>([dragRef.current.elementId]);
@@ -463,7 +469,7 @@ const App = () => {
         };
       })
     );
-  }, [isDragging, isResizing, isPanning, selectedKeyframeId, canvasScale]);
+  }, [isDragging, isResizing, isPanning, selectedKeyframeId, canvasScale, selectedElementIds]);
 
   const handleCanvasMouseUp = useCallback(() => {
     // Handle box selection end
