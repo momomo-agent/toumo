@@ -65,6 +65,8 @@ export default function App() {
     frameSize,
     setFrameSize,
     addImageElement,
+    groupSelectedElements,
+    ungroupSelectedElements,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -191,6 +193,15 @@ export default function App() {
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'y') {
         redo();
+        event.preventDefault();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'g') {
+        if (event.shiftKey) {
+          ungroupSelectedElements();
+        } else {
+          groupSelectedElements();
+        }
         event.preventDefault();
         return;
       }

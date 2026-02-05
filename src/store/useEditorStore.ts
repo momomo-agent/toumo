@@ -85,6 +85,9 @@ interface EditorActions {
   deleteComponent: (id: string) => void;
   // Image actions
   addImageElement: (imageSrc: string, originalWidth: number, originalHeight: number) => void;
+  // Group actions
+  groupSelectedElements: () => void;
+  ungroupSelectedElements: () => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -515,6 +518,126 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementId: newElement.id,
       selectedElementIds: [newElement.id],
       currentTool: 'select',
+    }));
+  },
+
+  // Group selected elements
+  groupSelectedElements: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    
+    get().pushHistory();
+    const groupId = `group-${Date.now()}`;
+    
+    // Find selected elements
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selectedElements = currentKeyframe.keyElements.filter(
+      el => state.selectedElementIds.includes(el.id)
+    );
+    
+    // Calculate bounding box
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    selectedElements.forEach(el => {
+      minX = Math.min(minX, el.position.x);
+      minY = Math.min(minY, el.position.y);
+      maxX = Math.max(maxX, el.position.x + el.size.width);
+      maxY = Math.max(maxY, el.position.y + el.size.height);
+    });
+    
+    // Create group element
+    const groupElement: KeyElement = {
+      id: groupId,
+      name: 'Group',
+      category: 'content',
+      isKeyElement: true,
+      attributes: [],
+      position: { x: minX, y: minY },
+      size: { width: maxX - minX, height: maxY - minY },
+      shapeType: 'rectangle',
+      style: {
+        fill: 'transparent',
+        fillOpacity: 0,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 0,
+        borderRadius: 0,
+      },
+    };
+    
+    set((state) => ({
+      keyframes: state.keyframes.map((kf) => {
+        if (kf.id !== state.selectedKeyframeId) return kf;
+        
+        // Update children to have parentId
+        const updatedElements = kf.keyElements.map(el => {
+          if (state.selectedElementIds.includes(el.id)) {
+            return {
+              ...el,
+              parentId: groupId,
+              position: {
+                x: el.position.x - minX,
+                y: el.position.y - minY,
+              },
+            };
+          }
+          return el;
+        });
+        
+        return {
+          ...kf,
+          keyElements: [groupElement, ...updatedElements],
+        };
+      }),
+      selectedElementId: groupId,
+      selectedElementIds: [groupId],
+    }));
+  },
+
+  // Ungroup selected elements
+  ungroupSelectedElements: () => {
+    const state = get();
+    if (state.selectedElementIds.length !== 1) return;
+    
+    const groupId = state.selectedElementIds[0];
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const groupElement = currentKeyframe.keyElements.find(el => el.id === groupId);
+    if (!groupElement) return;
+    
+    // Find children
+    const children = currentKeyframe.keyElements.filter(el => el.parentId === groupId);
+    if (children.length === 0) return;
+    
+    get().pushHistory();
+    
+    set((state) => ({
+      keyframes: state.keyframes.map((kf) => {
+        if (kf.id !== state.selectedKeyframeId) return kf;
+        
+        // Remove group, update children positions
+        const updatedElements = kf.keyElements
+          .filter(el => el.id !== groupId)
+          .map(el => {
+            if (el.parentId === groupId) {
+              return {
+                ...el,
+                parentId: undefined,
+                position: {
+                  x: el.position.x + groupElement.position.x,
+                  y: el.position.y + groupElement.position.y,
+                },
+              };
+            }
+            return el;
+          });
+        
+        return { ...kf, keyElements: updatedElements };
+      }),
+      selectedElementIds: children.map(c => c.id),
+      selectedElementId: children.length === 1 ? children[0].id : null,
     }));
   },
 }));
