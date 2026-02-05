@@ -316,10 +316,9 @@ textarea {
   border-radius: 24px;
   background: #070a12;
   padding: 20px;
-  min-height: 360px;
-  display: grid;
-  grid-template-rows: repeat(4, minmax(60px, 1fr));
-  gap: 12px;
+  min-height: 400px;
+  position: relative;
+  overflow: hidden;
 }
 
 .board-element {
@@ -330,6 +329,16 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  user-select: none;
+  transition: box-shadow 0.15s ease;
+}
+
+.board-element:hover {
+  box-shadow: 0 0 0 2px rgba(127, 241, 185, 0.4);
+}
+
+.board-element.selected {
+  box-shadow: 0 0 0 2px rgba(127, 241, 185, 0.9);
 }
 
 .board-element.is-key {

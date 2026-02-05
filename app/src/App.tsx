@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
+import type { MouseEvent } from "react";
 import "./App.css";
 
 type KeyAttribute = {
@@ -9,12 +10,24 @@ type KeyAttribute = {
   curve: string;
 };
 
+type Position = {
+  x: number;
+  y: number;
+};
+
+type Size = {
+  width: number;
+  height: number;
+};
+
 type KeyElement = {
   id: string;
   name: string;
   category: "content" | "component" | "system";
   isKeyElement: boolean;
   attributes: KeyAttribute[];
+  position: Position;
+  size: Size;
 };
 
 type Keyframe = {
@@ -61,6 +74,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Hero Card",
         category: "content",
         isKeyElement: true,
+        position: { x: 40, y: 20 },
+        size: { width: 280, height: 120 },
         attributes: [
           { id: "hero-scale-idle", label: "Scale", value: "100%", targeted: true, curve: "global" },
           { id: "hero-opacity-idle", label: "Opacity", value: "1", targeted: true, curve: "global" },
@@ -71,6 +86,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Supporting Copy",
         category: "content",
         isKeyElement: true,
+        position: { x: 40, y: 150 },
+        size: { width: 280, height: 40 },
         attributes: [
           { id: "copy-opacity-idle", label: "Opacity", value: "0.92", targeted: true, curve: "global" },
           { id: "copy-tracking-idle", label: "Letter spacing", value: "0", targeted: false, curve: "inherit" },
@@ -81,6 +98,8 @@ const initialKeyframes: Keyframe[] = [
         name: "CTA Button",
         category: "component",
         isKeyElement: false,
+        position: { x: 100, y: 210 },
+        size: { width: 160, height: 48 },
         attributes: [
           { id: "cta-y-idle", label: "Y offset", value: "0px", targeted: false, curve: "inherit" },
           { id: "cta-shadow-idle", label: "Shadow", value: "Soft / L", targeted: false, curve: "inherit" },
@@ -91,6 +110,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Skeleton Loader",
         category: "system",
         isKeyElement: false,
+        position: { x: 40, y: 280 },
+        size: { width: 280, height: 60 },
         attributes: [
           { id: "skeleton-opacity-idle", label: "Opacity", value: "0", targeted: true, curve: "global" },
         ],
@@ -100,6 +121,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Success Badge",
         category: "component",
         isKeyElement: false,
+        position: { x: 270, y: 20 },
+        size: { width: 48, height: 48 },
         attributes: [
           { id: "badge-scale-idle", label: "Scale", value: "80%", targeted: false, curve: "inherit" },
           { id: "badge-opacity-idle", label: "Opacity", value: "0", targeted: true, curve: "global" },
@@ -118,6 +141,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Hero Card",
         category: "content",
         isKeyElement: true,
+        position: { x: 40, y: 20 },
+        size: { width: 280, height: 120 },
         attributes: [
           { id: "hero-scale-loading", label: "Scale", value: "96%", targeted: true, curve: "ease-in" },
           { id: "hero-opacity-loading", label: "Opacity", value: "0.35", targeted: true, curve: "ease-in" },
@@ -128,6 +153,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Supporting Copy",
         category: "content",
         isKeyElement: false,
+        position: { x: 40, y: 150 },
+        size: { width: 280, height: 40 },
         attributes: [
           { id: "copy-opacity-loading", label: "Opacity", value: "0.4", targeted: true, curve: "ease-in" },
           { id: "copy-blur-loading", label: "Blur", value: "6px", targeted: true, curve: "ease-in" },
@@ -138,6 +165,8 @@ const initialKeyframes: Keyframe[] = [
         name: "CTA Button",
         category: "component",
         isKeyElement: true,
+        position: { x: 100, y: 238 },
+        size: { width: 160, height: 48 },
         attributes: [
           { id: "cta-y-loading", label: "Y offset", value: "28px", targeted: true, curve: "spring" },
           { id: "cta-opacity-loading", label: "Opacity", value: "0.5", targeted: true, curve: "ease-in" },
@@ -148,6 +177,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Skeleton Loader",
         category: "system",
         isKeyElement: true,
+        position: { x: 40, y: 280 },
+        size: { width: 280, height: 60 },
         attributes: [
           { id: "skeleton-opacity-loading", label: "Opacity", value: "1", targeted: true, curve: "ease-out" },
           { id: "skeleton-glow-loading", label: "Glow", value: "Pulse", targeted: true, curve: "ease-out" },
@@ -158,6 +189,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Success Badge",
         category: "component",
         isKeyElement: false,
+        position: { x: 270, y: 20 },
+        size: { width: 48, height: 48 },
         attributes: [
           { id: "badge-opacity-loading", label: "Opacity", value: "0", targeted: true, curve: "global" },
         ],
@@ -175,6 +208,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Hero Card",
         category: "content",
         isKeyElement: false,
+        position: { x: 40, y: 20 },
+        size: { width: 280, height: 120 },
         attributes: [
           { id: "hero-scale-success", label: "Scale", value: "100%", targeted: true, curve: "ease-out" },
           { id: "hero-opacity-success", label: "Opacity", value: "1", targeted: true, curve: "ease-out" },
@@ -185,6 +220,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Supporting Copy",
         category: "content",
         isKeyElement: true,
+        position: { x: 40, y: 150 },
+        size: { width: 280, height: 40 },
         attributes: [
           { id: "copy-opacity-success", label: "Opacity", value: "0.96", targeted: true, curve: "ease-out" },
           { id: "copy-color-success", label: "Color", value: "emerald", targeted: true, curve: "ease-out" },
@@ -195,6 +232,8 @@ const initialKeyframes: Keyframe[] = [
         name: "CTA Button",
         category: "component",
         isKeyElement: true,
+        position: { x: 100, y: 210 },
+        size: { width: 160, height: 48 },
         attributes: [
           { id: "cta-y-success", label: "Y offset", value: "0px", targeted: true, curve: "spring" },
           { id: "cta-fill-success", label: "Fill", value: "Accent / Lime", targeted: true, curve: "spring" },
@@ -205,6 +244,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Skeleton Loader",
         category: "system",
         isKeyElement: false,
+        position: { x: 40, y: 280 },
+        size: { width: 280, height: 60 },
         attributes: [
           { id: "skeleton-opacity-success", label: "Opacity", value: "0", targeted: true, curve: "ease-in" },
         ],
@@ -214,6 +255,8 @@ const initialKeyframes: Keyframe[] = [
         name: "Success Badge",
         category: "component",
         isKeyElement: true,
+        position: { x: 270, y: 20 },
+        size: { width: 48, height: 48 },
         attributes: [
           { id: "badge-scale-success", label: "Scale", value: "120%", targeted: true, curve: "overshoot" },
           { id: "badge-opacity-success", label: "Opacity", value: "1", targeted: true, curve: "overshoot" },
@@ -270,6 +313,11 @@ const App = () => {
     initialTransitions[0]?.id ?? null
   );
 
+  // Drag state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+
   const selectedKeyframe = useMemo(
     () => keyframes.find((frame) => frame.id === selectedKeyframeId)!,
     [keyframes, selectedKeyframeId]
@@ -303,6 +351,54 @@ const App = () => {
       null
     );
   }, [selectedTransitionId, transitions, outgoingTransitions, incomingTransitions]);
+
+  // Drag handlers
+  const handleCanvasMouseDown = useCallback((e: MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
+    if (!element) return;
+    
+    setSelectedElementId(elementId);
+    setIsDragging(true);
+    dragRef.current = {
+      elementId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: element.position.x,
+      origY: element.position.y,
+    };
+  }, [selectedKeyframe]);
+
+  const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !dragRef.current) return;
+    
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== dragRef.current!.elementId) return el;
+            return {
+              ...el,
+              position: {
+                x: Math.max(0, dragRef.current!.origX + dx),
+                y: Math.max(0, dragRef.current!.origY + dy),
+              },
+            };
+          }),
+        };
+      })
+    );
+  }, [isDragging, selectedKeyframeId]);
+
+  const handleCanvasMouseUp = useCallback(() => {
+    setIsDragging(false);
+    dragRef.current = null;
+  }, []);
 
   const selectKeyframe = (id: string) => {
     setSelectedKeyframeId(id);
@@ -615,13 +711,28 @@ const App = () => {
                 <span>{selectedKeyframe.summary}</span>
               </div>
               <div className="canvas-content">
-                <div className="board">
+                <div 
+                  className="board"
+                  ref={canvasRef}
+                  onMouseMove={handleCanvasMouseMove}
+                  onMouseUp={handleCanvasMouseUp}
+                  onMouseLeave={handleCanvasMouseUp}
+                >
                   {previewElements.map((element) => (
                     <div
                       key={`board-${element.id}`}
                       className={`board-element element-${element.id} ${
                         element.isKeyElement ? "is-key" : ""
-                      }`}
+                      } ${selectedElementId === element.id ? "selected" : ""}`}
+                      style={{
+                        position: "absolute",
+                        left: element.position.x,
+                        top: element.position.y,
+                        width: element.size.width,
+                        height: element.size.height,
+                        cursor: isDragging ? "grabbing" : "grab",
+                      }}
+                      onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
                     >
                       <span>{element.name}</span>
                       {element.isKeyElement && <small>Key</small>}
