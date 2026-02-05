@@ -12,6 +12,7 @@ export default function App() {
     selectedElementId,
     setSelectedElementId,
     updateElement,
+    addElement,
   } = useEditorStore();
 
   const [tool, setTool] = useState<Tool>('select');
@@ -33,6 +34,42 @@ export default function App() {
     { id: 'text', icon: 'T', key: 'T' },
     { id: 'hand', icon: '✋', key: 'H' },
   ];
+
+  // 画布点击创建元素
+  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    if (tool === 'select' || tool === 'hand') {
+      setSelectedElementId(null);
+      return;
+    }
+    
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const newElement = {
+      id: `el-${Date.now()}`,
+      name: tool === 'rectangle' ? 'Rectangle' : tool === 'ellipse' ? 'Ellipse' : 'Text',
+      category: 'content' as const,
+      isKeyElement: true,
+      attributes: [],
+      position: { x, y },
+      size: { width: 100, height: 100 },
+      shapeType: tool as 'rectangle' | 'ellipse' | 'text',
+      style: {
+        fill: '#3b82f6',
+        fillOpacity: 1,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 1,
+        borderRadius: tool === 'ellipse' ? 50 : 8,
+      },
+    };
+    
+    addElement(newElement);
+    setTool('select');
+  }, [tool, addElement, setSelectedElementId]);
 
   // 键盘快捷键
   useEffect(() => {
@@ -301,7 +338,7 @@ export default function App() {
           {/* Canvas */}
           <div 
             ref={canvasRef}
-            onClick={() => setSelectedElementId(null)}
+            onClick={handleCanvasClick}
             style={{
               flex: 1,
               position: 'relative',
