@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import type { KeyElement, Position } from '../../types';
 import { useEditorStore } from '../../store';
@@ -42,7 +42,11 @@ export function CanvasElement({
     setIsDragging,
     setIsResizing,
     pushHistory,
+    updateElement,
   } = useEditorStore();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(element.text || '');
 
   const dragStartRef = useRef<{
     pointerX: number;
@@ -408,9 +412,48 @@ export function CanvasElement({
         </svg>
       )}
       {isText ? (
-        <span style={{ padding: '0 8px', width: '100%', textAlign: element.style?.textAlign || 'center' }}>
-          {element.text ?? 'Text'}
-        </span>
+        isEditing ? (
+          <input
+            type="text"
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onBlur={() => {
+              updateElement(element.id, { text: editText });
+              setIsEditing(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                updateElement(element.id, { text: editText });
+                setIsEditing(false);
+              }
+              if (e.key === 'Escape') {
+                setEditText(element.text || '');
+                setIsEditing(false);
+              }
+            }}
+            autoFocus
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              fontSize: element.style?.fontSize || 14,
+              textAlign: element.style?.textAlign || 'center',
+              outline: 'none',
+              padding: '0 8px',
+            }}
+          />
+        ) : (
+          <span
+            onDoubleClick={() => {
+              setEditText(element.text || '');
+              setIsEditing(true);
+            }}
+            style={{ padding: '0 8px', width: '100%', textAlign: element.style?.textAlign || 'center' }}
+          >
+            {element.text ?? 'Text'}
+          </span>
+        )
       ) : null}
       {renderHandles()}
     </div>
