@@ -280,20 +280,26 @@ textarea {
 
 .layer-row {
   width: 100%;
-  padding: 12px;
-  border-radius: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: inherit;
   cursor: pointer;
+  font-size: 13px;
+  transition: background 0.1s;
+}
+
+.layer-row:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .layer-row.selected {
-  border-color: rgba(126, 244, 192, 0.6);
-  background: rgba(126, 244, 192, 0.08);
+  background: rgba(99, 179, 237, 0.15);
+  border-color: transparent;
 }
 
 .layer-category {
