@@ -1128,6 +1128,43 @@ export default function App() {
           >
             Export PNG
           </button>
+          <button
+            onClick={() => {
+              const kf = selectedKeyframe;
+              if (!kf) return;
+              let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${frameSize.width}" height="${frameSize.height}">`;
+              kf.keyElements.forEach(el => {
+                if (el.shapeType === 'rectangle') {
+                  svg += `<rect x="${el.position.x}" y="${el.position.y}" width="${el.size.width}" height="${el.size.height}" fill="${el.style?.fill || '#333'}" rx="${el.style?.borderRadius || 0}"/>`;
+                } else if (el.shapeType === 'ellipse') {
+                  const cx = el.position.x + el.size.width / 2;
+                  const cy = el.position.y + el.size.height / 2;
+                  svg += `<ellipse cx="${cx}" cy="${cy}" rx="${el.size.width / 2}" ry="${el.size.height / 2}" fill="${el.style?.fill || '#333'}"/>`;
+                } else if (el.shapeType === 'text') {
+                  svg += `<text x="${el.position.x + el.size.width / 2}" y="${el.position.y + el.size.height / 2}" fill="${el.style?.textColor || '#fff'}" font-size="${el.style?.fontSize || 14}" text-anchor="middle" dominant-baseline="middle">${el.text || ''}</text>`;
+                }
+              });
+              svg += '</svg>';
+              const blob = new Blob([svg], { type: 'image/svg+xml' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'toumo-export.svg';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            style={{
+              padding: '6px 12px',
+              background: 'transparent',
+              border: '1px solid #333',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            Export SVG
+          </button>
         </div>
       </header>
 
