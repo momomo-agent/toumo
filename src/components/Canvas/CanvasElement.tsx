@@ -52,6 +52,9 @@ export function CanvasElement({
   const [editText, setEditText] = useState(element.text || '');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
+  // Don't render hidden elements
+  if (element.visible === false) return null;
+
   const dragStartRef = useRef<{
     pointerX: number;
     pointerY: number;
