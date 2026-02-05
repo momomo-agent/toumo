@@ -365,6 +365,7 @@ export default function App() {
       if (overrides.fill) addRecentColor(overrides.fill);
     };
     const isTextElement = selected.shapeType === 'text';
+    const isLineElement = selected.shapeType === 'line';
     const activeAlign = currentStyle.textAlign ?? 'left';
 
     return (
@@ -987,6 +988,29 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        {isLineElement && (
+          <div style={{ marginBottom: 16 }}>
+            <Label>Arrow</Label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => handleStyleChange({ lineEndArrow: !currentStyle.lineEndArrow })}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  background: currentStyle.lineEndArrow ? '#2563eb30' : 'transparent',
+                  border: '1px solid #333',
+                  borderRadius: 6,
+                  color: '#fff',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                }}
+              >
+                End Arrow {currentStyle.lineEndArrow ? '✓' : ''}
+              </button>
+            </div>
+          </div>
+        )}
 
         {isTextElement && (
           <>
