@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import html2canvas from 'html2canvas';
 import { Canvas } from './components/Canvas';
 import { InteractionManager } from './components/InteractionManager';
 import { StateInspector } from './components/Inspector/StateInspector';
@@ -107,6 +108,31 @@ export default function App() {
   const handleAddKeyframe = () => {
     addKeyframe();
   };
+
+  // Export current frame as PNG
+  const handleExportPNG = useCallback(async () => {
+    const frameElement = document.querySelector(`[data-frame-id="${selectedKeyframeId}"]`) as HTMLElement;
+    if (!frameElement) {
+      alert('No frame to export');
+      return;
+    }
+    
+    try {
+      const canvas = await html2canvas(frameElement, {
+        backgroundColor: '#1a1a1a',
+        scale: 2,
+        logging: false,
+      });
+      
+      const link = document.createElement('a');
+      link.download = `${selectedKeyframe?.name || 'frame'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Export failed');
+    }
+  }, [selectedKeyframeId, selectedKeyframe?.name]);
 
   const tools: ToolButton[] = [
     { id: 'select', icon: '↖', label: 'Select (V)' },
@@ -501,6 +527,22 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontWeight: 600, fontSize: 15 }}>Toumo</span>
           <span style={{ color: '#666', fontSize: 12 }}>Motion Editor</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={handleExportPNG}
+            style={{
+              padding: '6px 12px',
+              background: '#2563eb',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            Export PNG
+          </button>
         </div>
       </header>
 

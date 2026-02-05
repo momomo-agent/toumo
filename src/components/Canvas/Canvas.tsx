@@ -595,6 +595,7 @@ export function Canvas() {
                 {isActive && <span style={{ fontSize: 11, color: '#8ab4ff' }}>Editing</span>}
               </button>
               <div
+                data-frame-id={keyframe.id}
                 style={{
                   width: layout.width,
                   height: layout.height,
