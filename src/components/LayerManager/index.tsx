@@ -157,7 +157,7 @@ export function LayerManager() {
   return (
     <section className="layer-panel">
       <h3 style={{ fontSize: 11, fontWeight: 600, color: '#888', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        Layers
+        Layers ({elements.length})
       </h3>
       <input
         type="text"
