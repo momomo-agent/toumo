@@ -1280,6 +1280,14 @@ const App = () => {
         e.preventDefault();
         toggleElementVisibility(selectedElementId);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "]" && selectedElementId) {
+        e.preventDefault();
+        moveElementUp(selectedElementId);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "[" && selectedElementId) {
+        e.preventDefault();
+        moveElementDown(selectedElementId);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
         duplicateElement(selectedElementId);
