@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
@@ -501,7 +501,7 @@ export function Canvas() {
     };
   }, [currentTool, nudgeSelectedElements, setCurrentTool]);
 
-  const handleWheel = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
+  const handleWheel = useCallback((event: WheelEvent) => {
     if (!event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
     if (!canvasRef.current) return;
@@ -522,13 +522,21 @@ export function Canvas() {
     });
   }, [canvasOffset.x, canvasOffset.y, canvasScale, setCanvasOffset, setCanvasScale]);
 
+  useEffect(() => {
+    const node = canvasRef.current;
+    if (!node) return;
+    node.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      node.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
+
   return (
     <div
       ref={canvasRef}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
-      onWheel={handleWheel}
       className="canvas-stage"
       style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair' }}
     >
