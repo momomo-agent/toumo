@@ -410,6 +410,7 @@ export function CanvasElement({
           element.style?.brightness ? `brightness(${element.style.brightness})` : '',
           element.style?.contrast ? `contrast(${element.style.contrast})` : '',
           element.style?.saturate ? `saturate(${element.style.saturate})` : '',
+          element.style?.hueRotate ? `hue-rotate(${element.style.hueRotate}deg)` : '',
         ].filter(Boolean).join(' ') || undefined,
         userSelect: 'none',
       }}

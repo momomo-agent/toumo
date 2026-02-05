@@ -892,6 +892,17 @@ export default function App() {
               style={{ width: '100%' }}
             />
           </div>
+          <div style={{ marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: '#666' }}>Hue Rotate</span>
+            <input
+              type="range"
+              min={0}
+              max={360}
+              value={currentStyle.hueRotate ?? 0}
+              onChange={(e) => handleStyleChange({ hueRotate: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
 
         {/* Border Radius Control */}

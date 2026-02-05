@@ -59,6 +59,7 @@ export type ShapeStyle = {
   brightness?: number;
   contrast?: number;
   saturate?: number;
+  hueRotate?: number;
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;
