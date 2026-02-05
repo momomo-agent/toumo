@@ -1426,7 +1426,9 @@ export default function App() {
         <span>Tool: {currentTool}</span>
         <span>{frameSize.width} × {frameSize.height}</span>
         <span>Zoom: {Math.round(canvasScale * 100)}%</span>
-        <span>{selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
+        <span>{selectedElementIds.length === 1 && selectedKeyframe?.keyElements.find(e => e.id === selectedElementIds[0]) 
+          ? `X: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
+          : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
       </div>
       <ShortcutsPanel />
     </div>
