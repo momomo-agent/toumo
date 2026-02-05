@@ -17,6 +17,7 @@ interface EditorState {
   clipboard: KeyElement[];
   canvasOffset: Position;
   canvasScale: number;
+  frameSize: Size;
   history: HistoryEntry[];
   historyIndex: number;
   isDragging: boolean;
@@ -46,6 +47,7 @@ interface EditorActions {
   setIsResizing: (isResizing: boolean) => void;
   setIsSelecting: (isSelecting: boolean) => void;
   setSelectionBox: (box: { start: Position; end: Position } | null) => void;
+  setFrameSize: (size: Size) => void;
   copySelectedElements: () => void;
   pasteElements: () => void;
   undo: () => void;
@@ -67,6 +69,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   clipboard: [],
   canvasOffset: { x: 0, y: 0 },
   canvasScale: 1,
+  frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   history: [{ keyframes: initialKeyframes }],
   historyIndex: 0,
   isDragging: false,
@@ -238,6 +241,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
   setSelectionBox: (selectionBox) => set({ selectionBox }),
+  setFrameSize: (frameSize) => set({ frameSize }),
 
   copySelectedElements: () => {
     const state = get();
