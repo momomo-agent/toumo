@@ -71,7 +71,7 @@ export default function App() {
 
     addElement(newElement);
     setTool('select');
-  }, [tool, addElement, setSelectedElementId]);
+  }, [tool, addElement, setSelectedElementId, setTool]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
