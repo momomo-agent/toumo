@@ -1,0 +1,847 @@
+import { useMemo, useState } from "react";
+import "./App.css";
+
+type KeyAttribute = {
+  id: string;
+  label: string;
+  value: string;
+  targeted: boolean;
+  curve: string;
+};
+
+type KeyElement = {
+  id: string;
+  name: string;
+  category: "content" | "component" | "system";
+  isKeyElement: boolean;
+  attributes: KeyAttribute[];
+};
+
+type Keyframe = {
+  id: string;
+  name: string;
+  summary: string;
+  functionalState?: string;
+  keyElements: KeyElement[];
+};
+
+type FunctionalState = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+type Transition = {
+  id: string;
+  from: string;
+  to: string;
+  trigger: string;
+  duration: number;
+  delay: number;
+  curve: string;
+  description?: string;
+};
+
+const functionalStates: FunctionalState[] = [
+  { id: "idle", name: "Idle", description: "Waiting for user input" },
+  { id: "loading", name: "Loading", description: "Async request in progress" },
+  { id: "success", name: "Success", description: "Positive API response" },
+  { id: "error", name: "Error", description: "Fallback when request fails" },
+];
+
+const initialKeyframes: Keyframe[] = [
+  {
+    id: "kf-idle",
+    name: "Idle",
+    summary: "Hero + CTA ready for interaction",
+    functionalState: "idle",
+    keyElements: [
+      {
+        id: "hero",
+        name: "Hero Card",
+        category: "content",
+        isKeyElement: true,
+        attributes: [
+          { id: "hero-scale-idle", label: "Scale", value: "100%", targeted: true, curve: "global" },
+          { id: "hero-opacity-idle", label: "Opacity", value: "1", targeted: true, curve: "global" },
+        ],
+      },
+      {
+        id: "copy",
+        name: "Supporting Copy",
+        category: "content",
+        isKeyElement: true,
+        attributes: [
+          { id: "copy-opacity-idle", label: "Opacity", value: "0.92", targeted: true, curve: "global" },
+          { id: "copy-tracking-idle", label: "Letter spacing", value: "0", targeted: false, curve: "inherit" },
+        ],
+      },
+      {
+        id: "cta",
+        name: "CTA Button",
+        category: "component",
+        isKeyElement: false,
+        attributes: [
+          { id: "cta-y-idle", label: "Y offset", value: "0px", targeted: false, curve: "inherit" },
+          { id: "cta-shadow-idle", label: "Shadow", value: "Soft / L", targeted: false, curve: "inherit" },
+        ],
+      },
+      {
+        id: "skeleton",
+        name: "Skeleton Loader",
+        category: "system",
+        isKeyElement: false,
+        attributes: [
+          { id: "skeleton-opacity-idle", label: "Opacity", value: "0", targeted: true, curve: "global" },
+        ],
+      },
+      {
+        id: "badge",
+        name: "Success Badge",
+        category: "component",
+        isKeyElement: false,
+        attributes: [
+          { id: "badge-scale-idle", label: "Scale", value: "80%", targeted: false, curve: "inherit" },
+          { id: "badge-opacity-idle", label: "Opacity", value: "0", targeted: true, curve: "global" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "kf-loading",
+    name: "Loading",
+    summary: "CTA lifts, skeleton fades in",
+    functionalState: "loading",
+    keyElements: [
+      {
+        id: "hero",
+        name: "Hero Card",
+        category: "content",
+        isKeyElement: true,
+        attributes: [
+          { id: "hero-scale-loading", label: "Scale", value: "96%", targeted: true, curve: "ease-in" },
+          { id: "hero-opacity-loading", label: "Opacity", value: "0.35", targeted: true, curve: "ease-in" },
+        ],
+      },
+      {
+        id: "copy",
+        name: "Supporting Copy",
+        category: "content",
+        isKeyElement: false,
+        attributes: [
+          { id: "copy-opacity-loading", label: "Opacity", value: "0.4", targeted: true, curve: "ease-in" },
+          { id: "copy-blur-loading", label: "Blur", value: "6px", targeted: true, curve: "ease-in" },
+        ],
+      },
+      {
+        id: "cta",
+        name: "CTA Button",
+        category: "component",
+        isKeyElement: true,
+        attributes: [
+          { id: "cta-y-loading", label: "Y offset", value: "28px", targeted: true, curve: "spring" },
+          { id: "cta-opacity-loading", label: "Opacity", value: "0.5", targeted: true, curve: "ease-in" },
+        ],
+      },
+      {
+        id: "skeleton",
+        name: "Skeleton Loader",
+        category: "system",
+        isKeyElement: true,
+        attributes: [
+          { id: "skeleton-opacity-loading", label: "Opacity", value: "1", targeted: true, curve: "ease-out" },
+          { id: "skeleton-glow-loading", label: "Glow", value: "Pulse", targeted: true, curve: "ease-out" },
+        ],
+      },
+      {
+        id: "badge",
+        name: "Success Badge",
+        category: "component",
+        isKeyElement: false,
+        attributes: [
+          { id: "badge-opacity-loading", label: "Opacity", value: "0", targeted: true, curve: "global" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "kf-success",
+    name: "Success",
+    summary: "Badge pops, CTA resets",
+    functionalState: "success",
+    keyElements: [
+      {
+        id: "hero",
+        name: "Hero Card",
+        category: "content",
+        isKeyElement: false,
+        attributes: [
+          { id: "hero-scale-success", label: "Scale", value: "100%", targeted: true, curve: "ease-out" },
+          { id: "hero-opacity-success", label: "Opacity", value: "1", targeted: true, curve: "ease-out" },
+        ],
+      },
+      {
+        id: "copy",
+        name: "Supporting Copy",
+        category: "content",
+        isKeyElement: true,
+        attributes: [
+          { id: "copy-opacity-success", label: "Opacity", value: "0.96", targeted: true, curve: "ease-out" },
+          { id: "copy-color-success", label: "Color", value: "emerald", targeted: true, curve: "ease-out" },
+        ],
+      },
+      {
+        id: "cta",
+        name: "CTA Button",
+        category: "component",
+        isKeyElement: true,
+        attributes: [
+          { id: "cta-y-success", label: "Y offset", value: "0px", targeted: true, curve: "spring" },
+          { id: "cta-fill-success", label: "Fill", value: "Accent / Lime", targeted: true, curve: "spring" },
+        ],
+      },
+      {
+        id: "skeleton",
+        name: "Skeleton Loader",
+        category: "system",
+        isKeyElement: false,
+        attributes: [
+          { id: "skeleton-opacity-success", label: "Opacity", value: "0", targeted: true, curve: "ease-in" },
+        ],
+      },
+      {
+        id: "badge",
+        name: "Success Badge",
+        category: "component",
+        isKeyElement: true,
+        attributes: [
+          { id: "badge-scale-success", label: "Scale", value: "120%", targeted: true, curve: "overshoot" },
+          { id: "badge-opacity-success", label: "Opacity", value: "1", targeted: true, curve: "overshoot" },
+        ],
+      },
+    ],
+  },
+];
+
+const initialTransitions: Transition[] = [
+  {
+    id: "transition-1",
+    from: "kf-idle",
+    to: "kf-loading",
+    trigger: "On CTA tap",
+    duration: 360,
+    delay: 40,
+    curve: "ease-in-out",
+    description: "User submits form",
+  },
+  {
+    id: "transition-2",
+    from: "kf-loading",
+    to: "kf-success",
+    trigger: "API resolves",
+    duration: 420,
+    delay: 80,
+    curve: "spring",
+    description: "Server returns success payload",
+  },
+  {
+    id: "transition-3",
+    from: "kf-loading",
+    to: "kf-idle",
+    trigger: "API error",
+    duration: 240,
+    delay: 0,
+    curve: "ease-in",
+    description: "Retry scenario",
+  },
+];
+
+const App = () => {
+  const [keyframes, setKeyframes] = useState<Keyframe[]>(initialKeyframes);
+  const [transitions, setTransitions] = useState<Transition[]>(initialTransitions);
+  const [selectedKeyframeId, setSelectedKeyframeId] = useState(keyframes[0].id);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(
+    keyframes[0].keyElements[0]?.id ?? null
+  );
+  const [selectedFunctionalState, setSelectedFunctionalState] = useState(
+    keyframes[0].functionalState ?? functionalStates[0].id
+  );
+  const [selectedTransitionId, setSelectedTransitionId] = useState<string | null>(
+    initialTransitions[0]?.id ?? null
+  );
+
+  const selectedKeyframe = useMemo(
+    () => keyframes.find((frame) => frame.id === selectedKeyframeId)!,
+    [keyframes, selectedKeyframeId]
+  );
+
+  const selectedElement = useMemo(() => {
+    if (!selectedElementId) return null;
+    return (
+      selectedKeyframe.keyElements.find((el) => el.id === selectedElementId) ?? null
+    );
+  }, [selectedElementId, selectedKeyframe]);
+
+  const outgoingTransitions = useMemo(
+    () => transitions.filter((transition) => transition.from === selectedKeyframeId),
+    [transitions, selectedKeyframeId]
+  );
+
+  const incomingTransitions = useMemo(
+    () => transitions.filter((transition) => transition.to === selectedKeyframeId),
+    [transitions, selectedKeyframeId]
+  );
+
+  const selectedTransition = useMemo(() => {
+    if (!selectedTransitionId) {
+      return outgoingTransitions[0] ?? incomingTransitions[0] ?? null;
+    }
+    return (
+      transitions.find((transition) => transition.id === selectedTransitionId) ??
+      outgoingTransitions[0] ??
+      incomingTransitions[0] ??
+      null
+    );
+  }, [selectedTransitionId, transitions, outgoingTransitions, incomingTransitions]);
+
+  const selectKeyframe = (id: string) => {
+    setSelectedKeyframeId(id);
+    const nextFrame = keyframes.find((frame) => frame.id === id);
+    setSelectedElementId(nextFrame?.keyElements[0]?.id ?? null);
+    if (nextFrame?.functionalState) {
+      setSelectedFunctionalState(nextFrame.functionalState);
+    }
+    const firstOutgoing = transitions.find((transition) => transition.from === id);
+    if (firstOutgoing) {
+      setSelectedTransitionId(firstOutgoing.id);
+    }
+  };
+
+  const addKeyframe = () => {
+    const template = selectedKeyframe ?? keyframes[0];
+    const duplicateElements = template.keyElements.map((element) => ({
+      ...element,
+      isKeyElement: false,
+      attributes: element.attributes.map((attribute) => ({
+        ...attribute,
+        id: `${attribute.id}-copy-${Date.now()}`,
+        targeted: false,
+        value: attribute.value,
+      })),
+    }));
+
+    const newFrame: Keyframe = {
+      id: `kf-${Date.now()}`,
+      name: `State ${keyframes.length + 1}`,
+      summary: "Describe this moment",
+      functionalState: undefined,
+      keyElements: duplicateElements,
+    };
+
+    setKeyframes((prev) => [...prev, newFrame]);
+    setSelectedKeyframeId(newFrame.id);
+    setSelectedElementId(newFrame.keyElements[0]?.id ?? null);
+  };
+
+  const updateKeyframeMeta = (field: "name" | "summary" | "functionalState", value: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) =>
+        frame.id === selectedKeyframeId
+          ? {
+              ...frame,
+              [field]: value,
+            }
+          : frame
+      )
+    );
+    if (field === "functionalState") {
+      setSelectedFunctionalState(value);
+    }
+  };
+
+  const toggleElementKeyStatus = (elementId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((element) =>
+            element.id === elementId
+              ? { ...element, isKeyElement: !element.isKeyElement }
+              : element
+          ),
+        };
+      })
+    );
+  };
+
+  const toggleAttributeTarget = (elementId: string, attributeId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((element) => {
+            if (element.id !== elementId) return element;
+            return {
+              ...element,
+              attributes: element.attributes.map((attribute) =>
+                attribute.id === attributeId
+                  ? { ...attribute, targeted: !attribute.targeted }
+                  : attribute
+              ),
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const updateAttributeValue = (elementId: string, attributeId: string, value: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((element) => {
+            if (element.id !== elementId) return element;
+            return {
+              ...element,
+              attributes: element.attributes.map((attribute) =>
+                attribute.id === attributeId ? { ...attribute, value } : attribute
+              ),
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const updateAttributeCurve = (elementId: string, attributeId: string, curve: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((element) => {
+            if (element.id !== elementId) return element;
+            return {
+              ...element,
+              attributes: element.attributes.map((attribute) =>
+                attribute.id === attributeId ? { ...attribute, curve } : attribute
+              ),
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const updateTransition = (
+    transitionId: string,
+    field: keyof Pick<Transition, "trigger" | "duration" | "delay" | "curve" | "description">,
+    value: string
+  ) => {
+    setTransitions((prev) =>
+      prev.map((transition) =>
+        transition.id === transitionId
+          ? {
+              ...transition,
+              [field]: field === "duration" || field === "delay" ? Number(value) : value,
+            }
+          : transition
+      )
+    );
+  };
+
+  const addTransition = () => {
+    if (keyframes.length < 2) return;
+    const currentIndex = keyframes.findIndex((frame) => frame.id === selectedKeyframeId);
+    const nextIndex = (currentIndex + 1) % keyframes.length;
+    const targetFrame = keyframes[nextIndex];
+
+    const newTransition: Transition = {
+      id: `transition-${Date.now()}`,
+      from: selectedKeyframeId,
+      to: targetFrame.id,
+      trigger: "New trigger",
+      duration: 360,
+      delay: 40,
+      curve: "ease-in-out",
+      description: "Describe how this state changes",
+    };
+
+    setTransitions((prev) => [...prev, newTransition]);
+    setSelectedTransitionId(newTransition.id);
+  };
+
+  const stepPreview = () => {
+    const currentIndex = keyframes.findIndex((frame) => frame.id === selectedKeyframeId);
+    const nextIndex = (currentIndex + 1) % keyframes.length;
+    const nextFrame = keyframes[nextIndex];
+    selectKeyframe(nextFrame.id);
+  };
+
+  const previewElements = selectedKeyframe.keyElements;
+  const previewStateLabel =
+    functionalStates.find((state) => state.id === selectedFunctionalState)?.name ??
+    selectedFunctionalState;
+
+  return (
+    <div className="app-shell">
+      <header className="top-bar">
+        <div>
+          <span className="pill">Toumo</span>
+          <strong>Motion Editor</strong>
+        </div>
+        <div className="top-actions">
+          <button className="ghost">Share</button>
+          <button className="ghost">Record preview</button>
+          <button className="primary">Publish</button>
+        </div>
+      </header>
+
+      <div className="body-grid">
+        <aside className="preview-pane">
+          <div className="preview-header">
+            <div>
+              <p className="eyebrow">Functional state</p>
+              <h2>{previewStateLabel}</h2>
+            </div>
+            <div className="playback-controls">
+              <button onClick={stepPreview}>Step</button>
+              <button onClick={() => selectKeyframe(keyframes[0].id)}>Reset</button>
+            </div>
+          </div>
+          <div className="device-frame">
+            <div className="device-screen">
+              {previewElements.map((element) => (
+                <div
+                  key={element.id}
+                  className={`device-element element-${element.id} ${
+                    element.isKeyElement ? "is-key" : ""
+                  }`}
+                >
+                  <span>{element.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="state-pills">
+            {keyframes.map((frame) => (
+              <button
+                key={frame.id}
+                className={frame.id === selectedKeyframeId ? "pill active" : "pill"}
+                onClick={() => selectKeyframe(frame.id)}
+              >
+                {frame.name}
+              </button>
+            ))}
+          </div>
+          <div className="legend">
+            <span className="dot key" /> key element
+            <span className="dot" /> inherited
+          </div>
+        </aside>
+
+        <main className="editor-pane">
+          <section className="keyframe-rail">
+            <div className="rail-heading">
+              <div>
+                <p className="eyebrow">Keyframes</p>
+                <strong>{keyframes.length} states</strong>
+              </div>
+              <button className="ghost" onClick={addKeyframe}>
+                + New keyframe
+              </button>
+            </div>
+            <div className="rail-cards">
+              {keyframes.map((frame, index) => (
+                <button
+                  key={frame.id}
+                  className={`keyframe-card ${frame.id === selectedKeyframeId ? "active" : ""}`}
+                  onClick={() => selectKeyframe(frame.id)}
+                >
+                  <div className="card-index">{index + 1}</div>
+                  <div>
+                    <strong>{frame.name}</strong>
+                    <p>{frame.summary}</p>
+                  </div>
+                  <div className="card-meta">
+                    <span>{frame.keyElements.filter((el) => el.isKeyElement).length} key elements</span>
+                    <span>{frame.functionalState ?? "Unmapped"}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="edit-grid">
+            <div className="panel layers-panel">
+              <div className="panel-heading">
+                <h3>Layer tree</h3>
+                <span>Aligned to Figma</span>
+              </div>
+              <ul>
+                {selectedKeyframe.keyElements.map((element) => (
+                  <li key={element.id}>
+                    <button
+                      className={`layer-row ${
+                        selectedElementId === element.id ? "selected" : ""
+                      }`}
+                      onClick={() => setSelectedElementId(element.id)}
+                    >
+                      <div>
+                        <span className="layer-name">{element.name}</span>
+                        <span className="layer-category">{element.category}</span>
+                      </div>
+                      <label className="toggle">
+                        <input
+                          type="checkbox"
+                          checked={element.isKeyElement}
+                          onChange={() => toggleElementKeyStatus(element.id)}
+                        />
+                        <span>Key</span>
+                      </label>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="panel canvas-panel">
+              <div className="canvas-heading">
+                <h3>Canvas</h3>
+                <span>{selectedKeyframe.summary}</span>
+              </div>
+              <div className="canvas-content">
+                <div className="board">
+                  {previewElements.map((element) => (
+                    <div
+                      key={`board-${element.id}`}
+                      className={`board-element element-${element.id} ${
+                        element.isKeyElement ? "is-key" : ""
+                      }`}
+                    >
+                      <span>{element.name}</span>
+                      {element.isKeyElement && <small>Key</small>}
+                    </div>
+                  ))}
+                </div>
+                <div className="functional-graph">
+                  <h4>Functional states</h4>
+                  <div className="graph">
+                    {functionalStates.map((state) => (
+                      <div
+                        key={state.id}
+                        className={`graph-node ${
+                          state.id === selectedFunctionalState ? "current" : ""
+                        }`}
+                        onClick={() => setSelectedFunctionalState(state.id)}
+                      >
+                        <strong>{state.name}</strong>
+                        <p>{state.description}</p>
+                        <div className="graph-chips">
+                          {keyframes
+                            .filter((frame) => frame.functionalState === state.id)
+                            .map((frame) => (
+                              <span key={`chip-${frame.id}`}>{frame.name}</span>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel inspector-panel">
+              <div className="panel-heading">
+                <h3>Inspector</h3>
+                <span>{selectedKeyframe.name}</span>
+              </div>
+              <label className="field">
+                <span>Keyframe name</span>
+                <input
+                  type="text"
+                  value={selectedKeyframe.name}
+                  onChange={(event) => updateKeyframeMeta("name", event.target.value)}
+                />
+              </label>
+              <label className="field">
+                <span>Summary</span>
+                <textarea
+                  value={selectedKeyframe.summary}
+                  onChange={(event) => updateKeyframeMeta("summary", event.target.value)}
+                />
+              </label>
+              <label className="field">
+                <span>Functional mapping</span>
+                <select
+                  value={selectedKeyframe.functionalState ?? ""}
+                  onChange={(event) => updateKeyframeMeta("functionalState", event.target.value)}
+                >
+                  <option value="">Not linked</option>
+                  {functionalStates.map((state) => (
+                    <option key={state.id} value={state.id}>
+                      {state.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {selectedElement ? (
+                <div className="attributes">
+                  <div className="panel-heading">
+                    <h4>{selectedElement.name}</h4>
+                    <span>Attributes</span>
+                  </div>
+                  {selectedElement.attributes.map((attribute) => (
+                    <div className="attribute-row" key={attribute.id}>
+                      <label>
+                        <span>{attribute.label}</span>
+                        <input
+                          type="text"
+                          value={attribute.value}
+                          onChange={(event) =>
+                            updateAttributeValue(
+                              selectedElement.id,
+                              attribute.id,
+                              event.target.value
+                            )
+                          }
+                        />
+                      </label>
+                      <div className="attribute-controls">
+                        <button
+                          className={attribute.targeted ? "pill active" : "pill"}
+                          onClick={() =>
+                            toggleAttributeTarget(selectedElement.id, attribute.id)
+                          }
+                        >
+                          {attribute.targeted ? "key" : "inherit"}
+                        </button>
+                        <select
+                          value={attribute.curve}
+                          onChange={(event) =>
+                            updateAttributeCurve(
+                              selectedElement.id,
+                              attribute.id,
+                              event.target.value
+                            )
+                          }
+                        >
+                          <option value="global">Global</option>
+                          <option value="ease-in">Ease-in</option>
+                          <option value="ease-out">Ease-out</option>
+                          <option value="ease-in-out">Ease-in-out</option>
+                          <option value="spring">Spring</option>
+                          <option value="overshoot">Overshoot</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">Select a layer to edit attributes.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="panel transition-panel">
+            <div className="panel-heading">
+              <h3>Transitions</h3>
+              <button className="ghost" onClick={addTransition}>
+                Link transition
+              </button>
+            </div>
+            <div className="transition-list">
+              {outgoingTransitions.length === 0 && (
+                <p className="muted">No outgoing transitions yet.</p>
+              )}
+              {outgoingTransitions.map((transition) => (
+                <button
+                  key={transition.id}
+                  className={`transition-row ${
+                    selectedTransition?.id === transition.id ? "selected" : ""
+                  }`}
+                  onClick={() => setSelectedTransitionId(transition.id)}
+                >
+                  <div>
+                    <strong>
+                      {transition.from} → {transition.to}
+                    </strong>
+                    <p>{transition.trigger}</p>
+                  </div>
+                  <span>{transition.duration}ms</span>
+                </button>
+              ))}
+            </div>
+            {selectedTransition && (
+              <div className="transition-editor">
+                <label className="field">
+                  <span>Trigger</span>
+                  <input
+                    type="text"
+                    value={selectedTransition.trigger}
+                    onChange={(event) =>
+                      updateTransition(selectedTransition.id, "trigger", event.target.value)
+                    }
+                  />
+                </label>
+                <div className="two-col">
+                  <label className="field">
+                    <span>Duration (ms)</span>
+                    <input
+                      type="number"
+                      value={selectedTransition.duration}
+                      onChange={(event) =>
+                        updateTransition(selectedTransition.id, "duration", event.target.value)
+                      }
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Delay (ms)</span>
+                    <input
+                      type="number"
+                      value={selectedTransition.delay}
+                      onChange={(event) =>
+                        updateTransition(selectedTransition.id, "delay", event.target.value)
+                      }
+                    />
+                  </label>
+                </div>
+                <label className="field">
+                  <span>Curve</span>
+                  <select
+                    value={selectedTransition.curve}
+                    onChange={(event) =>
+                      updateTransition(selectedTransition.id, "curve", event.target.value)
+                    }
+                  >
+                    <option value="ease-in">Ease-in</option>
+                    <option value="ease-out">Ease-out</option>
+                    <option value="ease-in-out">Ease-in-out</option>
+                    <option value="spring">Spring</option>
+                    <option value="overshoot">Overshoot</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Description</span>
+                  <textarea
+                    value={selectedTransition.description ?? ""}
+                    onChange={(event) =>
+                      updateTransition(selectedTransition.id, "description", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default App;
