@@ -1235,7 +1235,7 @@ const App = () => {
     <div className="app-shell">
       <header className="top-bar">
         <div>
-          <span className="pill">Toumo</span>
+          <span className="logo">Toumo</span>
           <strong>Motion Editor</strong>
         </div>
         <div className="top-actions">

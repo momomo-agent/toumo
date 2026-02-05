@@ -37,6 +37,15 @@ textarea {
   background: #2c2c2c;
 }
 
+.logo {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, #a0aec0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
