@@ -70,6 +70,7 @@ export default function App() {
     ungroupSelectedElements,
     alignElements,
     distributeElements,
+    loadProject,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -159,6 +160,27 @@ export default function App() {
     link.click();
     URL.revokeObjectURL(link.href);
   }, [keyframes, transitions, functionalStates, components, frameSize]);
+
+  // Load project from JSON
+  const projectInputRef = useRef<HTMLInputElement>(null);
+  const handleLoadProject = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        if (data.keyframes && data.transitions) {
+          loadProject(data);
+        }
+      } catch (err) {
+        alert('Invalid project file');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }, [loadProject]);
 
   const tools: ToolButton[] = [
     { id: 'select', icon: '↖', label: 'Select (V)' },
@@ -794,6 +816,27 @@ export default function App() {
           <span style={{ color: '#666', fontSize: 12 }}>Motion Editor</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            ref={projectInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleLoadProject}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => projectInputRef.current?.click()}
+            style={{
+              padding: '6px 12px',
+              background: 'transparent',
+              border: '1px solid #333',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            Load
+          </button>
           <button
             onClick={handleSaveProject}
             style={{

@@ -91,6 +91,8 @@ interface EditorActions {
   // Alignment actions
   alignElements: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
   distributeElements: (direction: 'horizontal' | 'vertical') => void;
+  // Project actions
+  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size }) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -733,5 +735,21 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         currentY += selected[i].size.height + gap;
       }
     }
+  },
+
+  // Load project
+  loadProject: (data) => {
+    set({
+      keyframes: data.keyframes,
+      transitions: data.transitions,
+      functionalStates: data.functionalStates,
+      components: data.components,
+      frameSize: data.frameSize,
+      selectedKeyframeId: data.keyframes[0]?.id || '',
+      selectedElementId: null,
+      selectedElementIds: [],
+      history: [{ keyframes: data.keyframes }],
+      historyIndex: 0,
+    });
   },
 }));
