@@ -90,6 +90,15 @@ export default function App() {
     1
   );
 
+  const handleSelectKeyframe = (keyframeId: string) => {
+    setSelectedKeyframeId(keyframeId);
+    setPreviewState(keyframeId);
+  };
+
+  const handleAddKeyframe = () => {
+    addKeyframe();
+  };
+
   const tools: ToolButton[] = [
     { id: 'select', icon: '↖', label: 'Select (V)' },
     { id: 'rectangle', icon: '▢', label: 'Rectangle (R)' },
@@ -164,6 +173,12 @@ export default function App() {
       setPreviewState(keyframes[0].id);
     }
   }, [keyframes, previewState]);
+
+  useEffect(() => {
+    if (selectedKeyframeId && previewState !== selectedKeyframeId) {
+      setPreviewState(selectedKeyframeId);
+    }
+  }, [previewState, selectedKeyframeId]);
 
   const renderInspector = () => {
     const selected = selectedElement;
@@ -491,29 +506,6 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 8 }}>State</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {keyframes.map((kf) => (
-                <button
-                  key={kf.id}
-                  onClick={() => setPreviewState(kf.id)}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    background: previewState === kf.id ? '#2563eb' : '#2a2a2a',
-                    border: 'none',
-                    borderRadius: 6,
-                    color: '#fff',
-                    fontSize: 11,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {kf.name}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -608,6 +600,82 @@ export default function App() {
               <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={redo}>Redo</button>
             </div>
           </div>
+          <div
+            style={{
+              borderBottom: '1px solid #1f1f1f',
+              padding: '16px 20px',
+              background: '#0f0f10',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', letterSpacing: 1 }}>Keyframes</div>
+                <div style={{ fontSize: 13, color: '#888' }}>States line up horizontally, Principle style</div>
+              </div>
+              <button
+                onClick={handleAddKeyframe}
+                style={{ marginLeft: 'auto', border: '1px solid #2a2a2a', background: 'transparent', color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}
+              >
+                + Add State
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
+              {keyframes.map((kf) => {
+                const cardElements = kf.keyElements || [];
+                const cardScale = Math.min(160 / frameSize.width, 240 / frameSize.height, 1);
+                return (
+                  <button
+                    key={kf.id}
+                    onClick={() => handleSelectKeyframe(kf.id)}
+                    style={{
+                      flexShrink: 0,
+                      width: 220,
+                      borderRadius: 16,
+                      border: selectedKeyframeId === kf.id ? '2px solid #2563eb' : '1px solid #2a2a2a',
+                      background: '#121214',
+                      color: '#fff',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    <div style={{ padding: '12px 14px', borderBottom: '1px solid #1f1f1f' }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{kf.name}</div>
+                      <div style={{ fontSize: 11, color: '#666' }}>{kf.summary ?? 'State description'}</div>
+                    </div>
+                    <div style={{ padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0c0c0d' }}>
+                      <div
+                        style={{
+                          width: frameSize.width * cardScale,
+                          height: frameSize.height * cardScale,
+                          position: 'relative',
+                          borderRadius: 24,
+                          border: '1px solid #1f1f1f',
+                          background: '#050506',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+                        }}
+                      >
+                        {cardElements.map((el) => (
+                          <div
+                            key={el.id}
+                            style={{
+                              position: 'absolute',
+                              left: el.position.x * cardScale,
+                              top: el.position.y * cardScale,
+                              width: el.size.width * cardScale,
+                              height: el.size.height * cardScale,
+                              background: el.style?.fill || '#3b82f6',
+                              borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8) * cardScale,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div style={{ flex: 1, display: 'flex' }}>
             <aside
               style={{
@@ -672,7 +740,7 @@ export default function App() {
                       }}
                     >
                       <strong style={{ display: 'block', fontSize: 12 }}>{kf.name}</strong>
-                      <span style={{ fontSize: 11, color: '#777' }}>{kf.summary}</span>
+                      <span style={{ fontSize: 11, color: '#777' }}>{kf.summary ?? 'State description'}</span>
                     </button>
                   ))}
                   <button
