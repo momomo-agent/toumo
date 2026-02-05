@@ -752,6 +752,13 @@ const App = () => {
     );
   };
 
+  const deleteTransition = (id: string) => {
+    setTransitions((prev) => prev.filter((t) => t.id !== id));
+    if (selectedTransitionId === id) {
+      setSelectedTransitionId(null);
+    }
+  };
+
   const addTransition = () => {
     if (keyframes.length < 2) return;
     const currentIndex = keyframes.findIndex((frame) => frame.id === selectedKeyframeId);
@@ -1139,7 +1146,7 @@ const App = () => {
                 <p className="muted">No outgoing transitions yet.</p>
               )}
               {outgoingTransitions.map((transition) => (
-                <button
+                <div
                   key={transition.id}
                   className={`transition-row ${
                     selectedTransition?.id === transition.id ? "selected" : ""
@@ -1152,8 +1159,14 @@ const App = () => {
                     </strong>
                     <p>{transition.trigger}</p>
                   </div>
-                  <span>{transition.duration}ms</span>
-                </button>
+                  <div className="transition-actions">
+                    <span>{transition.duration}ms</span>
+                    <button
+                      className="ghost small danger"
+                      onClick={(e) => { e.stopPropagation(); deleteTransition(transition.id); }}
+                    >×</button>
+                  </div>
+                </div>
               ))}
             </div>
             {selectedTransition && (
