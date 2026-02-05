@@ -14,25 +14,17 @@ export default function App() {
   } = useEditorStore();
 
   const [tool, setTool] = useState<Tool>('select');
-  const [_dragState, _setDragState] = useState<{
-    isDragging: boolean;
-    startX: number;
-    startY: number;
-    elementStartX: number;
-    elementStartY: number;
-  } | null>(null);
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
   const selectedElement = elements.find(el => el.id === selectedElementId);
 
-  // 工具栏图标
-  const tools: { id: Tool; icon: string; label: string; key: string }[] = [
-    { id: 'select', icon: '↖', label: 'Select', key: 'V' },
-    { id: 'rectangle', icon: '▢', label: 'Rectangle', key: 'R' },
-    { id: 'ellipse', icon: '○', label: 'Ellipse', key: 'O' },
-    { id: 'text', icon: 'T', label: 'Text', key: 'T' },
-    { id: 'hand', icon: '✋', label: 'Hand', key: 'H' },
+  const tools: { id: Tool; icon: string; key: string }[] = [
+    { id: 'select', icon: '↖', key: 'V' },
+    { id: 'rectangle', icon: '▢', key: 'R' },
+    { id: 'ellipse', icon: '○', key: 'O' },
+    { id: 'text', icon: 'T', key: 'T' },
+    { id: 'hand', icon: '✋', key: 'H' },
   ];
 
   return (
@@ -42,7 +34,7 @@ export default function App() {
       height: '100vh',
       background: '#0a0a0b',
       color: '#e5e5e5',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       fontSize: 13,
     }}>
       {/* Header */}
@@ -58,19 +50,6 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontWeight: 600, fontSize: 15 }}>Toumo</span>
           <span style={{ color: '#666', fontSize: 12 }}>Motion Editor</span>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{
-            padding: '6px 12px',
-            background: '#2563eb',
-            border: 'none',
-            borderRadius: 6,
-            color: '#fff',
-            fontSize: 12,
-            cursor: 'pointer',
-          }}>
-            Preview
-          </button>
         </div>
       </header>
 
@@ -90,7 +69,6 @@ export default function App() {
             <button
               key={t.id}
               onClick={() => setTool(t.id)}
-              title={`${t.label} (${t.key})`}
               style={{
                 width: 36,
                 height: 36,
@@ -103,7 +81,6 @@ export default function App() {
                 color: tool === t.id ? '#fff' : '#888',
                 fontSize: 16,
                 cursor: 'pointer',
-                transition: 'all 0.15s',
               }}
             >
               {t.icon}
@@ -111,13 +88,11 @@ export default function App() {
           ))}
         </div>
 
-        {/* Left Panel - Layers */}
+        {/* Layers Panel */}
         <div style={{
           width: 240,
           background: '#161617',
           borderRight: '1px solid #2a2a2a',
-          display: 'flex',
-          flexDirection: 'column',
         }}>
           <div style={{
             padding: '12px 16px',
@@ -126,47 +101,37 @@ export default function App() {
             fontWeight: 600,
             color: '#888',
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
           }}>
             Layers
           </div>
-          <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
-            {elements.length === 0 ? (
-              <div style={{ padding: 16, color: '#555', fontSize: 12 }}>
-                No layers yet
+          <div style={{ padding: 8 }}>
+            {elements.map(el => (
+              <div
+                key={el.id}
+                onClick={() => setSelectedElementId(el.id)}
+                style={{
+                  padding: '8px 12px',
+                  background: selectedElementId === el.id ? '#2563eb20' : 'transparent',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 2,
+                }}
+              >
+                <span style={{
+                  width: 16, height: 16,
+                  background: el.style?.fill || '#3b82f6',
+                  borderRadius: 3,
+                }} />
+                <span>{el.name}</span>
               </div>
-            ) : (
-              elements.map(el => (
-                <div
-                  key={el.id}
-                  onClick={() => setSelectedElementId(el.id)}
-                  style={{
-                    padding: '8px 12px',
-                    background: selectedElementId === el.id ? '#2563eb20' : 'transparent',
-                    border: selectedElementId === el.id ? '1px solid #2563eb40' : '1px solid transparent',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 2,
-                    transition: 'all 0.1s',
-                  }}
-                >
-                  <span style={{
-                    width: 16,
-                    height: 16,
-                    background: el.style?.fill || '#3b82f6',
-                    borderRadius: 3,
-                  }} />
-                  <span style={{ flex: 1 }}>{el.name}</span>
-                </div>
-              ))
-            )}
+            ))}
           </div>
         </div>
 
-        {/* Center - Canvas Area */}
+        {/* Canvas Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0d0d0e' }}>
           {/* Keyframe tabs */}
           <div style={{
@@ -194,40 +159,28 @@ export default function App() {
                 {kf.name}
               </button>
             ))}
-            <button
-              onClick={addKeyframe}
-              style={{
-                padding: '6px 10px',
-                background: 'transparent',
-                border: '1px dashed #444',
-                borderRadius: 6,
-                color: '#666',
-                fontSize: 12,
-                cursor: 'pointer',
-              }}
-            >
-              +
-            </button>
+            <button onClick={addKeyframe} style={{
+              padding: '6px 10px',
+              background: 'transparent',
+              border: '1px dashed #444',
+              borderRadius: 6,
+              color: '#666',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}>+</button>
           </div>
 
           {/* Canvas */}
           <div style={{
             flex: 1,
             position: 'relative',
-            overflow: 'hidden',
-            background: `
-              linear-gradient(#1a1a1b 1px, transparent 1px),
-              linear-gradient(90deg, #1a1a1b 1px, transparent 1px)
-            `,
+            background: 'linear-gradient(#1a1a1b 1px, transparent 1px), linear-gradient(90deg, #1a1a1b 1px, transparent 1px)',
             backgroundSize: '20px 20px',
           }}>
             {elements.map(el => (
               <div
                 key={el.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedElementId(el.id);
-                }}
+                onClick={() => setSelectedElementId(el.id)}
                 style={{
                   position: 'absolute',
                   left: el.position.x,
@@ -237,22 +190,18 @@ export default function App() {
                   background: el.style?.fill || '#3b82f6',
                   borderRadius: el.style?.borderRadius || 8,
                   cursor: 'move',
-                  boxShadow: selectedElementId === el.id 
-                    ? '0 0 0 2px #2563eb' 
-                    : 'none',
+                  boxShadow: selectedElementId === el.id ? '0 0 0 2px #2563eb' : 'none',
                 }}
               />
             ))}
           </div>
         </div>
 
-        {/* Right Panel - Inspector */}
+        {/* Inspector */}
         <div style={{
           width: 280,
           background: '#161617',
           borderLeft: '1px solid #2a2a2a',
-          display: 'flex',
-          flexDirection: 'column',
         }}>
           <div style={{
             padding: '12px 16px',
@@ -261,98 +210,48 @@ export default function App() {
             fontWeight: 600,
             color: '#888',
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
           }}>
             Inspector
           </div>
-          <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+          <div style={{ padding: 16 }}>
             {selectedElement ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Name */}
-                <div>
+              <div>
+                <div style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Name</label>
-                  <input
-                    type="text"
-                    value={selectedElement.name}
-                    readOnly
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      background: '#0d0d0e',
-                      border: '1px solid #2a2a2a',
-                      borderRadius: 6,
-                      color: '#e5e5e5',
-                      fontSize: 13,
-                    }}
-                  />
+                  <input type="text" value={selectedElement.name} readOnly style={{
+                    width: '100%', padding: '8px 10px', background: '#0d0d0e',
+                    border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
+                  }} />
                 </div>
-                {/* Position */}
-                <div>
+                <div style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Position</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: 11 }}>X</span>
-                      <input type="number" value={selectedElement.position.x} readOnly style={{
-                        width: '100%', padding: '8px 10px 8px 24px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 13,
-                      }} />
-                    </div>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: 11 }}>Y</span>
-                      <input type="number" value={selectedElement.position.y} readOnly style={{
-                        width: '100%', padding: '8px 10px 8px 24px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 13,
-                      }} />
-                    </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" value={`X: ${selectedElement.position.x}`} readOnly style={{
+                      flex: 1, padding: '8px', background: '#0d0d0e',
+                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
+                    }} />
+                    <input type="text" value={`Y: ${selectedElement.position.y}`} readOnly style={{
+                      flex: 1, padding: '8px', background: '#0d0d0e',
+                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
+                    }} />
                   </div>
                 </div>
-                {/* Size */}
-                <div>
-                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Size</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: 11 }}>W</span>
-                      <input type="number" value={selectedElement.size.width} readOnly style={{
-                        width: '100%', padding: '8px 10px 8px 28px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 13,
-                      }} />
-                    </div>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: 11 }}>H</span>
-                      <input type="number" value={selectedElement.size.height} readOnly style={{
-                        width: '100%', padding: '8px 10px 8px 28px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 13,
-                      }} />
-                    </div>
-                  </div>
-                </div>
-                {/* Fill */}
-                <div>
+                <div style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Fill</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{
                       width: 32, height: 32,
                       background: selectedElement.style?.fill || '#3b82f6',
-                      borderRadius: 6,
-                      border: '1px solid #2a2a2a',
+                      borderRadius: 6, border: '1px solid #2a2a2a',
                     }} />
-                    <input
-                      type="text"
-                      value={selectedElement.style?.fill || '#3b82f6'}
-                      readOnly
-                      style={{
-                        flex: 1, padding: '8px 10px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6,
-                        color: '#e5e5e5', fontSize: 12, fontFamily: 'monospace',
-                      }}
-                    />
+                    <span style={{ color: '#888', fontSize: 12 }}>
+                      {selectedElement.style?.fill || '#3b82f6'}
+                    </span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#555', fontSize: 12 }}>
-                Select a layer to edit
-              </div>
+              <div style={{ color: '#555' }}>Select a layer</div>
             )}
           </div>
         </div>
