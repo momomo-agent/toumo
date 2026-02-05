@@ -34,6 +34,7 @@ interface EditorState {
   copiedStyle: ShapeStyle | null;
   canvasOffset: Position;
   canvasScale: number;
+  recentColors: string[];
   frameSize: Size;
   history: HistoryEntry[];
   historyIndex: number;
@@ -60,6 +61,7 @@ interface EditorActions {
   setCurrentTool: (tool: ToolType) => void;
   setCanvasOffset: (offset: Position) => void;
   setCanvasScale: (scale: number) => void;
+  addRecentColor: (color: string) => void;
   setIsDragging: (isDragging: boolean) => void;
   setIsResizing: (isResizing: boolean) => void;
   setIsSelecting: (isSelecting: boolean) => void;
@@ -124,6 +126,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   copiedStyle: null,
   canvasOffset: { x: 0, y: 0 },
   canvasScale: 1,
+  recentColors: [],
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   history: [{ keyframes: initialKeyframes }],
   historyIndex: 0,
@@ -309,6 +312,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setCurrentTool: (tool) => set({ currentTool: tool }),
   setCanvasOffset: (offset) => set({ canvasOffset: offset }),
   setCanvasScale: (scale) => set({ canvasScale: scale }),
+  addRecentColor: (color: string) => set((state) => ({
+    recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
+  })),
   setIsDragging: (isDragging) => set({ isDragging }),
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
