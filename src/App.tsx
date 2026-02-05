@@ -242,6 +242,14 @@ export default function App() {
         return;
       }
 
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
+        if (!isTyping && selectedKeyframe) {
+          const allIds = selectedKeyframe.keyElements.map(el => el.id);
+          useEditorStore.getState().setSelectedElementIds(allIds);
+          event.preventDefault();
+        }
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
         copySelectedElements();
         pasteElements();
