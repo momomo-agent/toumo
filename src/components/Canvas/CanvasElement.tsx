@@ -287,7 +287,17 @@ export function CanvasElement({
 
   const getBorderRadius = () => {
     if (element.shapeType === 'ellipse') return '50%';
-    return element.style?.borderRadius || 8;
+    const style = element.style;
+    // Check if individual corners are set
+    if (style?.borderRadiusTL !== undefined || style?.borderRadiusTR !== undefined ||
+        style?.borderRadiusBR !== undefined || style?.borderRadiusBL !== undefined) {
+      const tl = style.borderRadiusTL ?? style.borderRadius ?? 0;
+      const tr = style.borderRadiusTR ?? style.borderRadius ?? 0;
+      const br = style.borderRadiusBR ?? style.borderRadius ?? 0;
+      const bl = style.borderRadiusBL ?? style.borderRadius ?? 0;
+      return `${tl}px ${tr}px ${br}px ${bl}px`;
+    }
+    return style?.borderRadius ?? 8;
   };
 
   const getBoxShadow = () => {

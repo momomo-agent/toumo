@@ -441,6 +441,75 @@ export default function App() {
           </div>
         </div>
 
+        {/* Border Radius Control */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Border Radius</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <input
+              type="number"
+              min={0}
+              value={currentStyle.borderRadius ?? 8}
+              onChange={(e) => handleStyleChange({ borderRadius: Number(e.target.value) })}
+              style={{ ...inputStyle, flex: 1 }}
+              placeholder="All corners"
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div>
+              <span style={{ fontSize: 9, color: '#555' }}>TL</span>
+              <input
+                type="number"
+                min={0}
+                value={currentStyle.borderRadiusTL ?? ''}
+                onChange={(e) => handleStyleChange({ 
+                  borderRadiusTL: e.target.value ? Number(e.target.value) : undefined 
+                })}
+                style={inputStyle}
+                placeholder="—"
+              />
+            </div>
+            <div>
+              <span style={{ fontSize: 9, color: '#555' }}>TR</span>
+              <input
+                type="number"
+                min={0}
+                value={currentStyle.borderRadiusTR ?? ''}
+                onChange={(e) => handleStyleChange({ 
+                  borderRadiusTR: e.target.value ? Number(e.target.value) : undefined 
+                })}
+                style={inputStyle}
+                placeholder="—"
+              />
+            </div>
+            <div>
+              <span style={{ fontSize: 9, color: '#555' }}>BL</span>
+              <input
+                type="number"
+                min={0}
+                value={currentStyle.borderRadiusBL ?? ''}
+                onChange={(e) => handleStyleChange({ 
+                  borderRadiusBL: e.target.value ? Number(e.target.value) : undefined 
+                })}
+                style={inputStyle}
+                placeholder="—"
+              />
+            </div>
+            <div>
+              <span style={{ fontSize: 9, color: '#555' }}>BR</span>
+              <input
+                type="number"
+                min={0}
+                value={currentStyle.borderRadiusBR ?? ''}
+                onChange={(e) => handleStyleChange({ 
+                  borderRadiusBR: e.target.value ? Number(e.target.value) : undefined 
+                })}
+                style={inputStyle}
+                placeholder="—"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Rotation Control */}
         <div style={{ marginBottom: 20 }}>
           <Label>Rotation</Label>

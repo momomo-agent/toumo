@@ -21,6 +21,11 @@ export type ShapeStyle = {
   strokeWidth: number;
   strokeOpacity: number;
   borderRadius: number;
+  // Individual corner radii
+  borderRadiusTL?: number;
+  borderRadiusTR?: number;
+  borderRadiusBR?: number;
+  borderRadiusBL?: number;
   rotation?: number; // degrees
   fontSize?: number;
   fontWeight?: string;
