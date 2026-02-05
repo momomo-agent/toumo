@@ -1131,6 +1131,17 @@ export default function App() {
       return <TransitionInspector />;
     }
     
+    // Multi-selection info
+    if (selectedElementIds.length > 1 && !selectedElement) {
+      return (
+        <div style={{ padding: 16, color: '#888', textAlign: 'center' }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>📦</div>
+          <div>{selectedElementIds.length} elements selected</div>
+          <div style={{ fontSize: 11, marginTop: 8 }}>Use alignment tools or group them</div>
+        </div>
+      );
+    }
+    
     // If an element is selected, show element properties + state mapping
     if (selectedElement) {
       return (
