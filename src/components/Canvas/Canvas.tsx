@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useEditorStore } from '../../store';
-import type { KeyElement, Position } from '../../types';
+import type { KeyElement, Position, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement } from './CanvasElement';
 import { SelectionBox } from './SelectionBox';
@@ -25,6 +25,8 @@ export function Canvas() {
     selectionBox,
     setSelectionBox,
     setIsSelecting,
+    nudgeSelectedElements,
+    setCurrentTool,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);

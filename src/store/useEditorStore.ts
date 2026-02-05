@@ -38,6 +38,7 @@ interface EditorActions {
   updateElementPosition: (id: string, position: Position) => void;
   updateElementSize: (id: string, size: Size) => void;
   updateElementName: (id: string, name: string) => void;
+  nudgeSelectedElements: (dx: number, dy: number) => void;
   setCurrentTool: (tool: ToolType) => void;
   setCanvasOffset: (offset: Position) => void;
   setCanvasScale: (scale: number) => void;
@@ -204,6 +205,32 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     ),
   })),
 
+  nudgeSelectedElements: (dx, dy) => {
+    const state = get();
+    if (state.selectedElementIds.length === 0) return;
+    get().pushHistory();
+    set((state) => ({
+      keyframes: state.keyframes.map((kf) =>
+        kf.id === state.selectedKeyframeId
+          ? {
+              ...kf,
+              keyElements: kf.keyElements.map((el) =>
+                state.selectedElementIds.includes(el.id)
+                  ? {
+                      ...el,
+                      position: {
+                        x: el.position.x + dx,
+                        y: el.position.y + dy,
+                      },
+                    }
+                  : el
+              ),
+            }
+          : kf
+      ),
+    }));
+  },
+
   setCurrentTool: (tool) => set({ currentTool: tool }),
   setCanvasOffset: (offset) => set({ canvasOffset: offset }),
   setCanvasScale: (scale) => set({ canvasScale: scale }),
@@ -226,9 +253,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.clipboard.length === 0) return;
     get().pushHistory();
-    const newElements = state.clipboard.map(el => ({
+    const timestamp = Date.now();
+    const newElements = state.clipboard.map((el, index) => ({
       ...el,
-      id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `el-${timestamp}-${index}`,
       position: { x: el.position.x + 20, y: el.position.y + 20 },
     }));
     set((state) => ({
@@ -243,8 +271,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   pushHistory: () => set((state) => {
+    const snapshot = JSON.parse(JSON.stringify(state.keyframes)) as Keyframe[];
     const newHistory = state.history.slice(0, state.historyIndex + 1);
-    newHistory.push({ keyframes: JSON.parse(JSON.stringify(state.keyframes)) });
+    newHistory.push({ keyframes: snapshot });
     if (newHistory.length > 50) newHistory.shift();
     return {
       history: newHistory,
