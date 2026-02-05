@@ -56,6 +56,9 @@ export type ShapeStyle = {
   innerShadowBlur?: number;
   // Filters
   blur?: number;
+  // Line specific
+  lineStartArrow?: boolean;
+  lineEndArrow?: boolean;
   // Image specific
   imageSrc?: string;
   imageOriginalWidth?: number;
