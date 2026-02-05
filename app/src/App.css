@@ -624,3 +624,25 @@ button:focus {
   display: flex;
   gap: 4px;
 }
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.icon-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+.icon-btn.danger:hover {
+  background: #fee;
+  color: #e53935;
+}
