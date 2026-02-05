@@ -429,6 +429,11 @@ export function CanvasElement({
           height="100%"
           style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
         >
+          <defs>
+            <marker id={`arrow-${element.id}`} markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill={element.style?.stroke || '#ffffff'} />
+            </marker>
+          </defs>
           <line
             x1="0"
             y1="0"
@@ -437,6 +442,7 @@ export function CanvasElement({
             stroke={element.style?.stroke || '#ffffff'}
             strokeWidth={element.style?.strokeWidth || 2}
             strokeLinecap="round"
+            markerEnd={element.style?.lineEndArrow ? `url(#arrow-${element.id})` : undefined}
           />
         </svg>
       )}
