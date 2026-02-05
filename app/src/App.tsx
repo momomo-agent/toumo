@@ -781,6 +781,47 @@ const App = () => {
     );
   };
 
+  const distributeElements = (direction: 'horizontal' | 'vertical') => {
+    if (selectedElementIds.length < 3) return;
+    const elements = selectedKeyframe.keyElements.filter(el => selectedElementIds.includes(el.id));
+    if (elements.length < 3) return;
+
+    const sorted = [...elements].sort((a, b) => 
+      direction === 'horizontal' ? a.position.x - b.position.x : a.position.y - b.position.y
+    );
+    
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    const totalSpace = direction === 'horizontal' 
+      ? (last.position.x + last.size.width) - first.position.x
+      : (last.position.y + last.size.height) - first.position.y;
+    const totalSize = sorted.reduce((sum, el) => sum + (direction === 'horizontal' ? el.size.width : el.size.height), 0);
+    const gap = (totalSpace - totalSize) / (sorted.length - 1);
+
+    let currentPos = direction === 'horizontal' ? first.position.x : first.position.y;
+    const newPositions: Record<string, number> = {};
+    sorted.forEach(el => {
+      newPositions[el.id] = currentPos;
+      currentPos += (direction === 'horizontal' ? el.size.width : el.size.height) + gap;
+    });
+
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (!selectedElementIds.includes(el.id)) return el;
+            const newPos = { ...el.position };
+            if (direction === 'horizontal') newPos.x = newPositions[el.id];
+            else newPos.y = newPositions[el.id];
+            return { ...el, position: newPos };
+          }),
+        };
+      })
+    );
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1284,6 +1325,12 @@ const App = () => {
                       <button className="icon-btn" onClick={() => alignElements('top')} title="Align top">⊤</button>
                       <button className="icon-btn" onClick={() => alignElements('middle')} title="Align middle">⊝</button>
                       <button className="icon-btn" onClick={() => alignElements('bottom')} title="Align bottom">⊥</button>
+                      {selectedElementIds.length >= 3 && (
+                        <>
+                          <button className="icon-btn" onClick={() => distributeElements('horizontal')} title="Distribute H">⋯</button>
+                          <button className="icon-btn" onClick={() => distributeElements('vertical')} title="Distribute V">⋮</button>
+                        </>
+                      )}
                     </div>
                   )}
                   <span className="zoom-indicator">{Math.round(canvasScale * 100)}%</span>
