@@ -404,6 +404,20 @@ export default function App() {
             >
               {selected.locked ? '🔒' : '🔓'}
             </button>
+            <button
+              onClick={() => updateElement(selected.id, { visible: selected.visible === false ? true : false })}
+              style={{
+                padding: '6px 10px',
+                background: selected.visible === false ? '#ef444430' : 'transparent',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: selected.visible === false ? '#ef4444' : '#666',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              {selected.visible === false ? '👁️‍🗨️' : '👁️'}
+            </button>
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
