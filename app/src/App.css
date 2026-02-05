@@ -106,7 +106,7 @@ textarea {
   flex: 1;
   display: grid;
   grid-template-columns: 300px 1fr;
-  height: calc(100vh - 72px);
+  height: calc(100vh - 48px);
 }
 
 .preview-pane {
