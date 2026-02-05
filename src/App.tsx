@@ -449,6 +449,21 @@ export default function App() {
             >
               🗑️
             </button>
+            <button
+              onClick={() => { copySelectedElements(); pasteElements(); }}
+              style={{
+                padding: '6px 10px',
+                background: 'transparent',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: '#666',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+              title="Duplicate"
+            >
+              📋
+            </button>
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
