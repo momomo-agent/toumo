@@ -10,9 +10,9 @@ export type Size = {
   height: number;
 };
 
-export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "hand";
+export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "hand";
 
-export type ShapeType = "rectangle" | "ellipse" | "text" | "keyframe-element";
+export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "keyframe-element";
 
 export type ShapeStyle = {
   fill: string;
@@ -24,6 +24,11 @@ export type ShapeStyle = {
   fontSize?: number;
   fontWeight?: string;
   textAlign?: "left" | "center" | "right";
+  // Image specific
+  imageSrc?: string;
+  imageOriginalWidth?: number;
+  imageOriginalHeight?: number;
+  objectFit?: "cover" | "contain" | "fill";
 };
 
 export type KeyAttribute = {

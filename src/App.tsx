@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Canvas } from './components/Canvas';
 import { InteractionManager } from './components/InteractionManager';
 import { StateInspector } from './components/Inspector/StateInspector';
@@ -60,11 +60,27 @@ export default function App() {
     updateElement,
     frameSize,
     setFrameSize,
+    addImageElement,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
   const selectedElement = elements.find((el) => el.id === selectedElementId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle image file upload
+  const handleImageFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageSrc = event.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        addImageElement(imageSrc, img.width, img.height);
+      };
+      img.src = imageSrc;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const activePresetId = FRAME_PRESETS.find(
     (preset) => preset.size.width === frameSize.width && preset.size.height === frameSize.height
@@ -149,6 +165,9 @@ export default function App() {
           break;
         case 'h':
           setCurrentTool('hand');
+          break;
+        case 'i':
+          fileInputRef.current?.click();
           break;
         case 'delete':
         case 'backspace':
@@ -372,7 +391,33 @@ export default function App() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         fontSize: 13,
       }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          handleImageFile(file);
+        }
+      }}
     >
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            handleImageFile(file);
+            e.target.value = '';
+          }
+        }}
+      />
       {/* Header */}
       <header
         style={{

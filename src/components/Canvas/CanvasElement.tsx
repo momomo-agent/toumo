@@ -277,6 +277,18 @@ export function CanvasElement({
   };
 
   const isText = element.shapeType === 'text';
+  const isImage = element.shapeType === 'image';
+
+  const getBackground = () => {
+    if (isText) return 'transparent';
+    if (isImage) return 'transparent';
+    return element.style?.fill || '#3b82f6';
+  };
+
+  const getBorderRadius = () => {
+    if (element.shapeType === 'ellipse') return '50%';
+    return element.style?.borderRadius || 8;
+  };
 
   return (
     <div
@@ -287,8 +299,8 @@ export function CanvasElement({
         top: element.position.y,
         width: element.size.width,
         height: element.size.height,
-        background: isText ? 'transparent' : element.style?.fill || '#3b82f6',
-        borderRadius: element.shapeType === 'ellipse' ? '50%' : element.style?.borderRadius || 8,
+        background: getBackground(),
+        borderRadius: getBorderRadius(),
         border: isText ? '1px dashed rgba(255,255,255,0.4)' : undefined,
         color: '#fff',
         display: 'flex',
@@ -301,6 +313,20 @@ export function CanvasElement({
         userSelect: 'none',
       }}
     >
+      {isImage && element.style?.imageSrc && (
+        <img
+          src={element.style.imageSrc}
+          alt=""
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: element.style.objectFit || 'cover',
+            borderRadius: getBorderRadius(),
+            pointerEvents: 'none',
+          }}
+          draggable={false}
+        />
+      )}
       {isText ? (
         <span style={{ padding: '0 8px', width: '100%', textAlign: element.style?.textAlign || 'center' }}>
           {element.text ?? 'Text'}

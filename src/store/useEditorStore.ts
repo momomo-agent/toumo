@@ -83,6 +83,8 @@ interface EditorActions {
   addComponent: (name: string) => void;
   updateComponent: (id: string, updates: Partial<Component>) => void;
   deleteComponent: (id: string) => void;
+  // Image actions
+  addImageElement: (imageSrc: string, originalWidth: number, originalHeight: number) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -460,4 +462,59 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   deleteComponent: (id) => set((state) => ({
     components: state.components.filter((c) => c.id !== id),
   })),
+
+  // Image element
+  addImageElement: (imageSrc, originalWidth, originalHeight) => {
+    const state = get();
+    get().pushHistory();
+    
+    // Scale image to fit within frame, max 300px
+    const maxSize = 300;
+    let width = originalWidth;
+    let height = originalHeight;
+    
+    if (width > maxSize || height > maxSize) {
+      const ratio = Math.min(maxSize / width, maxSize / height);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+    }
+    
+    // Center in frame
+    const x = Math.max(0, (state.frameSize.width - width) / 2);
+    const y = Math.max(0, (state.frameSize.height - height) / 2);
+    
+    const newElement: KeyElement = {
+      id: `el-img-${Date.now()}`,
+      name: 'Image',
+      category: 'content',
+      isKeyElement: true,
+      attributes: [],
+      position: { x, y },
+      size: { width, height },
+      shapeType: 'image',
+      style: {
+        fill: 'transparent',
+        fillOpacity: 1,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 1,
+        borderRadius: 0,
+        imageSrc,
+        imageOriginalWidth: originalWidth,
+        imageOriginalHeight: originalHeight,
+        objectFit: 'cover',
+      },
+    };
+    
+    set((state) => ({
+      keyframes: state.keyframes.map((kf) =>
+        kf.id === state.selectedKeyframeId
+          ? { ...kf, keyElements: [...kf.keyElements, newElement] }
+          : kf
+      ),
+      selectedElementId: newElement.id,
+      selectedElementIds: [newElement.id],
+      currentTool: 'select',
+    }));
+  },
 }));
