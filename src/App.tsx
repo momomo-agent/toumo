@@ -680,6 +680,33 @@ export default function App() {
           </div>
         </div>
 
+        {/* Flip Controls */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Flip</Label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => handleStyleChange({ flipX: !currentStyle.flipX })}
+              style={{
+                ...alignBtnStyle,
+                flex: 1,
+                background: currentStyle.flipX ? '#2563eb30' : '#0d0d0e',
+              }}
+            >
+              ↔ Horizontal
+            </button>
+            <button
+              onClick={() => handleStyleChange({ flipY: !currentStyle.flipY })}
+              style={{
+                ...alignBtnStyle,
+                flex: 1,
+                background: currentStyle.flipY ? '#2563eb30' : '#0d0d0e',
+              }}
+            >
+              ↕ Vertical
+            </button>
+          </div>
+        </div>
+
         {isTextElement && (
           <>
             <div style={{ marginBottom: 16 }}>

@@ -30,7 +30,9 @@ export type ShapeStyle = {
   borderRadiusTR?: number;
   borderRadiusBR?: number;
   borderRadiusBL?: number;
-  rotation?: number; // degrees
+  rotation?: number;
+  flipX?: boolean;
+  flipY?: boolean; // degrees
   fontSize?: number;
   fontWeight?: string;
   textAlign?: "left" | "center" | "right";

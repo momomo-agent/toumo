@@ -360,7 +360,11 @@ export function CanvasElement({
         opacity: element.style?.fillOpacity ?? 1,
         borderRadius: getBorderRadius(),
         border: getStroke(),
-        transform: element.style?.rotation ? `rotate(${element.style.rotation}deg)` : undefined,
+        transform: [
+          element.style?.rotation ? `rotate(${element.style.rotation}deg)` : '',
+          element.style?.flipX ? 'scaleX(-1)' : '',
+          element.style?.flipY ? 'scaleY(-1)' : '',
+        ].filter(Boolean).join(' ') || undefined,
         color: '#fff',
         display: 'flex',
         alignItems: 'center',
