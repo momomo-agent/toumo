@@ -13,6 +13,7 @@ export default function App() {
     setSelectedElementId,
     updateElement,
     addElement,
+    deleteElement,
   } = useEditorStore();
 
   const [tool, setTool] = useState<Tool>('select');
@@ -81,11 +82,17 @@ export default function App() {
         case 'o': setTool('ellipse'); break;
         case 't': setTool('text'); break;
         case 'h': setTool('hand'); break;
+        case 'delete':
+        case 'backspace':
+          if (selectedElementId) {
+            deleteElement(selectedElementId);
+          }
+          break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectedElementId, deleteElement]);
 
   // 拖拽开始
   const handleMouseDown = useCallback((e: React.MouseEvent, elId: string, handle?: string) => {
@@ -361,7 +368,7 @@ export default function App() {
                   width: el.size.width,
                   height: el.size.height,
                   background: el.style?.fill || '#3b82f6',
-                  borderRadius: el.style?.borderRadius || 8,
+                  borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8),
                   cursor: 'move',
                   boxShadow: selectedElementId === el.id 
                     ? '0 0 0 2px #2563eb' 
