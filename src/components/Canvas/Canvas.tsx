@@ -10,6 +10,10 @@ import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
 
+type AlignmentResult = {
+  snappedPosition: Position | null;
+};
+
 export function Canvas() {
   const {
     keyframes,
@@ -50,12 +54,35 @@ export function Canvas() {
     };
   };
 
-  const checkAlignment = useCallback((draggedId: string, position: Position, size: { width: number; height: number }) => {
+  const checkAlignment = useCallback((draggedId: string, position: Position, size: { width: number; height: number }): AlignmentResult => {
     const lines: AlignmentLine[] = [];
     const draggedRight = position.x + size.width;
     const draggedBottom = position.y + size.height;
     const draggedCenterX = position.x + size.width / 2;
     const draggedCenterY = position.y + size.height / 2;
+
+    let snapDeltaX: number | null = null;
+    let snapDeltaY: number | null = null;
+
+    const considerSnap = (
+      target: number,
+      current: number,
+      axis: 'x' | 'y',
+      line: AlignmentLine,
+    ) => {
+      const delta = target - current;
+      if (Math.abs(delta) > SNAP_THRESHOLD) return;
+      if (axis === 'x') {
+        if (snapDeltaX === null || Math.abs(delta) < Math.abs(snapDeltaX)) {
+          snapDeltaX = delta;
+        }
+      } else {
+        if (snapDeltaY === null || Math.abs(delta) < Math.abs(snapDeltaY)) {
+          snapDeltaY = delta;
+        }
+      }
+      lines.push(line);
+    };
 
     elements.forEach((element) => {
       if (element.id === draggedId) return;
@@ -65,27 +92,26 @@ export function Canvas() {
       const elCenterX = element.position.x + element.size.width / 2;
       const elCenterY = element.position.y + element.size.height / 2;
 
-      if (Math.abs(position.x - element.position.x) <= SNAP_THRESHOLD) {
-        lines.push({ type: 'vertical', position: element.position.x });
-      }
-      if (Math.abs(draggedRight - elRight) <= SNAP_THRESHOLD) {
-        lines.push({ type: 'vertical', position: elRight });
-      }
-      if (Math.abs(draggedCenterX - elCenterX) <= SNAP_THRESHOLD) {
-        lines.push({ type: 'vertical', position: elCenterX });
-      }
-      if (Math.abs(position.y - element.position.y) <= SNAP_THRESHOLD) {
-        lines.push({ type: 'horizontal', position: element.position.y });
-      }
-      if (Math.abs(draggedBottom - elBottom) <= SNAP_THRESHOLD) {
-        lines.push({ type: 'horizontal', position: elBottom });
-      }
-      if (Math.abs(draggedCenterY - elCenterY) <= SNAP_THRESHOLD) {
-        lines.push({ type: 'horizontal', position: elCenterY });
-      }
+      considerSnap(element.position.x, position.x, 'x', { type: 'vertical', position: element.position.x });
+      considerSnap(elRight, draggedRight, 'x', { type: 'vertical', position: elRight });
+      considerSnap(elCenterX, draggedCenterX, 'x', { type: 'vertical', position: elCenterX });
+
+      considerSnap(element.position.y, position.y, 'y', { type: 'horizontal', position: element.position.y });
+      considerSnap(elBottom, draggedBottom, 'y', { type: 'horizontal', position: elBottom });
+      considerSnap(elCenterY, draggedCenterY, 'y', { type: 'horizontal', position: elCenterY });
     });
 
     setAlignmentLines(lines);
+    if (snapDeltaX === null && snapDeltaY === null) {
+      return { snappedPosition: null };
+    }
+
+    return {
+      snappedPosition: {
+        x: position.x + (snapDeltaX ?? 0),
+        y: position.y + (snapDeltaY ?? 0),
+      },
+    };
   }, [elements]);
 
   useEffect(() => {

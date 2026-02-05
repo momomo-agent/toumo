@@ -12,7 +12,7 @@ interface CanvasElementProps {
   isSelected: boolean;
   scale: number;
   allElements: KeyElement[];
-  onAlignmentCheck: (id: string, pos: Position, size: { width: number; height: number }) => void;
+  onAlignmentCheck: (id: string, pos: Position, size: { width: number; height: number }) => { snappedPosition: Position | null } | void;
 }
 
 export function CanvasElement({
