@@ -918,6 +918,17 @@ const App = () => {
     setSelectedTransitionId(newTransition.id);
   };
 
+  const exportJSON = () => {
+    const data = { keyframes, transitions };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "toumo-project.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const stepPreview = () => {
     const currentIndex = keyframes.findIndex((frame) => frame.id === selectedKeyframeId);
     const nextIndex = (currentIndex + 1) % keyframes.length;
@@ -957,8 +968,7 @@ const App = () => {
           <strong>Motion Editor</strong>
         </div>
         <div className="top-actions">
-          <button className="ghost">Share</button>
-          <button className="ghost">Record preview</button>
+          <button className="ghost" onClick={exportJSON}>Export</button>
           <button className="primary">Publish</button>
         </div>
       </header>
