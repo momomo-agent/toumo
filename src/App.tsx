@@ -477,6 +477,20 @@ export default function App() {
               }
               style={{ ...inputStyle, flex: 1 }}
             />
+            <button
+              onClick={() => updateElement(selected.id, { constrainProportions: !selected.constrainProportions })}
+              style={{
+                padding: '6px 8px',
+                background: selected.constrainProportions ? '#2563eb30' : 'transparent',
+                border: '1px solid #333',
+                borderRadius: 4,
+                color: selected.constrainProportions ? '#2563eb' : '#666',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+            >
+              🔗
+            </button>
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>

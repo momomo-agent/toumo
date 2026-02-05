@@ -78,6 +78,7 @@ export type KeyElement = {
   isKeyElement: boolean;
   locked?: boolean;
   visible?: boolean;
+  constrainProportions?: boolean;
   groupId?: string;
   parentId?: string; // For nested layers
   collapsed?: boolean; // For groups/frames
