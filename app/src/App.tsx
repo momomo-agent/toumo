@@ -308,6 +308,40 @@ const initialTransitions: Transition[] = [
 const App = () => {
   const [keyframes, setKeyframes] = useState<Keyframe[]>(initialKeyframes);
   const [transitions, setTransitions] = useState<Transition[]>(initialTransitions);
+  
+  // Undo/Redo history
+  const [history, setHistory] = useState<Keyframe[][]>([initialKeyframes]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const isUndoRedo = useRef(false);
+  
+  useEffect(() => {
+    if (isUndoRedo.current) {
+      isUndoRedo.current = false;
+      return;
+    }
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(keyframes);
+    if (newHistory.length > 50) newHistory.shift();
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [keyframes]);
+  
+  const undo = () => {
+    if (historyIndex > 0) {
+      isUndoRedo.current = true;
+      setHistoryIndex(historyIndex - 1);
+      setKeyframes(history[historyIndex - 1]);
+    }
+  };
+  
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      isUndoRedo.current = true;
+      setHistoryIndex(historyIndex + 1);
+      setKeyframes(history[historyIndex + 1]);
+    }
+  };
+  
   const [selectedKeyframeId, setSelectedKeyframeId] = useState(keyframes[0].id);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(
     keyframes[0].keyElements[0]?.id ?? null
@@ -1189,6 +1223,15 @@ const App = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Undo/Redo
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
+        e.preventDefault();
+        redo();
+      }
       if (e.key === "Escape") {
         setSelectedElementId(null);
         setSelectedElementIds([]);
