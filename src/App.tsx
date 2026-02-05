@@ -935,6 +935,18 @@ export default function App() {
               style={{ width: '100%' }}
             />
           </div>
+          <div style={{ marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: '#666' }}>Sepia</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={currentStyle.sepia ?? 0}
+              onChange={(e) => handleStyleChange({ sepia: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
 
         {/* Border Radius Control */}

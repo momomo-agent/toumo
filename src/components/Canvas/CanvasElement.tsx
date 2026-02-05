@@ -413,6 +413,7 @@ export function CanvasElement({
           element.style?.hueRotate ? `hue-rotate(${element.style.hueRotate}deg)` : '',
           element.style?.invert ? `invert(${element.style.invert})` : '',
           element.style?.grayscale ? `grayscale(${element.style.grayscale})` : '',
+          element.style?.sepia ? `sepia(${element.style.sepia})` : '',
         ].filter(Boolean).join(' ') || undefined,
         userSelect: 'none',
       }}

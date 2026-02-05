@@ -62,6 +62,7 @@ export type ShapeStyle = {
   hueRotate?: number;
   invert?: number;
   grayscale?: number;
+  sepia?: number;
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;
