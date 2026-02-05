@@ -73,6 +73,7 @@ export default function App() {
     loadProject,
     copyStyle,
     pasteStyle,
+    nudgeSelectedElements,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -271,12 +272,28 @@ export default function App() {
         case 'backspace':
           deleteSelectedElements();
           break;
+        case 'arrowup':
+          nudgeSelectedElements(0, event.shiftKey ? -10 : -1);
+          event.preventDefault();
+          break;
+        case 'arrowdown':
+          nudgeSelectedElements(0, event.shiftKey ? 10 : 1);
+          event.preventDefault();
+          break;
+        case 'arrowleft':
+          nudgeSelectedElements(event.shiftKey ? -10 : -1, 0);
+          event.preventDefault();
+          break;
+        case 'arrowright':
+          nudgeSelectedElements(event.shiftKey ? 10 : 1, 0);
+          event.preventDefault();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copySelectedElements, deleteSelectedElements, pasteElements, redo, setCurrentTool, undo]);
+  }, [copySelectedElements, copyStyle, deleteSelectedElements, groupSelectedElements, nudgeSelectedElements, pasteElements, pasteStyle, redo, setCurrentTool, undo, ungroupSelectedElements]);
 
   // Render element properties inspector
   const renderElementInspector = () => {
