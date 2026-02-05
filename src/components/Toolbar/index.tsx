@@ -9,6 +9,7 @@ const tools: { id: ToolType; icon: string; label: string }[] = [
   { id: 'text', icon: 'T', label: 'Text (T)' },
   { id: 'image', icon: '🖼', label: 'Image (I)' },
   { id: 'line', icon: '╱', label: 'Line (L)' },
+  { id: 'frame', icon: '⬚', label: 'Frame (F)' },
   { id: 'hand', icon: '✋', label: 'Hand (H)' },
 ];
 

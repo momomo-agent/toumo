@@ -123,6 +123,7 @@ export function LayerManager() {
             {el.shapeType === 'text' && 'T'}
             {el.shapeType === 'image' && '🖼'}
             {el.shapeType === 'line' && '╱'}
+            {el.shapeType === 'frame' && '⬚'}
             {!el.shapeType && '□'}
           </span>
           

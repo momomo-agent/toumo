@@ -336,7 +336,7 @@ export function Canvas() {
       return;
     }
 
-    if (['rectangle', 'ellipse', 'text', 'line'].includes(currentTool)) {
+    if (['rectangle', 'ellipse', 'text', 'line', 'frame'].includes(currentTool)) {
       if (!isInsideFrame(framePoint)) return;
       drawStartRef.current = clampPointToFrame(framePoint);
     }
@@ -391,7 +391,7 @@ export function Canvas() {
       return;
     }
 
-    if (drawStartRef.current && ['rectangle', 'ellipse', 'text', 'line'].includes(currentTool)) {
+    if (drawStartRef.current && ['rectangle', 'ellipse', 'text', 'line', 'frame'].includes(currentTool)) {
       const start = drawStartRef.current;
       const clampedEnd = clampPointToFrame(framePoint);
       const width = Math.abs(clampedEnd.x - start.x);
@@ -409,6 +409,7 @@ export function Canvas() {
         if (shapeType === 'ellipse') return 'Ellipse';
         if (shapeType === 'text') return 'Text';
         if (shapeType === 'line') return 'Line';
+        if (shapeType === 'frame') return 'Frame';
         return 'Rectangle';
       };
       
@@ -424,18 +425,25 @@ export function Canvas() {
         },
         size: {
           width: Math.max(width, shapeType === 'text' ? 140 : shapeType === 'line' ? 2 : 48),
-          height: Math.max(height, shapeType === 'text' ? 40 : shapeType === 'line' ? 2 : 48),
+          height: Math.max(height, shapeType === 'text' ? 40 : shapeType === 'line' ? 2 : shapeType === 'frame' ? 100 : 48),
         },
         shapeType,
         style: {
           ...baseStyle,
           borderRadius: shapeType === 'ellipse' ? Math.max(width, height) : shapeType === 'line' ? 0 : baseStyle.borderRadius,
           fontSize: shapeType === 'text' ? 18 : baseStyle.fontSize,
-          // Line specific: store start/end for angle calculation
+          // Line specific
           ...(shapeType === 'line' ? {
             fill: '#ffffff',
             stroke: '#ffffff',
             strokeWidth: 2,
+          } : {}),
+          // Frame specific - transparent container
+          ...(shapeType === 'frame' ? {
+            fill: '#1a1a1a',
+            fillOpacity: 1,
+            stroke: '#333',
+            strokeWidth: 1,
           } : {}),
         },
         text: shapeType === 'text' ? 'Text' : undefined,

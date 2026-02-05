@@ -233,6 +233,9 @@ export default function App() {
         case 'l':
           setCurrentTool('line');
           break;
+        case 'f':
+          setCurrentTool('frame');
+          break;
         case 'delete':
         case 'backspace':
           deleteSelectedElements();

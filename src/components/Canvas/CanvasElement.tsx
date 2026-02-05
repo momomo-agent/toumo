@@ -279,6 +279,7 @@ export function CanvasElement({
   const isText = element.shapeType === 'text';
   const isImage = element.shapeType === 'image';
   const isLine = element.shapeType === 'line';
+  // Frame renders like rectangle but with different default styles
 
   const getBackground = () => {
     if (isText) return 'transparent';

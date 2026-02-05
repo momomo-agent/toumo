@@ -10,9 +10,9 @@ export type Size = {
   height: number;
 };
 
-export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "line" | "hand";
+export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "hand";
 
-export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "keyframe-element";
+export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "keyframe-element";
 
 export type ShapeStyle = {
   fill: string;
