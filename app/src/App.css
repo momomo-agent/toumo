@@ -327,16 +327,17 @@ textarea {
 }
 
 .board {
-  border-radius: 12px;
+  border-radius: 8px;
   background: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-    #0a0c14;
-  background-size: 20px 20px;
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+    #1e1e1e;
+  background-size: 16px 16px;
   min-height: 500px;
   position: relative;
   overflow: hidden;
   cursor: crosshair;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .board-element {
