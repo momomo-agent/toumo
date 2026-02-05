@@ -26,6 +26,7 @@ type KeyElement = {
   category: "content" | "component" | "system";
   isKeyElement: boolean;
   locked?: boolean;
+  visible?: boolean;
   attributes: KeyAttribute[];
   position: Position;
   size: Size;
@@ -669,6 +670,20 @@ const App = () => {
     );
   };
 
+  const toggleElementVisibility = (elementId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.id === elementId ? { ...el, visible: el.visible === false ? true : false } : el
+          ),
+        };
+      })
+    );
+  };
+
   const duplicateElement = (elementId: string) => {
     const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
     if (!element) return;
@@ -1191,6 +1206,7 @@ const App = () => {
                           width: element.size.width,
                           height: element.size.height,
                           cursor: isDragging ? "grabbing" : "grab",
+                          opacity: element.visible === false ? 0.3 : 1,
                         }}
                         onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
                       >
@@ -1289,6 +1305,9 @@ const App = () => {
                       onChange={(e) => updateElementName(selectedElement.id, e.target.value)}
                     />
                     <div className="element-actions">
+                      <button className="ghost small" onClick={() => toggleElementVisibility(selectedElement.id)}>
+                        {selectedElement.visible === false ? "👁️‍🗨️" : "👁️"}
+                      </button>
                       <button className="ghost small" onClick={() => toggleElementLock(selectedElement.id)}>
                         {selectedElement.locked ? "🔒" : "🔓"}
                       </button>
