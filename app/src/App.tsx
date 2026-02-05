@@ -20,6 +20,25 @@ type Size = {
   height: number;
 };
 
+// Tool types for the toolbar
+type ToolType = "select" | "rectangle" | "ellipse" | "text" | "hand";
+
+// Shape element types
+type ShapeType = "rectangle" | "ellipse" | "text" | "keyframe-element";
+
+// Style properties for shapes
+type ShapeStyle = {
+  fill: string;
+  fillOpacity: number;
+  stroke: string;
+  strokeWidth: number;
+  strokeOpacity: number;
+  borderRadius: number;
+  fontSize?: number;
+  fontWeight?: string;
+  textAlign?: "left" | "center" | "right";
+};
+
 type KeyElement = {
   id: string;
   name: string;
@@ -31,6 +50,10 @@ type KeyElement = {
   attributes: KeyAttribute[];
   position: Position;
   size: Size;
+  // New shape properties
+  shapeType?: ShapeType;
+  style?: ShapeStyle;
+  text?: string;
 };
 
 type Keyframe = {
@@ -359,6 +382,26 @@ const App = () => {
     initialTransitions[0]?.id ?? null
   );
 
+  // Tool state
+  const [currentTool, setCurrentTool] = useState<ToolType>("select");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
+  const [drawEnd, setDrawEnd] = useState<{ x: number; y: number } | null>(null);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+
+  // Default styles for new shapes
+  const defaultStyle: ShapeStyle = {
+    fill: "#4A90D9",
+    fillOpacity: 1,
+    stroke: "#2D5A87",
+    strokeWidth: 2,
+    strokeOpacity: 1,
+    borderRadius: 8,
+    fontSize: 16,
+    fontWeight: "normal",
+    textAlign: "left",
+  };
+
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -514,6 +557,24 @@ const App = () => {
   }, [isDragging, isResizing, isPanning, selectedKeyframeId, canvasScale, selectedElementIds]);
 
   const handleCanvasMouseUp = useCallback(() => {
+    // Handle drawing completion
+    if (isDrawing && drawStart && drawEnd) {
+      const minX = Math.min(drawStart.x, drawEnd.x);
+      const minY = Math.min(drawStart.y, drawEnd.y);
+      const width = Math.abs(drawEnd.x - drawStart.x);
+      const height = Math.abs(drawEnd.y - drawStart.y);
+      
+      if (width > 5 && height > 5) {
+        const shapeType = currentTool === "rectangle" ? "rectangle" : "ellipse";
+        createShapeElement(shapeType, minX, minY, width, height);
+      }
+      
+      setIsDrawing(false);
+      setDrawStart(null);
+      setDrawEnd(null);
+      return;
+    }
+    
     // Handle box selection end
     if (isBoxSelecting && boxSelectStart && boxSelectEnd) {
       const minX = Math.min(boxSelectStart.x, boxSelectEnd.x);
@@ -547,7 +608,7 @@ const App = () => {
   }, [isBoxSelecting, boxSelectStart, boxSelectEnd, selectedKeyframe]);
 
   const handleCanvasPanStart = useCallback((e: MouseEvent) => {
-    if (e.button === 1 || e.altKey) {
+    if (e.button === 1 || (e.altKey && currentTool !== "hand") || currentTool === "hand") {
       e.preventDefault();
       setIsPanning(true);
       panRef.current = {
@@ -557,19 +618,36 @@ const App = () => {
         origY: canvasOffset.y,
       };
     } else if (e.button === 0 && e.target === canvasRef.current) {
-      // Start box selection on empty canvas click
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
         const x = (e.clientX - rect.left - canvasOffset.x) / canvasScale;
         const y = (e.clientY - rect.top - canvasOffset.y) / canvasScale;
-        setIsBoxSelecting(true);
-        setBoxSelectStart({ x, y });
-        setBoxSelectEnd({ x, y });
-        setSelectedElementId(null);
-        setSelectedElementIds([]);
+        
+        // Handle drawing tools
+        if (currentTool === "rectangle" || currentTool === "ellipse") {
+          setIsDrawing(true);
+          setDrawStart({ x, y });
+          setDrawEnd({ x, y });
+          return;
+        }
+        
+        // Handle text tool - create text on click
+        if (currentTool === "text") {
+          createShapeElement("text", x, y, 120, 30);
+          return;
+        }
+        
+        // Start box selection on empty canvas click (select tool)
+        if (currentTool === "select") {
+          setIsBoxSelecting(true);
+          setBoxSelectStart({ x, y });
+          setBoxSelectEnd({ x, y });
+          setSelectedElementId(null);
+          setSelectedElementIds([]);
+        }
       }
     }
-  }, [canvasOffset, canvasScale]);
+  }, [canvasOffset, canvasScale, currentTool]);
 
   const handleCanvasPanMove = useCallback((e: MouseEvent) => {
     if (isPanning && panRef.current) {
@@ -581,13 +659,21 @@ const App = () => {
       });
       return;
     }
+    // Handle drawing preview
+    if (isDrawing && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left - canvasOffset.x) / canvasScale;
+      const y = (e.clientY - rect.top - canvasOffset.y) / canvasScale;
+      setDrawEnd({ x, y });
+      return;
+    }
     if (isBoxSelecting && canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
       const x = (e.clientX - rect.left - canvasOffset.x) / canvasScale;
       const y = (e.clientY - rect.top - canvasOffset.y) / canvasScale;
       setBoxSelectEnd({ x, y });
     }
-  }, [isPanning, isBoxSelecting, canvasOffset, canvasScale]);
+  }, [isPanning, isDrawing, isBoxSelecting, canvasOffset, canvasScale]);
 
   const handleCanvasWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -939,6 +1025,76 @@ const App = () => {
     setSelectedElementId(newElement.id);
   };
 
+  // Create shape element
+  const createShapeElement = (shapeType: ShapeType, x: number, y: number, width: number, height: number) => {
+    const names: Record<ShapeType, string> = {
+      rectangle: "Rectangle",
+      ellipse: "Ellipse",
+      text: "Text",
+      "keyframe-element": "Element",
+    };
+    
+    const newElement: KeyElement = {
+      id: `el-${Date.now()}`,
+      name: `${names[shapeType]} ${selectedKeyframe.keyElements.length + 1}`,
+      category: "component",
+      isKeyElement: false,
+      position: { x, y },
+      size: { width: Math.max(width, 20), height: Math.max(height, 20) },
+      shapeType,
+      style: { ...defaultStyle },
+      text: shapeType === "text" ? "Text" : undefined,
+      attributes: [],
+    };
+
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return { ...frame, keyElements: [...frame.keyElements, newElement] };
+      })
+    );
+    setSelectedElementId(newElement.id);
+    setCurrentTool("select");
+    
+    if (shapeType === "text") {
+      setEditingTextId(newElement.id);
+    }
+  };
+
+  // Update element style
+  const updateElementStyle = (elementId: string, styleKey: keyof ShapeStyle, value: string | number) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== elementId) return el;
+            return {
+              ...el,
+              style: { ...defaultStyle, ...el.style, [styleKey]: value },
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  // Update element text
+  const updateElementText = (elementId: string, text: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) =>
+            el.id === elementId ? { ...el, text } : el
+          ),
+        };
+      })
+    );
+  };
+
   const updateKeyframeMeta = (field: "name" | "summary" | "functionalState", value: string) => {
     setKeyframes((prev) =>
       prev.map((frame) =>
@@ -1250,6 +1406,30 @@ const App = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when editing text
+      if (editingTextId || editingElementId) return;
+      
+      // Tool shortcuts (single key, no modifiers)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case "v":
+            setCurrentTool("select");
+            return;
+          case "r":
+            setCurrentTool("rectangle");
+            return;
+          case "o":
+            setCurrentTool("ellipse");
+            return;
+          case "t":
+            setCurrentTool("text");
+            return;
+          case "h":
+            setCurrentTool("hand");
+            return;
+        }
+      }
+      
       // Undo/Redo
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
@@ -1442,6 +1622,61 @@ const App = () => {
         </div>
       </header>
 
+      {/* Toolbar */}
+      <div className="toolbar">
+        <button
+          className={`tool-btn ${currentTool === "select" ? "active" : ""}`}
+          onClick={() => setCurrentTool("select")}
+          title="Select (V)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+          </svg>
+        </button>
+        <button
+          className={`tool-btn ${currentTool === "rectangle" ? "active" : ""}`}
+          onClick={() => setCurrentTool("rectangle")}
+          title="Rectangle (R)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+          </svg>
+        </button>
+        <button
+          className={`tool-btn ${currentTool === "ellipse" ? "active" : ""}`}
+          onClick={() => setCurrentTool("ellipse")}
+          title="Ellipse (O)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <ellipse cx="12" cy="12" rx="9" ry="9"/>
+          </svg>
+        </button>
+        <button
+          className={`tool-btn ${currentTool === "text" ? "active" : ""}`}
+          onClick={() => setCurrentTool("text")}
+          title="Text (T)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 7V4h16v3"/>
+            <path d="M12 4v16"/>
+            <path d="M8 20h8"/>
+          </svg>
+        </button>
+        <div className="tool-divider" />
+        <button
+          className={`tool-btn ${currentTool === "hand" ? "active" : ""}`}
+          onClick={() => setCurrentTool("hand")}
+          title="Hand (H)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+          </svg>
+        </button>
+      </div>
+
       <div className="body-grid">
         <aside className="preview-pane">
           <div className="preview-header">
@@ -1588,7 +1823,7 @@ const App = () => {
                   onMouseUp={handleCanvasMouseUp}
                   onMouseLeave={handleCanvasMouseUp}
                   onWheel={handleCanvasWheel}
-                  style={{ cursor: isPanning ? "grabbing" : "crosshair" }}
+                  style={{ cursor: isPanning || currentTool === "hand" ? "grabbing" : currentTool === "select" ? "default" : "crosshair" }}
                 >
                   <div
                     className="canvas-transform"
@@ -1597,50 +1832,104 @@ const App = () => {
                       transformOrigin: "0 0",
                     }}
                   >
-                    {previewElements.map((element) => (
-                      <div
-                        key={`board-${element.id}`}
-                        className={`board-element element-${element.id} ${
-                          element.isKeyElement ? "is-key" : ""
-                        } ${selectedElementId === element.id || selectedElementIds.includes(element.id) ? "selected" : ""}`}
-                        style={{
-                          position: "absolute",
-                          left: element.position.x,
-                          top: element.position.y,
-                          width: element.size.width,
-                          height: element.size.height,
-                          cursor: isDragging ? "grabbing" : "grab",
-                          opacity: element.visible === false ? 0.3 : 1,
-                        }}
-                        onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
-                        onDoubleClick={() => setEditingElementId(element.id)}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setContextMenu({ x: e.clientX, y: e.clientY, elementId: element.id });
-                          setSelectedElementId(element.id);
-                        }}
-                      >
-                      {editingElementId === element.id ? (
-                        <input
-                          autoFocus
-                          defaultValue={element.name}
-                          onBlur={(e) => { updateElementName(element.id, e.target.value); setEditingElementId(null); }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') { updateElementName(element.id, (e.target as HTMLInputElement).value); setEditingElementId(null); } }}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit', outline: 'none' }}
-                        />
-                      ) : (
-                        <span>{element.name}</span>
-                      )}
-                      {element.isKeyElement && <small>Key</small>}
-                        {selectedElementId === element.id && (
-                          <div
-                            className="resize-handle"
-                            onMouseDown={(e) => handleResizeStart(e, element.id)}
-                          />
-                        )}
-                      </div>
-                    ))}
+                    {previewElements.map((element) => {
+                      const style = element.style || defaultStyle;
+                      const isShape = element.shapeType === "rectangle" || element.shapeType === "ellipse";
+                      const isText = element.shapeType === "text";
+                      
+                      return (
+                        <div
+                          key={`board-${element.id}`}
+                          className={`board-element element-${element.id} ${
+                            element.isKeyElement ? "is-key" : ""
+                          } ${selectedElementId === element.id || selectedElementIds.includes(element.id) ? "selected" : ""} ${isShape || isText ? "shape-element" : ""}`}
+                          style={{
+                            position: "absolute",
+                            left: element.position.x,
+                            top: element.position.y,
+                            width: element.size.width,
+                            height: element.size.height,
+                            cursor: currentTool === "select" ? (isDragging ? "grabbing" : "grab") : "default",
+                            opacity: element.visible === false ? 0.3 : style.fillOpacity,
+                            backgroundColor: isShape ? style.fill : (isText ? "transparent" : undefined),
+                            borderRadius: element.shapeType === "ellipse" ? "50%" : (isShape ? style.borderRadius : undefined),
+                            border: isShape ? `${style.strokeWidth}px solid ${style.stroke}` : undefined,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: isText ? style.textAlign : "center",
+                            fontSize: isText ? style.fontSize : undefined,
+                            fontWeight: isText ? style.fontWeight : undefined,
+                            color: isText ? style.fill : undefined,
+                            padding: isText ? "4px 8px" : undefined,
+                          }}
+                          onMouseDown={(e) => {
+                            if (currentTool === "select") {
+                              handleCanvasMouseDown(e, element.id);
+                            }
+                          }}
+                          onDoubleClick={() => {
+                            if (isText) {
+                              setEditingTextId(element.id);
+                            } else {
+                              setEditingElementId(element.id);
+                            }
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setContextMenu({ x: e.clientX, y: e.clientY, elementId: element.id });
+                            setSelectedElementId(element.id);
+                          }}
+                        >
+                          {editingTextId === element.id && isText ? (
+                            <input
+                              autoFocus
+                              defaultValue={element.text || ""}
+                              onBlur={(e) => { updateElementText(element.id, e.target.value); setEditingTextId(null); }}
+                              onKeyDown={(e) => { 
+                                if (e.key === 'Enter') { 
+                                  updateElementText(element.id, (e.target as HTMLInputElement).value); 
+                                  setEditingTextId(null); 
+                                }
+                                if (e.key === 'Escape') {
+                                  setEditingTextId(null);
+                                }
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ 
+                                width: '100%', 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: 'inherit', 
+                                outline: 'none',
+                                fontSize: 'inherit',
+                                fontWeight: 'inherit',
+                                textAlign: style.textAlign || 'left',
+                              }}
+                            />
+                          ) : editingElementId === element.id ? (
+                            <input
+                              autoFocus
+                              defaultValue={element.name}
+                              onBlur={(e) => { updateElementName(element.id, e.target.value); setEditingElementId(null); }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') { updateElementName(element.id, (e.target as HTMLInputElement).value); setEditingElementId(null); } }}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit', outline: 'none' }}
+                            />
+                          ) : isText ? (
+                            <span>{element.text || "Text"}</span>
+                          ) : isShape ? null : (
+                            <span>{element.name}</span>
+                          )}
+                          {element.isKeyElement && !isShape && !isText && <small>Key</small>}
+                          {selectedElementId === element.id && (
+                            <div
+                              className="resize-handle"
+                              onMouseDown={(e) => handleResizeStart(e, element.id)}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                   {isBoxSelecting && boxSelectStart && boxSelectEnd && (
                     <div
@@ -1650,6 +1939,23 @@ const App = () => {
                         top: Math.min(boxSelectStart.y, boxSelectEnd.y),
                         width: Math.abs(boxSelectEnd.x - boxSelectStart.x),
                         height: Math.abs(boxSelectEnd.y - boxSelectStart.y),
+                      }}
+                    />
+                  )}
+                  {/* Drawing preview */}
+                  {isDrawing && drawStart && drawEnd && (
+                    <div
+                      className="drawing-preview"
+                      style={{
+                        position: "absolute",
+                        left: Math.min(drawStart.x, drawEnd.x) * canvasScale + canvasOffset.x,
+                        top: Math.min(drawStart.y, drawEnd.y) * canvasScale + canvasOffset.y,
+                        width: Math.abs(drawEnd.x - drawStart.x) * canvasScale,
+                        height: Math.abs(drawEnd.y - drawStart.y) * canvasScale,
+                        border: "2px dashed #0d99ff",
+                        borderRadius: currentTool === "ellipse" ? "50%" : "4px",
+                        background: "rgba(13, 153, 255, 0.1)",
+                        pointerEvents: "none",
                       }}
                     />
                   )}
@@ -1809,6 +2115,116 @@ const App = () => {
                       />
                     </label>
                   </div>
+                  {/* Style Panel for shapes */}
+                  {(selectedElement.shapeType === "rectangle" || selectedElement.shapeType === "ellipse" || selectedElement.shapeType === "text") && (
+                    <>
+                      <div className="panel-heading" style={{ marginTop: 16 }}>
+                        <span>Fill</span>
+                      </div>
+                      <div className="style-row">
+                        <input
+                          type="color"
+                          value={selectedElement.style?.fill || defaultStyle.fill}
+                          onChange={(e) => updateElementStyle(selectedElement.id, "fill", e.target.value)}
+                          className="color-input"
+                        />
+                        <input
+                          type="text"
+                          value={selectedElement.style?.fill || defaultStyle.fill}
+                          onChange={(e) => updateElementStyle(selectedElement.id, "fill", e.target.value)}
+                          className="color-text"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={Math.round((selectedElement.style?.fillOpacity ?? 1) * 100)}
+                          onChange={(e) => updateElementStyle(selectedElement.id, "fillOpacity", Number(e.target.value) / 100)}
+                          className="opacity-input"
+                        />
+                        <span className="opacity-label">%</span>
+                      </div>
+                      
+                      {selectedElement.shapeType !== "text" && (
+                        <>
+                          <div className="panel-heading" style={{ marginTop: 12 }}>
+                            <span>Stroke</span>
+                          </div>
+                          <div className="style-row">
+                            <input
+                              type="color"
+                              value={selectedElement.style?.stroke || defaultStyle.stroke}
+                              onChange={(e) => updateElementStyle(selectedElement.id, "stroke", e.target.value)}
+                              className="color-input"
+                            />
+                            <input
+                              type="text"
+                              value={selectedElement.style?.stroke || defaultStyle.stroke}
+                              onChange={(e) => updateElementStyle(selectedElement.id, "stroke", e.target.value)}
+                              className="color-text"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              value={selectedElement.style?.strokeWidth ?? defaultStyle.strokeWidth}
+                              onChange={(e) => updateElementStyle(selectedElement.id, "strokeWidth", Number(e.target.value))}
+                              className="stroke-width-input"
+                            />
+                            <span className="opacity-label">px</span>
+                          </div>
+                        </>
+                      )}
+                      
+                      {selectedElement.shapeType === "rectangle" && (
+                        <>
+                          <div className="panel-heading" style={{ marginTop: 12 }}>
+                            <span>Corner Radius</span>
+                          </div>
+                          <div className="style-row">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={selectedElement.style?.borderRadius ?? defaultStyle.borderRadius}
+                              onChange={(e) => updateElementStyle(selectedElement.id, "borderRadius", Number(e.target.value))}
+                              style={{ width: 60 }}
+                            />
+                            <span className="opacity-label">px</span>
+                          </div>
+                        </>
+                      )}
+                      
+                      {selectedElement.shapeType === "text" && (
+                        <>
+                          <div className="panel-heading" style={{ marginTop: 12 }}>
+                            <span>Text</span>
+                          </div>
+                          <div className="style-row">
+                            <input
+                              type="number"
+                              min="8"
+                              max="200"
+                              value={selectedElement.style?.fontSize ?? 16}
+                              onChange={(e) => updateElementStyle(selectedElement.id, "fontSize", Number(e.target.value))}
+                              style={{ width: 60 }}
+                            />
+                            <span className="opacity-label">px</span>
+                            <select
+                              value={selectedElement.style?.fontWeight ?? "normal"}
+                              onChange={(e) => updateElementStyle(selectedElement.id, "fontWeight", e.target.value)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              <option value="normal">Regular</option>
+                              <option value="500">Medium</option>
+                              <option value="600">Semibold</option>
+                              <option value="bold">Bold</option>
+                            </select>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                   <div className="panel-heading" style={{ marginTop: 16 }}>
                     <span>Attributes</span>
                     <button className="ghost small" onClick={() => addAttribute(selectedElement.id)}>+ Add</button>
