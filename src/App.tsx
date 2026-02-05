@@ -80,6 +80,8 @@ export default function App() {
     sendBackward,
     canvasScale,
     deleteElement,
+    recentColors,
+    addRecentColor,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -358,6 +360,7 @@ export default function App() {
       updateElement(selected.id, {
         style: mergeStyle(selected.style, overrides),
       });
+      if (overrides.fill) addRecentColor(overrides.fill);
     };
     const isTextElement = selected.shapeType === 'text';
     const activeAlign = currentStyle.textAlign ?? 'left';
@@ -591,6 +594,16 @@ export default function App() {
               />
             ))}
           </div>
+          {recentColors.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <span style={{ fontSize: 10, color: '#666' }}>Recent</span>
+              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                {recentColors.slice(0, 7).map((c) => (
+                  <button key={c} onClick={() => handleStyleChange({ fill: c })} style={{ width: 20, height: 20, borderRadius: 4, border: '1px solid #333', background: c, cursor: 'pointer' }} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Gradient Control */}
