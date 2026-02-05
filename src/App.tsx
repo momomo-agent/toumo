@@ -847,7 +847,7 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Label>Filters</Label>
             <button
-              onClick={() => handleStyleChange({ blur: 0, brightness: 1, contrast: 1, saturate: 1, hueRotate: 0, invert: 0, grayscale: 0 })}
+              onClick={() => handleStyleChange({ blur: 0, brightness: 1, contrast: 1, saturate: 1, hueRotate: 0, invert: 0, grayscale: 0, sepia: 0 })}
               style={{ background: 'none', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer' }}
             >
               Reset
