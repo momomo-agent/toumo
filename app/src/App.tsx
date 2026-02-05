@@ -1307,9 +1307,26 @@ const App = () => {
         setCanvasScale(1);
         setCanvasOffset({ x: 0, y: 0 });
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "1") {
+      if ((e.ctrlKey || e.metaKey) && e.key === "1" && !e.shiftKey) {
         e.preventDefault();
         setCanvasScale(1);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "1") {
+        e.preventDefault();
+        // Zoom to fit all elements
+        const elements = selectedKeyframe.keyElements;
+        if (elements.length === 0) return;
+        const bounds = elements.reduce((acc, el) => ({
+          minX: Math.min(acc.minX, el.position.x),
+          minY: Math.min(acc.minY, el.position.y),
+          maxX: Math.max(acc.maxX, el.position.x + el.size.width),
+          maxY: Math.max(acc.maxY, el.position.y + el.size.height),
+        }), { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+        const contentW = bounds.maxX - bounds.minX + 100;
+        const contentH = bounds.maxY - bounds.minY + 100;
+        const scale = Math.min(600 / contentW, 400 / contentH, 2);
+        setCanvasScale(scale);
+        setCanvasOffset({ x: -bounds.minX * scale + 50, y: -bounds.minY * scale + 50 });
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
