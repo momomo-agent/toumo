@@ -327,7 +327,7 @@ const App = () => {
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
   const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}> } | null>(null);
+  const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}>; altCopy?: boolean } | null>(null);
   const resizeRef = useRef<{ elementId: string; startX: number; startY: number; origW: number; origH: number; corner: string } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -393,8 +393,9 @@ const App = () => {
       origX: element.position.x,
       origY: element.position.y,
       origPositions,
+      altCopy: e.altKey,
     };
-  }, [selectedKeyframe]);
+  }, [selectedKeyframe, selectedElementIds]);
 
   const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
     // Handle panning
