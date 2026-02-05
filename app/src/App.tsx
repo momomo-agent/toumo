@@ -1204,6 +1204,11 @@ const App = () => {
         e.preventDefault();
         ungroupElements();
       }
+      // Ctrl+A select all
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+        e.preventDefault();
+        setSelectedElementIds(selectedKeyframe.keyElements.map(el => el.id));
+      }
       // Arrow keys nudge
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) && selectedElementId) {
         e.preventDefault();
