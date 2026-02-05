@@ -646,6 +646,24 @@ const App = () => {
     );
   };
 
+  const deleteAttribute = (elementId: string, attrId: string) => {
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return {
+          ...frame,
+          keyElements: frame.keyElements.map((el) => {
+            if (el.id !== elementId) return el;
+            return {
+              ...el,
+              attributes: el.attributes.filter((attr) => attr.id !== attrId),
+            };
+          }),
+        };
+      })
+    );
+  };
+
   const updateAttributeLabel = (elementId: string, attrId: string, label: string) => {
     setKeyframes((prev) =>
       prev.map((frame) => {
@@ -1079,6 +1097,10 @@ const App = () => {
                           <option value="spring">Spring</option>
                           <option value="overshoot">Overshoot</option>
                         </select>
+                        <button
+                          className="ghost small danger"
+                          onClick={() => deleteAttribute(selectedElement.id, attribute.id)}
+                        >×</button>
                       </div>
                     </div>
                   ))}
