@@ -70,6 +70,7 @@ export function CanvasElement({
 
   const handlePointerDown = useCallback((event: ReactMouseEvent) => {
     if (currentTool !== 'select') return;
+    if (element.locked) return; // Don't allow dragging locked elements
     event.stopPropagation();
 
     const multiSelect = event.shiftKey || event.metaKey || event.ctrlKey;
@@ -160,6 +161,7 @@ export function CanvasElement({
   }, [allElements, currentTool, element.id, onAlignmentCheck, scale, selectedElementIds, setIsDragging, setSelectedElementId, setSelectedElementIds, updateElementPosition, pushHistory]);
 
   const handleResizeStart = useCallback((event: ReactMouseEvent, handle: ResizeHandle) => {
+    if (element.locked) return;
     event.stopPropagation();
     event.preventDefault();
 
