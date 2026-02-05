@@ -851,6 +851,22 @@ export default function App() {
                 >
                   Bold
                 </button>
+                <button
+                  onClick={() => handleStyleChange({ fontStyle: currentStyle.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 6,
+                    border: currentStyle.fontStyle === 'italic' ? '1px solid #2563eb' : '1px solid #2a2a2a',
+                    background: currentStyle.fontStyle === 'italic' ? '#2563eb20' : 'transparent',
+                    color: '#fff',
+                    fontSize: 12,
+                    fontStyle: 'italic',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Italic
+                </button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>

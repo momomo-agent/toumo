@@ -35,6 +35,7 @@ export type ShapeStyle = {
   flipY?: boolean; // degrees
   fontSize?: number;
   fontWeight?: string;
+  fontStyle?: 'normal' | 'italic';
   textAlign?: "left" | "center" | "right";
   textColor?: string;
   // Shadow

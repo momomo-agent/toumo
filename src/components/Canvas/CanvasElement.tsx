@@ -388,6 +388,8 @@ export function CanvasElement({
         alignItems: 'center',
         justifyContent: isText ? (element.style?.textAlign || 'center') : 'center',
         fontSize: element.style?.fontSize || 14,
+        fontWeight: element.style?.fontWeight || 'normal',
+        fontStyle: element.style?.fontStyle || 'normal',
         overflow: 'hidden',
         cursor: currentTool === 'select' ? 'move' : 'default',
         boxShadow: getBoxShadow(),
