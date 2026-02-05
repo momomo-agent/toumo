@@ -11,12 +11,14 @@ export function LayerManager() {
     setSelectedElementId,
     setSelectedElementIds,
     updateElement,
+    deleteElement,
   } = useEditorStore();
   
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null);
   
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
@@ -105,6 +107,7 @@ export function LayerManager() {
           onDrop={(e) => handleDrop(e, el.id)}
           onDragLeave={() => setDragOverId(null)}
           onClick={(e) => handleSelect(el.id, e)}
+          onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, id: el.id }); }}
           style={{
             opacity: el.visible === false ? 0.4 : 1,
             display: 'flex',
@@ -205,6 +208,17 @@ export function LayerManager() {
           : rootElements.map(el => renderLayer(el, 0))
         }
       </div>
+      {contextMenu && (
+        <div
+          style={{ position: 'fixed', left: contextMenu.x, top: contextMenu.y, background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: 4, zIndex: 1000 }}
+          onClick={() => setContextMenu(null)}
+        >
+          <button onClick={() => { setEditingId(contextMenu.id); setEditName(elements.find(e => e.id === contextMenu.id)?.name || ''); }} style={menuBtn}>Rename</button>
+          <button onClick={() => deleteElement(contextMenu.id)} style={{ ...menuBtn, color: '#ef4444' }}>Delete</button>
+        </div>
+      )}
     </section>
   );
 }
+
+const menuBtn: React.CSSProperties = { display: 'block', width: '100%', padding: '6px 12px', background: 'none', border: 'none', color: '#fff', fontSize: 11, textAlign: 'left', cursor: 'pointer' };
