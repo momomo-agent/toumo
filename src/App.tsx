@@ -45,6 +45,9 @@ type ToolButton = {
 export default function App() {
   const {
     keyframes,
+    transitions,
+    functionalStates,
+    components,
     selectedKeyframeId,
     setSelectedKeyframeId,
     addKeyframe,
@@ -133,6 +136,24 @@ export default function App() {
       alert('Export failed');
     }
   }, [selectedKeyframeId, selectedKeyframe?.name]);
+
+  // Save project as JSON
+  const handleSaveProject = useCallback(() => {
+    const projectData = {
+      version: '1.0',
+      keyframes,
+      transitions,
+      functionalStates,
+      components,
+      frameSize,
+    };
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.download = 'toumo-project.json';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, [keyframes, transitions, functionalStates, components, frameSize]);
 
   const tools: ToolButton[] = [
     { id: 'select', icon: '↖', label: 'Select (V)' },
@@ -736,6 +757,20 @@ export default function App() {
           <span style={{ color: '#666', fontSize: 12 }}>Motion Editor</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={handleSaveProject}
+            style={{
+              padding: '6px 12px',
+              background: 'transparent',
+              border: '1px solid #333',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            Save
+          </button>
           <button
             onClick={handleExportPNG}
             style={{
