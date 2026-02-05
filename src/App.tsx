@@ -303,6 +303,9 @@ export default function App() {
         case 'backspace':
           deleteSelectedElements();
           break;
+        case 'escape':
+          setSelectedElementId(null);
+          break;
         case 'arrowup':
           nudgeSelectedElements(0, event.shiftKey ? -10 : -1);
           event.preventDefault();
