@@ -680,3 +680,17 @@ button:focus {
   background: rgba(255, 100, 100, 0.15);
   color: #ff6b6b;
 }
+
+.align-buttons {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  margin-right: 8px;
+}
+.align-buttons .icon-btn {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
