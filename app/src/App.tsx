@@ -988,7 +988,10 @@ const App = () => {
             <div className="panel canvas-panel">
               <div className="canvas-heading">
                 <h3>Canvas</h3>
-                <span>{selectedKeyframe.summary}</span>
+                <div className="canvas-controls">
+                  <span className="zoom-indicator">{Math.round(canvasScale * 100)}%</span>
+                  <button className="ghost small" onClick={() => { setCanvasScale(1); setCanvasOffset({ x: 0, y: 0 }); }}>Reset</button>
+                </div>
               </div>
               <div className="canvas-content">
                 <div 
