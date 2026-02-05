@@ -310,6 +310,14 @@ export function CanvasElement({
     return shadows.length > 0 ? shadows.join(', ') : 'none';
   };
 
+  const getStroke = () => {
+    if (isText) return '1px dashed rgba(255,255,255,0.4)';
+    if (element.style?.strokeWidth && element.style.stroke) {
+      return `${element.style.strokeWidth}px solid ${element.style.stroke}`;
+    }
+    return undefined;
+  };
+
   return (
     <div
       onMouseDown={handlePointerDown}
@@ -320,8 +328,9 @@ export function CanvasElement({
         width: element.size.width,
         height: element.size.height,
         background: getBackground(),
+        opacity: element.style?.fillOpacity ?? 1,
         borderRadius: getBorderRadius(),
-        border: isText ? '1px dashed rgba(255,255,255,0.4)' : undefined,
+        border: getStroke(),
         transform: element.style?.rotation ? `rotate(${element.style.rotation}deg)` : undefined,
         color: '#fff',
         display: 'flex',

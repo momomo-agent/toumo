@@ -325,6 +325,54 @@ export default function App() {
           </div>
         </div>
 
+        {/* Opacity Control */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Opacity</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={currentStyle.fillOpacity ?? 1}
+              onChange={(e) => handleStyleChange({ fillOpacity: Number(e.target.value) })}
+              style={{ flex: 1 }}
+            />
+            <span style={{ fontSize: 11, color: '#888', width: 40 }}>
+              {Math.round((currentStyle.fillOpacity ?? 1) * 100)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Stroke Controls */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Stroke</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <input
+              type="color"
+              value={currentStyle.stroke || '#ffffff'}
+              onChange={(e) => handleStyleChange({ stroke: e.target.value })}
+              style={{
+                width: 34,
+                height: 34,
+                padding: 0,
+                border: '1px solid #2a2a2a',
+                borderRadius: 8,
+                cursor: 'pointer',
+                background: 'transparent',
+              }}
+            />
+            <input
+              type="number"
+              min={0}
+              value={currentStyle.strokeWidth ?? 0}
+              onChange={(e) => handleStyleChange({ strokeWidth: Number(e.target.value) })}
+              style={{ ...inputStyle, flex: 1 }}
+              placeholder="Width"
+            />
+          </div>
+        </div>
+
         {/* Shadow Controls */}
         <div style={{ marginBottom: 20 }}>
           <Label>Shadow</Label>
