@@ -1328,6 +1328,15 @@ const App = () => {
         setCanvasScale(scale);
         setCanvasOffset({ x: -bounds.minX * scale + 50, y: -bounds.minY * scale + 50 });
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "2" && selectedElementId) {
+        e.preventDefault();
+        // Zoom to selection
+        const el = selectedKeyframe.keyElements.find(e => e.id === selectedElementId);
+        if (el) {
+          setCanvasScale(2);
+          setCanvasOffset({ x: -el.position.x * 2 + 200, y: -el.position.y * 2 + 150 });
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
         duplicateElement(selectedElementId);
