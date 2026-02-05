@@ -748,3 +748,41 @@ button:focus {
   font-family: inherit;
   margin-right: 8px;
 }
+
+.context-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+.context-menu {
+  position: fixed;
+  background: #2d2d2d;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.context-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.context-menu button:hover {
+  background: rgba(255,255,255,0.1);
+}
+.context-menu button.danger {
+  color: #ff6b6b;
+}
+.context-menu hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 4px 0;
+}

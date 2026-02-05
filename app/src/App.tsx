@@ -366,6 +366,7 @@ const App = () => {
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
   const [showHelp, setShowHelp] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{x: number; y: number; elementId: string} | null>(null);
   const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}>; altCopy?: boolean } | null>(null);
   const resizeRef = useRef<{ elementId: string; startX: number; startY: number; origW: number; origH: number; corner: string } | null>(null);
@@ -1357,6 +1358,29 @@ const App = () => {
           </div>
         </div>
       )}
+      {contextMenu && (
+        <div className="context-menu-overlay" onClick={() => setContextMenu(null)}>
+          <div 
+            className="context-menu" 
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button onClick={() => { duplicateElement(contextMenu.elementId); setContextMenu(null); }}>Duplicate</button>
+            <button onClick={() => { copyElements(); setContextMenu(null); }}>Copy</button>
+            <button onClick={() => { toggleElementLock(contextMenu.elementId); setContextMenu(null); }}>
+              {selectedKeyframe.keyElements.find(el => el.id === contextMenu.elementId)?.locked ? 'Unlock' : 'Lock'}
+            </button>
+            <button onClick={() => { toggleElementVisibility(contextMenu.elementId); setContextMenu(null); }}>
+              {selectedKeyframe.keyElements.find(el => el.id === contextMenu.elementId)?.visible === false ? 'Show' : 'Hide'}
+            </button>
+            <hr />
+            <button onClick={() => { moveElementUp(contextMenu.elementId); setContextMenu(null); }}>Bring Forward</button>
+            <button onClick={() => { moveElementDown(contextMenu.elementId); setContextMenu(null); }}>Send Backward</button>
+            <hr />
+            <button className="danger" onClick={() => { deleteElement(contextMenu.elementId); setContextMenu(null); }}>Delete</button>
+          </div>
+        </div>
+      )}
       <header className="top-bar">
         <div>
           <span className="logo">Toumo</span>
@@ -1541,6 +1565,11 @@ const App = () => {
                         }}
                         onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
                         onDoubleClick={() => setEditingElementId(element.id)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setContextMenu({ x: e.clientX, y: e.clientY, elementId: element.id });
+                          setSelectedElementId(element.id);
+                        }}
                       >
                       {editingElementId === element.id ? (
                         <input
