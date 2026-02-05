@@ -4,36 +4,19 @@
 
 | Track | Scope | Status |
 |-------|-------|--------|
-| 1. Canvas & Editor Core | Multi-frame layout, drawing tools, alignment, selection, zoom/pan | ✅ Base editing done; zoom fix in place |
+| 1. Canvas & Editor Core | Multi-frame layout, drawing tools, alignment, selection, zoom/pan | ✅ Core editing + zoom fix done |
 | 2. Interaction Manager | State graph, transition editing, component view | ✅ Drag-to-create transitions, inline edit, component tab |
-| 3. Inspector & State Mapping | Element inspector, functional/display state panels | 🚧 Transition inspector next (trigger, curve, spring) |
-| 4. Components & Reuse | Component state machine, mappings | 🚧 Component tab scaffolded; need linking to canvas/inspector |
-| 5. Live Preview & Devices | Device presets, state pills, preview controls | 🕓 Basic preview; need multi-device + manual zoom control |
-| 6. Export/Playground | Share/demo links, recording | Not started |
+| 3. Inspector & State Mapping | Transition inspector, functional/display mappings | 🧑‍💻 Transition Inspector 2.0 shipping; state mappings active |
+| 4. Components & Reuse | Component overrides, canvas highlighting | ⌛️ Next: link component overrides between canvas/inspector |
+| 5. Live Preview & Devices | Device presets, zoom controls | 🧑‍💻 Device dropdown + manual preview zoom delivered |
+| 6. Canvas Layer Hierarchy | Grouping, nested frames, lock/hide | 🕙 Not started |
 
 ## Upcoming Milestones
 
-1. **Transition Inspector 2.0**
-   - Editable trigger combos (tap/drag/scroll/variable)
-   - Spring curve parameters (damping/response)
-   - Hook from state graph edge selection
+1. **Transition Inspector 2.0** (✅ delivered)
+2. **Component-State Linking** (⌛️) → Inspector toggle between functional/display states; canvas highlights overrides
+3. **Live Preview Enhancements** (🧑‍💻) → Device frame dropdown, zoom slider, browser zoom interception
+4. **Canvas Layer Hierarchy** (🕙) → Group/ungroup, nested layers, lock/hide controls
+5. **Trigger & Variable Panel** (🕙)
 
-2. **Component-State Linking**
-   - Inspector: view and switch display states per functional state
-   - Canvas: highlight component usage; show overrides
-   - Interaction Manager: per-component mini graphs synced to inspector
-
-3. **Live Preview Enhancements**
-   - Device frame dropdown (iPhone/iPad/Android)
-   - Manual zoom slider; intercept browser shortcuts
-   - State pill interactions tied to canvas selection
-
-4. **Trigger & Variable Panel**
-   - Global triggers/variables list
-   - Assign variables to transitions
-
-5. **Playback/Export**
-   - Quick demo mode (auto-run transitions)
-   - PNG/MP4/GIF export (stretch goal)
-
-Progress will be updated every concept completion (or every 5 min check-in while long tasks run).
+Progress is revisited every check-in; symbols: 🧑‍💻 active agent · ⌛️ queued · 🕙 not started · ✅ done.
