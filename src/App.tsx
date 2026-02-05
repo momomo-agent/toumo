@@ -923,6 +923,18 @@ export default function App() {
               style={{ width: '100%' }}
             />
           </div>
+          <div style={{ marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: '#666' }}>Grayscale</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={currentStyle.grayscale ?? 0}
+              onChange={(e) => handleStyleChange({ grayscale: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
 
         {/* Border Radius Control */}
