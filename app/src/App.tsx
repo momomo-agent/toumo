@@ -458,6 +458,17 @@ const App = () => {
     }
   };
 
+  const deleteKeyframe = (id: string) => {
+    if (keyframes.length <= 1) return;
+    const newFrames = keyframes.filter((f) => f.id !== id);
+    setKeyframes(newFrames);
+    if (selectedKeyframeId === id) {
+      setSelectedKeyframeId(newFrames[0].id);
+      setSelectedElementId(newFrames[0].keyElements[0]?.id ?? null);
+    }
+    setTransitions((prev) => prev.filter((t) => t.from !== id && t.to !== id));
+  };
+
   const addKeyframe = () => {
     const template = selectedKeyframe ?? keyframes[0];
     const duplicateElements = template.keyElements.map((element) => ({
@@ -844,7 +855,7 @@ const App = () => {
             </div>
             <div className="rail-cards">
               {keyframes.map((frame, index) => (
-                <button
+                <div
                   key={frame.id}
                   className={`keyframe-card ${frame.id === selectedKeyframeId ? "active" : ""}`}
                   onClick={() => selectKeyframe(frame.id)}
@@ -855,10 +866,15 @@ const App = () => {
                     <p>{frame.summary}</p>
                   </div>
                   <div className="card-meta">
-                    <span>{frame.keyElements.filter((el) => el.isKeyElement).length} key elements</span>
-                    <span>{frame.functionalState ?? "Unmapped"}</span>
+                    <span>{frame.keyElements.filter((el) => el.isKeyElement).length} key</span>
+                    {keyframes.length > 1 && (
+                      <button
+                        className="ghost small danger"
+                        onClick={(e) => { e.stopPropagation(); deleteKeyframe(frame.id); }}
+                      >×</button>
+                    )}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </section>
