@@ -71,3 +71,112 @@ background-image: url("data:image/svg+xml,..."); /* 下箭头 */
 background-position: right 8px center;
 padding-right: 28px;
 ```
+
+---
+
+## 药丸标签 (Pill)
+
+用于状态指示、标签。
+
+```css
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 4px 10px;
+border-radius: 9999px;
+background: var(--bg-hover);
+font-size: 11px;
+font-weight: 500;
+```
+
+### 变体
+
+| 变体 | 背景 | 文字 |
+|------|------|------|
+| default | `bg-hover` | `text-secondary` |
+| active | `accent` | `#fff` |
+| success | `success/15%` | `success` |
+
+---
+
+## 面板标题 (Panel Heading)
+
+```css
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 0;
+font-size: 11px;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+color: var(--text-tertiary);
+```
+
+---
+
+## 图层项 (Layer Item)
+
+```css
+display: flex;
+align-items: center;
+gap: 8px;
+height: 28px;
+padding: 0 8px;
+border-radius: 4px;
+cursor: pointer;
+```
+
+### 状态
+
+- **悬停**: `background: var(--bg-hover)`
+- **选中**: `background: var(--bg-active)` + 左侧 2px accent 边框
+
+---
+
+## 工具栏按钮 (Toolbar Button)
+
+```css
+width: 32px;
+height: 32px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 6px;
+background: transparent;
+border: none;
+color: var(--text-secondary);
+```
+
+### 状态
+
+- **悬停**: `background: var(--bg-hover)`
+- **选中**: `background: var(--accent-subtle)`, `color: var(--accent)`
+
+---
+
+## 关键帧卡片 (Keyframe Card)
+
+```css
+background: var(--bg-surface);
+border: 1px solid var(--border-default);
+border-radius: 8px;
+overflow: hidden;
+```
+
+### 头部
+
+```css
+padding: 8px 12px;
+background: var(--bg-elevated);
+border-bottom: 1px solid var(--border-subtle);
+font-size: 13px;
+font-weight: 500;
+```
+
+### 选中态
+
+```css
+border-color: var(--accent);
+box-shadow: 0 0 0 1px var(--accent);
+```

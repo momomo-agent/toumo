@@ -416,7 +416,7 @@ const App = () => {
   const [animationProgress, setAnimationProgress] = useState(0);
   const [animatingFromKeyframe, setAnimatingFromKeyframe] = useState<Keyframe | null>(null);
   const [animatingToKeyframe, setAnimatingToKeyframe] = useState<Keyframe | null>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const [contextMenu, setContextMenu] = useState<{x: number; y: number; elementId: string} | null>(null);
   const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}>; altCopy?: boolean } | null>(null);
@@ -1604,7 +1604,38 @@ const App = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedElementId, selectedElementIds]);
 
-  const previewElements = selectedKeyframe.keyElements;
+  // 计算动画中的元素状态
+  const previewElements = useMemo(() => {
+    if (!isAnimating || !animatingFromKeyframe || !animatingToKeyframe) {
+      return selectedKeyframe.keyElements;
+    }
+    
+    // 插值计算动画中的元素位置和属性
+    return animatingFromKeyframe.keyElements.map(fromEl => {
+      const toEl = animatingToKeyframe.keyElements.find(e => e.id === fromEl.id);
+      if (!toEl) return fromEl;
+      
+      const progress = animationProgress;
+      
+      return {
+        ...fromEl,
+        position: {
+          x: fromEl.position.x + (toEl.position.x - fromEl.position.x) * progress,
+          y: fromEl.position.y + (toEl.position.y - fromEl.position.y) * progress,
+        },
+        size: {
+          width: fromEl.size.width + (toEl.size.width - fromEl.size.width) * progress,
+          height: fromEl.size.height + (toEl.size.height - fromEl.size.height) * progress,
+        },
+        style: fromEl.style && toEl.style ? {
+          ...fromEl.style,
+          fillOpacity: fromEl.style.fillOpacity + (toEl.style.fillOpacity - fromEl.style.fillOpacity) * progress,
+          borderRadius: fromEl.style.borderRadius + (toEl.style.borderRadius - fromEl.style.borderRadius) * progress,
+        } : fromEl.style,
+      };
+    });
+  }, [isAnimating, animatingFromKeyframe, animatingToKeyframe, animationProgress, selectedKeyframe]);
+
   const previewStateLabel =
     functionalStates.find((state) => state.id === selectedFunctionalState)?.name ??
     selectedFunctionalState;
