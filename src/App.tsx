@@ -75,6 +75,8 @@ export default function App() {
     pasteStyle,
     nudgeSelectedElements,
     setCanvasScale,
+    bringForward,
+    sendBackward,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -268,6 +270,17 @@ export default function App() {
       }
       if ((event.metaKey || event.ctrlKey) && event.key === '=') {
         setCanvasScale(Math.min(3, 1.25));
+        event.preventDefault();
+        return;
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key === ']') {
+        bringForward();
+        event.preventDefault();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === '[') {
+        sendBackward();
         event.preventDefault();
         return;
       }

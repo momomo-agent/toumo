@@ -92,6 +92,9 @@ interface EditorActions {
   // Alignment actions
   alignElements: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
   distributeElements: (direction: 'horizontal' | 'vertical') => void;
+  // Layer order
+  bringForward: () => void;
+  sendBackward: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size }) => void;
   // Style clipboard
@@ -780,5 +783,29 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     state.selectedElementIds.forEach(id => {
       get().updateElement(id, { style: { ...state.copiedStyle! } });
     });
+  },
+
+  // Bring forward (increase zIndex)
+  bringForward: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el) {
+      get().updateElement(state.selectedElementId, { zIndex: (el.zIndex ?? 0) + 1 });
+    }
+  },
+
+  // Send backward (decrease zIndex)
+  sendBackward: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el) {
+      get().updateElement(state.selectedElementId, { zIndex: (el.zIndex ?? 0) - 1 });
+    }
   },
 }));
