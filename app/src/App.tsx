@@ -556,6 +556,42 @@ const App = () => {
     );
   }, [isDragging, isResizing, isPanning, selectedKeyframeId, canvasScale, selectedElementIds]);
 
+  // Create shape element - defined before handlers that use it
+  const createShapeElement = useCallback((shapeType: ShapeType, x: number, y: number, width: number, height: number) => {
+    const names: Record<ShapeType, string> = {
+      rectangle: "Rectangle",
+      ellipse: "Ellipse",
+      text: "Text",
+      "keyframe-element": "Element",
+    };
+    
+    const newElement: KeyElement = {
+      id: `el-${Date.now()}`,
+      name: `${names[shapeType]} ${selectedKeyframe.keyElements.length + 1}`,
+      category: "component",
+      isKeyElement: false,
+      position: { x, y },
+      size: { width: Math.max(width, 20), height: Math.max(height, 20) },
+      shapeType,
+      style: { ...defaultStyle },
+      text: shapeType === "text" ? "Text" : undefined,
+      attributes: [],
+    };
+
+    setKeyframes((prev) =>
+      prev.map((frame) => {
+        if (frame.id !== selectedKeyframeId) return frame;
+        return { ...frame, keyElements: [...frame.keyElements, newElement] };
+      })
+    );
+    setSelectedElementId(newElement.id);
+    setCurrentTool("select");
+    
+    if (shapeType === "text") {
+      setEditingTextId(newElement.id);
+    }
+  }, [selectedKeyframe.keyElements.length, selectedKeyframeId, defaultStyle]);
+
   const handleCanvasMouseUp = useCallback(() => {
     // Handle drawing completion
     if (isDrawing && drawStart && drawEnd) {
@@ -1023,42 +1059,6 @@ const App = () => {
       })
     );
     setSelectedElementId(newElement.id);
-  };
-
-  // Create shape element
-  const createShapeElement = (shapeType: ShapeType, x: number, y: number, width: number, height: number) => {
-    const names: Record<ShapeType, string> = {
-      rectangle: "Rectangle",
-      ellipse: "Ellipse",
-      text: "Text",
-      "keyframe-element": "Element",
-    };
-    
-    const newElement: KeyElement = {
-      id: `el-${Date.now()}`,
-      name: `${names[shapeType]} ${selectedKeyframe.keyElements.length + 1}`,
-      category: "component",
-      isKeyElement: false,
-      position: { x, y },
-      size: { width: Math.max(width, 20), height: Math.max(height, 20) },
-      shapeType,
-      style: { ...defaultStyle },
-      text: shapeType === "text" ? "Text" : undefined,
-      attributes: [],
-    };
-
-    setKeyframes((prev) =>
-      prev.map((frame) => {
-        if (frame.id !== selectedKeyframeId) return frame;
-        return { ...frame, keyElements: [...frame.keyElements, newElement] };
-      })
-    );
-    setSelectedElementId(newElement.id);
-    setCurrentTool("select");
-    
-    if (shapeType === "text") {
-      setEditingTextId(newElement.id);
-    }
   };
 
   // Update element style
