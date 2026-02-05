@@ -853,9 +853,14 @@ export default function App() {
               type="number"
               value={currentStyle.rotation ?? 0}
               onChange={(e) => handleStyleChange({ rotation: Number(e.target.value) })}
-              style={{ ...inputStyle, width: 60 }}
+              style={{ ...inputStyle, width: 50 }}
             />
-            <span style={{ fontSize: 11, color: '#666' }}>°</span>
+            <button
+              onClick={() => handleStyleChange({ rotation: 0 })}
+              style={{ padding: '4px 8px', background: '#333', border: 'none', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}
+            >
+              Reset
+            </button>
           </div>
         </div>
 
