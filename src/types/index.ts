@@ -23,6 +23,7 @@ export type ShapeStyle = {
   gradientStops?: { color: string; position: number }[];
   stroke: string;
   strokeWidth: number;
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
   // Individual corner radii

@@ -592,6 +592,26 @@ export default function App() {
               placeholder="Width"
             />
           </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {(['solid', 'dashed', 'dotted'] as const).map(style => (
+              <button
+                key={style}
+                onClick={() => handleStyleChange({ strokeStyle: style })}
+                style={{
+                  flex: 1,
+                  padding: '4px 0',
+                  borderRadius: 4,
+                  border: (currentStyle.strokeStyle ?? 'solid') === style ? '1px solid #2563eb' : '1px solid #2a2a2a',
+                  background: (currentStyle.strokeStyle ?? 'solid') === style ? '#2563eb20' : 'transparent',
+                  color: '#fff',
+                  fontSize: 10,
+                  cursor: 'pointer',
+                }}
+              >
+                {style}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Shadow Controls */}

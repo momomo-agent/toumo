@@ -355,7 +355,8 @@ export function CanvasElement({
   const getStroke = () => {
     if (isText) return '1px dashed rgba(255,255,255,0.4)';
     if (element.style?.strokeWidth && element.style.stroke) {
-      return `${element.style.strokeWidth}px solid ${element.style.stroke}`;
+      const style = element.style.strokeStyle || 'solid';
+      return `${element.style.strokeWidth}px ${style} ${element.style.stroke}`;
     }
     return undefined;
   };
