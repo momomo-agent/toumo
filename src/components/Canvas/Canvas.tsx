@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement, Position, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
@@ -21,6 +21,7 @@ export function Canvas() {
     canvasOffset,
     canvasScale,
     setCanvasOffset,
+    setCanvasScale,
     addElement,
     selectionBox,
     setSelectionBox,
@@ -283,12 +284,34 @@ export function Canvas() {
     };
   }, [currentTool, nudgeSelectedElements, setCurrentTool]);
 
+  const handleWheel = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    if (!canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const pointerX = event.clientX - rect.left;
+    const pointerY = event.clientY - rect.top;
+    const originX = (pointerX - canvasOffset.x) / canvasScale;
+    const originY = (pointerY - canvasOffset.y) / canvasScale;
+
+    const factor = event.deltaY < 0 ? 1.05 : 0.95;
+    const nextScale = Math.min(4, Math.max(0.25, canvasScale * factor));
+
+    setCanvasScale(nextScale);
+    setCanvasOffset({
+      x: pointerX - originX * nextScale,
+      y: pointerY - originY * nextScale,
+    });
+  }, [canvasOffset.x, canvasOffset.y, canvasScale, setCanvasOffset, setCanvasScale]);
+
   return (
     <div
       ref={canvasRef}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
+      onWheel={handleWheel}
       className="canvas-stage"
       style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair' }}
     >

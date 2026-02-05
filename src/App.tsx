@@ -24,6 +24,9 @@ export default function App() {
     pasteElements,
     undo,
     redo,
+    canvasScale,
+    setCanvasScale,
+    setCanvasOffset,
   } = useEditorStore();
 
   const [previewState, setPreviewState] = useState(keyframes[0]?.id ?? 'kf-idle');
