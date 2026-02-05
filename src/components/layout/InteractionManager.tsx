@@ -4,6 +4,9 @@ import './InteractionManager.css';
 
 type Tab = 'states' | 'timeline';
 
+const TRIGGER_OPTIONS = ['tap', 'hover', 'drag', 'scroll', 'timer', 'variable'];
+const CURVE_OPTIONS = ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'spring'];
+
 export function InteractionManager() {
   const [tab, setTab] = useState<Tab>('states');
   const { 
@@ -13,6 +16,7 @@ export function InteractionManager() {
     selectedTransitionId,
     setSelectedKeyframeId,
     setSelectedTransitionId,
+    updateTransition,
   } = useEditorStore();
 
   // Calculate node positions in a simple horizontal layout
@@ -54,6 +58,7 @@ export function InteractionManager() {
             selectedTransitionId={selectedTransitionId}
             onSelectKeyframe={setSelectedKeyframeId}
             onSelectTransition={setSelectedTransitionId}
+            onUpdateTransition={updateTransition}
           />
         )}
         {tab === 'timeline' && (
@@ -71,12 +76,13 @@ export function InteractionManager() {
 // State Graph component
 interface StateGraphProps {
   keyframes: { id: string; name: string }[];
-  transitions: { id: string; from: string; to: string; trigger: string }[];
+  transitions: { id: string; from: string; to: string; trigger: string; duration: number; curve: string }[];
   nodePositions: Record<string, { x: number; y: number }>;
   selectedKeyframeId: string;
   selectedTransitionId: string | null;
   onSelectKeyframe: (id: string) => void;
   onSelectTransition: (id: string | null) => void;
+  onUpdateTransition: (id: string, updates: { trigger?: string; duration?: number; curve?: string }) => void;
 }
 
 function StateGraph({
@@ -87,11 +93,14 @@ function StateGraph({
   selectedTransitionId,
   onSelectKeyframe,
   onSelectTransition,
+  onUpdateTransition,
 }: StateGraphProps) {
   const nodeRadius = 28;
+  const selectedTr = transitions.find(t => t.id === selectedTransitionId);
 
   return (
-    <svg className="state-graph" width="100%" height="140">
+    <div className="state-graph-container">
+      <svg className="state-graph" width="100%" height="140">
       {/* Render edges (transitions) */}
       {transitions.map((tr) => {
         const fromPos = nodePositions[tr.from];
@@ -177,6 +186,46 @@ function StateGraph({
         );
       })}
     </svg>
+    
+    {/* Inline Transition Editor */}
+    {selectedTr && (
+      <div className="transition-editor">
+        <div className="te-field">
+          <label>Trigger</label>
+          <select
+            value={selectedTr.trigger}
+            onChange={(e) => onUpdateTransition(selectedTr.id, { trigger: e.target.value })}
+          >
+            {TRIGGER_OPTIONS.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+        <div className="te-field">
+          <label>Duration</label>
+          <input
+            type="number"
+            value={selectedTr.duration}
+            min={0}
+            step={50}
+            onChange={(e) => onUpdateTransition(selectedTr.id, { duration: parseInt(e.target.value) || 0 })}
+          />
+          <span className="te-unit">ms</span>
+        </div>
+        <div className="te-field">
+          <label>Curve</label>
+          <select
+            value={selectedTr.curve}
+            onChange={(e) => onUpdateTransition(selectedTr.id, { curve: e.target.value })}
+          >
+            {CURVE_OPTIONS.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    )}
+    </div>
   );
 }
 

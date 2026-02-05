@@ -68,6 +68,9 @@ interface EditorActions {
   redo: () => void;
   pushHistory: () => void;
   setSelectedTransitionId: (id: string | null) => void;
+  updateTransition: (id: string, updates: Partial<Transition>) => void;
+  addTransition: (from: string, to: string) => void;
+  deleteTransition: (id: string) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -352,4 +355,32 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     selectedElementId: id ? null : undefined,
     selectedElementIds: id ? [] : undefined,
   }),
+
+  updateTransition: (id, updates) => set((state) => ({
+    transitions: state.transitions.map((tr) =>
+      tr.id === id ? { ...tr, ...updates } : tr
+    ),
+  })),
+
+  addTransition: (from, to) => set((state) => {
+    const newId = `tr-${Date.now()}`;
+    const newTransition: Transition = {
+      id: newId,
+      from,
+      to,
+      trigger: 'tap',
+      duration: 300,
+      delay: 0,
+      curve: 'ease-out',
+    };
+    return {
+      transitions: [...state.transitions, newTransition],
+      selectedTransitionId: newId,
+    };
+  }),
+
+  deleteTransition: (id) => set((state) => ({
+    transitions: state.transitions.filter((tr) => tr.id !== id),
+    selectedTransitionId: state.selectedTransitionId === id ? null : state.selectedTransitionId,
+  })),
 }));
