@@ -82,6 +82,8 @@ export default function App() {
     deleteElement,
     recentColors,
     addRecentColor,
+    canvasBackground,
+    setCanvasBackground,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -1261,6 +1263,13 @@ export default function App() {
           >
             Resize
           </button>
+          <input
+            type="color"
+            value={canvasBackground}
+            onChange={(e) => setCanvasBackground(e.target.value)}
+            title="Canvas Background"
+            style={{ width: 32, height: 32, border: '1px solid #333', borderRadius: 6, cursor: 'pointer' }}
+          />
           <button
             onClick={() => projectInputRef.current?.click()}
             style={{
