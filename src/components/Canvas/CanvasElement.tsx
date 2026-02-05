@@ -405,6 +405,7 @@ export function CanvasElement({
         overflow: 'hidden',
         cursor: currentTool === 'select' ? 'move' : 'default',
         boxShadow: getBoxShadow(),
+        filter: element.style?.blur ? `blur(${element.style.blur}px)` : undefined,
         userSelect: 'none',
       }}
     >

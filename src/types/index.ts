@@ -54,6 +54,8 @@ export type ShapeStyle = {
   innerShadowX?: number;
   innerShadowY?: number;
   innerShadowBlur?: number;
+  // Filters
+  blur?: number;
   // Image specific
   imageSrc?: string;
   imageOriginalWidth?: number;
