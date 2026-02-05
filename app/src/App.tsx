@@ -327,7 +327,7 @@ const App = () => {
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [canvasScale, setCanvasScale] = useState(1);
   const panRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number; origPositions?: Record<string, {x: number; y: number}> } | null>(null);
   const resizeRef = useRef<{ elementId: string; startX: number; startY: number; origW: number; origH: number; corner: string } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -376,6 +376,15 @@ const App = () => {
     // Don't allow dragging locked elements
     if (element.locked) return;
     
+    // Record original positions for all selected elements
+    const origPositions: Record<string, {x: number; y: number}> = {};
+    const idsToMove = selectedElementIds.length > 0 ? selectedElementIds : [elementId];
+    idsToMove.forEach(id => {
+      const el = selectedKeyframe.keyElements.find(e => e.id === id);
+      if (el) origPositions[id] = { x: el.position.x, y: el.position.y };
+    });
+    origPositions[elementId] = { x: element.position.x, y: element.position.y };
+    
     setIsDragging(true);
     dragRef.current = {
       elementId,
@@ -383,6 +392,7 @@ const App = () => {
       startY: e.clientY,
       origX: element.position.x,
       origY: element.position.y,
+      origPositions,
     };
   }, [selectedKeyframe]);
 
@@ -428,18 +438,25 @@ const App = () => {
     const dx = (e.clientX - dragRef.current.startX) / canvasScale;
     const dy = (e.clientY - dragRef.current.startY) / canvasScale;
     
+    // Get all elements to move (selected + same group)
+    const elementsToMove = new Set<string>([dragRef.current.elementId]);
+    if (selectedElementIds.length > 0) {
+      selectedElementIds.forEach(id => elementsToMove.add(id));
+    }
+    
     setKeyframes((prev) =>
       prev.map((frame) => {
         if (frame.id !== selectedKeyframeId) return frame;
         return {
           ...frame,
           keyElements: frame.keyElements.map((el) => {
-            if (el.id !== dragRef.current!.elementId) return el;
+            if (!elementsToMove.has(el.id)) return el;
+            const origPos = dragRef.current!.origPositions?.[el.id] || { x: el.position.x - dx, y: el.position.y - dy };
             return {
               ...el,
               position: {
-                x: Math.max(0, dragRef.current!.origX + dx),
-                y: Math.max(0, dragRef.current!.origY + dy),
+                x: Math.max(0, origPos.x + dx),
+                y: Math.max(0, origPos.y + dy),
               },
             };
           }),
