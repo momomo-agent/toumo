@@ -405,7 +405,11 @@ export function CanvasElement({
         overflow: 'hidden',
         cursor: currentTool === 'select' ? 'move' : 'default',
         boxShadow: getBoxShadow(),
-        filter: element.style?.blur ? `blur(${element.style.blur}px)` : undefined,
+        filter: [
+          element.style?.blur ? `blur(${element.style.blur}px)` : '',
+          element.style?.brightness ? `brightness(${element.style.brightness})` : '',
+          element.style?.contrast ? `contrast(${element.style.contrast})` : '',
+        ].filter(Boolean).join(' ') || undefined,
         userSelect: 'none',
       }}
     >
