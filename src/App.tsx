@@ -383,7 +383,15 @@ export default function App() {
         )}
         <SectionHeader>Element Properties</SectionHeader>
         <div style={{ marginBottom: 16 }}>
-          <Label>Name</Label>
+          <Label>
+            {selected.shapeType === 'rectangle' && '⬜ '}
+            {selected.shapeType === 'ellipse' && '⚪ '}
+            {selected.shapeType === 'text' && '📝 '}
+            {selected.shapeType === 'image' && '🖼️ '}
+            {selected.shapeType === 'line' && '📏 '}
+            {selected.shapeType === 'frame' && '📐 '}
+            Name
+          </Label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="text"
