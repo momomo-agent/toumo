@@ -336,7 +336,7 @@ export function Canvas() {
       return;
     }
 
-    if (['rectangle', 'ellipse', 'text'].includes(currentTool)) {
+    if (['rectangle', 'ellipse', 'text', 'line'].includes(currentTool)) {
       if (!isInsideFrame(framePoint)) return;
       drawStartRef.current = clampPointToFrame(framePoint);
     }
@@ -391,7 +391,7 @@ export function Canvas() {
       return;
     }
 
-    if (drawStartRef.current && ['rectangle', 'ellipse', 'text'].includes(currentTool)) {
+    if (drawStartRef.current && ['rectangle', 'ellipse', 'text', 'line'].includes(currentTool)) {
       const start = drawStartRef.current;
       const clampedEnd = clampPointToFrame(framePoint);
       const width = Math.abs(clampedEnd.x - start.x);
@@ -404,9 +404,17 @@ export function Canvas() {
 
       const baseStyle = { ...DEFAULT_STYLE };
       const shapeType = currentTool as KeyElement['shapeType'];
+      
+      const getElementName = () => {
+        if (shapeType === 'ellipse') return 'Ellipse';
+        if (shapeType === 'text') return 'Text';
+        if (shapeType === 'line') return 'Line';
+        return 'Rectangle';
+      };
+      
       const newElement: KeyElement = {
         id: `el-${Date.now()}`,
-        name: shapeType === 'ellipse' ? 'Ellipse' : shapeType === 'text' ? 'Text' : 'Rectangle',
+        name: getElementName(),
         category: 'content',
         isKeyElement: true,
         attributes: [],
@@ -415,14 +423,20 @@ export function Canvas() {
           y: Math.min(start.y, clampedEnd.y),
         },
         size: {
-          width: Math.max(width, shapeType === 'text' ? 140 : 48),
-          height: Math.max(height, shapeType === 'text' ? 40 : 48),
+          width: Math.max(width, shapeType === 'text' ? 140 : shapeType === 'line' ? 2 : 48),
+          height: Math.max(height, shapeType === 'text' ? 40 : shapeType === 'line' ? 2 : 48),
         },
         shapeType,
         style: {
           ...baseStyle,
-          borderRadius: shapeType === 'ellipse' ? Math.max(width, height) : baseStyle.borderRadius,
+          borderRadius: shapeType === 'ellipse' ? Math.max(width, height) : shapeType === 'line' ? 0 : baseStyle.borderRadius,
           fontSize: shapeType === 'text' ? 18 : baseStyle.fontSize,
+          // Line specific: store start/end for angle calculation
+          ...(shapeType === 'line' ? {
+            fill: '#ffffff',
+            stroke: '#ffffff',
+            strokeWidth: 2,
+          } : {}),
         },
         text: shapeType === 'text' ? 'Text' : undefined,
       };

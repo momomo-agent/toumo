@@ -195,6 +195,9 @@ export default function App() {
         case 'i':
           fileInputRef.current?.click();
           break;
+        case 'l':
+          setCurrentTool('line');
+          break;
         case 'delete':
         case 'backspace':
           deleteSelectedElements();

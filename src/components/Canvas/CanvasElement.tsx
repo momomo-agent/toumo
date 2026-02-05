@@ -278,10 +278,12 @@ export function CanvasElement({
 
   const isText = element.shapeType === 'text';
   const isImage = element.shapeType === 'image';
+  const isLine = element.shapeType === 'line';
 
   const getBackground = () => {
     if (isText) return 'transparent';
     if (isImage) return 'transparent';
+    if (isLine) return 'transparent';
     return element.style?.fill || '#3b82f6';
   };
 
@@ -366,6 +368,23 @@ export function CanvasElement({
           }}
           draggable={false}
         />
+      )}
+      {isLine && (
+        <svg
+          width="100%"
+          height="100%"
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+        >
+          <line
+            x1="0"
+            y1="0"
+            x2={element.size.width}
+            y2={element.size.height}
+            stroke={element.style?.stroke || '#ffffff'}
+            strokeWidth={element.style?.strokeWidth || 2}
+            strokeLinecap="round"
+          />
+        </svg>
       )}
       {isText ? (
         <span style={{ padding: '0 8px', width: '100%', textAlign: element.style?.textAlign || 'center' }}>
