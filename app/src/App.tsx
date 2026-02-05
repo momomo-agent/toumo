@@ -1307,6 +1307,10 @@ const App = () => {
         setCanvasScale(1);
         setCanvasOffset({ x: 0, y: 0 });
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "1") {
+        e.preventDefault();
+        setCanvasScale(1);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "d" && selectedElementId) {
         e.preventDefault();
         duplicateElement(selectedElementId);
