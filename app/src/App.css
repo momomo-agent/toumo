@@ -110,12 +110,12 @@ textarea {
 }
 
 .preview-pane {
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 32px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  background: rgba(8, 10, 20, 0.6);
+  gap: 16px;
+  background: #252526;
 }
 
 .preview-header {
