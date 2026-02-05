@@ -315,7 +315,9 @@ const App = () => {
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const dragRef = useRef<{ elementId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const resizeRef = useRef<{ elementId: string; startX: number; startY: number; origW: number; origH: number; corner: string } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const selectedKeyframe = useMemo(
@@ -370,6 +372,31 @@ const App = () => {
   }, [selectedKeyframe]);
 
   const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
+    if (isResizing && resizeRef.current) {
+      const dx = e.clientX - resizeRef.current.startX;
+      const dy = e.clientY - resizeRef.current.startY;
+      
+      setKeyframes((prev) =>
+        prev.map((frame) => {
+          if (frame.id !== selectedKeyframeId) return frame;
+          return {
+            ...frame,
+            keyElements: frame.keyElements.map((el) => {
+              if (el.id !== resizeRef.current!.elementId) return el;
+              return {
+                ...el,
+                size: {
+                  width: Math.max(60, resizeRef.current!.origW + dx),
+                  height: Math.max(40, resizeRef.current!.origH + dy),
+                },
+              };
+            }),
+          };
+        })
+      );
+      return;
+    }
+    
     if (!isDragging || !dragRef.current) return;
     
     const dx = e.clientX - dragRef.current.startX;
@@ -393,12 +420,30 @@ const App = () => {
         };
       })
     );
-  }, [isDragging, selectedKeyframeId]);
+  }, [isDragging, isResizing, selectedKeyframeId]);
 
   const handleCanvasMouseUp = useCallback(() => {
     setIsDragging(false);
+    setIsResizing(false);
     dragRef.current = null;
+    resizeRef.current = null;
   }, []);
+
+  const handleResizeStart = useCallback((e: MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    const element = selectedKeyframe.keyElements.find((el) => el.id === elementId);
+    if (!element) return;
+    
+    setIsResizing(true);
+    resizeRef.current = {
+      elementId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origW: element.size.width,
+      origH: element.size.height,
+      corner: "se",
+    };
+  }, [selectedKeyframe]);
 
   const selectKeyframe = (id: string) => {
     setSelectedKeyframeId(id);
@@ -736,6 +781,12 @@ const App = () => {
                     >
                       <span>{element.name}</span>
                       {element.isKeyElement && <small>Key</small>}
+                      {selectedElementId === element.id && (
+                        <div
+                          className="resize-handle"
+                          onMouseDown={(e) => handleResizeStart(e, element.id)}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
