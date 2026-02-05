@@ -421,6 +421,15 @@ export default function App() {
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
+          <Label>Layer (zIndex)</Label>
+          <input
+            type="number"
+            value={selected.zIndex ?? 0}
+            onChange={(e) => updateElement(selected.id, { zIndex: Number(e.target.value) })}
+            style={inputStyle}
+          />
+        </div>
+        <div style={{ marginBottom: 16 }}>
           <Label>Position</Label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
