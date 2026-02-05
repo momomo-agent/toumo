@@ -729,7 +729,7 @@ export default function App() {
                   {keyframes.map((kf) => (
                     <button
                       key={kf.id}
-                      onClick={() => setSelectedKeyframeId(kf.id)}
+                      onClick={() => handleSelectKeyframe(kf.id)}
                       style={{
                         padding: '10px 12px',
                         background: selectedKeyframeId === kf.id ? '#2563eb20' : 'transparent',
@@ -744,7 +744,7 @@ export default function App() {
                     </button>
                   ))}
                   <button
-                    onClick={addKeyframe}
+                    onClick={handleAddKeyframe}
                     style={{
                       padding: '10px 12px',
                       border: '1px dashed #333',
