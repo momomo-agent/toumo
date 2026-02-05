@@ -78,6 +78,7 @@ export default function App() {
     setCanvasScale,
     bringForward,
     sendBackward,
+    canvasScale,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -1423,6 +1424,7 @@ export default function App() {
         color: '#666',
       }}>
         <span>Tool: {currentTool}</span>
+        <span>Zoom: {Math.round(canvasScale * 100)}%</span>
         <span>{selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
       </div>
       <ShortcutsPanel />
