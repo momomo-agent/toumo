@@ -17,12 +17,11 @@ export default function App() {
 
   const [tool, setTool] = useState<Tool>('select');
   const [previewState, setPreviewState] = useState('kf-idle');
+  const [interactionTab, setInteractionTab] = useState<'states' | 'timeline'>('states');
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
   const selectedElement = elements.find(el => el.id === selectedElementId);
-
-  // 获取预览状态的元素
   const previewKeyframe = keyframes.find(kf => kf.id === previewState);
   const previewElements = previewKeyframe?.keyElements || [];
 
@@ -78,12 +77,33 @@ export default function App() {
           <span style={{ fontWeight: 600, fontSize: 15 }}>Toumo</span>
           <span style={{ color: '#666', fontSize: 12 }}>Motion Editor</span>
         </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {tools.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTool(t.id)}
+              style={{
+                width: 32, height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: tool === t.id ? '#2563eb' : 'transparent',
+                border: 'none',
+                borderRadius: 6,
+                color: tool === t.id ? '#fff' : '#888',
+                cursor: 'pointer',
+              }}
+            >
+              {t.icon}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left: Live Preview */}
         <div style={{
-          width: 320,
+          width: 300,
           background: '#161617',
           borderRight: '1px solid #2a2a2a',
           display: 'flex',
@@ -99,7 +119,6 @@ export default function App() {
           }}>
             Live Preview
           </div>
-          {/* Preview Canvas */}
           <div style={{
             flex: 1,
             margin: 16,
@@ -113,33 +132,34 @@ export default function App() {
                 key={el.id}
                 style={{
                   position: 'absolute',
-                  left: el.position.x * 0.7,
-                  top: el.position.y * 0.7,
-                  width: el.size.width * 0.7,
-                  height: el.size.height * 0.7,
+                  left: el.position.x * 0.65,
+                  top: el.position.y * 0.65,
+                  width: el.size.width * 0.65,
+                  height: el.size.height * 0.65,
                   background: el.style?.fill || '#3b82f6',
-                  borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8) * 0.7,
+                  borderRadius: el.shapeType === 'ellipse' 
+                    ? '50%' 
+                    : (el.style?.borderRadius || 8) * 0.65,
                   transition: 'all 0.3s ease',
                 }}
               />
             ))}
           </div>
-          {/* State Switcher */}
-          <div style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+          <div style={{ padding: 12, borderTop: '1px solid #2a2a2a' }}>
             <div style={{ fontSize: 11, color: '#666', marginBottom: 8 }}>State</div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               {keyframes.map(kf => (
                 <button
                   key={kf.id}
                   onClick={() => setPreviewState(kf.id)}
                   style={{
                     flex: 1,
-                    padding: '8px',
+                    padding: '6px',
                     background: previewState === kf.id ? '#2563eb' : '#2a2a2a',
                     border: 'none',
                     borderRadius: 6,
                     color: '#fff',
-                    fontSize: 11,
+                    fontSize: 10,
                     cursor: 'pointer',
                   }}
                 >
@@ -150,84 +170,66 @@ export default function App() {
           </div>
         </div>
 
-        {/* Center: Layers + Keyframes */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {/* Toolbar */}
+        {/* Layers Panel - Figma 风格图层树 */}
+        <div style={{
+          width: 200,
+          background: '#161617',
+          borderRight: '1px solid #2a2a2a',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
           <div style={{
-            height: 48,
+            padding: '12px 16px',
             borderBottom: '1px solid #2a2a2a',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 12px',
-            gap: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#888',
+            textTransform: 'uppercase',
           }}>
-            {tools.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTool(t.id)}
+            Layers
+          </div>
+          <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
+            {elements.map(el => (
+              <div
+                key={el.id}
+                onClick={() => setSelectedElementId(el.id)}
                 style={{
-                  width: 32, height: 32,
+                  padding: '8px 12px',
+                  background: selectedElementId === el.id 
+                    ? '#2563eb20' : 'transparent',
+                  borderRadius: 6,
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  background: tool === t.id ? '#2563eb' : 'transparent',
-                  border: 'none',
-                  borderRadius: 6,
-                  color: tool === t.id ? '#fff' : '#888',
-                  cursor: 'pointer',
+                  gap: 8,
+                  marginBottom: 2,
                 }}
               >
-                {t.icon}
-              </button>
+                <span style={{
+                  width: 14, height: 14,
+                  background: el.style?.fill || '#3b82f6',
+                  borderRadius: 3,
+                }} />
+                <span style={{ fontSize: 12 }}>{el.name}</span>
+              </div>
             ))}
           </div>
+        </div>
 
-          {/* Layers Panel (Global) */}
-          <div style={{
-            height: 120,
-            borderBottom: '1px solid #2a2a2a',
-            padding: 12,
-          }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 8 }}>
-              Layers (shared across keyframes)
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {elements.map(el => (
-                <button
-                  key={el.id}
-                  onClick={() => setSelectedElementId(el.id)}
-                  style={{
-                    padding: '6px 12px',
-                    background: selectedElementId === el.id ? '#2563eb' : '#2a2a2a',
-                    border: 'none',
-                    borderRadius: 6,
-                    color: '#fff',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                  }}
-                >
-                  <span style={{
-                    width: 12, height: 12,
-                    background: el.style?.fill || '#3b82f6',
-                    borderRadius: 2,
-                  }} />
-                  {el.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Keyframes - 平铺展示 */}
+        {/* Canvas + Interaction Manager */}
+        <div style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          background: '#0d0d0e',
+        }}>
+          {/* Canvas - 关键帧平铺 */}
           <div style={{
             flex: 1,
-            padding: 24,
+            padding: 20,
             display: 'flex',
-            gap: 24,
+            gap: 20,
             overflowX: 'auto',
-            background: '#0d0d0e',
           }}>
             {keyframes.map(kf => {
               const kfElements = kf.keyElements || [];
@@ -237,7 +239,7 @@ export default function App() {
                   onClick={() => setSelectedKeyframeId(kf.id)}
                   style={{
                     flexShrink: 0,
-                    width: 280,
+                    width: 260,
                     background: '#1a1a1a',
                     border: `2px solid ${kf.id === selectedKeyframeId ? '#2563eb' : '#333'}`,
                     borderRadius: 12,
@@ -249,12 +251,12 @@ export default function App() {
                     padding: '10px 14px',
                     borderBottom: '1px solid #333',
                     fontWeight: 500,
-                    fontSize: 13,
+                    fontSize: 12,
                   }}>
                     {kf.name}
                   </div>
                   <div style={{
-                    height: 200,
+                    height: 180,
                     position: 'relative',
                     background: `
                       linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
@@ -267,12 +269,14 @@ export default function App() {
                         key={el.id}
                         style={{
                           position: 'absolute',
-                          left: el.position.x * 0.6,
-                          top: el.position.y * 0.6,
-                          width: el.size.width * 0.6,
-                          height: el.size.height * 0.6,
+                          left: el.position.x * 0.55,
+                          top: el.position.y * 0.55,
+                          width: el.size.width * 0.55,
+                          height: el.size.height * 0.55,
                           background: el.style?.fill || '#3b82f6',
-                          borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8) * 0.6,
+                          borderRadius: el.shapeType === 'ellipse' 
+                            ? '50%' 
+                            : (el.style?.borderRadius || 8) * 0.55,
                         }}
                       />
                     ))}
@@ -280,32 +284,99 @@ export default function App() {
                 </div>
               );
             })}
-            {/* Add Keyframe */}
             <button
               onClick={addKeyframe}
               style={{
                 flexShrink: 0,
-                width: 120,
-                height: 240,
+                width: 100,
                 background: 'transparent',
                 border: '2px dashed #444',
                 borderRadius: 12,
                 color: '#666',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 24,
+                fontSize: 20,
               }}
             >
               +
             </button>
           </div>
+
+          {/* Interaction Manager */}
+          <div style={{
+            height: 140,
+            borderTop: '1px solid #2a2a2a',
+            background: '#161617',
+          }}>
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid #2a2a2a',
+            }}>
+              <button
+                onClick={() => setInteractionTab('states')}
+                style={{
+                  padding: '10px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: interactionTab === 'states' 
+                    ? '2px solid #2563eb' : '2px solid transparent',
+                  color: interactionTab === 'states' ? '#fff' : '#666',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                }}
+              >
+                State Machine
+              </button>
+              <button
+                onClick={() => setInteractionTab('timeline')}
+                style={{
+                  padding: '10px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: interactionTab === 'timeline' 
+                    ? '2px solid #2563eb' : '2px solid transparent',
+                  color: interactionTab === 'timeline' ? '#fff' : '#666',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                }}
+              >
+                Timeline
+              </button>
+            </div>
+            <div style={{ padding: 16 }}>
+              {interactionTab === 'states' ? (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 12 
+                }}>
+                  {keyframes.map((kf, i) => (
+                    <div key={kf.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        padding: '8px 16px',
+                        background: previewState === kf.id ? '#2563eb' : '#2a2a2a',
+                        borderRadius: 8,
+                        fontSize: 11,
+                      }}>
+                        {kf.name}
+                      </div>
+                      {i < keyframes.length - 1 && (
+                        <span style={{ color: '#666' }}>→</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: '#666', fontSize: 11 }}>
+                  Timeline view coming soon...
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Right: Inspector */}
+        {/* Inspector */}
         <div style={{
-          width: 280,
+          width: 260,
           background: '#161617',
           borderLeft: '1px solid #2a2a2a',
         }}>
@@ -322,7 +393,7 @@ export default function App() {
           <div style={{ padding: 16 }}>
             {selectedElement ? (
               <div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Name</label>
                   <input 
                     type="text" 
@@ -330,65 +401,49 @@ export default function App() {
                     onChange={(e) => updateElement(selectedElement.id, { name: e.target.value })}
                     style={{
                       width: '100%', padding: '8px 10px', background: '#0d0d0e',
-                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
+                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
                     }} 
                   />
                 </div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Position</label>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input 
-                      type="number" 
-                      value={selectedElement.position.x} 
+                    <input type="number" value={selectedElement.position.x} 
                       onChange={(e) => updateElement(selectedElement.id, { 
                         position: { ...selectedElement.position, x: Number(e.target.value) }
                       })}
-                      style={{
-                        flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
-                      }} 
-                    />
-                    <input 
-                      type="number" 
-                      value={selectedElement.position.y} 
+                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                      }} />
+                    <input type="number" value={selectedElement.position.y} 
                       onChange={(e) => updateElement(selectedElement.id, { 
                         position: { ...selectedElement.position, y: Number(e.target.value) }
                       })}
-                      style={{
-                        flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
-                      }} 
-                    />
+                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                      }} />
                   </div>
                 </div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Size</label>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input 
-                      type="number" 
-                      value={selectedElement.size.width} 
+                    <input type="number" value={selectedElement.size.width} 
                       onChange={(e) => updateElement(selectedElement.id, { 
                         size: { ...selectedElement.size, width: Number(e.target.value) }
                       })}
-                      style={{
-                        flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
-                      }} 
-                    />
-                    <input 
-                      type="number" 
-                      value={selectedElement.size.height} 
+                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                      }} />
+                    <input type="number" value={selectedElement.size.height} 
                       onChange={(e) => updateElement(selectedElement.id, { 
                         size: { ...selectedElement.size, height: Number(e.target.value) }
                       })}
-                      style={{
-                        flex: 1, padding: '8px', background: '#0d0d0e',
-                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
-                      }} 
-                    />
+                      style={{ flex: 1, padding: '8px', background: '#0d0d0e',
+                        border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5', fontSize: 12,
+                      }} />
                   </div>
                 </div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Fill</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <input
@@ -405,19 +460,19 @@ export default function App() {
                         }
                       })}
                       style={{
-                        width: 32, height: 32,
+                        width: 28, height: 28,
                         padding: 0, border: '1px solid #2a2a2a',
                         borderRadius: 6, cursor: 'pointer',
                       }}
                     />
-                    <span style={{ color: '#888', fontSize: 12 }}>
+                    <span style={{ color: '#888', fontSize: 11 }}>
                       {selectedElement.style?.fill || '#3b82f6'}
                     </span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#555' }}>Select a layer</div>
+              <div style={{ color: '#555', fontSize: 12 }}>Select a layer</div>
             )}
           </div>
         </div>
