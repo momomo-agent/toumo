@@ -1247,6 +1247,22 @@ export default function App() {
           </div>
         </div>
       </div>
+      
+      {/* Status Bar */}
+      <div style={{
+        height: 24,
+        padding: '0 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderTop: '1px solid #2a2a2a',
+        background: '#161617',
+        fontSize: 11,
+        color: '#666',
+      }}>
+        <span>Tool: {currentTool}</span>
+        <span>{selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
+      </div>
     </div>
   );
 }
