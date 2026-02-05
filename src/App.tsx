@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useEditorStore } from './store';
 
 type Tool = 'select' | 'rectangle' | 'ellipse' | 'text' | 'hand';
@@ -11,9 +11,16 @@ export default function App() {
     addKeyframe,
     selectedElementId,
     setSelectedElementId,
+    updateElement,
   } = useEditorStore();
 
   const [tool, setTool] = useState<Tool>('select');
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [elementStart, setElementStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
@@ -27,16 +34,137 @@ export default function App() {
     { id: 'hand', icon: '✋', key: 'H' },
   ];
 
+  // 键盘快捷键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      switch (e.key.toLowerCase()) {
+        case 'v': setTool('select'); break;
+        case 'r': setTool('rectangle'); break;
+        case 'o': setTool('ellipse'); break;
+        case 't': setTool('text'); break;
+        case 'h': setTool('hand'); break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // 拖拽开始
+  const handleMouseDown = useCallback((e: React.MouseEvent, elId: string, handle?: string) => {
+    e.stopPropagation();
+    const el = elements.find(el => el.id === elId);
+    if (!el) return;
+    
+    setSelectedElementId(elId);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setElementStart({ 
+      x: el.position.x, 
+      y: el.position.y,
+      w: el.size.width,
+      h: el.size.height
+    });
+    
+    if (handle) {
+      setIsResizing(true);
+      setResizeHandle(handle);
+    } else {
+      setIsDragging(true);
+    }
+  }, [elements, setSelectedElementId]);
+
+  // 拖拽中
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!selectedElement || (!isDragging && !isResizing)) return;
+    
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+
+    if (isDragging) {
+      updateElement(selectedElement.id, {
+        position: {
+          x: Math.max(0, elementStart.x + dx),
+          y: Math.max(0, elementStart.y + dy)
+        }
+      });
+    } else if (isResizing && resizeHandle) {
+      let newW = elementStart.w;
+      let newH = elementStart.h;
+      let newX = elementStart.x;
+      let newY = elementStart.y;
+
+      if (resizeHandle.includes('e')) newW = Math.max(20, elementStart.w + dx);
+      if (resizeHandle.includes('w')) {
+        newW = Math.max(20, elementStart.w - dx);
+        newX = elementStart.x + dx;
+      }
+      if (resizeHandle.includes('s')) newH = Math.max(20, elementStart.h + dy);
+      if (resizeHandle.includes('n')) {
+        newH = Math.max(20, elementStart.h - dy);
+        newY = elementStart.y + dy;
+      }
+
+      updateElement(selectedElement.id, {
+        position: { x: newX, y: newY },
+        size: { width: newW, height: newH }
+      });
+    }
+  }, [isDragging, isResizing, resizeHandle, dragStart, elementStart, selectedElement, selectedKeyframeId, updateElement]);
+
+  // 拖拽结束
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setIsResizing(false);
+    setResizeHandle(null);
+  }, []);
+
+  // Resize handles
+  const renderResizeHandles = (elId: string) => {
+    if (selectedElementId !== elId) return null;
+    const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+    const positions: Record<string, React.CSSProperties> = {
+      nw: { top: -4, left: -4, cursor: 'nwse-resize' },
+      n: { top: -4, left: '50%', transform: 'translateX(-50%)', cursor: 'ns-resize' },
+      ne: { top: -4, right: -4, cursor: 'nesw-resize' },
+      e: { top: '50%', right: -4, transform: 'translateY(-50%)', cursor: 'ew-resize' },
+      se: { bottom: -4, right: -4, cursor: 'nwse-resize' },
+      s: { bottom: -4, left: '50%', transform: 'translateX(-50%)', cursor: 'ns-resize' },
+      sw: { bottom: -4, left: -4, cursor: 'nesw-resize' },
+      w: { top: '50%', left: -4, transform: 'translateY(-50%)', cursor: 'ew-resize' },
+    };
+    return handles.map(h => (
+      <div
+        key={h}
+        onMouseDown={(e) => handleMouseDown(e, elId, h)}
+        style={{
+          position: 'absolute',
+          width: 8,
+          height: 8,
+          background: '#fff',
+          border: '1px solid #2563eb',
+          borderRadius: 2,
+          ...positions[h],
+        }}
+      />
+    ));
+  };
+
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      background: '#0a0a0b',
-      color: '#e5e5e5',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      fontSize: 13,
-    }}>
+    <div 
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        background: '#0a0a0b',
+        color: '#e5e5e5',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontSize: 13,
+        userSelect: 'none',
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       {/* Header */}
       <header style={{
         height: 48,
@@ -69,6 +197,7 @@ export default function App() {
             <button
               key={t.id}
               onClick={() => setTool(t.id)}
+              title={`${t.key}`}
               style={{
                 width: 36,
                 height: 36,
@@ -165,22 +294,29 @@ export default function App() {
               border: '1px dashed #444',
               borderRadius: 6,
               color: '#666',
-              fontSize: 12,
               cursor: 'pointer',
             }}>+</button>
           </div>
 
           {/* Canvas */}
-          <div style={{
-            flex: 1,
-            position: 'relative',
-            background: 'linear-gradient(#1a1a1b 1px, transparent 1px), linear-gradient(90deg, #1a1a1b 1px, transparent 1px)',
-            backgroundSize: '20px 20px',
-          }}>
+          <div 
+            ref={canvasRef}
+            onClick={() => setSelectedElementId(null)}
+            style={{
+              flex: 1,
+              position: 'relative',
+              overflow: 'hidden',
+              background: `
+                linear-gradient(#1a1a1b 1px, transparent 1px),
+                linear-gradient(90deg, #1a1a1b 1px, transparent 1px)
+              `,
+              backgroundSize: '20px 20px',
+            }}
+          >
             {elements.map(el => (
               <div
                 key={el.id}
-                onClick={() => setSelectedElementId(el.id)}
+                onMouseDown={(e) => handleMouseDown(e, el.id)}
                 style={{
                   position: 'absolute',
                   left: el.position.x,
@@ -190,9 +326,13 @@ export default function App() {
                   background: el.style?.fill || '#3b82f6',
                   borderRadius: el.style?.borderRadius || 8,
                   cursor: 'move',
-                  boxShadow: selectedElementId === el.id ? '0 0 0 2px #2563eb' : 'none',
+                  boxShadow: selectedElementId === el.id 
+                    ? '0 0 0 2px #2563eb' 
+                    : 'none',
                 }}
-              />
+              >
+                {renderResizeHandles(el.id)}
+              </div>
             ))}
           </div>
         </div>
@@ -226,11 +366,24 @@ export default function App() {
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Position</label>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="text" value={`X: ${selectedElement.position.x}`} readOnly style={{
+                    <input type="number" value={selectedElement.position.x} readOnly style={{
                       flex: 1, padding: '8px', background: '#0d0d0e',
                       border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
                     }} />
-                    <input type="text" value={`Y: ${selectedElement.position.y}`} readOnly style={{
+                    <input type="number" value={selectedElement.position.y} readOnly style={{
+                      flex: 1, padding: '8px', background: '#0d0d0e',
+                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
+                    }} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 6 }}>Size</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="number" value={selectedElement.size.width} readOnly style={{
+                      flex: 1, padding: '8px', background: '#0d0d0e',
+                      border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
+                    }} />
+                    <input type="number" value={selectedElement.size.height} readOnly style={{
                       flex: 1, padding: '8px', background: '#0d0d0e',
                       border: '1px solid #2a2a2a', borderRadius: 6, color: '#e5e5e5',
                     }} />
