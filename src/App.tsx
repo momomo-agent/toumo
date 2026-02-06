@@ -1778,6 +1778,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ backfaceVisibility: 'hidden' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Hide</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Transform Style</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ transformStyle: 'flat' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Flat</button>
+                <button onClick={() => handleStyleChange({ transformStyle: 'preserve-3d' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>3D</button>
+              </div>
+            </div>
           </>
         )}
       </>
