@@ -452,6 +452,24 @@ export default function App() {
               ID
             </button>
             <button
+              onClick={() => {
+                const css = `width: ${selected.size.width}px;\nheight: ${selected.size.height}px;\nbackground: ${selected.style?.fill || '#333'};\nborder-radius: ${selected.style?.borderRadius || 0}px;`;
+                navigator.clipboard.writeText(css);
+              }}
+              style={{
+                padding: '6px 10px',
+                background: 'transparent',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: '#888',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+              title="Copy CSS"
+            >
+              CSS
+            </button>
+            <button
               onClick={() => deleteElement(selected.id)}
               style={{
                 padding: '6px 10px',

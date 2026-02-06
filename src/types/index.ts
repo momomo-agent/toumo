@@ -72,6 +72,7 @@ export type ShapeStyle = {
   textShadow?: string;
   fontFamily?: string;
   textTransform?: string;
+  aspectRatioLocked?: boolean;
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;
