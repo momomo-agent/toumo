@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 
 interface HistoryEntry {
@@ -52,6 +52,7 @@ interface EditorState {
   editingInstanceId: string | null;
   // Variables for state machine logic
   variables: Variable[];
+  interactions: Interaction[];
 }
 
 interface EditorActions {
@@ -241,6 +242,12 @@ interface EditorActions {
   updateVariable: (id: string, updates: Partial<Variable>) => void;
   deleteVariable: (id: string) => void;
   setVariableValue: (id: string, value: string | number | boolean) => void;
+  // Interaction actions
+  addInteraction: (interaction: Interaction) => void;
+  updateInteraction: (id: string, updates: Partial<Interaction>) => void;
+  deleteInteraction: (id: string) => void;
+  duplicateInteraction: (id: string) => void;
+  getInteractionsForElement: (elementId: string) => Interaction[];
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -262,6 +269,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   ],
   components: [],
   variables: [],
+  interactions: [],
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -2777,6 +2785,36 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       v.id === id ? { ...v, currentValue: value } : v
     ),
   })),
+
+  // Interaction actions
+  addInteraction: (interaction: Interaction) => set((state) => ({
+    interactions: [...state.interactions, interaction],
+  })),
+
+  updateInteraction: (id: string, updates: Partial<Interaction>) => set((state) => ({
+    interactions: state.interactions.map(i => 
+      i.id === id ? { ...i, ...updates } : i
+    ),
+  })),
+
+  deleteInteraction: (id: string) => set((state) => ({
+    interactions: state.interactions.filter(i => i.id !== id),
+  })),
+
+  duplicateInteraction: (id: string) => set((state) => {
+    const interaction = state.interactions.find(i => i.id === id);
+    if (!interaction) return state;
+    const newInteraction = {
+      ...interaction,
+      id: `interaction-${Date.now()}`,
+      name: interaction.name ? `${interaction.name} (copy)` : undefined,
+    };
+    return { interactions: [...state.interactions, newInteraction] };
+  }),
+
+  getInteractionsForElement: (elementId: string) => {
+    return get().interactions.filter(i => i.elementId === elementId);
+  },
 
   // Import actions
   importKeyframes: (keyframes: Keyframe[]) => set(() => ({
