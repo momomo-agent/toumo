@@ -209,6 +209,7 @@ interface EditorActions {
   setIsolation: (isolation: 'auto' | 'isolate') => void;
   setBackfaceVisibility: (visibility: 'visible' | 'hidden') => void;
   setWillChange: (property: string) => void;
+  setUserSelect: (select: 'none' | 'auto' | 'text' | 'all') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2356,6 +2357,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, willChange: property } 
+      });
+    }
+  },
+
+  setUserSelect: (select: 'none' | 'auto' | 'text' | 'all') => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, userSelect: select } 
       });
     }
   },
