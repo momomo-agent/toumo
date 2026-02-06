@@ -109,9 +109,6 @@ interface EditorActions {
   enterComponentEditMode: (instanceId: string) => void;
   exitComponentEditMode: () => void;
   syncComponentInstances: (componentId: string) => void;
-  // Component edit mode state
-  editingComponentId: string | null;
-  editingInstanceId: string | null;
   // Image actions
   addImageElement: (imageSrc: string, originalWidth: number, originalHeight: number) => void;
   // Group actions
@@ -1460,6 +1457,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementId: null,
       transitions: [],
       components: [],
+      variables: [],
       history: [],
       historyIndex: -1,
     });

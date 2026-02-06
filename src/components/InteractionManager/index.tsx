@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { StateGraph } from './StateGraph';
 import { TransitionList } from './TransitionList';
 import { ComponentPanel } from './ComponentPanel';
+import { VariablePanel } from './VariablePanel';
 
-type Tab = 'graph' | 'transitions' | 'components';
+type Tab = 'graph' | 'transitions' | 'components' | 'variables';
 
 export function InteractionManager() {
   const [activeTab, setActiveTab] = useState<Tab>('graph');
@@ -45,6 +46,12 @@ export function InteractionManager() {
         >
           Components
         </TabButton>
+        <TabButton
+          active={activeTab === 'variables'}
+          onClick={() => setActiveTab('variables')}
+        >
+          Variables
+        </TabButton>
       </div>
 
       {/* Content */}
@@ -52,6 +59,7 @@ export function InteractionManager() {
         {activeTab === 'graph' && <StateGraph />}
         {activeTab === 'transitions' && <TransitionList />}
         {activeTab === 'components' && <ComponentPanel />}
+        {activeTab === 'variables' && <VariablePanel />}
       </div>
     </div>
   );
