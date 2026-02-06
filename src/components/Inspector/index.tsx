@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useEditorStore } from '../../store';
 import { DesignPanel } from './DesignPanel';
-import { AlignmentPanel } from './AlignmentPanel';
+import { MultiSelectPanel } from './MultiSelectPanel';
 import { TransitionInspector } from './TransitionInspector';
 import './Inspector.css';
 
@@ -40,15 +40,12 @@ export function Inspector() {
     );
   }
 
-  // Show alignment panel when multiple elements are selected
+  // Show multi-select panel (alignment + shared properties) when multiple elements are selected
   if (selectedElementIds.length >= 2) {
     return (
       <div key={panelKey} className="panel-transition-enter">
         <section className="inspector-panel figma-style">
-          <div className="figma-panel-header">
-            {selectedElementIds.length} Elements Selected
-          </div>
-          <AlignmentPanel />
+          <MultiSelectPanel />
         </section>
       </div>
     );
