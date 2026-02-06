@@ -373,6 +373,8 @@ export default function App() {
               const el = elements.find(e => e.id === id);
               if (el) updateElement(id, { visible: !el.visible });
             });
+          } else if (event.altKey && selectedElementIds.length > 0) {
+            alignElements('center');
           } else {
             setCurrentTool('hand');
           }
