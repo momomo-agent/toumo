@@ -137,6 +137,7 @@ interface EditorActions {
   spaceEvenlyV: () => void;
   swapSize: () => void;
   setOpacity: (opacity: number) => void;
+  setBlur: (blur: number) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1321,6 +1322,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, opacity } 
+      });
+    }
+  },
+
+  setBlur: (blur: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, blur } 
       });
     }
   },
