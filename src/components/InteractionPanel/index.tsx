@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
-import type { Interaction, GestureType, InteractionActionType, Keyframe } from '../../types';
+import type { Interaction, GestureType, InteractionActionType, Keyframe, SwipeDirection } from '../../types';
 import { Plus, Trash2, Copy, Zap, Hand, ChevronDown, ChevronRight } from 'lucide-react';
 
-const GESTURE_OPTIONS: { value: GestureType; label: string; icon: string }[] = [
-  { value: 'tap', label: '点击', icon: '👆' },
-  { value: 'doubleTap', label: '双击', icon: '👆👆' },
-  { value: 'longPress', label: '长按', icon: '✋' },
-  { value: 'swipe', label: '滑动', icon: '👉' },
-  { value: 'pan', label: '拖拽', icon: '🤏' },
-  { value: 'hover', label: '悬停', icon: '🖱️' },
+// 手势分组配置
+const GESTURE_OPTIONS: { value: GestureType; label: string; icon: string; category: string }[] = [
+  // 基础点击
+  { value: 'tap', label: '点击', icon: '👆', category: '点击' },
+  { value: 'doubleTap', label: '双击', icon: '👆', category: '点击' },
+  { value: 'longPress', label: '长按', icon: '✋', category: '点击' },
+  // 按下/抬起 (细粒度)
+  { value: 'press', label: '按下', icon: '⬇️', category: '触摸' },
+  { value: 'release', label: '抬起', icon: '⬆️', category: '触摸' },
+  // 滑动
+  { value: 'swipe', label: '滑动', icon: '👉', category: '滑动' },
+  // 拖拽系列
+  { value: 'pan', label: '拖拽', icon: '🤏', category: '拖拽' },
+  { value: 'panStart', label: '拖拽开始', icon: '🤏', category: '拖拽' },
+  { value: 'panMove', label: '拖拽中', icon: '↔️', category: '拖拽' },
+  { value: 'panEnd', label: '拖拽结束', icon: '🤏', category: '拖拽' },
+  // 缩放
+  { value: 'pinch', label: '捏合', icon: '🤌', category: '缩放' },
+  { value: 'pinchStart', label: '捏合开始', icon: '🤌', category: '缩放' },
+  { value: 'pinchMove', label: '捏合中', icon: '🤌', category: '缩放' },
+  { value: 'pinchEnd', label: '捏合结束', icon: '🤌', category: '缩放' },
+  // 旋转
+  { value: 'rotate', label: '旋转', icon: '🔄', category: '旋转' },
+  // 悬停 (桌面端)
+  { value: 'hover', label: '悬停', icon: '🖱️', category: '悬停' },
+  { value: 'hoverEnter', label: '进入悬停', icon: '➡️', category: '悬停' },
+  { value: 'hoverLeave', label: '离开悬停', icon: '⬅️', category: '悬停' },
+  // 焦点
+  { value: 'focus', label: '聚焦', icon: '🎯', category: '焦点' },
+  { value: 'blur', label: '失焦', icon: '💨', category: '焦点' },
 ];
+
+// 需要方向配置的手势
+const DIRECTION_GESTURES: GestureType[] = ['swipe', 'pan', 'panStart', 'panMove', 'panEnd'];
+
+// 需要时长配置的手势
+const DURATION_GESTURES: GestureType[] = ['longPress'];
+
+// 需要移动阈值配置的手势
+const THRESHOLD_GESTURES: GestureType[] = ['pan', 'panStart', 'swipe'];
 
 const ACTION_OPTIONS: { value: InteractionActionType; label: string }[] = [
   { value: 'goToState', label: '切换状态' },
@@ -168,24 +200,95 @@ const InteractionItem: React.FC<InteractionItemProps> = ({
       {/* Expanded Content */}
       {expanded && (
         <div className="p-3 pt-0 space-y-3 border-t border-gray-700/50">
-          {/* Gesture Select */}
+          {/* Gesture Select with Groups */}
           <div>
             <label className="text-xs text-gray-500 mb-1 block">手势</label>
             <select
               value={interaction.gesture.type}
               onChange={(e) => onUpdate({
-                gesture: { ...interaction.gesture, type: e.target.value as GestureType }
+                gesture: { type: e.target.value as GestureType }
               })}
               className="w-full bg-gray-700/50 border border-gray-600 rounded px-2 py-1.5
                          text-sm text-gray-200 focus:outline-none focus:border-blue-500"
             >
-              {GESTURE_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.icon} {opt.label}
-                </option>
-              ))}
+              {/* 按分类分组 */}
+              {['点击', '触摸', '滑动', '拖拽', '缩放', '旋转', '悬停', '焦点'].map(category => {
+                const categoryOptions = GESTURE_OPTIONS.filter(opt => opt.category === category);
+                if (categoryOptions.length === 0) return null;
+                return (
+                  <optgroup key={category} label={category}>
+                    {categoryOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.icon} {opt.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </select>
           </div>
+
+          {/* Gesture Config - 方向 */}
+          {DIRECTION_GESTURES.includes(interaction.gesture.type) && (
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">方向</label>
+              <select
+                value={interaction.gesture.direction || 'any'}
+                onChange={(e) => onUpdate({
+                  gesture: { ...interaction.gesture, direction: e.target.value as SwipeDirection }
+                })}
+                className="w-full bg-gray-700/50 border border-gray-600 rounded px-2 py-1.5
+                           text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              >
+                <option value="any">任意方向</option>
+                <option value="up">向上 ⬆️</option>
+                <option value="down">向下 ⬇️</option>
+                <option value="left">向左 ⬅️</option>
+                <option value="right">向右 ➡️</option>
+              </select>
+            </div>
+          )}
+
+          {/* Gesture Config - 长按时长 */}
+          {DURATION_GESTURES.includes(interaction.gesture.type) && (
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">
+                长按时长: {interaction.gesture.duration || 500}ms
+              </label>
+              <input
+                type="range"
+                min="200"
+                max="2000"
+                step="100"
+                value={interaction.gesture.duration || 500}
+                onChange={(e) => onUpdate({
+                  gesture: { ...interaction.gesture, duration: parseInt(e.target.value) }
+                })}
+                className="w-full"
+              />
+            </div>
+          )}
+
+          {/* Gesture Config - 移动阈值 */}
+          {THRESHOLD_GESTURES.includes(interaction.gesture.type) && (
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">
+                移动阈值: {interaction.gesture.moveThreshold || 10}px
+              </label>
+              <input
+                type="range"
+                min="5"
+                max="50"
+                step="5"
+                value={interaction.gesture.moveThreshold || 10}
+                onChange={(e) => onUpdate({
+                  gesture: { ...interaction.gesture, moveThreshold: parseInt(e.target.value) }
+                })}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-600 mt-1">超过此距离判定为拖拽</p>
+            </div>
+          )}
 
           {/* Actions */}
           <div>
