@@ -43,6 +43,9 @@ export function Canvas() {
     snapToGrid,
     gridSize,
     instantiateComponent,
+    editingGroupId,
+    enterGroupEditMode,
+    exitGroupEditMode,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);

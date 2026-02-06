@@ -50,6 +50,8 @@ interface EditorState {
   // Component edit mode
   editingComponentId: string | null;
   editingInstanceId: string | null;
+  // Group edit mode
+  editingGroupId: string | null;
   // Variables for state machine logic
   variables: Variable[];
   interactions: Interaction[];
@@ -115,6 +117,8 @@ interface EditorActions {
   // Group actions
   groupSelectedElements: () => void;
   ungroupSelectedElements: () => void;
+  enterGroupEditMode: (groupId: string) => void;
+  exitGroupEditMode: () => void;
   // Alignment actions
   alignElements: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
   distributeElements: (direction: 'horizontal' | 'vertical') => void;
@@ -294,6 +298,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectionBox: null,
   editingComponentId: null,
   editingInstanceId: null,
+  // Group editing mode
+  editingGroupId: null as string | null,
 
   // Actions
   setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
@@ -1070,6 +1076,35 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementIds: children.map(c => c.id),
       selectedElementId: children.length === 1 ? children[0].id : null,
     }));
+  },
+
+  // Enter group edit mode (double-click on group)
+  enterGroupEditMode: (groupId: string) => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    // Verify it's a valid group (has children)
+    const children = currentKeyframe.keyElements.filter(el => el.parentId === groupId);
+    if (children.length === 0) return;
+    
+    set({
+      editingGroupId: groupId,
+      selectedElementIds: [],
+      selectedElementId: null,
+    });
+  },
+
+  // Exit group edit mode (click outside group)
+  exitGroupEditMode: () => {
+    const state = get();
+    if (!state.editingGroupId) return;
+    
+    set({
+      editingGroupId: null,
+      selectedElementIds: [state.editingGroupId],
+      selectedElementId: state.editingGroupId,
+    });
   },
 
   // Align elements

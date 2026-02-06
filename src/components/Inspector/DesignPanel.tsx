@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEditorStore } from '../../store';
+import { ColorPicker } from './ColorPicker';
 import './DesignPanel.css';
 
 // Icons as SVG components
@@ -190,13 +191,12 @@ function FillItem({ fill, onUpdate, onRemove }: FillItemProps) {
         <MinusIcon />
       </button>
       {showPicker && (
-        <div className="figma-color-picker-popup">
-          <input
-            type="color"
-            value={fill.color}
-            onChange={(e) => onUpdate({ color: e.target.value })}
-          />
-        </div>
+        <ColorPicker
+          color={fill.color}
+          opacity={fill.opacity}
+          onChange={(color, opacity) => onUpdate({ color, opacity })}
+          onClose={() => setShowPicker(false)}
+        />
       )}
     </div>
   );

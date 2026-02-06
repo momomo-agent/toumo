@@ -1,0 +1,130 @@
+/* Figma-style Color Picker */
+
+.figma-color-picker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  width: 220px;
+}
+
+/* Saturation/Value Area */
+.figma-cp-satval {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: 4px;
+  cursor: crosshair;
+  margin-bottom: 12px;
+}
+
+.figma-cp-satval-white {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #fff, transparent);
+  border-radius: 4px;
+}
+
+.figma-cp-satval-black {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, #000);
+  border-radius: 4px;
+}
+
+/* Cursor */
+.figma-cp-cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Hue Slider */
+.figma-cp-hue {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(to right, 
+    #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000
+  );
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.figma-cp-hue-cursor {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Inputs */
+.figma-cp-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.figma-cp-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.figma-cp-label {
+  color: #888;
+  font-size: 10px;
+}
+
+.figma-cp-hex-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 11px;
+  font-family: monospace;
+  padding: 4px 6px;
+  width: 70px;
+  height: 24px;
+}
+
+.figma-cp-hex-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.figma-cp-opacity-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 11px;
+  padding: 4px 6px;
+  width: 40px;
+  height: 24px;
+  text-align: right;
+}
+
+.figma-cp-opacity-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.figma-cp-unit {
+  color: #666;
+  font-size: 10px;
+}
