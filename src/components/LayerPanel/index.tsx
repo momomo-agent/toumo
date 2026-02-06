@@ -126,6 +126,9 @@ function ContextMenuDivider() {
   return <div style={{ height: 1, background: '#333', margin: '4px 0' }} />;
 }
 
+// Drop position type: above/below for reorder, inside for nesting into Frame
+type DropPosition = 'above' | 'below' | 'inside';
+
 // --- Main LayerPanel ---
 export function LayerPanel() {
   const {
@@ -143,7 +146,7 @@ export function LayerPanel() {
   } = useEditorStore();
 
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [dragPosition, setDragPosition] = useState<'above' | 'below' | null>(null);
+  const [dragPosition, setDragPosition] = useState<DropPosition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -168,10 +171,20 @@ export function LayerPanel() {
     [elements]
   );
 
-  const sortedElements = useMemo(() =>
-    [...elements].sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0)),
-    [elements]
-  );
+  // Check if `ancestorId` is an ancestor of `elementId` (prevent circular nesting)
+  const isAncestorOf = useCallback((ancestorId: string, elementId: string): boolean => {
+    let current = elements.find(el => el.id === elementId);
+    while (current?.parentId) {
+      if (current.parentId === ancestorId) return true;
+      current = elements.find(el => el.id === current!.parentId);
+    }
+    return false;
+  }, [elements]);
+
+  // Check if an element can accept children (is a Frame or group-like container)
+  const canAcceptChildren = useCallback((el: KeyElement): boolean => {
+    return el.shapeType === 'frame';
+  }, []);
 
   const toggleCollapse = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -212,7 +225,6 @@ export function LayerPanel() {
     draggedIdRef.current = id;
     e.dataTransfer.setData('text/plain', id);
     e.dataTransfer.effectAllowed = 'move';
-    // Make the default drag ghost semi-transparent
     if (e.currentTarget instanceof HTMLElement) {
       const ghost = e.currentTarget.cloneNode(true) as HTMLElement;
       ghost.style.opacity = '0.6';
@@ -227,11 +239,32 @@ export function LayerPanel() {
 
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
-    if (draggedIdRef.current === id) return;
+    const draggedId = draggedIdRef.current;
+    if (!draggedId || draggedId === id) return;
+
+    const targetEl = elements.find(el => el.id === id);
+    if (!targetEl) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    const position = e.clientY < midY ? 'above' : 'below';
+    const relY = e.clientY - rect.top;
+    const h = rect.height;
+    const isContainer = canAcceptChildren(targetEl);
+
+    let position: DropPosition;
+    if (isContainer) {
+      // Three-zone: top 25% = above, middle 50% = inside, bottom 25% = below
+      if (relY < h * 0.25) position = 'above';
+      else if (relY > h * 0.75) position = 'below';
+      else position = 'inside';
+    } else {
+      // Two-zone: top half = above, bottom half = below
+      position = relY < h * 0.5 ? 'above' : 'below';
+    }
+
+    // Prevent nesting into own descendant
+    if (position === 'inside' && isAncestorOf(draggedId, id)) {
+      position = relY < h * 0.5 ? 'above' : 'below';
+    }
 
     setDragOverId(id);
     setDragPosition(position);
@@ -247,20 +280,58 @@ export function LayerPanel() {
 
     const targetEl = elements.find(el => el.id === targetId);
     const draggedEl = elements.find(el => el.id === draggedId);
-    if (!targetEl || !draggedEl) return;
+    if (!targetEl || !draggedEl) { resetDrag(); return; }
 
-    const targetIndex = sortedElements.findIndex(el => el.id === targetId);
-    const insertIndex = dragPosition === 'above' ? targetIndex : targetIndex + 1;
+    // Prevent dropping into own descendant
+    if (dragPosition === 'inside' && isAncestorOf(draggedId, targetId)) {
+      resetDrag();
+      return;
+    }
 
-    const newOrder = sortedElements.filter(el => el.id !== draggedId);
-    newOrder.splice(insertIndex, 0, draggedEl);
+    if (dragPosition === 'inside') {
+      // --- Nest into Frame ---
+      // Auto-expand the target frame
+      setCollapsedIds(prev => {
+        const next = new Set(prev);
+        next.delete(targetId);
+        return next;
+      });
+      // Get children of target to assign zIndex (top of children)
+      const targetChildren = getChildren(targetId);
+      const maxChildZ = targetChildren.length > 0
+        ? Math.max(...targetChildren.map(c => c.zIndex ?? 0))
+        : 0;
+      updateElement(draggedId, {
+        parentId: targetId,
+        zIndex: maxChildZ + 1,
+      });
+    } else {
+      // --- Reorder (above/below) ---
+      // The dragged element should end up in the same parent context as the target
+      const newParentId = targetEl.parentId;
+      // Get siblings in the target's parent context
+      const siblings = newParentId
+        ? elements.filter(el => el.parentId === newParentId).sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0))
+        : elements.filter(el => !el.parentId).sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0));
 
-    newOrder.forEach((el, idx) => {
-      const newZIndex = newOrder.length - idx;
-      if (el.zIndex !== newZIndex) {
-        updateElement(el.id, { zIndex: newZIndex });
+      const filtered = siblings.filter(el => el.id !== draggedId);
+      const targetIndex = filtered.findIndex(el => el.id === targetId);
+      const insertIndex = dragPosition === 'above' ? targetIndex : targetIndex + 1;
+      filtered.splice(insertIndex, 0, draggedEl);
+
+      // Update parentId if moving between contexts
+      if (draggedEl.parentId !== newParentId) {
+        updateElement(draggedId, { parentId: newParentId ?? undefined });
       }
-    });
+
+      // Reassign zIndex for all siblings
+      filtered.forEach((el, idx) => {
+        const newZIndex = filtered.length - idx;
+        if (el.zIndex !== newZIndex) {
+          updateElement(el.id, { zIndex: newZIndex });
+        }
+      });
+    }
 
     resetDrag();
   };
@@ -333,6 +404,8 @@ export function LayerPanel() {
     const isHidden = el.visible === false;
     const isLocked = el.locked;
     const isBeingDragged = isDragging && draggedIdRef.current === el.id;
+    const isNestTarget = isDragOver && dragPosition === 'inside';
+    const isContainer = canAcceptChildren(el);
 
     return (
       <div key={el.id} style={{ position: 'relative' }}>
@@ -371,30 +444,37 @@ export function LayerPanel() {
             padding: '4px 8px',
             paddingLeft: 8 + depth * 16,
             height: 32,
-            background: isSelected
-              ? 'rgba(59,130,246,0.15)'
-              : isHovered
-                ? 'rgba(255,255,255,0.04)'
-                : 'transparent',
-            borderLeft: isSelected
-              ? '2px solid #3b82f6'
-              : isHovered
-                ? '2px solid rgba(59,130,246,0.4)'
-                : '2px solid transparent',
+            background: isNestTarget
+              ? 'rgba(139,92,246,0.2)'
+              : isSelected
+                ? 'rgba(59,130,246,0.15)'
+                : isHovered
+                  ? 'rgba(255,255,255,0.04)'
+                  : 'transparent',
+            borderLeft: isNestTarget
+              ? '2px solid #8b5cf6'
+              : isSelected
+                ? '2px solid #3b82f6'
+                : isHovered
+                  ? '2px solid rgba(59,130,246,0.4)'
+                  : '2px solid transparent',
+            outline: isNestTarget ? '1px dashed #8b5cf6' : 'none',
+            outlineOffset: -1,
             cursor: isLocked ? 'not-allowed' : 'grab',
             fontSize: 12,
-            transition: 'background 0.12s ease, border-color 0.12s ease, opacity 0.15s ease',
+            transition: 'background 0.12s ease, border-color 0.12s ease, opacity 0.15s ease, outline 0.12s ease',
             userSelect: 'none',
             borderRadius: '0 4px 4px 0',
             marginRight: 2,
           }}
         >
           {/* Collapse toggle */}
-          {hasChildren ? (
+          {hasChildren || isContainer ? (
             <span
               onClick={(e) => toggleCollapse(el.id, e)}
               style={{
-                cursor: 'pointer', width: 14, fontSize: 8, color: '#666',
+                cursor: 'pointer', width: 14, fontSize: 8,
+                color: isNestTarget ? '#8b5cf6' : '#666',
                 textAlign: 'center', lineHeight: '14px',
                 borderRadius: 3, transition: 'color 0.1s',
               }}
@@ -435,11 +515,21 @@ export function LayerPanel() {
               />
             ) : (
               <span style={{
-                color: isSelected ? '#e0e7ff' : isHidden ? '#555' : '#ccc',
-                fontWeight: isSelected ? 500 : 400,
+                color: isNestTarget ? '#c4b5fd' : isSelected ? '#e0e7ff' : isHidden ? '#555' : '#ccc',
+                fontWeight: isSelected || isNestTarget ? 500 : 400,
                 transition: 'color 0.1s',
               }}>
                 {el.name}
+                {isNestTarget && (
+                  <span style={{
+                    marginLeft: 6, fontSize: 9, color: '#8b5cf6',
+                    background: 'rgba(139,92,246,0.15)',
+                    padding: '1px 5px', borderRadius: 3,
+                    fontWeight: 500,
+                  }}>
+                    Move inside
+                  </span>
+                )}
               </span>
             )}
           </span>
@@ -498,10 +588,11 @@ export function LayerPanel() {
         )}
 
         {/* Children */}
-        {hasChildren && !isCollapsed && (
+        {(hasChildren || isContainer) && !isCollapsed && (
           <div style={{
-            borderLeft: '1px solid #2a2a2a',
+            borderLeft: isNestTarget ? '1px solid rgba(139,92,246,0.4)' : '1px solid #2a2a2a',
             marginLeft: 15 + depth * 16,
+            transition: 'border-color 0.15s ease',
           }}>
             {children.map(child => renderLayer(child, depth + 1))}
           </div>
