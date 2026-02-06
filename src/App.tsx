@@ -170,6 +170,7 @@ export default function App() {
       functionalStates,
       components,
       frameSize,
+      canvasBackground,
     };
     const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
@@ -177,7 +178,7 @@ export default function App() {
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
-  }, [keyframes, transitions, functionalStates, components, frameSize]);
+  }, [keyframes, transitions, functionalStates, components, frameSize, canvasBackground]);
 
   // Load project from JSON
   const projectInputRef = useRef<HTMLInputElement>(null);
