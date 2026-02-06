@@ -286,30 +286,32 @@ export const CanvasElement = memo(function CanvasElement({
 
   const renderHandles = () => {
     if (!isSelected || currentTool !== 'select') return null;
-    const handles: ResizeHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+    const handles: ResizeHandle[] = ['nw', 'ne', 'se', 'sw'];
+    const edgeHandles: ResizeHandle[] = ['n', 'e', 's', 'w'];
 
-    return handles.map((handle) => {
-      const size = 8;
-      const offset = -size / 2;
+    const cornerSize = 10;
+    const cornerOffset = -cornerSize / 2;
+    const edgeSize = 6;
+    const edgeOffset = -edgeSize / 2;
+
+    const cornerHandleElements = handles.map((handle) => {
       const baseStyle: CSSProperties = {
         position: 'absolute',
-        width: size,
-        height: size,
+        width: cornerSize,
+        height: cornerSize,
         background: '#fff',
-        border: '1px solid #3b82f6',
-        borderRadius: 2,
+        border: '2px solid #3b82f6',
+        borderRadius: '50%',
         cursor: `${handle}-resize`,
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.12)',
+        zIndex: 10,
       };
 
-      const styleMap: Record<ResizeHandle, CSSProperties> = {
-        nw: { top: offset, left: offset },
-        n: { top: offset, left: '50%', marginLeft: offset },
-        ne: { top: offset, right: offset },
-        e: { top: '50%', right: offset, marginTop: offset },
-        se: { bottom: offset, right: offset },
-        s: { bottom: offset, left: '50%', marginLeft: offset },
-        sw: { bottom: offset, left: offset },
-        w: { top: '50%', left: offset, marginTop: offset },
+      const styleMap: Record<string, CSSProperties> = {
+        nw: { top: cornerOffset, left: cornerOffset },
+        ne: { top: cornerOffset, right: cornerOffset },
+        se: { bottom: cornerOffset, right: cornerOffset },
+        sw: { bottom: cornerOffset, left: cornerOffset },
       };
 
       return (
@@ -320,6 +322,38 @@ export const CanvasElement = memo(function CanvasElement({
         />
       );
     });
+
+    const edgeHandleElements = edgeHandles.map((handle) => {
+      const isHorizontal = handle === 'n' || handle === 's';
+      const baseStyle: CSSProperties = {
+        position: 'absolute',
+        width: isHorizontal ? 20 : edgeSize,
+        height: isHorizontal ? edgeSize : 20,
+        background: '#fff',
+        border: '1.5px solid #3b82f6',
+        borderRadius: 3,
+        cursor: `${handle}-resize`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        zIndex: 9,
+      };
+
+      const styleMap: Record<string, CSSProperties> = {
+        n: { top: -edgeSize / 2, left: '50%', marginLeft: -10 },
+        e: { top: '50%', right: -edgeSize / 2, marginTop: -10 },
+        s: { bottom: -edgeSize / 2, left: '50%', marginLeft: -10 },
+        w: { top: '50%', left: -edgeSize / 2, marginTop: -10 },
+      };
+
+      return (
+        <div
+          key={handle}
+          style={{ ...baseStyle, ...styleMap[handle] }}
+          onMouseDown={(event) => handleResizeStart(event, handle)}
+        />
+      );
+    });
+
+    return [...cornerHandleElements, ...edgeHandleElements];
   };
 
   const isText = element.shapeType === 'text';
@@ -386,10 +420,7 @@ export const CanvasElement = memo(function CanvasElement({
       shadows.push(`inset ${x}px ${y}px ${blur}px ${element.style.innerShadowColor}`);
     }
     
-    // Selection outline
-    if (isSelected) {
-      shadows.push('0 0 0 2px #3b82f6');
-    }
+    // Selection outline removed from box-shadow — now rendered as a separate overlay
     
     return shadows.length > 0 ? shadows.join(', ') : 'none';
   };
@@ -622,6 +653,19 @@ export const CanvasElement = memo(function CanvasElement({
         </div>
       )}
       
+      {/* Selection border overlay */}
+      {isSelected && currentTool === 'select' && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: -1,
+            border: '1.5px solid #3b82f6',
+            borderRadius: isGroup ? 0 : getBorderRadius(),
+            pointerEvents: 'none',
+            zIndex: 8,
+          }}
+        />
+      )}
       {renderHandles()}
       
       {/* Context Menu */}
