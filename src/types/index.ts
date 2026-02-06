@@ -44,6 +44,7 @@ export type ShapeStyle = {
   outline?: string;
   backdropFilter?: string;
   transition?: string;
+  willChange?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
