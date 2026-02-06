@@ -810,6 +810,9 @@ export function Canvas() {
           frameLayout={activeFrameLayout || null}
         />
       </div>
+      
+      {/* Zoom Controls */}
+      <ZoomControls />
     </div>
   );
 }
