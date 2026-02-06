@@ -63,6 +63,7 @@ export type ShapeStyle = {
   transformStyle?: 'flat' | 'preserve-3d';
   clipPath?: string;
   maskImage?: string;
+  textShadow?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
@@ -109,7 +110,6 @@ export type ShapeStyle = {
   dropShadowColor?: string;
   blendMode?: string;
   backdropBlur?: number;
-  textShadow?: string;
   fontFamily?: string;
   textTransform?: string;
   aspectRatioLocked?: boolean;
