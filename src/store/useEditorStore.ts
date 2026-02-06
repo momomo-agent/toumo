@@ -226,7 +226,7 @@ interface EditorActions {
   setPlaceItems: (place: 'start' | 'center' | 'end' | 'stretch') => void;
   setPlaceContent: (place: 'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around') => void;
   setAlignContent: (align: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'space-between' | 'space-around') => void;
-  setPosition: (position: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky') => void;
+  setCssPosition: (position: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2603,7 +2603,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 
-  setPosition: (position: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky') => {
+  setCssPosition: (position: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky') => {
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
