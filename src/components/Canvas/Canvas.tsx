@@ -73,6 +73,7 @@ export function Canvas() {
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const drawStartRef = useRef<Position | null>(null);
+  const marqueeShiftRef = useRef(false);
   const isPanningRef = useRef(false);
   const panStartRef = useRef<{ pointerX: number; pointerY: number; startX: number; startY: number } | null>(null);
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLine[]>([]);
@@ -592,7 +593,11 @@ export function Canvas() {
       if (editingGroupId) {
         exitGroupEditMode();
       }
-      setSelectedElementId(null);
+      // Track whether Shift is held — additive marquee selection
+      marqueeShiftRef.current = event.shiftKey;
+      if (!event.shiftKey) {
+        setSelectedElementId(null);
+      }
       setIsSelecting(true);
       setSelectionBox({ start: clampPointToFrame(framePoint), end: clampPointToFrame(framePoint) });
       return;
@@ -653,15 +658,26 @@ export function Canvas() {
       const minY = Math.min(selectionBox.start.y, selectionBox.end.y);
       const maxY = Math.max(selectionBox.start.y, selectionBox.end.y);
 
-      const ids = elements
+      // Only select top-level elements (skip children inside groups)
+      const marqueeIds = elements
         .filter((el) => {
+          if (el.parentId) return false; // skip group children
           const elRight = el.position.x + el.size.width;
           const elBottom = el.position.y + el.size.height;
           return el.position.x < maxX && elRight > minX && el.position.y < maxY && elBottom > minY;
         })
         .map((el) => el.id);
 
-      setSelectedElementIds(ids);
+      // Shift+drag → add to existing selection (toggle)
+      if (marqueeShiftRef.current) {
+        const prev = useEditorStore.getState().selectedElementIds;
+        const merged = new Set(prev);
+        marqueeIds.forEach((id) => merged.add(id));
+        setSelectedElementIds(Array.from(merged));
+      } else {
+        setSelectedElementIds(marqueeIds);
+      }
+
       setSelectionBox(null);
       setIsSelecting(false);
       return;
