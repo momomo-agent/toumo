@@ -1371,7 +1371,7 @@ export default function App() {
 
         {/* Rotation Control */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Rotation</Label>
+          <Label>旋转</Label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="range"
@@ -1409,7 +1409,7 @@ export default function App() {
 
         {/* Flip Controls */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Flip</Label>
+          <Label>翻转</Label>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={() => handleStyleChange({ flipX: !currentStyle.flipX })}
@@ -1449,7 +1449,7 @@ export default function App() {
               </select>
             </div>
             <div style={{ marginBottom: 16 }}>
-              <Label>Object Position</Label>
+              <Label>对象位置</Label>
               <select
                 value={currentStyle.objectPosition || 'center'}
                 onChange={(e) => handleStyleChange({ objectPosition: e.target.value })}
@@ -1467,7 +1467,7 @@ export default function App() {
 
         {isLineElement && (
           <div style={{ marginBottom: 16 }}>
-            <Label>Arrow</Label>
+            <Label>箭头</Label>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => handleStyleChange({ lineEndArrow: !currentStyle.lineEndArrow })}
