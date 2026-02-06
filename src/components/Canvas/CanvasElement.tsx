@@ -53,6 +53,7 @@ export const CanvasElement = memo(function CanvasElement({
   // Actions are stable references — won't cause re-renders
   const setSelectedElementId = useEditorStore((s) => s.setSelectedElementId);
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds);
+  const setHoveredElementId = useEditorStore((s) => s.setHoveredElementId);
   const updateElementPosition = useEditorStore((s) => s.updateElementPosition);
   const updateElementSize = useEditorStore((s) => s.updateElementSize);
   const setIsDragging = useEditorStore((s) => s.setIsDragging);

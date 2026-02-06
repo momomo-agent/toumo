@@ -372,6 +372,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     selectedElementId: ids.length === 1 ? ids[0] : null,
   }),
 
+  setHoveredElementId: (id) => set({ hoveredElementId: id }),
+
   addElement: (element) => {
     get().pushHistory();
     set((state) => {

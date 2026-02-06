@@ -200,14 +200,21 @@ export function StateGraph() {
 
   const selectedTransition = transitions.find(t => t.id === selectedTransitionId);
 
-  // Calculate edge path with curve
+  // Calculate edge path with smooth bezier curve
   const getEdgePath = (from: NodePosition, to: NodePosition) => {
-    const dx = to.x - from.x;
-    const cx1 = from.x + dx * 0.4;
-    const cy1 = from.y;
-    const cx2 = from.x + dx * 0.6;
-    const cy2 = to.y;
-    return `M ${from.x + 140} ${from.y + 20} C ${cx1 + 70} ${cy1 + 20}, ${cx2} ${cy2 + 20}, ${to.x} ${to.y + 20}`;
+    const startX = from.x + 140;
+    const startY = from.y + 20;
+    const endX = to.x;
+    const endY = to.y + 20;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const tension = Math.min(dist * 0.4, 120);
+    const cx1 = startX + tension;
+    const cy1 = startY;
+    const cx2 = endX - tension;
+    const cy2 = endY;
+    return `M ${startX} ${startY} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${endX} ${endY}`;
   };
 
   // Get midpoint for transition label
@@ -320,13 +327,25 @@ export function StateGraph() {
                 onClick={(e) => handleTransitionClick(e, tr.id)}
                 onContextMenu={(e) => handleTransitionContextMenu(e, tr.id)}
               />
-              {/* Transition label */}
+              {/* Transition label with background */}
+              <rect
+                x={midpoint.x - 20}
+                y={midpoint.y - 18}
+                width={40}
+                height={16}
+                rx={4}
+                fill={isSelected ? 'rgba(59,130,246,0.15)' : 'rgba(30,30,32,0.85)'}
+                stroke={isSelected ? 'rgba(59,130,246,0.3)' : 'rgba(60,60,65,0.5)'}
+                strokeWidth={0.5}
+                style={{ pointerEvents: 'none' }}
+              />
               <text
                 x={midpoint.x}
-                y={midpoint.y - 8}
+                y={midpoint.y - 7}
                 textAnchor="middle"
-                fill={isSelected ? '#2563eb' : '#888'}
-                fontSize={10}
+                fill={isSelected ? '#60a5fa' : '#999'}
+                fontSize={9}
+                fontWeight={500}
                 style={{ pointerEvents: 'none' }}
               >
                 {tr.trigger}
@@ -336,18 +355,23 @@ export function StateGraph() {
         })}
 
         {/* Drag connection preview */}
-        {dragConnection && (
-          <line
-            x1={dragConnection.fromX}
-            y1={dragConnection.fromY}
-            x2={dragConnection.toX}
-            y2={dragConnection.toY}
-            stroke="#22c55e"
-            strokeWidth={2}
-            strokeDasharray="5,5"
-            markerEnd="url(#arrowhead-drag)"
-          />
-        )}
+        {dragConnection && (() => {
+          const dx = dragConnection.toX - dragConnection.fromX;
+          const cpx1 = dragConnection.fromX + dx * 0.4;
+          const cpx2 = dragConnection.fromX + dx * 0.6;
+          return (
+            <path
+              d={`M ${dragConnection.fromX} ${dragConnection.fromY} C ${cpx1} ${dragConnection.fromY}, ${cpx2} ${dragConnection.toY}, ${dragConnection.toX} ${dragConnection.toY}`}
+              fill="none"
+              stroke="#4ade80"
+              strokeWidth={2}
+              strokeDasharray="6,4"
+              strokeLinecap="round"
+              markerEnd="url(#arrowhead-drag)"
+              opacity={0.8}
+            />
+          );
+        })()}
       </svg>
 
       {/* State nodes */}
