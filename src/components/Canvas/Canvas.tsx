@@ -16,6 +16,7 @@ import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
 import { findPresetComponent, createKeyElement } from '../ComponentLibrary';
+import { PrototypeLinkOverlay } from './PrototypeLinkOverlay';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -1451,6 +1452,14 @@ export function Canvas() {
           </div>
         )}
         
+        {/* Prototype Link Arrows */}
+        <PrototypeLinkOverlay
+          keyframes={keyframes}
+          frameLayouts={frameLayouts}
+          selectedKeyframeId={selectedKeyframeId}
+          selectedElementIds={selectedElementIds}
+        />
+
         {/* Pen Tool */}
         {/* Multi-select bounding box */}
         {currentTool === 'select' && selectedElementIds.length >= 2 && (() => {
