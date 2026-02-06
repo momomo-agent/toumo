@@ -4,6 +4,7 @@ import { useEditorStore } from '../../store';
 import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement, type ResizeHandle } from './CanvasElement';
+import { PenTool } from './PenTool';
 import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
 
@@ -716,6 +717,14 @@ export function Canvas() {
             {selectionBox && <SelectionBox start={selectionBox.start} end={selectionBox.end} />}
           </div>
         )}
+        
+        {/* Pen Tool */}
+        <PenTool
+          isActive={currentTool === 'pen'}
+          canvasOffset={canvasOffset}
+          canvasScale={canvasScale}
+          frameLayout={activeFrameLayout || null}
+        />
       </div>
     </div>
   );
