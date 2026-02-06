@@ -292,12 +292,13 @@ export function CanvasElement({
   const isText = element.shapeType === 'text';
   const isImage = element.shapeType === 'image';
   const isLine = element.shapeType === 'line';
-  // Frame renders like rectangle but with different default styles
+  const isPath = element.shapeType === 'path';
 
   const getBackground = () => {
     if (isText) return 'transparent';
     if (isImage) return 'transparent';
     if (isLine) return 'transparent';
+    if (isPath) return 'transparent';
     
     const style = element.style;
     // Check for gradient
@@ -480,6 +481,22 @@ export function CanvasElement({
             strokeWidth={element.style?.strokeWidth || 2}
             strokeLinecap="round"
             markerEnd={element.style?.lineEndArrow ? `url(#arrow-${element.id})` : undefined}
+          />
+        </svg>
+      )}
+      {isPath && element.style?.pathData && (
+        <svg
+          width="100%"
+          height="100%"
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+        >
+          <path
+            d={element.style.pathData}
+            fill={element.style?.pathClosed ? (element.style?.fill || 'transparent') : 'none'}
+            stroke={element.style?.stroke || '#ffffff'}
+            strokeWidth={element.style?.strokeWidth || 2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       )}

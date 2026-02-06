@@ -423,6 +423,7 @@ export function Canvas() {
         if (shapeType === 'text') return 'Text';
         if (shapeType === 'line') return 'Line';
         if (shapeType === 'frame') return 'Frame';
+        if (shapeType === 'path') return 'Path';
         return 'Rectangle';
       };
       
