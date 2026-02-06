@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
 import { AutoLayoutPanel } from './AutoLayoutPanel';
@@ -109,7 +109,7 @@ const InteractionIcon = () => (
   </svg>
 );
 
-// Number input with label
+// Number input with label + drag-to-adjust
 interface NumberInputProps {
   label: string;
   value: number;
@@ -122,21 +122,111 @@ interface NumberInputProps {
 }
 
 function NumberInput({ label, value, onChange, min, max, step = 1, unit, disabled }: NumberInputProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef({ startX: 0, startValue: 0, hasMoved: false });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
+
+  const clampValue = useCallback((v: number) => {
+    if (min !== undefined) v = Math.max(min, v);
+    if (max !== undefined) v = Math.min(max, v);
+    return Math.round(v * 100) / 100;
+  }, [min, max]);
+
+  // Drag on label to scrub value
+  const handleLabelMouseDown = useCallback((e: React.MouseEvent) => {
+    if (disabled) return;
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startValue: value, hasMoved: false };
+
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - dragRef.current.startX;
+      if (Math.abs(dx) > 2) dragRef.current.hasMoved = true;
+      if (!dragRef.current.hasMoved) return;
+
+      if (!isDragging) setIsDragging(true);
+      const multiplier = ev.shiftKey ? 10 : ev.altKey ? 0.1 : 1;
+      const newVal = clampValue(dragRef.current.startValue + dx * step * multiplier);
+      onChange(newVal);
+    };
+
+    const onUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      // If didn't drag, focus the input for editing
+      if (!dragRef.current.hasMoved && inputRef.current) {
+        setIsEditing(true);
+        setEditValue(String(Math.round(value * 100) / 100));
+        setTimeout(() => inputRef.current?.select(), 0);
+      }
+    };
+
+    document.body.style.cursor = 'ew-resize';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [value, onChange, step, disabled, isDragging, clampValue]);
+
+  // Direct input editing
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(e.target.value);
+  };
+
+  const commitEdit = () => {
+    const val = parseFloat(editValue);
     if (!isNaN(val)) {
-      onChange(val);
+      onChange(clampValue(val));
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const multiplier = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
+      const delta = e.key === 'ArrowUp' ? step * multiplier : -step * multiplier;
+      const newVal = clampValue(value + delta);
+      onChange(newVal);
+      setEditValue(String(Math.round(newVal * 100) / 100));
     }
   };
 
+  const displayValue = Math.round(value * 100) / 100;
+
   return (
-    <div className="figma-input-group">
-      <span className="figma-input-label">{label}</span>
+    <div className={`figma-input-group ${isDragging ? 'dragging' : ''}`}>
+      <span
+        ref={labelRef}
+        className={`figma-input-label ${disabled ? '' : 'draggable'}`}
+        onMouseDown={handleLabelMouseDown}
+      >
+        {label}
+      </span>
       <input
-        type="number"
+        ref={inputRef}
+        type={isEditing ? 'text' : 'number'}
         className="figma-number-input"
-        value={Math.round(value * 100) / 100}
-        onChange={handleChange}
+        value={isEditing ? editValue : displayValue}
+        onChange={isEditing ? handleInputChange : (e) => {
+          const val = parseFloat(e.target.value);
+          if (!isNaN(val)) onChange(clampValue(val));
+        }}
+        onFocus={() => {
+          if (!isEditing) {
+            setIsEditing(true);
+            setEditValue(String(displayValue));
+            setTimeout(() => inputRef.current?.select(), 0);
+          }
+        }}
+        onBlur={commitEdit}
+        onKeyDown={handleKeyDown}
         min={min}
         max={max}
         step={step}

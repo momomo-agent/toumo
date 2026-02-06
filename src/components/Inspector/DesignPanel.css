@@ -118,6 +118,24 @@
   min-width: 12px;
 }
 
+.figma-input-label.draggable {
+  cursor: ew-resize;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.figma-input-label.draggable:hover {
+  color: #3b82f6;
+}
+
+.figma-input-group.dragging .figma-input-label {
+  color: #3b82f6;
+}
+
+.figma-input-group.dragging .figma-number-input {
+  border-color: #3b82f6;
+}
+
 .figma-number-input {
   background: #2a2a2a;
   border: 1px solid transparent;
