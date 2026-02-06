@@ -6,6 +6,10 @@
  * - 区分 tap/drag (dragThreshold: 10px)
  * - 识别 longPress (500ms)
  * - 触发对应的 Interaction actions
+ * - touchInfo 完整触摸信息记录
+ * - SpeedTracker 速度追踪
+ * 
+ * 参考: Folme/MouseAction.as
  */
 
 import type {
@@ -24,6 +28,161 @@ const DEFAULT_RECOGNITION: GestureRecognition = {
   swipeVelocity: 0.5,
 };
 
+// ============ TouchInfo 类型定义 ============
+
+/** 历史轨迹点 */
+export interface HistoryPoint {
+  x: number;
+  y: number;
+  time: number;
+}
+
+/** 速度信息 */
+export interface SpeedInfo {
+  x: number;
+  y: number;
+  total: number;
+}
+
+/** 触摸信息 - 参考 MouseAction.as 的 touchInfo */
+export interface TouchInfo {
+  // 状态标记
+  isClick: boolean;
+  hasLongClick: boolean;
+  hasDown: boolean;
+  hasMove: boolean;
+  hasUp: boolean;
+  
+  // 位置信息
+  mouseDownX: number;
+  mouseDownY: number;
+  mouseUpX: number | undefined;
+  mouseUpY: number | undefined;
+  offsetX: number;
+  offsetY: number;
+  
+  // 方向信息
+  direction: boolean | undefined;  // true=横向, false=纵向
+  directionPositive: boolean | undefined;  // true=正方向(右/下)
+  directionAngle: number;  // 角度 0-360
+  
+  // 时间信息
+  mouseDownTime: number;
+  
+  // 速度追踪
+  speed: SpeedInfo;
+  
+  // 历史轨迹
+  history: HistoryPoint[];
+}
+
+// ============ SpeedTracker 速度追踪器 ============
+
+/** 速度追踪器配置 */
+interface SpeedTrackerConfig {
+  maxHistoryLength: number;  // 最大历史记录数
+  minTimeDelta: number;      // 最小时间差 (ms)
+  maxTimeDelta: number;      // 最大时间差 (ms)
+}
+
+const DEFAULT_SPEED_CONFIG: SpeedTrackerConfig = {
+  maxHistoryLength: 50,
+  minTimeDelta: 30,
+  maxTimeDelta: 100,
+};
+
+/**
+ * SpeedTracker - 速度追踪器
+ * 记录最近几帧的位置，计算瞬时速度
+ */
+class SpeedTracker {
+  private history: HistoryPoint[] = [];
+  private config: SpeedTrackerConfig;
+
+  constructor(config?: Partial<SpeedTrackerConfig>) {
+    this.config = { ...DEFAULT_SPEED_CONFIG, ...config };
+  }
+
+  /** 重置历史记录 */
+  reset(): void {
+    this.history = [];
+  }
+
+  /** 添加位置点 */
+  push(x: number, y: number): void {
+    const time = Date.now();
+    this.history.push({ x, y, time });
+    
+    // 限制历史记录长度
+    while (this.history.length > this.config.maxHistoryLength) {
+      this.history.shift();
+    }
+  }
+
+  /** 获取历史记录 */
+  getHistory(): HistoryPoint[] {
+    return [...this.history];
+  }
+
+  /**
+   * 计算瞬时速度
+   * 参考 MouseAction.as 的 pushHistory 算法
+   */
+  calculateSpeed(): SpeedInfo {
+    if (this.history.length < 2) {
+      return { x: 0, y: 0, total: 0 };
+    }
+
+    const len = this.history.length;
+    const last = this.history[len - 1];
+    const prev = this.history[len - 2];
+    
+    const dt1 = last.time - prev.time;
+    if (dt1 === 0) {
+      return { x: 0, y: 0, total: 0 };
+    }
+
+    // 计算最近两帧的速度
+    const tmp1X = (last.x - prev.x) / (dt1 / 1000);
+    const tmp1Y = (last.y - prev.y) / (dt1 / 1000);
+
+    let speedX: number | null = null;
+    let speedY: number | null = null;
+
+    // 查找合适时间范围内的历史点计算更稳定的速度
+    for (let i = len - 1; i >= 0; i--) {
+      const point = this.history[i];
+      const dt = last.time - point.time;
+      
+      if (dt > this.config.minTimeDelta && dt < this.config.maxTimeDelta) {
+        const tmp2X = (last.x - point.x) / (dt / 1000);
+        const tmp2Y = (last.y - point.y) / (dt / 1000);
+
+        speedX = tmp2X;
+        speedY = tmp2Y;
+
+        // 如果方向一致，取较大值（参考 MouseAction.as）
+        if (tmp1X * tmp2X > 0) {
+          speedX = tmp2X > 0 ? Math.max(tmp1X, tmp2X) : Math.min(tmp1X, tmp2X);
+        }
+        if (tmp1Y * tmp2Y > 0) {
+          speedY = tmp2Y > 0 ? Math.max(tmp1Y, tmp2Y) : Math.min(tmp1Y, tmp2Y);
+        }
+
+        break;
+      }
+    }
+
+    // 如果没找到合适的历史点，使用最近两帧的速度
+    if (speedX === null) speedX = tmp1X;
+    if (speedY === null) speedY = tmp1Y;
+
+    const total = Math.sqrt(speedX * speedX + speedY * speedY);
+
+    return { x: speedX, y: speedY, total };
+  }
+}
+
 // 手势状态
 interface GestureState {
   isPressed: boolean;
@@ -36,6 +195,7 @@ interface GestureState {
   longPressTimer: number | null;
   isDragging: boolean;
   totalDistance: number;
+  hasStartMoveTriggered: boolean;  // 是否已触发 startMove
 }
 
 // 手势事件回调
@@ -48,6 +208,12 @@ export interface GestureCallbacks {
   onPanEnd?: (elementId: string, x: number, y: number, velocity: { x: number; y: number }) => void;
   onSwipe?: (elementId: string, direction: SwipeDirection) => void;
   onInteraction?: (interaction: Interaction, gesture: GestureType) => void;
+  // 新增: 开始移动事件 (移动超过阈值时触发一次)
+  onMouseStartMove?: (elementId: string, touchInfo: TouchInfo) => void;
+  // 新增: 移动中事件 (每帧触发)
+  onMouseMoving?: (elementId: string, touchInfo: TouchInfo) => void;
+  // 新增: 结束移动事件
+  onMouseEndMove?: (elementId: string, touchInfo: TouchInfo) => void;
 }
 
 export class GestureEngine {
@@ -56,10 +222,15 @@ export class GestureEngine {
   private callbacks: GestureCallbacks = {};
   private interactions: Interaction[] = [];
   private state: GestureState;
+  private speedTracker: SpeedTracker;
+  private touchInfo: TouchInfo;
+  private currentElementId: string | null = null;
 
   constructor(config?: Partial<GestureRecognition>) {
     this.recognition = { ...DEFAULT_RECOGNITION, ...config };
     this.state = this.createInitialState();
+    this.speedTracker = new SpeedTracker();
+    this.touchInfo = this.createInitialTouchInfo();
   }
 
   private createInitialState(): GestureState {
@@ -74,7 +245,36 @@ export class GestureEngine {
       longPressTimer: null,
       isDragging: false,
       totalDistance: 0,
+      hasStartMoveTriggered: false,
     };
+  }
+
+  /** 创建初始 touchInfo */
+  private createInitialTouchInfo(): TouchInfo {
+    return {
+      isClick: false,
+      hasLongClick: false,
+      hasDown: false,
+      hasMove: false,
+      hasUp: false,
+      mouseDownX: 0,
+      mouseDownY: 0,
+      mouseUpX: undefined,
+      mouseUpY: undefined,
+      offsetX: 0,
+      offsetY: 0,
+      direction: undefined,
+      directionPositive: undefined,
+      directionAngle: 0,
+      mouseDownTime: 0,
+      speed: { x: 0, y: 0, total: 0 },
+      history: [],
+    };
+  }
+
+  /** 获取当前 touchInfo (只读副本) */
+  getTouchInfo(): TouchInfo {
+    return { ...this.touchInfo, speed: { ...this.touchInfo.speed }, history: [...this.touchInfo.history] };
   }
 
   /**
@@ -176,6 +376,7 @@ export class GestureEngine {
    */
   private handleStart(x: number, y: number, target: EventTarget | null): void {
     const elementId = this.findElementId(target);
+    this.currentElementId = elementId;
     
     this.state.isPressed = true;
     this.state.startX = x;
@@ -185,10 +386,38 @@ export class GestureEngine {
     this.state.startTime = Date.now();
     this.state.isDragging = false;
     this.state.totalDistance = 0;
+    this.state.hasStartMoveTriggered = false;
+
+    // 初始化 touchInfo
+    this.touchInfo = {
+      isClick: false,
+      hasLongClick: false,
+      hasDown: true,
+      hasMove: false,
+      hasUp: false,
+      mouseDownX: x,
+      mouseDownY: y,
+      mouseUpX: undefined,
+      mouseUpY: undefined,
+      offsetX: 0,
+      offsetY: 0,
+      direction: undefined,
+      directionPositive: undefined,
+      directionAngle: 0,
+      mouseDownTime: Date.now(),
+      speed: { x: 0, y: 0, total: 0 },
+      history: [],
+    };
+
+    // 初始化速度追踪器
+    this.speedTracker.reset();
+    this.speedTracker.push(x, y);
+    this.touchInfo.history = this.speedTracker.getHistory();
 
     // 设置长按定时器
     this.state.longPressTimer = window.setTimeout(() => {
       if (this.state.isPressed && !this.state.isDragging) {
+        this.touchInfo.hasLongClick = true;
         this.triggerGesture('longPress', elementId, x, y);
         this.callbacks.onLongPress?.(elementId || '', x, y);
       }
@@ -201,25 +430,47 @@ export class GestureEngine {
   private handleMove(x: number, y: number, target: EventTarget | null): void {
     if (!this.state.isPressed) return;
 
-    const elementId = this.findElementId(target);
+    const elementId = this.findElementId(target) || this.currentElementId;
     const deltaX = x - this.state.currentX;
     const deltaY = y - this.state.currentY;
-    const distanceFromStart = Math.sqrt(
-      Math.pow(x - this.state.startX, 2) + Math.pow(y - this.state.startY, 2)
-    );
+    const dx = x - this.state.startX;
+    const dy = y - this.state.startY;
+    const distanceFromStart = Math.sqrt(dx * dx + dy * dy);
 
     this.state.currentX = x;
     this.state.currentY = y;
     this.state.totalDistance += Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // 判断是否开始拖拽
-    if (!this.state.isDragging && distanceFromStart > this.recognition.dragThreshold) {
-      this.state.isDragging = true;
+    // 更新速度追踪
+    this.speedTracker.push(x, y);
+    this.touchInfo.speed = this.speedTracker.calculateSpeed();
+    this.touchInfo.history = this.speedTracker.getHistory();
+
+    // 触发 onMouseMoving (每帧)
+    this.callbacks.onMouseMoving?.(elementId || '', this.touchInfo);
+
+    // 判断是否第一次超过移动阈值 (onMouseStartMove)
+    if (!this.state.hasStartMoveTriggered && distanceFromStart > this.recognition.dragThreshold) {
+      this.state.hasStartMoveTriggered = true;
+      this.touchInfo.hasMove = true;
+      
+      // 计算方向
+      this.touchInfo.direction = Math.abs(dx) > Math.abs(dy);  // true=横向
+      this.touchInfo.directionPositive = this.touchInfo.direction ? dx > 0 : dy > 0;
+
+      // 触发 onMouseStartMove (只触发一次)
+      this.callbacks.onMouseStartMove?.(elementId || '', this.touchInfo);
+
       // 取消长按定时器
       if (this.state.longPressTimer) {
         clearTimeout(this.state.longPressTimer);
         this.state.longPressTimer = null;
       }
+    }
+
+    // 判断是否开始拖拽 (panStart)
+    if (!this.state.isDragging && distanceFromStart > this.recognition.dragThreshold) {
+      this.state.isDragging = true;
       this.triggerGesture('panStart', elementId, this.state.startX, this.state.startY);
       this.callbacks.onPanStart?.(elementId || '', this.state.startX, this.state.startY);
     }
@@ -236,12 +487,33 @@ export class GestureEngine {
   private handleEnd(x: number, y: number, target: EventTarget | null): void {
     if (!this.state.isPressed) return;
 
-    const elementId = this.findElementId(target);
+    const elementId = this.findElementId(target) || this.currentElementId;
     const duration = Date.now() - this.state.startTime;
+    
+    // 最后更新一次速度
+    this.speedTracker.push(x, y);
+    const speed = this.speedTracker.calculateSpeed();
+    
     const velocity = {
-      x: (x - this.state.startX) / duration,
-      y: (y - this.state.startY) / duration,
+      x: speed.x,
+      y: speed.y,
     };
+
+    // 更新 touchInfo
+    this.touchInfo.hasDown = false;
+    this.touchInfo.hasUp = true;
+    this.touchInfo.mouseUpX = x;
+    this.touchInfo.mouseUpY = y;
+    this.touchInfo.offsetX = x - this.touchInfo.mouseDownX;
+    this.touchInfo.offsetY = y - this.touchInfo.mouseDownY;
+    this.touchInfo.speed = speed;
+    this.touchInfo.history = this.speedTracker.getHistory();
+    
+    // 计算方向角度 (0-360)
+    this.touchInfo.directionAngle = Math.atan2(speed.y, speed.x) * 180 / Math.PI;
+    if (this.touchInfo.directionAngle < 0) {
+      this.touchInfo.directionAngle = 360 + this.touchInfo.directionAngle;
+    }
 
     // 清除长按定时器
     if (this.state.longPressTimer) {
@@ -249,10 +521,17 @@ export class GestureEngine {
       this.state.longPressTimer = null;
     }
 
+    // 判断是否为点击
+    this.touchInfo.isClick = !this.touchInfo.hasMove && duration < this.recognition.longPressDelay;
+
     if (this.state.isDragging) {
+      // 触发 onMouseEndMove
+      if (!this.touchInfo.isClick) {
+        this.callbacks.onMouseEndMove?.(elementId || '', this.touchInfo);
+      }
+
       // 判断是否为滑动
-      const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-      if (speed > this.recognition.swipeVelocity) {
+      if (speed.total > this.recognition.swipeVelocity) {
         const direction = this.getSwipeDirection(velocity.x, velocity.y);
         this.triggerGesture('swipe', elementId, x, y, direction);
         this.callbacks.onSwipe?.(elementId || '', direction);
@@ -277,6 +556,7 @@ export class GestureEngine {
 
     this.state.isPressed = false;
     this.state.isDragging = false;
+    this.currentElementId = null;
   }
 
   /**
