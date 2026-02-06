@@ -220,6 +220,7 @@ interface EditorActions {
   setFlexShrink: (shrink: number) => void;
   setFlexBasis: (basis: string) => void;
   setAlignSelf: (align: 'auto' | 'flex-start' | 'flex-end' | 'center' | 'stretch') => void;
+  setOrder: (order: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2510,6 +2511,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, alignSelf: align } 
+      });
+    }
+  },
+
+  setOrder: (order: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, order } 
       });
     }
   },
