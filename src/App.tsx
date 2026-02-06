@@ -1182,6 +1182,20 @@ export default function App() {
                 }}
               />
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Font Family</Label>
+              <select
+                value={currentStyle.fontFamily || 'Inter, sans-serif'}
+                onChange={(e) => handleStyleChange({ fontFamily: e.target.value })}
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#fff', fontSize: 12 }}
+              >
+                <option value="Inter, sans-serif">Inter</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="monospace">Monospace</option>
+                <option value="cursive">Cursive</option>
+              </select>
+            </div>
             <div style={{ marginBottom: 16 }}>
               <Label>Font Size</Label>
               <input
