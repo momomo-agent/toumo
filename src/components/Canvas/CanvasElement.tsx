@@ -396,7 +396,7 @@ export function CanvasElement({
         backdropFilter: element.style?.backdropBlur ? `blur(${element.style.backdropBlur}px)` : undefined,
         color: element.style?.textColor || '#fff',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: element.style?.verticalAlign === 'top' ? 'flex-start' : element.style?.verticalAlign === 'bottom' ? 'flex-end' : 'center',
         justifyContent: isText ? (element.style?.textAlign || 'center') : 'center',
         fontSize: element.style?.fontSize || 14,
         fontWeight: element.style?.fontWeight || 'normal',
