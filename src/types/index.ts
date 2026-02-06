@@ -54,6 +54,7 @@ export type ShapeStyle = {
   gap?: number;
   flexDirection?: 'row' | 'column';
   flexWrap?: 'nowrap' | 'wrap';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
