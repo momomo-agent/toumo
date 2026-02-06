@@ -1,0 +1,582 @@
+import { useState } from 'react';
+import { useEditorStore } from '../../store';
+import './DesignPanel.css';
+
+// Icons as SVG components
+const LockIcon = ({ locked }: { locked: boolean }) => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    {locked ? (
+      <>
+        <rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <path d="M4 5V3.5C4 2.12 5.12 1 6.5 1h-1C4.12 1 3 2.12 3 3.5V5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <path d="M8 5V3.5C8 2.12 6.88 1 5.5 1h1C7.88 1 9 2.12 9 3.5V5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+      </>
+    ) : (
+      <>
+        <rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <path d="M4 5V3.5C4 2.12 5.12 1 6.5 1h-1C4.12 1 3 2.12 3 3.5V5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <path d="M9 3.5V5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+      </>
+    )}
+  </svg>
+);
+
+const RotateIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path d="M10 6A4 4 0 1 1 6 2" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <path d="M6 2L8 2L8 4" stroke="currentColor" strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
+const CornerRadiusIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path d="M2 10V5C2 3.34 3.34 2 5 2H10" stroke="currentColor" strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
+const EyeIcon = ({ visible }: { visible: boolean }) => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    {visible ? (
+      <>
+        <path d="M1 7C1 7 3 3 7 3C11 3 13 7 13 7C13 7 11 11 7 11C3 11 1 7 1 7Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.2" fill="none" />
+      </>
+    ) : (
+      <>
+        <path d="M1 7C1 7 3 3 7 3C11 3 13 7 13 7" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.5" />
+        <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" strokeWidth="1.2" />
+      </>
+    )}
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <line x1="6" y1="2" x2="6" y2="10" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const MinusIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
+  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+    <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
+// Number input with label
+interface NumberInputProps {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  disabled?: boolean;
+}
+
+function NumberInput({ label, value, onChange, min, max, step = 1, unit, disabled }: NumberInputProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val)) {
+      onChange(val);
+    }
+  };
+
+  return (
+    <div className="figma-input-group">
+      <span className="figma-input-label">{label}</span>
+      <input
+        type="number"
+        className="figma-number-input"
+        value={Math.round(value * 100) / 100}
+        onChange={handleChange}
+        min={min}
+        max={max}
+        step={step}
+        disabled={disabled}
+      />
+      {unit && <span className="figma-input-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Collapsible section
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+  defaultExpanded?: boolean;
+  onAdd?: () => void;
+}
+
+function Section({ title, children, defaultExpanded = true, onAdd }: SectionProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
+  return (
+    <div className="figma-section">
+      <div className="figma-section-header" onClick={() => setExpanded(!expanded)}>
+        <ChevronIcon expanded={expanded} />
+        <span className="figma-section-title">{title}</span>
+        {onAdd && (
+          <button className="figma-icon-btn" onClick={(e) => { e.stopPropagation(); onAdd(); }}>
+            <PlusIcon />
+          </button>
+        )}
+      </div>
+      {expanded && <div className="figma-section-content">{children}</div>}
+    </div>
+  );
+}
+
+// Fill item component
+interface FillItemProps {
+  fill: {
+    id: string;
+    color: string;
+    opacity: number;
+    visible: boolean;
+  };
+  onUpdate: (updates: Partial<FillItemProps['fill']>) => void;
+  onRemove: () => void;
+}
+
+function FillItem({ fill, onUpdate, onRemove }: FillItemProps) {
+  const [showPicker, setShowPicker] = useState(false);
+
+  return (
+    <div className="figma-fill-item">
+      <button 
+        className="figma-icon-btn visibility-btn"
+        onClick={() => onUpdate({ visible: !fill.visible })}
+      >
+        <EyeIcon visible={fill.visible} />
+      </button>
+      <div 
+        className="figma-color-swatch"
+        style={{ backgroundColor: fill.color, opacity: fill.opacity }}
+        onClick={() => setShowPicker(!showPicker)}
+      />
+      <input
+        type="text"
+        className="figma-color-input"
+        value={fill.color.toUpperCase()}
+        onChange={(e) => onUpdate({ color: e.target.value })}
+      />
+      <input
+        type="number"
+        className="figma-opacity-input"
+        value={Math.round(fill.opacity * 100)}
+        min={0}
+        max={100}
+        onChange={(e) => onUpdate({ opacity: parseInt(e.target.value) / 100 })}
+      />
+      <span className="figma-input-unit">%</span>
+      <button className="figma-icon-btn remove-btn" onClick={onRemove}>
+        <MinusIcon />
+      </button>
+      {showPicker && (
+        <div className="figma-color-picker-popup">
+          <input
+            type="color"
+            value={fill.color}
+            onChange={(e) => onUpdate({ color: e.target.value })}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Stroke position options
+const STROKE_POSITIONS = [
+  { value: 'center', label: 'Center' },
+  { value: 'inside', label: 'Inside' },
+  { value: 'outside', label: 'Outside' },
+];
+
+// Stroke item component
+interface StrokeItemProps {
+  stroke: {
+    id: string;
+    color: string;
+    width: number;
+    position: string;
+    dashArray?: string;
+    visible: boolean;
+  };
+  onUpdate: (updates: Partial<StrokeItemProps['stroke']>) => void;
+  onRemove: () => void;
+}
+
+function StrokeItem({ stroke, onUpdate, onRemove }: StrokeItemProps) {
+  return (
+    <div className="figma-stroke-item">
+      <div className="figma-stroke-row">
+        <button 
+          className="figma-icon-btn visibility-btn"
+          onClick={() => onUpdate({ visible: !stroke.visible })}
+        >
+          <EyeIcon visible={stroke.visible} />
+        </button>
+        <div 
+          className="figma-color-swatch"
+          style={{ backgroundColor: stroke.color }}
+        />
+        <input
+          type="text"
+          className="figma-color-input"
+          value={stroke.color.toUpperCase()}
+          onChange={(e) => onUpdate({ color: e.target.value })}
+        />
+        <input
+          type="number"
+          className="figma-stroke-width-input"
+          value={stroke.width}
+          min={0}
+          onChange={(e) => onUpdate({ width: parseInt(e.target.value) || 0 })}
+        />
+        <button className="figma-icon-btn remove-btn" onClick={onRemove}>
+          <MinusIcon />
+        </button>
+      </div>
+      <div className="figma-stroke-options">
+        <select
+          className="figma-select"
+          value={stroke.position}
+          onChange={(e) => onUpdate({ position: e.target.value })}
+        >
+          {STROKE_POSITIONS.map(pos => (
+            <option key={pos.value} value={pos.value}>{pos.label}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          className="figma-dash-input"
+          placeholder="Dash"
+          value={stroke.dashArray || ''}
+          onChange={(e) => onUpdate({ dashArray: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Effect types
+const EFFECT_TYPES = [
+  { value: 'dropShadow', label: 'Drop Shadow' },
+  { value: 'innerShadow', label: 'Inner Shadow' },
+  { value: 'layerBlur', label: 'Layer Blur' },
+  { value: 'backgroundBlur', label: 'Background Blur' },
+];
+
+// Effect item component
+interface EffectItemProps {
+  effect: {
+    id: string;
+    type: string;
+    visible: boolean;
+    color?: string;
+    offsetX?: number;
+    offsetY?: number;
+    blur?: number;
+    spread?: number;
+  };
+  onUpdate: (updates: Partial<EffectItemProps['effect']>) => void;
+  onRemove: () => void;
+}
+
+function EffectItem({ effect, onUpdate, onRemove }: EffectItemProps) {
+  const isShadow = effect.type === 'dropShadow' || effect.type === 'innerShadow';
+  const isBlur = effect.type === 'layerBlur' || effect.type === 'backgroundBlur';
+
+  return (
+    <div className="figma-effect-item">
+      <div className="figma-effect-header">
+        <button 
+          className="figma-icon-btn visibility-btn"
+          onClick={() => onUpdate({ visible: !effect.visible })}
+        >
+          <EyeIcon visible={effect.visible} />
+        </button>
+        <select
+          className="figma-select effect-type-select"
+          value={effect.type}
+          onChange={(e) => onUpdate({ type: e.target.value })}
+        >
+          {EFFECT_TYPES.map(type => (
+            <option key={type.value} value={type.value}>{type.label}</option>
+          ))}
+        </select>
+        <button className="figma-icon-btn remove-btn" onClick={onRemove}>
+          <MinusIcon />
+        </button>
+      </div>
+      {isShadow && (
+        <div className="figma-effect-details">
+          <div className="figma-effect-row">
+            <div 
+              className="figma-color-swatch small"
+              style={{ backgroundColor: effect.color || '#000000' }}
+            />
+            <NumberInput label="X" value={effect.offsetX || 0} onChange={(v) => onUpdate({ offsetX: v })} />
+            <NumberInput label="Y" value={effect.offsetY || 0} onChange={(v) => onUpdate({ offsetY: v })} />
+          </div>
+          <div className="figma-effect-row">
+            <NumberInput label="Blur" value={effect.blur || 0} onChange={(v) => onUpdate({ blur: v })} min={0} />
+            <NumberInput label="Spread" value={effect.spread || 0} onChange={(v) => onUpdate({ spread: v })} />
+          </div>
+        </div>
+      )}
+      {isBlur && (
+        <div className="figma-effect-details">
+          <NumberInput label="Blur" value={effect.blur || 0} onChange={(v) => onUpdate({ blur: v })} min={0} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Main Design Panel
+export function DesignPanel() {
+  const { 
+    selectedElementId,
+    selectedKeyframeId,
+    keyframes,
+    updateElement,
+  } = useEditorStore();
+
+  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
+  const selectedElement = selectedKeyframe?.keyElements.find(
+    (el: { id: string }) => el.id === selectedElementId
+  );
+
+  // Local state for aspect ratio lock
+  const [aspectLocked, setAspectLocked] = useState(false);
+  const [_aspectRatio, setAspectRatio] = useState(1);
+
+  // Local state for fills, strokes, effects (will be synced with element)
+  const [fills, setFills] = useState<FillItemProps['fill'][]>([
+    { id: '1', color: '#3b82f6', opacity: 1, visible: true }
+  ]);
+  const [strokes, setStrokes] = useState<StrokeItemProps['stroke'][]>([]);
+  const [effects, setEffects] = useState<EffectItemProps['effect'][]>([]);
+
+  // Corner radius state
+  const [cornerRadius, setCornerRadius] = useState(0);
+  const [_independentCorners, _setIndependentCorners] = useState(false);
+  const [_corners, _setCorners] = useState({ tl: 0, tr: 0, br: 0, bl: 0 });
+
+  // Rotation state
+  const [rotation, setRotation] = useState(0);
+
+  if (!selectedElement) {
+    return (
+      <div className="figma-design-panel">
+        <div className="figma-empty-state">
+          <p>Select a layer to see its properties</p>
+        </div>
+      </div>
+    );
+  }
+
+  const element = selectedElement as {
+    id: string;
+    position: { x: number; y: number };
+    size: { width: number; height: number };
+    style?: {
+      fill?: string;
+      fillOpacity?: number;
+      borderRadius?: number;
+      stroke?: string;
+      strokeWidth?: number;
+    };
+  };
+
+  const handlePositionChange = (axis: 'x' | 'y', value: number) => {
+    updateElement(element.id, {
+      position: { ...element.position, [axis]: value }
+    });
+  };
+
+  const handleSizeChange = (dim: 'width' | 'height', value: number) => {
+    if (aspectLocked) {
+      const ratio = element.size.width / element.size.height;
+      if (dim === 'width') {
+        updateElement(element.id, {
+          size: { width: value, height: value / ratio }
+        });
+      } else {
+        updateElement(element.id, {
+          size: { width: value * ratio, height: value }
+        });
+      }
+    } else {
+      updateElement(element.id, {
+        size: { ...element.size, [dim]: value }
+      });
+    }
+  };
+
+  const addFill = () => {
+    setFills([...fills, { 
+      id: Date.now().toString(), 
+      color: '#808080', 
+      opacity: 1, 
+      visible: true 
+    }]);
+  };
+
+  const addStroke = () => {
+    setStrokes([...strokes, {
+      id: Date.now().toString(),
+      color: '#000000',
+      width: 1,
+      position: 'center',
+      visible: true
+    }]);
+  };
+
+  const addEffect = () => {
+    setEffects([...effects, {
+      id: Date.now().toString(),
+      type: 'dropShadow',
+      visible: true,
+      color: '#00000040',
+      offsetX: 0,
+      offsetY: 4,
+      blur: 8,
+      spread: 0
+    }]);
+  };
+
+  return (
+    <div className="figma-design-panel">
+      {/* Position & Size Section */}
+      <Section title="Frame" defaultExpanded={true}>
+        <div className="figma-position-grid">
+          <NumberInput 
+            label="X" 
+            value={element.position.x} 
+            onChange={(v) => handlePositionChange('x', v)} 
+          />
+          <NumberInput 
+            label="Y" 
+            value={element.position.y} 
+            onChange={(v) => handlePositionChange('y', v)} 
+          />
+          <NumberInput 
+            label="W" 
+            value={element.size.width} 
+            onChange={(v) => handleSizeChange('width', v)} 
+          />
+          <div className="figma-input-with-lock">
+            <NumberInput 
+              label="H" 
+              value={element.size.height} 
+              onChange={(v) => handleSizeChange('height', v)} 
+            />
+            <button 
+              className={`figma-lock-btn ${aspectLocked ? 'locked' : ''}`}
+              onClick={() => {
+                if (!aspectLocked) {
+                  setAspectRatio(element.size.width / element.size.height);
+                }
+                setAspectLocked(!aspectLocked);
+              }}
+            >
+              <LockIcon locked={aspectLocked} />
+            </button>
+          </div>
+        </div>
+        <div className="figma-transform-row">
+          <div className="figma-input-group with-icon">
+            <RotateIcon />
+            <input
+              type="number"
+              className="figma-number-input"
+              value={rotation}
+              onChange={(e) => setRotation(parseFloat(e.target.value) || 0)}
+            />
+            <span className="figma-input-unit">°</span>
+          </div>
+          <div className="figma-input-group with-icon">
+            <CornerRadiusIcon />
+            <input
+              type="number"
+              className="figma-number-input"
+              value={cornerRadius}
+              min={0}
+              onChange={(e) => setCornerRadius(parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </div>
+      </Section>
+
+      {/* Fill Section */}
+      <Section title="Fill" onAdd={addFill}>
+        {fills.length === 0 ? (
+          <div className="figma-empty-hint">Click + to add a fill</div>
+        ) : (
+          fills.map((fill, index) => (
+            <FillItem
+              key={fill.id}
+              fill={fill}
+              onUpdate={(updates) => {
+                const newFills = [...fills];
+                newFills[index] = { ...fill, ...updates };
+                setFills(newFills);
+              }}
+              onRemove={() => setFills(fills.filter(f => f.id !== fill.id))}
+            />
+          ))
+        )}
+      </Section>
+
+      {/* Stroke Section */}
+      <Section title="Stroke" onAdd={addStroke}>
+        {strokes.length === 0 ? (
+          <div className="figma-empty-hint">Click + to add a stroke</div>
+        ) : (
+          strokes.map((stroke, index) => (
+            <StrokeItem
+              key={stroke.id}
+              stroke={stroke}
+              onUpdate={(updates) => {
+                const newStrokes = [...strokes];
+                newStrokes[index] = { ...stroke, ...updates };
+                setStrokes(newStrokes);
+              }}
+              onRemove={() => setStrokes(strokes.filter(s => s.id !== stroke.id))}
+            />
+          ))
+        )}
+      </Section>
+
+      {/* Effects Section */}
+      <Section title="Effects" onAdd={addEffect}>
+        {effects.length === 0 ? (
+          <div className="figma-empty-hint">Click + to add an effect</div>
+        ) : (
+          effects.map((effect, index) => (
+            <EffectItem
+              key={effect.id}
+              effect={effect}
+              onUpdate={(updates) => {
+                const newEffects = [...effects];
+                newEffects[index] = { ...effect, ...updates };
+                setEffects(newEffects);
+              }}
+              onRemove={() => setEffects(effects.filter(e => e.id !== effect.id))}
+            />
+          ))
+        )}
+      </Section>
+    </div>
+  );
+}

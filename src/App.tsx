@@ -13,6 +13,7 @@ import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/share
 import { WelcomeModal } from './components/WelcomeModal';
 import { EmptyState } from './components/EmptyState';
 import { LayerPanel } from './components/LayerPanel';
+import { ExportPanel } from './components/ExportPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -55,6 +56,7 @@ export default function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(() => isPreviewUrl());
   const [previewData, setPreviewData] = useState<ProjectData | null>(() => getProjectFromUrl());
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isExportPanelOpen, setIsExportPanelOpen] = useState(false);
 
   const {
     keyframes,
@@ -2198,6 +2200,21 @@ export default function App() {
             🔗 Share
           </button>
           <button
+            onClick={() => setIsExportPanelOpen(true)}
+            style={{
+              padding: '6px 12px',
+              background: '#22c55e',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            📦 Export
+          </button>
+          <button
             onClick={handleEnterPreviewMode}
             style={{
               padding: '6px 12px',
@@ -2575,6 +2592,7 @@ export default function App() {
       </div>
       <ShortcutsPanel />
       <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
+      <ExportPanel isOpen={isExportPanelOpen} onClose={() => setIsExportPanelOpen(false)} />
       <WelcomeModal />
     </div>
   );
