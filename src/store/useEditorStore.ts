@@ -174,6 +174,7 @@ interface EditorActions {
   setFontStyle: (style: 'normal' | 'italic') => void;
   setTextTransform: (transform: 'none' | 'uppercase' | 'lowercase' | 'capitalize') => void;
   setVisibility: (visible: boolean) => void;
+  setCursor: (cursor: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -1841,6 +1842,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, visibility: visible ? 'visible' : 'hidden' } 
+      });
+    }
+  },
+
+  setCursor: (cursor: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, cursor: cursor as 'default' | 'pointer' | 'grab' | 'text' } 
       });
     }
   },
