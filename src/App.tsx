@@ -1695,6 +1695,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ backdropFilter: 'blur(16px)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Transition</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ transition: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+                <button onClick={() => handleStyleChange({ transition: 'all 0.3s ease' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0.3s</button>
+              </div>
+            </div>
           </>
         )}
       </>
