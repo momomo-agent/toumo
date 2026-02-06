@@ -33,6 +33,7 @@ export type ShapeStyle = {
   borderBottomLeftRadius?: number;
   borderBottomRightRadius?: number;
   cursor?: 'default' | 'pointer' | 'grab' | 'text';
+  pointerEvents?: 'auto' | 'none';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
