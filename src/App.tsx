@@ -1725,6 +1725,14 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ flexDirection: 'column' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Col</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Justify</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ justifyContent: 'flex-start' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Start</button>
+                <button onClick={() => handleStyleChange({ justifyContent: 'center' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Center</button>
+                <button onClick={() => handleStyleChange({ justifyContent: 'flex-end' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>End</button>
+              </div>
+            </div>
           </>
         )}
       </>
