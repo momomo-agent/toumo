@@ -181,6 +181,7 @@ interface EditorActions {
   setPointerEvents: (enabled: boolean) => void;
   setTransformOrigin: (origin: string) => void;
   setDropShadow: (x: number, y: number, blur: number, color: string) => void;
+  setTextShadow: (x: number, y: number, blur: number, color: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -1945,6 +1946,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           dropShadowBlur: blur,
           dropShadowColor: color
         } 
+      });
+    }
+  },
+
+  setTextShadow: (x: number, y: number, blur: number, color: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, textShadow: `${x}px ${y}px ${blur}px ${color}` } 
       });
     }
   },
