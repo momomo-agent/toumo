@@ -227,6 +227,7 @@ interface EditorActions {
   setPlaceContent: (place: 'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around') => void;
   setAlignContent: (align: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'space-between' | 'space-around') => void;
   setCssPosition: (position: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky') => void;
+  setInset: (top?: number, right?: number, bottom?: number, left?: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2612,6 +2613,25 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, position } 
+      });
+    }
+  },
+
+  setInset: (top?: number, right?: number, bottom?: number, left?: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style,
+          ...(top !== undefined && { top }),
+          ...(right !== undefined && { right }),
+          ...(bottom !== undefined && { bottom }),
+          ...(left !== undefined && { left })
+        } 
       });
     }
   },
