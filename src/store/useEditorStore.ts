@@ -207,6 +207,7 @@ interface EditorActions {
   setMaxSize: (maxWidth?: number, maxHeight?: number) => void;
   setBoxSizing: (sizing: 'content-box' | 'border-box') => void;
   setIsolation: (isolation: 'auto' | 'isolate') => void;
+  setBackfaceVisibility: (visibility: 'visible' | 'hidden') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2328,6 +2329,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, isolation } 
+      });
+    }
+  },
+
+  setBackfaceVisibility: (visibility: 'visible' | 'hidden') => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, backfaceVisibility: visibility } 
       });
     }
   },
