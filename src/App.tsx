@@ -90,7 +90,6 @@ export default function App() {
     loadProject,
     copyStyle,
     pasteStyle,
-    nudgeSelectedElements,
     setCanvasScale,
     bringForward,
     sendBackward,
@@ -259,8 +258,12 @@ export default function App() {
     e.target.value = '';
   }, [loadProject]);
 
-  // Load example project
-  const handleLoadExampleProject = useCallback(() => {
+  // Load example project (accepts optional project data from WelcomeModal)
+  const handleLoadExampleProject = useCallback((project?: any) => {
+    if (project) {
+      loadProject(project as Parameters<typeof loadProject>[0]);
+      return;
+    }
     const baseStyle = { fill: '#3b82f6', fillOpacity: 1, stroke: '', strokeWidth: 0, strokeOpacity: 1, borderRadius: 8 };
     const exampleProject = {
       version: '1.0',
@@ -323,18 +326,27 @@ export default function App() {
       const target = event.target as HTMLElement | null;
       const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
 
+      // --- Cmd/Ctrl combos (work even when typing, except where noted) ---
+
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c') {
         if (event.altKey) {
+          // Alt+Cmd+C → copy style (always)
           copyStyle();
-        } else {
+          event.preventDefault();
+        } else if (!isTyping) {
+          // Cmd+C → copy elements (only when not typing)
           copySelectedElements();
+          event.preventDefault();
         }
-        event.preventDefault();
         return;
       }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
-        duplicateSelectedElements();
-        event.preventDefault();
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'x') {
+        if (!isTyping) {
+          // Cmd+X → cut elements (copy + delete)
+          copySelectedElements();
+          deleteSelectedElements();
+          event.preventDefault();
+        }
         return;
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'v') {
@@ -343,6 +355,13 @@ export default function App() {
           event.preventDefault();
         } else if (!isTyping) {
           pasteElements();
+          event.preventDefault();
+        }
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
+        if (!isTyping) {
+          duplicateSelectedElements();
           event.preventDefault();
         }
         return;
@@ -372,9 +391,11 @@ export default function App() {
         return;
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
-        const allIds = elements.map(e => e.id);
-        setSelectedElementIds(allIds);
-        event.preventDefault();
+        if (!isTyping) {
+          const allIds = elements.map(e => e.id);
+          setSelectedElementIds(allIds);
+          event.preventDefault();
+        }
         return;
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'g') {
@@ -387,35 +408,7 @@ export default function App() {
         return;
       }
 
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
-        if (!isTyping && selectedKeyframe) {
-          const allIds = selectedKeyframe.keyElements.map(el => el.id);
-          useEditorStore.getState().setSelectedElementIds(allIds);
-          event.preventDefault();
-        }
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
-        copySelectedElements();
-        pasteElements();
-        event.preventDefault();
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key === '0') {
-        setCanvasScale(1);
-        event.preventDefault();
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key === '1') {
-        setCanvasScale(1);
-        event.preventDefault();
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key === '=') {
-        setCanvasScale(Math.min(3, 1.25));
-        event.preventDefault();
-        return;
-      }
+      // Zoom: handled by Canvas.tsx (Cmd+0, Cmd+=, Cmd+-), no duplicate here
 
       if ((event.metaKey || event.ctrlKey) && event.key === ']') {
         bringForward();
@@ -448,7 +441,16 @@ export default function App() {
           setCurrentTool('text');
           break;
         case 'h':
-          setCurrentTool('hand');
+          if (event.shiftKey && selectedElementIds.length > 0) {
+            selectedElementIds.forEach(id => {
+              const el = elements.find(e => e.id === id);
+              if (el) updateElement(id, { visible: !el.visible });
+            });
+          } else if (event.altKey && selectedElementIds.length > 0) {
+            alignElements('center');
+          } else {
+            setCurrentTool('hand');
+          }
           break;
         case 'e':
           setCurrentTool('eyedropper');
@@ -504,40 +506,13 @@ export default function App() {
         case 'escape':
           setSelectedElementId(null);
           break;
-        case 'h':
-          if (event.shiftKey && selectedElementIds.length > 0) {
-            selectedElementIds.forEach(id => {
-              const el = elements.find(e => e.id === id);
-              if (el) updateElement(id, { visible: !el.visible });
-            });
-          } else if (event.altKey && selectedElementIds.length > 0) {
-            alignElements('center');
-          } else {
-            setCurrentTool('hand');
-          }
-          break;
-        case 'arrowup':
-          nudgeSelectedElements(0, event.shiftKey ? -10 : -1);
-          event.preventDefault();
-          break;
-        case 'arrowdown':
-          nudgeSelectedElements(0, event.shiftKey ? 10 : 1);
-          event.preventDefault();
-          break;
-        case 'arrowleft':
-          nudgeSelectedElements(event.shiftKey ? -10 : -1, 0);
-          event.preventDefault();
-          break;
-        case 'arrowright':
-          nudgeSelectedElements(event.shiftKey ? 10 : 1, 0);
-          event.preventDefault();
-          break;
+        // Arrow keys for nudging are handled in Canvas.tsx to avoid double-fire
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copySelectedElements, copyStyle, deleteSelectedElements, groupSelectedElements, nudgeSelectedElements, pasteElements, pasteStyle, redo, setCurrentTool, undo, ungroupSelectedElements]);
+  }, [copySelectedElements, copyStyle, deleteSelectedElements, duplicateSelectedElements, groupSelectedElements, pasteElements, pasteStyle, redo, setCurrentTool, undo, ungroupSelectedElements, handleExportPNG, handleSaveProject, elements, selectedElementIds, setSelectedElementIds, bringForward, sendBackward, setSelectedElementId, updateElement, alignElements, setCanvasScale, canvasScale]);
 
   // Render element properties inspector
   const renderElementInspector = () => {
