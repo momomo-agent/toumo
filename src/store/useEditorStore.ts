@@ -130,6 +130,7 @@ interface EditorActions {
   toggleVisibility: () => void;
   nudgeElement: (dx: number, dy: number) => void;
   centerElement: () => void;
+  fitToFrame: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1222,6 +1223,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const y = (state.frameSize.height - el.size.height) / 2;
       get().updateElement(state.selectedElementId, { position: { x, y } });
     }
+  },
+
+  fitToFrame: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    get().updateElement(state.selectedElementId, { 
+      position: { x: 0, y: 0 },
+      size: { width: state.frameSize.width, height: state.frameSize.height }
+    });
   },
 
   // Import actions
