@@ -405,10 +405,10 @@ export function CanvasElement({
         textShadow: element.style?.textShadow,
         fontFamily: element.style?.fontFamily || 'Inter, sans-serif',
         whiteSpace: element.style?.whiteSpace || 'normal',
+        overflow: element.style?.overflow || 'visible',
         textTransform: element.style?.textTransform as React.CSSProperties['textTransform'],
         letterSpacing: element.style?.letterSpacing ?? 0,
         lineHeight: element.style?.lineHeight ?? 1.4,
-        overflow: 'hidden',
         cursor: currentTool === 'select' ? 'move' : 'default',
         boxShadow: getBoxShadow(),
         filter: [
