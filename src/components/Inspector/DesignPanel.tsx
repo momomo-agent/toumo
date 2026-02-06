@@ -34,6 +34,15 @@ const CornerRadiusIcon = () => (
   </svg>
 );
 
+const IndependentCornersIcon = ({ active }: { active: boolean }) => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path d="M1 4V3C1 1.9 1.9 1 3 1H4" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+    <path d="M8 1H9C10.1 1 11 1.9 11 3V4" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+    <path d="M11 8V9C11 10.1 10.1 11 9 11H8" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+    <path d="M4 11H3C1.9 11 1 10.1 1 9V8" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
 const EyeIcon = ({ visible }: { visible: boolean }) => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
     {visible ? (
@@ -369,8 +378,8 @@ export function DesignPanel() {
 
   // Corner radius state
   const [cornerRadius, setCornerRadius] = useState(0);
-  const [_independentCorners, _setIndependentCorners] = useState(false);
-  const [_corners, _setCorners] = useState({ tl: 0, tr: 0, br: 0, bl: 0 });
+  const [independentCorners, setIndependentCorners] = useState(false);
+  const [corners, setCorners] = useState({ tl: 0, tr: 0, br: 0, bl: 0 });
 
   // Rotation state
   const [rotation, setRotation] = useState(0);
@@ -510,12 +519,39 @@ export function DesignPanel() {
             <input
               type="number"
               className="figma-number-input"
-              value={cornerRadius}
+              value={independentCorners ? corners.tl : cornerRadius}
               min={0}
-              onChange={(e) => setCornerRadius(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 0;
+                if (independentCorners) {
+                  setCorners({ ...corners, tl: val });
+                } else {
+                  setCornerRadius(val);
+                }
+              }}
             />
+            <button 
+              className={`figma-icon-btn ${independentCorners ? 'active' : ''}`}
+              onClick={() => {
+                if (!independentCorners) {
+                  setCorners({ tl: cornerRadius, tr: cornerRadius, br: cornerRadius, bl: cornerRadius });
+                }
+                setIndependentCorners(!independentCorners);
+              }}
+              title="Independent corners"
+            >
+              <IndependentCornersIcon active={independentCorners} />
+            </button>
           </div>
         </div>
+        {independentCorners && (
+          <div className="figma-corners-grid">
+            <NumberInput label="TL" value={corners.tl} onChange={(v) => setCorners({ ...corners, tl: v })} min={0} />
+            <NumberInput label="TR" value={corners.tr} onChange={(v) => setCorners({ ...corners, tr: v })} min={0} />
+            <NumberInput label="BL" value={corners.bl} onChange={(v) => setCorners({ ...corners, bl: v })} min={0} />
+            <NumberInput label="BR" value={corners.br} onChange={(v) => setCorners({ ...corners, br: v })} min={0} />
+          </div>
+        )}
       </Section>
 
       {/* Fill Section */}
