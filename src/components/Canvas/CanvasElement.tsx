@@ -517,6 +517,8 @@ export const CanvasElement = memo(function CanvasElement({
   return (
     <div
       onMouseDown={handlePointerDown}
+      onMouseEnter={() => setHoveredElementId(element.id)}
+      onMouseLeave={() => setHoveredElementId(null)}
       onDoubleClick={onDoubleClick}
       onContextMenu={(e) => {
         e.preventDefault();

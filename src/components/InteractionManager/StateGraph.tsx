@@ -406,12 +406,18 @@ export function StateGraph() {
               borderRadius: 12,
               cursor: draggingNode === kf.id ? 'grabbing' : 'grab',
               userSelect: 'none',
-              zIndex: isSelected ? 10 : 1,
-              boxShadow: isSelected
-                ? '0 0 20px rgba(59,130,246,0.25), 0 4px 16px rgba(0,0,0,0.4)'
-                : '0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)',
+              zIndex: draggingNode === kf.id ? 50 : isSelected ? 10 : 1,
+              transform: draggingNode === kf.id ? 'scale(1.05)' : 'scale(1)',
+              boxShadow: draggingNode === kf.id
+                ? '0 12px 40px rgba(0,0,0,0.5), 0 0 24px rgba(59,130,246,0.15)'
+                : isSelected
+                  ? '0 0 20px rgba(59,130,246,0.25), 0 4px 16px rgba(0,0,0,0.4)'
+                  : '0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)',
               backdropFilter: 'blur(8px)',
-            }}
+              transition: draggingNode === kf.id
+                ? 'transform 0.15s ease-out, box-shadow 0.15s ease-out'
+                : 'left 0.12s ease-out, top 0.12s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s, background 0.2s',
+            }
           >
             {isInitial && (
               <div
