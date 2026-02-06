@@ -122,6 +122,8 @@ interface EditorActions {
   sendBackward: () => void;
   bringToFront: () => void;
   sendToBack: () => void;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1114,6 +1116,32 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
     const minZ = Math.min(...(kf?.keyElements.map(e => e.zIndex ?? 0) || [0]));
     get().updateElement(state.selectedElementId, { zIndex: minZ - 1 });
+  },
+
+  flipHorizontal: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, flipX: !el.style.flipX } 
+      });
+    }
+  },
+
+  flipVertical: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, flipY: !el.style.flipY } 
+      });
+    }
   },
 
   // Import actions
