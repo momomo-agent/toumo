@@ -706,6 +706,9 @@ export function DesignPanel() {
   const [layerOpacity, setLayerOpacity] = useState(100);
   const [blendMode, setBlendMode] = useState('normal');
 
+  // Image replace file input ref
+  const imageReplaceRef = useRef<HTMLInputElement>(null);
+
   if (!selectedElement) {
     return (
       <div className="figma-design-panel">
@@ -1206,6 +1209,50 @@ export function DesignPanel() {
                 Original: {element.style.imageOriginalWidth} × {element.style.imageOriginalHeight}px
               </div>
             )}
+
+            {/* Replace Image */}
+            <button
+              onClick={() => imageReplaceRef.current?.click()}
+              style={{
+                width: '100%',
+                padding: '6px 0',
+                fontSize: 11,
+                color: '#aaa',
+                background: '#2a2a2a',
+                border: '1px solid #333',
+                borderRadius: 6,
+                cursor: 'pointer',
+                marginTop: 2,
+              }}
+            >
+              Replace Image…
+            </button>
+            <input
+              ref={imageReplaceRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  const dataUrl = ev.target?.result as string;
+                  if (!dataUrl) return;
+                  const img = new window.Image();
+                  img.onload = () => {
+                    updateStyle({
+                      imageSrc: dataUrl,
+                      imageOriginalWidth: img.width,
+                      imageOriginalHeight: img.height,
+                    });
+                  };
+                  img.src = dataUrl;
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+              }}
+            />
           </div>
         </Section>
       )}
