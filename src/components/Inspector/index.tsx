@@ -1,10 +1,8 @@
 import { useEditorStore } from '../../store';
 import { DesignPanel } from './DesignPanel';
 import { AlignmentPanel } from './AlignmentPanel';
+import { TransitionInspector } from './TransitionInspector';
 import './Inspector.css';
-
-const TRIGGER_OPTIONS = ['tap', 'hover', 'drag', 'scroll', 'timer', 'variable'];
-const CURVE_OPTIONS = ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'spring'];
 
 export function Inspector() {
   const { 
@@ -14,7 +12,6 @@ export function Inspector() {
     selectedElementId,
     selectedElementIds,
     selectedTransitionId,
-    updateTransition,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
@@ -26,11 +23,9 @@ export function Inspector() {
   // Show transition inspector if a transition is selected
   if (selectedTransition) {
     return (
-      <TransitionInspector
-        transition={selectedTransition}
-        keyframes={keyframes}
-        onUpdate={updateTransition}
-      />
+      <section className="inspector-panel figma-style" style={{ padding: 16 }}>
+        <TransitionInspector />
+      </section>
     );
   }
 
@@ -58,100 +53,6 @@ export function Inspector() {
       keyframes={keyframes}
       transitions={transitions}
     />
-  );
-}
-
-// Transition Inspector Component
-interface TransitionInspectorProps {
-  transition: {
-    id: string;
-    from: string;
-    to: string;
-    trigger: string;
-    duration: number;
-    delay: number;
-    curve: string;
-  };
-  keyframes: { id: string; name: string }[];
-  onUpdate: (id: string, updates: Record<string, unknown>) => void;
-}
-
-function TransitionInspector({ transition, keyframes, onUpdate }: TransitionInspectorProps) {
-  const fromKf = keyframes.find(kf => kf.id === transition.from);
-  const toKf = keyframes.find(kf => kf.id === transition.to);
-
-  return (
-    <section className="inspector-panel figma-style">
-      <div className="figma-panel-header">Transition</div>
-      
-      <div className="figma-section">
-        <div className="figma-section-label">States</div>
-        <div className="figma-row">
-          <span className="figma-label">From</span>
-          <span className="figma-badge">{fromKf?.name || '—'}</span>
-        </div>
-        <div className="figma-row">
-          <span className="figma-label">To</span>
-          <span className="figma-badge">{toKf?.name || '—'}</span>
-        </div>
-      </div>
-
-      <div className="figma-section">
-        <div className="figma-section-label">Trigger</div>
-        <div className="figma-row">
-          <span className="figma-label">Type</span>
-          <select
-            className="figma-select"
-            value={transition.trigger}
-            onChange={(e) => onUpdate(transition.id, { trigger: e.target.value })}
-          >
-            {TRIGGER_OPTIONS.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="figma-section">
-        <div className="figma-section-label">Timing</div>
-        <div className="figma-row">
-          <span className="figma-label">Duration</span>
-          <input
-            type="number"
-            className="figma-input"
-            value={transition.duration}
-            min={0}
-            step={50}
-            onChange={(e) => onUpdate(transition.id, { duration: parseInt(e.target.value) || 0 })}
-          />
-          <span className="figma-unit">ms</span>
-        </div>
-        <div className="figma-row">
-          <span className="figma-label">Delay</span>
-          <input
-            type="number"
-            className="figma-input"
-            value={transition.delay}
-            min={0}
-            step={50}
-            onChange={(e) => onUpdate(transition.id, { delay: parseInt(e.target.value) || 0 })}
-          />
-          <span className="figma-unit">ms</span>
-        </div>
-        <div className="figma-row">
-          <span className="figma-label">Curve</span>
-          <select
-            className="figma-select"
-            value={transition.curve}
-            onChange={(e) => onUpdate(transition.id, { curve: e.target.value })}
-          >
-            {CURVE_OPTIONS.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </section>
   );
 }
 

@@ -484,7 +484,7 @@ export class SmartAnimateController {
           break;
         default:
           if (element.style) {
-            (element.style as Record<string, number>)[key] = value;
+            (element.style as unknown as Record<string, number>)[key] = value;
           }
       }
     }
@@ -493,7 +493,7 @@ export class SmartAnimateController {
     for (const colorAnim of colorAnims) {
       const interpolated = interpolateColor(colorAnim.from, colorAnim.to, colorProgress);
       if (element.style) {
-        (element.style as Record<string, string>)[colorAnim.prop] = interpolated;
+        (element.style as unknown as Record<string, string>)[colorAnim.prop] = interpolated;
       }
     }
   }

@@ -411,3 +411,25 @@ export function LivePreview() {
           {isZoomLocked ? '🔒' : '🔓'}
         </button>
       </div>
+
+      {/* ── Action Buttons ─────────────────────────────────────────── */}
+      <div style={styles.actionRow}>
+        <button onClick={handleReset} style={styles.actionBtn}>↺ Reset</button>
+        <button onClick={() => setZoom(100)} style={styles.actionBtn}>1:1</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Trigger icon helper ──────────────────────────────────────────────
+function getTriggerIcon(trigger: string): string {
+  switch (trigger) {
+    case 'tap': return '👆';
+    case 'hover': return '🖱️';
+    case 'drag': return '✋';
+    case 'scroll': return '📜';
+    case 'timer': return '⏱️';
+    case 'variable': return '📊';
+    default: return '⚡';
+  }
+}
