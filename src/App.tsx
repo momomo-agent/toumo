@@ -1680,6 +1680,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ boxSizing: 'content-box' })} style={{ flex: 1, padding: 4, background: currentStyle.boxSizing === 'content-box' ? '#2563eb20' : '#1a1a1a', border: currentStyle.boxSizing === 'content-box' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Content</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Outline</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ outline: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+                <button onClick={() => handleStyleChange({ outline: '2px solid #3b82f6' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Blue</button>
+              </div>
+            </div>
           </>
         )}
       </>
