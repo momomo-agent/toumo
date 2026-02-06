@@ -209,7 +209,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectionBox: null,
   editingComponentId: null,
   editingInstanceId: null,
-  variables: [],
 
   // Actions
   setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
