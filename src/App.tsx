@@ -1806,6 +1806,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Word Break</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ wordBreak: 'normal' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Normal</button>
+                <button onClick={() => handleStyleChange({ wordBreak: 'break-all' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Break</button>
+              </div>
+            </div>
           </>
         )}
       </>
