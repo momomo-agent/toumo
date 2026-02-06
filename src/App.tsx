@@ -322,6 +322,31 @@ export default function App() {
         case 'f':
           setCurrentTool('frame');
           break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          if (selectedElementIds.length > 0) {
+            const opacity = Number(event.key) / 10;
+            selectedElementIds.forEach(id => {
+              const el = elements.find(e => e.id === id);
+              if (el?.style) updateElement(id, { style: { ...el.style, fillOpacity: opacity } as ShapeStyle });
+            });
+          }
+          break;
+        case '0':
+          if (selectedElementIds.length > 0) {
+            selectedElementIds.forEach(id => {
+              const el = elements.find(e => e.id === id);
+              if (el?.style) updateElement(id, { style: { ...el.style, fillOpacity: 1 } as ShapeStyle });
+            });
+          }
+          break;
         case 'delete':
         case 'backspace':
           deleteSelectedElements();
