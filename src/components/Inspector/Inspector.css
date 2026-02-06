@@ -1,8 +1,8 @@
 /* Inspector Panel - Figma Style */
 
 .inspector-panel {
-  background: #1e1e1e;
-  color: #e5e5e5;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   font-size: 11px;
   height: 100%;
   overflow-y: auto;
@@ -62,20 +62,20 @@
 }
 
 .figma-label {
-  color: #888;
+  color: var(--text-tertiary);
   font-size: 11px;
   min-width: 60px;
 }
 
 .figma-value {
-  color: #e5e5e5;
+  color: var(--text-primary);
   font-size: 11px;
 }
 
 /* Badge */
 .figma-badge {
-  background: #1e3a5f;
-  color: #60a5fa;
+  background: var(--accent-subtle);
+  color: var(--accent-hover);
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 10px;
@@ -83,10 +83,10 @@
 
 /* Input */
 .figma-input {
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border: 1px solid transparent;
-  border-radius: 4px;
-  color: #e5e5e5;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   font-size: 11px;
   padding: 4px 8px;
   width: 60px;
@@ -95,20 +95,21 @@
 
 .figma-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .figma-unit {
-  color: #666;
+  color: var(--text-muted);
   font-size: 10px;
 }
 
 /* Select */
 .figma-select {
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border: 1px solid transparent;
-  border-radius: 4px;
-  color: #e5e5e5;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   font-size: 11px;
   padding: 4px 8px;
   height: 28px;
@@ -117,7 +118,8 @@
 
 .figma-select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 /* Transition List */
@@ -126,19 +128,19 @@
 }
 
 .figma-tl-label {
-  color: #666;
+  color: var(--text-muted);
   font-size: 10px;
   margin-bottom: 4px;
 }
 
 .figma-tl-item {
-  color: #e5e5e5;
+  color: var(--text-primary);
   font-size: 11px;
   padding: 2px 0;
 }
 
 .figma-tl-trigger {
-  color: #666;
+  color: var(--text-muted);
   font-size: 10px;
 }
 
@@ -147,7 +149,7 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border-radius: 2px;
   outline: none;
 }
@@ -157,8 +159,8 @@ input[type="range"]::-webkit-slider-thumb {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #1e1e1e;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
   cursor: pointer;
   transition: transform 0.1s ease;
 }
@@ -171,8 +173,8 @@ input[type="range"]::-moz-range-thumb {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #1e1e1e;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
   cursor: pointer;
 }
 
@@ -180,12 +182,14 @@ input[type="range"]::-moz-range-thumb {
 .inspector-panel input[type="number"]:focus,
 .inspector-panel input[type="text"]:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .inspector-panel select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 /* Delete button hover */

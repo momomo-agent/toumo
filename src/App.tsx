@@ -2325,6 +2325,10 @@ export default function App() {
               <button
                 key={tool.id}
                 onClick={() => setCurrentTool(tool.id)}
+                tabIndex={0}
+                role="radio"
+                aria-checked={currentTool === tool.id}
+                aria-label={tool.label}
                 title={tool.label}
                 style={{
                   width: 32,
@@ -2338,6 +2342,13 @@ export default function App() {
                   color: currentTool === tool.id ? '#fff' : '#888',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
+                  outline: 'none',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px #2563eb';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
                 onMouseEnter={(e) => {
                   if (currentTool !== tool.id) {
@@ -2633,7 +2644,19 @@ export default function App() {
         fontSize: 11,
         color: '#666',
       }}>
-        <span>Tool: {currentTool}</span>
+        <span>🔧 {
+          ({
+            select: '选择工具 (V)',
+            rectangle: '矩形工具 (R)',
+            ellipse: '椭圆工具 (O)',
+            text: '文字工具 (T)',
+            hand: '手型工具 (H)',
+            eyedropper: '取色器 (E)',
+            pen: '钢笔工具 (P)',
+            line: '线条工具 (L)',
+            frame: '画板工具 (F)',
+          } as Record<string, string>)[currentTool] || currentTool
+        }</span>
         <span>{frameSize.width} × {frameSize.height}</span>
         <span>Zoom: {Math.round(canvasScale * 100)}%</span>
         <div style={{ display: 'flex', gap: 4 }}>
@@ -2687,6 +2710,9 @@ export default function App() {
         <span>{selectedElementIds.length === 1 && selectedKeyframe?.keyElements.find(e => e.id === selectedElementIds[0]) 
           ? `X: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
+        <span style={{ color: '#555', cursor: 'default' }} title="按 ? 查看所有快捷键">
+          ⌨️ 按 <kbd style={{ padding: '0 4px', background: '#0d0d0e', border: '1px solid #333', borderRadius: 3, fontSize: 10, color: '#888' }}>?</kbd> 查看快捷键
+        </span>
       </div>
       <ShortcutsPanel />
       <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />

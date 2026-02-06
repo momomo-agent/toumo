@@ -1,35 +1,22 @@
 /* Figma-style Design Panel */
 
 .figma-design-panel {
-  background: #1e1e1e;
-  color: #e5e5e5;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   font-size: 11px;
   height: 100%;
   overflow-y: auto;
-}
-
-.figma-design-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-.figma-design-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.figma-design-panel::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
 }
 
 /* Empty State */
 .figma-empty-state {
   padding: 24px 16px;
   text-align: center;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .figma-empty-hint {
-  color: #555;
+  color: var(--text-muted);
   font-size: 10px;
   padding: 8px 0;
 }
@@ -80,7 +67,7 @@
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 0;
 }
@@ -125,7 +112,7 @@
 }
 
 .figma-input-label {
-  color: #888;
+  color: var(--text-tertiary);
   font-size: 10px;
   min-width: 12px;
 }
@@ -137,22 +124,22 @@
 }
 
 .figma-input-label.draggable:hover {
-  color: #3b82f6;
+  color: var(--accent);
 }
 
 .figma-input-group.dragging .figma-input-label {
-  color: #3b82f6;
+  color: var(--accent);
 }
 
 .figma-input-group.dragging .figma-number-input {
-  border-color: #3b82f6;
+  border-color: var(--accent);
 }
 
 .figma-number-input {
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border: 1px solid transparent;
-  border-radius: 4px;
-  color: #e5e5e5;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   font-size: 11px;
   padding: 4px 6px;
   width: 52px;
@@ -169,7 +156,8 @@
 
 .figma-number-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .figma-number-input::-webkit-inner-spin-button,
@@ -179,7 +167,7 @@
 }
 
 .figma-input-unit {
-  color: #666;
+  color: var(--text-muted);
   font-size: 10px;
 }
 

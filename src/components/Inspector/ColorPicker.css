@@ -5,10 +5,11 @@
   top: 100%;
   left: 0;
   z-index: 1000;
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-default);
   width: 240px;
   animation: cp-fade-in 0.15s ease-out;
 }
@@ -32,7 +33,7 @@
   height: 32px;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #444;
+  border: 1px solid var(--border-strong);
   flex-shrink: 0;
 }
 
@@ -43,7 +44,7 @@
 }
 
 .figma-cp-preview-hex {
-  color: #e5e5e5;
+  color: var(--text-primary);
   font-size: 12px;
   font-family: monospace;
   font-weight: 500;
@@ -173,15 +174,15 @@
 }
 
 .figma-cp-label {
-  color: #888;
+  color: var(--text-tertiary);
   font-size: 10px;
 }
 
 .figma-cp-hex-input {
-  background: #1e1e1e;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e5e5e5;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   font-size: 11px;
   font-family: monospace;
   padding: 4px 6px;
@@ -191,14 +192,15 @@
 
 .figma-cp-hex-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .figma-cp-opacity-input {
-  background: #1e1e1e;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e5e5e5;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   font-size: 11px;
   padding: 4px 6px;
   width: 40px;
@@ -208,7 +210,8 @@
 
 .figma-cp-opacity-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .figma-cp-opacity-input::-webkit-inner-spin-button,
@@ -218,7 +221,7 @@
 }
 
 .figma-cp-unit {
-  color: #666;
+  color: var(--text-muted);
   font-size: 10px;
 }
 
@@ -228,13 +231,13 @@
   grid-template-columns: repeat(10, 1fr);
   gap: 3px;
   padding-top: 8px;
-  border-top: 1px solid #383838;
+  border-top: 1px solid var(--border-default);
 }
 
 .figma-cp-preset {
   width: 100%;
   aspect-ratio: 1;
-  border: 1px solid #444;
+  border: 1px solid var(--border-strong);
   border-radius: 3px;
   cursor: pointer;
   padding: 0;
@@ -243,11 +246,11 @@
 
 .figma-cp-preset:hover {
   transform: scale(1.2);
-  border-color: #888;
+  border-color: var(--text-tertiary);
   z-index: 1;
 }
 
 .figma-cp-preset.active {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
