@@ -638,6 +638,7 @@ export default function App() {
             <button onClick={() => updateElement(selected.id, { size: { width: 100, height: 100 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>100²</button>
             <button onClick={() => updateElement(selected.id, { size: { width: 200, height: 200 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>200²</button>
             <button onClick={() => updateElement(selected.id, { size: { width: 300, height: 200 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>3:2</button>
+            <button onClick={() => updateElement(selected.id, { size: { width: frameSize.width, height: frameSize.height } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>Full</button>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
