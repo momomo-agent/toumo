@@ -187,6 +187,7 @@ interface EditorActions {
   setJustifyContent: (justify: 'flex-start' | 'center' | 'flex-end' | 'space-between') => void;
   setAlignItems: (align: 'flex-start' | 'center' | 'flex-end' | 'stretch') => void;
   setPadding: (padding: number | { top?: number; right?: number; bottom?: number; left?: number }) => void;
+  setIndividualCornerRadius: (tl: number, tr: number, br: number, bl: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2034,6 +2035,25 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const p = typeof padding === 'number' ? padding : padding;
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, padding: typeof p === 'number' ? p : undefined } 
+      });
+    }
+  },
+
+  setIndividualCornerRadius: (tl: number, tr: number, br: number, bl: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style, 
+          borderRadiusTL: tl,
+          borderRadiusTR: tr,
+          borderRadiusBR: br,
+          borderRadiusBL: bl
+        } 
       });
     }
   },
