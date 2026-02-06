@@ -949,6 +949,29 @@ export default function App() {
           </div>
         </div>
 
+        {/* Drop Shadow */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Drop Shadow</Label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>X</span>
+              <input type="number" value={currentStyle.dropShadowX ?? 0} onChange={(e) => handleStyleChange({ dropShadowX: Number(e.target.value) })} style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, padding: 4, color: '#fff' }} />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Y</span>
+              <input type="number" value={currentStyle.dropShadowY ?? 0} onChange={(e) => handleStyleChange({ dropShadowY: Number(e.target.value) })} style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, padding: 4, color: '#fff' }} />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Blur</span>
+              <input type="number" min={0} value={currentStyle.dropShadowBlur ?? 0} onChange={(e) => handleStyleChange({ dropShadowBlur: Number(e.target.value) })} style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, padding: 4, color: '#fff' }} />
+            </div>
+            <div>
+              <span style={{ fontSize: 10, color: '#666' }}>Color</span>
+              <input type="color" value={currentStyle.dropShadowColor ?? '#000000'} onChange={(e) => handleStyleChange({ dropShadowColor: e.target.value })} style={{ width: '100%', height: 28, border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+            </div>
+          </div>
+        </div>
+
         {/* Border Radius Control */}
         <div style={{ marginBottom: 20 }}>
           <Label>Border Radius</Label>

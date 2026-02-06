@@ -63,6 +63,10 @@ export type ShapeStyle = {
   invert?: number;
   grayscale?: number;
   sepia?: number;
+  dropShadowX?: number;
+  dropShadowY?: number;
+  dropShadowBlur?: number;
+  dropShadowColor?: string;
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;

@@ -414,6 +414,7 @@ export function CanvasElement({
           element.style?.invert ? `invert(${element.style.invert})` : '',
           element.style?.grayscale ? `grayscale(${element.style.grayscale})` : '',
           element.style?.sepia ? `sepia(${element.style.sepia})` : '',
+          element.style?.dropShadowX !== undefined ? `drop-shadow(${element.style.dropShadowX || 0}px ${element.style.dropShadowY || 0}px ${element.style.dropShadowBlur || 0}px ${element.style.dropShadowColor || '#000'})` : '',
         ].filter(Boolean).join(' ') || undefined,
         userSelect: 'none',
       }}
