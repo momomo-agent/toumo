@@ -1,9 +1,9 @@
 type AlignmentLine = {
   type: 'vertical' | 'horizontal';
   position: number;
-  // 用于显示间距的额外信息
-  fromElement?: { x: number; y: number; width: number; height: number };
-  toElement?: { x: number; y: number; width: number; height: number };
+  /** Optional bounded range so the guide only spans relevant elements */
+  start?: number;
+  end?: number;
 };
 
 type DistanceIndicator = {
@@ -12,6 +12,8 @@ type DistanceIndicator = {
   y: number;
   length: number;
   distance: number;
+  /** If true, this indicator is part of an equal-spacing group */
+  isEqualSpacing?: boolean;
 };
 
 interface AlignmentGuidesProps {
@@ -24,6 +26,8 @@ interface AlignmentGuidesProps {
 const GUIDE_COLOR = '#ff3366';
 const GUIDE_COLOR_SOFT = 'rgba(255, 51, 102, 0.5)';
 const DISTANCE_BG = '#ff3366';
+const EQUAL_SPACING_COLOR = '#22c55e';
+const EQUAL_SPACING_SOFT = 'rgba(34, 197, 94, 0.5)';
 
 export function AlignmentGuides({ 
   lines, 
@@ -39,37 +43,45 @@ export function AlignmentGuides({
   return (
     <>
       {/* 对齐参考线 — dashed style with soft glow */}
-      {uniqueLines.map((line, index) => (
-        <div
-          key={`${line.type}-${index}-${line.position}`}
-          style={{
-            position: 'absolute',
-            pointerEvents: 'none',
-            zIndex: 1000,
-            ...(line.type === 'vertical'
-              ? {
-                  left: line.position - 0.5,
-                  top: 0,
-                  width: 0,
-                  height: canvasHeight,
-                  borderLeft: `1px dashed ${GUIDE_COLOR}`,
-                  filter: `drop-shadow(0 0 2px ${GUIDE_COLOR_SOFT})`,
-                }
-              : {
-                  top: line.position - 0.5,
-                  left: 0,
-                  width: canvasWidth,
-                  height: 0,
-                  borderTop: `1px dashed ${GUIDE_COLOR}`,
-                  filter: `drop-shadow(0 0 2px ${GUIDE_COLOR_SOFT})`,
-                }),
-          }}
-        />
-      ))}
+      {uniqueLines.map((line, index) => {
+        const isBounded = line.start !== undefined && line.end !== undefined;
+        return (
+          <div
+            key={`${line.type}-${index}-${line.position}`}
+            style={{
+              position: 'absolute',
+              pointerEvents: 'none',
+              zIndex: 1000,
+              ...(line.type === 'vertical'
+                ? {
+                    left: line.position - 0.5,
+                    top: isBounded ? line.start! : 0,
+                    width: 0,
+                    height: isBounded ? (line.end! - line.start!) : canvasHeight,
+                    borderLeft: `1px dashed ${GUIDE_COLOR}`,
+                    filter: `drop-shadow(0 0 2px ${GUIDE_COLOR_SOFT})`,
+                  }
+                : {
+                    top: line.position - 0.5,
+                    left: isBounded ? line.start! : 0,
+                    width: isBounded ? (line.end! - line.start!) : canvasWidth,
+                    height: 0,
+                    borderTop: `1px dashed ${GUIDE_COLOR}`,
+                    filter: `drop-shadow(0 0 2px ${GUIDE_COLOR_SOFT})`,
+                  }),
+            }}
+          />
+        );
+      })}
       
       {/* 间距指示器 — polished with arrow endpoints + pill labels */}
       {distanceIndicators.map((indicator, index) => {
         const isH = indicator.type === 'horizontal';
+        const isEqual = indicator.isEqualSpacing;
+        const color = isEqual ? EQUAL_SPACING_COLOR : GUIDE_COLOR;
+        const bgColor = isEqual ? EQUAL_SPACING_COLOR : DISTANCE_BG;
+        const softColor = isEqual ? EQUAL_SPACING_SOFT : GUIDE_COLOR_SOFT;
+
         return (
           <div
             key={`distance-${index}`}
@@ -85,7 +97,7 @@ export function AlignmentGuides({
             {/* Main distance line */}
             <div style={{
               position: 'absolute',
-              background: GUIDE_COLOR,
+              background: color,
               ...(isH
                 ? { width: '100%', height: 1, top: 0 }
                 : { width: 1, height: '100%', left: 0 }),
@@ -93,11 +105,11 @@ export function AlignmentGuides({
 
             {/* Arrow-style endpoint caps */}
             {isH ? (<>
-              <div style={{ position: 'absolute', left: 0, top: -4, width: 1, height: 9, background: GUIDE_COLOR }} />
-              <div style={{ position: 'absolute', right: 0, top: -4, width: 1, height: 9, background: GUIDE_COLOR }} />
+              <div style={{ position: 'absolute', left: 0, top: -4, width: 1, height: 9, background: color }} />
+              <div style={{ position: 'absolute', right: 0, top: -4, width: 1, height: 9, background: color }} />
             </>) : (<>
-              <div style={{ position: 'absolute', top: 0, left: -4, width: 9, height: 1, background: GUIDE_COLOR }} />
-              <div style={{ position: 'absolute', bottom: 0, left: -4, width: 9, height: 1, background: GUIDE_COLOR }} />
+              <div style={{ position: 'absolute', top: 0, left: -4, width: 9, height: 1, background: color }} />
+              <div style={{ position: 'absolute', bottom: 0, left: -4, width: 9, height: 1, background: color }} />
             </>)}
 
             {/* Distance pill label */}
@@ -107,7 +119,7 @@ export function AlignmentGuides({
                 ...(isH
                   ? { left: '50%', top: -20, transform: 'translateX(-50%)' }
                   : { top: '50%', left: 8, transform: 'translateY(-50%)' }),
-                background: DISTANCE_BG,
+                background: bgColor,
                 color: '#fff',
                 fontSize: 10,
                 fontWeight: 600,
@@ -115,7 +127,7 @@ export function AlignmentGuides({
                 borderRadius: 10,
                 whiteSpace: 'nowrap',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                boxShadow: `0 1px 4px ${GUIDE_COLOR_SOFT}`,
+                boxShadow: `0 1px 4px ${softColor}`,
                 letterSpacing: 0.3,
               }}>
                 {Math.round(indicator.distance)}

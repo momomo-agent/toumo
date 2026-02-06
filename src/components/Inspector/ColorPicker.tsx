@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import './ColorPicker.css';
 
+type ColorFormat = 'HEX' | 'RGB' | 'HSL';
+
 interface ColorPickerProps {
   color: string;
   opacity: number;
@@ -68,10 +70,72 @@ function hsvToHex(h: number, s: number, v: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+// Convert hex to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  if (!hex || hex.length < 7) return { r: 0, g: 0, b: 0 };
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  };
+}
+
+// Convert hex to HSL
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+  if (!hex || hex.length < 7) return { h: 0, s: 0, l: 0 };
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+// Format color string based on format
+function formatColor(hex: string, format: ColorFormat): string {
+  switch (format) {
+    case 'HEX': return hex.toUpperCase();
+    case 'RGB': { const { r, g, b } = hexToRgb(hex); return `${r}, ${g}, ${b}`; }
+    case 'HSL': { const { h, s, l } = hexToHsl(hex); return `${h}°, ${s}%, ${l}%`; }
+  }
+}
+
+// Recent colors - stored in localStorage
+const RECENT_COLORS_KEY = 'toumo-recent-colors';
+const MAX_RECENT_COLORS = 10;
+
+function getRecentColors(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENT_COLORS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch { return []; }
+}
+
+function addRecentColor(color: string) {
+  const recent = getRecentColors().filter(c => c.toUpperCase() !== color.toUpperCase());
+  recent.unshift(color.toUpperCase());
+  if (recent.length > MAX_RECENT_COLORS) recent.pop();
+  localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(recent));
+}
+
 export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerProps) {
   const [hsv, setHsv] = useState(() => hexToHsv(color));
   const [hexInput, setHexInput] = useState(color.toUpperCase());
   const [localOpacity, setLocalOpacity] = useState(Math.round(opacity * 100));
+  const [colorFormat, setColorFormat] = useState<ColorFormat>('HEX');
+  const [recentColors, setRecentColors] = useState<string[]>(() => getRecentColors());
+  const [eyeDropperSupported] = useState(() => 'EyeDropper' in window);
   const satValRef = useRef<HTMLDivElement>(null);
   const hueRef = useRef<HTMLDivElement>(null);
   const opacityRef = useRef<HTMLDivElement>(null);
@@ -109,6 +173,37 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
   }, [onClose]);
 
   const currentColor = hsvToHex(hsv.h, hsv.s, hsv.v);
+
+  // Save to recent colors when closing
+  useEffect(() => {
+    return () => {
+      addRecentColor(hsvToHex(hsv.h, hsv.s, hsv.v));
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // EyeDropper handler
+  const handleEyeDropper = useCallback(async () => {
+    if (!('EyeDropper' in window)) return;
+    try {
+      // @ts-expect-error EyeDropper API not yet in TS lib
+      const dropper = new window.EyeDropper();
+      const result = await dropper.open();
+      const picked = result.sRGBHex as string;
+      setHsv(hexToHsv(picked));
+      setHexInput(picked.toUpperCase());
+      onChange(picked, localOpacity / 100);
+      addRecentColor(picked);
+      setRecentColors(getRecentColors());
+    } catch {
+      // User cancelled
+    }
+  }, [localOpacity, onChange]);
+
+  // Cycle color format
+  const cycleFormat = useCallback(() => {
+    setColorFormat(f => f === 'HEX' ? 'RGB' : f === 'RGB' ? 'HSL' : 'HEX');
+  }, []);
 
   const handleSatValChange = useCallback((e: React.MouseEvent | MouseEvent) => {
     if (!satValRef.current) return;
@@ -179,7 +274,7 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
 
   return (
     <div className="figma-color-picker" ref={popupRef}>
-      {/* Color preview + current swatch */}
+      {/* Color preview + eyedropper */}
       <div className="figma-cp-preview-row">
         <div className="figma-cp-preview-swatch">
           <div className="figma-cp-checkerboard" />
@@ -188,7 +283,18 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
             style={{ backgroundColor: currentColor, opacity: localOpacity / 100 }}
           />
         </div>
-        <div className="figma-cp-preview-hex">{currentColor.toUpperCase()}</div>
+        <div className="figma-cp-preview-hex">{formatColor(currentColor, colorFormat)}</div>
+        {eyeDropperSupported && (
+          <button
+            className="figma-cp-eyedropper"
+            onClick={handleEyeDropper}
+            title="Pick color from screen"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M13.354 3.354l-.708-.708-2.293 2.293-1.06-1.06 2.293-2.293-.708-.708a.5.5 0 00-.707 0L8.293 2.957 7.586 2.25a.5.5 0 00-.707 0L5.172 3.957a.5.5 0 000 .707l.543.543L2.04 8.882a2 2 0 00-.476.883l-.61 2.438a.5.5 0 00.606.607l2.438-.61a2 2 0 00.883-.476l3.675-3.675.543.543a.5.5 0 00.707 0l1.707-1.707a.5.5 0 000-.707l-.707-.707 2.293-2.293a.5.5 0 000-.707z"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Saturation/Value picker */}
@@ -244,15 +350,18 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
         </div>
       </div>
 
-      {/* Inputs */}
+      {/* Inputs with format switcher */}
       <div className="figma-cp-inputs">
         <div className="figma-cp-input-group">
-          <span className="figma-cp-label">Hex</span>
+          <button className="figma-cp-format-btn" onClick={cycleFormat} title="Switch format">
+            {colorFormat}
+          </button>
           <input
             type="text"
             className="figma-cp-hex-input"
-            value={hexInput}
-            onChange={(e) => handleHexChange(e.target.value)}
+            value={colorFormat === 'HEX' ? hexInput : formatColor(currentColor, colorFormat)}
+            onChange={(e) => colorFormat === 'HEX' && handleHexChange(e.target.value)}
+            readOnly={colorFormat !== 'HEX'}
             onFocus={(e) => e.target.select()}
           />
         </div>
@@ -283,6 +392,24 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
           />
         ))}
       </div>
+
+      {/* Recent colors */}
+      {recentColors.length > 0 && (
+        <div className="figma-cp-recent">
+          <span className="figma-cp-recent-label">Recent</span>
+          <div className="figma-cp-recent-colors">
+            {recentColors.map((c, i) => (
+              <button
+                key={i}
+                className={`figma-cp-preset ${c.toUpperCase() === currentColor.toUpperCase() ? 'active' : ''}`}
+                style={{ backgroundColor: c }}
+                onClick={() => handlePresetClick(c)}
+                title={c}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

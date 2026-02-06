@@ -245,6 +245,30 @@ export function Canvas() {
     const allowCenterX = !isResize;
     const allowCenterY = !isResize;
 
+    // --- Frame boundary snapping (snap to frame edges + center) ---
+    const frameCenterX = frameSize.width / 2;
+    const frameCenterY = frameSize.height / 2;
+
+    if (trackLeft) {
+      considerSnap(0, position.x, 'x', { type: 'vertical', position: 0 }, isResize && handle?.includes('w') ? 'left' : undefined);
+    }
+    if (trackRight) {
+      considerSnap(frameSize.width, draggedRight, 'x', { type: 'vertical', position: frameSize.width }, isResize && handle?.includes('e') ? 'right' : undefined);
+    }
+    if (trackTop) {
+      considerSnap(0, position.y, 'y', { type: 'horizontal', position: 0 }, isResize && handle?.includes('n') ? 'top' : undefined);
+    }
+    if (trackBottom) {
+      considerSnap(frameSize.height, draggedBottom, 'y', { type: 'horizontal', position: frameSize.height }, isResize && handle?.includes('s') ? 'bottom' : undefined);
+    }
+    if (allowCenterX) {
+      considerSnap(frameCenterX, draggedCenterX, 'x', { type: 'vertical', position: frameCenterX });
+    }
+    if (allowCenterY) {
+      considerSnap(frameCenterY, draggedCenterY, 'y', { type: 'horizontal', position: frameCenterY });
+    }
+
+    // --- Element-to-element snapping (edges + center + cross-edge) ---
     elements.forEach((element) => {
       if (element.id === draggedId) return;
 
@@ -253,50 +277,38 @@ export function Canvas() {
       const elCenterX = element.position.x + element.size.width / 2;
       const elCenterY = element.position.y + element.size.height / 2;
 
+      // Same-edge snapping (left-left, right-right)
       if (trackLeft) {
-        considerSnap(
-          element.position.x,
-          position.x,
-          'x',
-          { type: 'vertical', position: element.position.x },
-          isResize && handle?.includes('w') ? 'left' : undefined,
-        );
+        considerSnap(element.position.x, position.x, 'x', { type: 'vertical', position: element.position.x }, isResize && handle?.includes('w') ? 'left' : undefined);
       }
-
       if (trackRight) {
-        considerSnap(
-          elRight,
-          draggedRight,
-          'x',
-          { type: 'vertical', position: elRight },
-          isResize && handle?.includes('e') ? 'right' : undefined,
-        );
+        considerSnap(elRight, draggedRight, 'x', { type: 'vertical', position: elRight }, isResize && handle?.includes('e') ? 'right' : undefined);
+      }
+      if (trackTop) {
+        considerSnap(element.position.y, position.y, 'y', { type: 'horizontal', position: element.position.y }, isResize && handle?.includes('n') ? 'top' : undefined);
+      }
+      if (trackBottom) {
+        considerSnap(elBottom, draggedBottom, 'y', { type: 'horizontal', position: elBottom }, isResize && handle?.includes('s') ? 'bottom' : undefined);
       }
 
+      // Cross-edge snapping (left-to-right, right-to-left, top-to-bottom, bottom-to-top)
+      if (trackLeft) {
+        considerSnap(elRight, position.x, 'x', { type: 'vertical', position: elRight }, isResize && handle?.includes('w') ? 'left' : undefined);
+      }
+      if (trackRight) {
+        considerSnap(element.position.x, draggedRight, 'x', { type: 'vertical', position: element.position.x }, isResize && handle?.includes('e') ? 'right' : undefined);
+      }
+      if (trackTop) {
+        considerSnap(elBottom, position.y, 'y', { type: 'horizontal', position: elBottom }, isResize && handle?.includes('n') ? 'top' : undefined);
+      }
+      if (trackBottom) {
+        considerSnap(element.position.y, draggedBottom, 'y', { type: 'horizontal', position: element.position.y }, isResize && handle?.includes('s') ? 'bottom' : undefined);
+      }
+
+      // Center snapping
       if (allowCenterX) {
         considerSnap(elCenterX, draggedCenterX, 'x', { type: 'vertical', position: elCenterX });
       }
-
-      if (trackTop) {
-        considerSnap(
-          element.position.y,
-          position.y,
-          'y',
-          { type: 'horizontal', position: element.position.y },
-          isResize && handle?.includes('n') ? 'top' : undefined,
-        );
-      }
-
-      if (trackBottom) {
-        considerSnap(
-          elBottom,
-          draggedBottom,
-          'y',
-          { type: 'horizontal', position: elBottom },
-          isResize && handle?.includes('s') ? 'bottom' : undefined,
-        );
-      }
-
       if (allowCenterY) {
         considerSnap(elCenterY, draggedCenterY, 'y', { type: 'horizontal', position: elCenterY });
       }
@@ -318,93 +330,161 @@ export function Canvas() {
       });
     }
 
-    // 计算间距指示器
+    // 计算间距指示器 + 等间距吸附
     const indicators: DistanceIndicator[] = [];
     
     if (!isResize) {
-      // 找到最近的元素来显示间距
-      elements.forEach((element) => {
-        if (element.id === draggedId) return;
-        
-        const elRight = element.position.x + element.size.width;
-        const elBottom = element.position.y + element.size.height;
-        
-        // 检查水平方向的间距（元素在拖拽元素的左边或右边）
-        const verticalOverlap = !(draggedBottom <= element.position.y || position.y >= elBottom);
-        
-        if (verticalOverlap) {
-          // 拖拽元素在目标元素右边
-          if (position.x >= elRight) {
-            const distance = position.x - elRight;
-            if (distance > 0 && distance < 200) {
-              const overlapTop = Math.max(position.y, element.position.y);
-              const overlapBottom = Math.min(draggedBottom, elBottom);
-              const midY = (overlapTop + overlapBottom) / 2;
-              indicators.push({
-                type: 'horizontal',
-                x: elRight,
-                y: midY,
-                length: distance,
-                distance,
-              });
-            }
+      // --- 基础间距指示器 ---
+      elements.forEach((el) => {
+        if (el.id === draggedId) return;
+        const elR = el.position.x + el.size.width;
+        const elB = el.position.y + el.size.height;
+
+        // 水平间距（垂直方向有重叠时）
+        const vOverlap = !(draggedBottom <= el.position.y || position.y >= elB);
+        if (vOverlap) {
+          const midY = (Math.max(position.y, el.position.y) + Math.min(draggedBottom, elB)) / 2;
+          if (position.x >= elR) {
+            const d = position.x - elR;
+            if (d > 0 && d < 200) indicators.push({ type: 'horizontal', x: elR, y: midY, length: d, distance: d });
           }
-          // 拖拽元素在目标元素左边
-          if (draggedRight <= element.position.x) {
-            const distance = element.position.x - draggedRight;
-            if (distance > 0 && distance < 200) {
-              const overlapTop = Math.max(position.y, element.position.y);
-              const overlapBottom = Math.min(draggedBottom, elBottom);
-              const midY = (overlapTop + overlapBottom) / 2;
-              indicators.push({
-                type: 'horizontal',
-                x: draggedRight,
-                y: midY,
-                length: distance,
-                distance,
-              });
-            }
+          if (draggedRight <= el.position.x) {
+            const d = el.position.x - draggedRight;
+            if (d > 0 && d < 200) indicators.push({ type: 'horizontal', x: draggedRight, y: midY, length: d, distance: d });
           }
         }
-        
-        // 检查垂直方向的间距（元素在拖拽元素的上边或下边）
-        const horizontalOverlap = !(draggedRight <= element.position.x || position.x >= elRight);
-        
-        if (horizontalOverlap) {
-          // 拖拽元素在目标元素下边
-          if (position.y >= elBottom) {
-            const distance = position.y - elBottom;
-            if (distance > 0 && distance < 200) {
-              const overlapLeft = Math.max(position.x, element.position.x);
-              const overlapRight = Math.min(draggedRight, elRight);
-              const midX = (overlapLeft + overlapRight) / 2;
-              indicators.push({
-                type: 'vertical',
-                x: midX,
-                y: elBottom,
-                length: distance,
-                distance,
-              });
-            }
+
+        // 垂直间距（水平方向有重叠时）
+        const hOverlap = !(draggedRight <= el.position.x || position.x >= elR);
+        if (hOverlap) {
+          const midX = (Math.max(position.x, el.position.x) + Math.min(draggedRight, elR)) / 2;
+          if (position.y >= elB) {
+            const d = position.y - elB;
+            if (d > 0 && d < 200) indicators.push({ type: 'vertical', x: midX, y: elB, length: d, distance: d });
           }
-          // 拖拽元素在目标元素上边
-          if (draggedBottom <= element.position.y) {
-            const distance = element.position.y - draggedBottom;
-            if (distance > 0 && distance < 200) {
-              const overlapLeft = Math.max(position.x, element.position.x);
-              const overlapRight = Math.min(draggedRight, elRight);
-              const midX = (overlapLeft + overlapRight) / 2;
-              indicators.push({
-                type: 'vertical',
-                x: midX,
-                y: draggedBottom,
-                length: distance,
-                distance,
-              });
-            }
+          if (draggedBottom <= el.position.y) {
+            const d = el.position.y - draggedBottom;
+            if (d > 0 && d < 200) indicators.push({ type: 'vertical', x: midX, y: draggedBottom, length: d, distance: d });
           }
         }
       });
+
+      // --- 等间距检测 + 吸附 ---
+      const EQUAL_SPACING_THRESHOLD = 4;
+      const otherEls = elements.filter(el => el.id !== draggedId);
+
+      // 水平等间距：按 x 排序，检测相邻元素间距是否相等
+      const hSorted = [...otherEls].sort((a, b) => a.position.x - b.position.x);
+      // 收集所有相邻间距
+      const hGaps: { left: number; right: number; gap: number; midY: number }[] = [];
+      for (let i = 0; i < hSorted.length - 1; i++) {
+        const a = hSorted[i];
+        const b = hSorted[i + 1];
+        const aR = a.position.x + a.size.width;
+        const gap = b.position.x - aR;
+        if (gap > 0) {
+          const midY = (Math.min(a.position.y + a.size.height, b.position.y + b.size.height)
+            + Math.max(a.position.y, b.position.y)) / 2;
+          hGaps.push({ left: aR, right: b.position.x, gap, midY });
+        }
+      }
+
+      // 检查拖拽元素与左右邻居的间距是否匹配已有间距
+      for (const el of otherEls) {
+        const elR = el.position.x + el.size.width;
+        // 拖拽元素在 el 右边
+        const gapRight = position.x - elR;
+        if (gapRight > 0 && gapRight < 300) {
+          for (const hg of hGaps) {
+            if (Math.abs(gapRight - hg.gap) < EQUAL_SPACING_THRESHOLD) {
+              // 吸附到等间距
+              const snapTarget = elR + hg.gap;
+              const delta = snapTarget - position.x;
+              if (Math.abs(delta) <= SNAP_THRESHOLD) {
+                if (snapDeltaX === null || Math.abs(delta) < Math.abs(snapDeltaX)) {
+                  snapDeltaX = delta;
+                }
+                const midY = (position.y + draggedBottom) / 2;
+                indicators.push({ type: 'horizontal', x: elR, y: midY, length: hg.gap, distance: hg.gap, isEqualSpacing: true });
+                indicators.push({ type: 'horizontal', x: hg.left, y: hg.midY, length: hg.gap, distance: hg.gap, isEqualSpacing: true });
+              }
+            }
+          }
+        }
+        // 拖拽元素在 el 左边
+        const gapLeft = el.position.x - draggedRight;
+        if (gapLeft > 0 && gapLeft < 300) {
+          for (const hg of hGaps) {
+            if (Math.abs(gapLeft - hg.gap) < EQUAL_SPACING_THRESHOLD) {
+              const snapTarget = el.position.x - size.width - hg.gap;
+              const delta = snapTarget - position.x;
+              if (Math.abs(delta) <= SNAP_THRESHOLD) {
+                if (snapDeltaX === null || Math.abs(delta) < Math.abs(snapDeltaX)) {
+                  snapDeltaX = delta;
+                }
+                const midY = (position.y + draggedBottom) / 2;
+                indicators.push({ type: 'horizontal', x: snapTarget + size.width, y: midY, length: hg.gap, distance: hg.gap, isEqualSpacing: true });
+                indicators.push({ type: 'horizontal', x: hg.left, y: hg.midY, length: hg.gap, distance: hg.gap, isEqualSpacing: true });
+              }
+            }
+          }
+        }
+      }
+
+      // 垂直等间距：按 y 排序
+      const vSorted = [...otherEls].sort((a, b) => a.position.y - b.position.y);
+      const vGaps: { top: number; bottom: number; gap: number; midX: number }[] = [];
+      for (let i = 0; i < vSorted.length - 1; i++) {
+        const a = vSorted[i];
+        const b = vSorted[i + 1];
+        const aB = a.position.y + a.size.height;
+        const gap = b.position.y - aB;
+        if (gap > 0) {
+          const midX = (Math.min(a.position.x + a.size.width, b.position.x + b.size.width)
+            + Math.max(a.position.x, b.position.x)) / 2;
+          vGaps.push({ top: aB, bottom: b.position.y, gap, midX });
+        }
+      }
+
+      for (const el of otherEls) {
+        const elB = el.position.y + el.size.height;
+        // 拖拽元素在 el 下方
+        const gapBelow = position.y - elB;
+        if (gapBelow > 0 && gapBelow < 300) {
+          for (const vg of vGaps) {
+            if (Math.abs(gapBelow - vg.gap) < EQUAL_SPACING_THRESHOLD) {
+              const snapTarget = elB + vg.gap;
+              const delta = snapTarget - position.y;
+              if (Math.abs(delta) <= SNAP_THRESHOLD) {
+                if (snapDeltaY === null || Math.abs(delta) < Math.abs(snapDeltaY)) {
+                  snapDeltaY = delta;
+                }
+                const midX = (position.x + draggedRight) / 2;
+                indicators.push({ type: 'vertical', x: midX, y: elB, length: vg.gap, distance: vg.gap, isEqualSpacing: true });
+                indicators.push({ type: 'vertical', x: vg.midX, y: vg.top, length: vg.gap, distance: vg.gap, isEqualSpacing: true });
+              }
+            }
+          }
+        }
+        // 拖拽元素在 el 上方
+        const gapAbove = el.position.y - draggedBottom;
+        if (gapAbove > 0 && gapAbove < 300) {
+          for (const vg of vGaps) {
+            if (Math.abs(gapAbove - vg.gap) < EQUAL_SPACING_THRESHOLD) {
+              const snapTarget = el.position.y - size.height - vg.gap;
+              const delta = snapTarget - position.y;
+              if (Math.abs(delta) <= SNAP_THRESHOLD) {
+                if (snapDeltaY === null || Math.abs(delta) < Math.abs(snapDeltaY)) {
+                  snapDeltaY = delta;
+                }
+                const midX = (position.x + draggedRight) / 2;
+                indicators.push({ type: 'vertical', x: midX, y: snapTarget + size.height, length: vg.gap, distance: vg.gap, isEqualSpacing: true });
+                indicators.push({ type: 'vertical', x: vg.midX, y: vg.top, length: vg.gap, distance: vg.gap, isEqualSpacing: true });
+              }
+            }
+          }
+        }
+      }
     }
 
     setAlignmentLines(lines);
@@ -458,7 +538,7 @@ export function Canvas() {
         y: position.y + (snapDeltaY ?? 0),
       },
     };
-  }, [elements]);
+  }, [elements, frameSize]);
 
   useEffect(() => {
     const clear = () => {

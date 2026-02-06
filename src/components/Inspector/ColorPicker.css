@@ -254,3 +254,65 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
 }
+
+/* Eyedropper button */
+.figma-cp-eyedropper {
+  margin-left: auto;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.figma-cp-eyedropper:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* Format switcher button */
+.figma-cp-format-btn {
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  padding: 4px 6px;
+  height: 24px;
+  min-width: 32px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.figma-cp-format-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Recent Colors */
+.figma-cp-recent {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-default);
+}
+
+.figma-cp-recent-label {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.figma-cp-recent-colors {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
