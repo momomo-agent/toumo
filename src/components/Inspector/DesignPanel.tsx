@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
 import { AutoLayoutPanel } from './AutoLayoutPanel';
+import { ConstraintsPanel } from './ConstraintsPanel';
 import './DesignPanel.css';
 
 // Icons as SVG components
@@ -568,6 +569,9 @@ export function DesignPanel() {
     <div className="figma-design-panel">
       {/* Auto Layout Section */}
       <AutoLayoutPanel />
+
+      {/* Constraints Section */}
+      <ConstraintsPanel />
 
       {/* Layer Section - Opacity & Blend Mode */}
       <Section title="Layer" defaultExpanded={true}>
