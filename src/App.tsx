@@ -683,6 +683,11 @@ export default function App() {
             <option value="linear">Linear</option>
             <option value="radial">Radial</option>
           </select>
+          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+            <button onClick={() => handleStyleChange({ gradientType: 'linear', gradientStops: [{ color: '#3b82f6', position: 0 }, { color: '#8b5cf6', position: 100 }] })} style={{ flex: 1, height: 24, background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} title="Blue-Purple" />
+            <button onClick={() => handleStyleChange({ gradientType: 'linear', gradientStops: [{ color: '#f97316', position: 0 }, { color: '#ef4444', position: 100 }] })} style={{ flex: 1, height: 24, background: 'linear-gradient(90deg, #f97316, #ef4444)', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} title="Orange-Red" />
+            <button onClick={() => handleStyleChange({ gradientType: 'linear', gradientStops: [{ color: '#22c55e', position: 0 }, { color: '#06b6d4', position: 100 }] })} style={{ flex: 1, height: 24, background: 'linear-gradient(90deg, #22c55e, #06b6d4)', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} title="Green-Cyan" />
+          </div>
           {currentStyle.gradientType === 'linear' && (
             <div style={{ marginTop: 8 }}>
               <span style={{ fontSize: 10, color: '#666' }}>Angle</span>
