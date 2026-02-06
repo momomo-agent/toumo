@@ -31,6 +31,7 @@ export function Canvas() {
     currentTool, canvasOffset, canvasScale,
     selectionBox, frameSize, canvasBackground,
     snapToGrid, gridSize, editingGroupId,
+    isDragging, isResizing,
   } = useEditorStore(useShallow((s) => ({
     keyframes: s.keyframes,
     selectedKeyframeId: s.selectedKeyframeId,
