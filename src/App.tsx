@@ -369,6 +369,9 @@ export default function App() {
         case 'e':
           setCurrentTool('eyedropper');
           break;
+        case 'p':
+          setCurrentTool('pen');
+          break;
         case 'i':
           fileInputRef.current?.click();
           break;
