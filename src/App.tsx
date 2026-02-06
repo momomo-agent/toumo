@@ -765,6 +765,13 @@ export default function App() {
                 onChange={(e) => handleStyleChange({ gradientAngle: Number(e.target.value) })}
                 style={{ width: '100%' }}
               />
+              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                <button onClick={() => handleStyleChange({ gradientAngle: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>↑</button>
+                <button onClick={() => handleStyleChange({ gradientAngle: 90 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>→</button>
+                <button onClick={() => handleStyleChange({ gradientAngle: 180 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>↓</button>
+                <button onClick={() => handleStyleChange({ gradientAngle: 270 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>←</button>
+                <button onClick={() => handleStyleChange({ gradientAngle: 45 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>↗</button>
+              </div>
             </div>
           )}
           {currentStyle.gradientType && currentStyle.gradientType !== 'none' && (
