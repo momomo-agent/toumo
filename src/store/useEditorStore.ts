@@ -375,9 +375,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         selectedElementIds: [nextElement.id],
       };
     });
+    // If element has a parent with auto layout, re-apply it
+    if (element.parentId) {
+      get().applyAutoLayout(element.parentId);
+    }
   },
 
   deleteElement: (id) => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === id);
+    const parentId = element?.parentId;
+    
     get().pushHistory();
     set((state) => ({
       keyframes: state.keyframes.map((kf) =>
@@ -388,6 +397,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
       selectedElementIds: state.selectedElementIds.filter((eid) => eid !== id),
     }));
+    
+    // If element had a parent with auto layout, re-apply it
+    if (parentId) {
+      get().applyAutoLayout(parentId);
+    }
   },
 
   deleteSelectedElements: () => {
