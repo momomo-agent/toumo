@@ -70,6 +70,7 @@ export type ShapeStyle = {
   writingMode?: 'horizontal-tb' | 'vertical-rl' | 'vertical-lr';
   textIndent?: number;
   columnCount?: number;
+  columnGap?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
