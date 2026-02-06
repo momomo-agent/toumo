@@ -202,6 +202,7 @@ interface EditorActions {
   setVerticalAlign: (align: 'top' | 'middle' | 'bottom') => void;
   setWhiteSpace: (ws: 'nowrap' | 'normal' | 'pre-wrap') => void;
   setWordBreak: (wb: 'normal' | 'break-all' | 'break-word') => void;
+  setTextOverflow: (overflow: 'clip' | 'ellipsis') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2250,6 +2251,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, wordBreak: wb } 
+      });
+    }
+  },
+
+  setTextOverflow: (overflow: 'clip' | 'ellipsis') => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, textOverflow: overflow } 
       });
     }
   },
