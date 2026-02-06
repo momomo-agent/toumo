@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store';
 import type { TriggerConfig, TriggerType } from '../../types';
 
@@ -10,6 +10,22 @@ const CURVE_OPTIONS = [
   { id: 'ease-in-out', label: 'Ease In Out', preview: 'M0,100 C40,100 60,0 100,0' },
   { id: 'spring', label: 'Spring', preview: 'M0,100 Q50,-20 100,0' },
   { id: 'custom', label: 'Custom', preview: 'M0,100 C25,75 75,25 100,0' },
+];
+
+const SPRING_PRESETS = [
+  { id: 'gentle', label: 'Gentle', damping: 1.0, response: 0.8, mass: 1, stiffness: 120 },
+  { id: 'bouncy', label: 'Bouncy', damping: 0.4, response: 0.6, mass: 1, stiffness: 180 },
+  { id: 'snappy', label: 'Snappy', damping: 0.9, response: 0.3, mass: 0.8, stiffness: 300 },
+  { id: 'stiff', label: 'Stiff', damping: 1.2, response: 0.2, mass: 1, stiffness: 400 },
+  { id: 'wobbly', label: 'Wobbly', damping: 0.3, response: 0.7, mass: 1.5, stiffness: 150 },
+  { id: 'slow', label: 'Slow', damping: 1.0, response: 1.2, mass: 2, stiffness: 80 },
+];
+
+const BEZIER_PRESETS = [
+  { id: 'material', label: 'Material', value: [0.4, 0, 0.2, 1] as [number, number, number, number] },
+  { id: 'ios', label: 'iOS', value: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
+  { id: 'sharp', label: 'Sharp', value: [0.4, 0, 0.6, 1] as [number, number, number, number] },
+  { id: 'overshoot', label: 'Overshoot', value: [0.34, 1.56, 0.64, 1] as [number, number, number, number] },
 ];
 
 const TRIGGER_OPTIONS: { id: TriggerType; label: string; icon: string }[] = [
@@ -39,8 +55,6 @@ export function TransitionInspector() {
     updateTransition,
     deleteTransition,
   } = useEditorStore();
-
-  const [showCurveEditor, setShowCurveEditor] = useState(false);
 
   const transition = transitions.find((t) => t.id === selectedTransitionId);
 
@@ -83,7 +97,7 @@ export function TransitionInspector() {
       {/* From → To display */}
       <div style={flowBoxStyle}>
         <StateChip name={fromKeyframe?.name || 'Unknown'} />
-        <span style={{ color: '#666' }}>→</span>
+        <ArrowIcon />
         <StateChip name={toKeyframe?.name || 'Unknown'} />
       </div>
 
@@ -172,10 +186,7 @@ export function TransitionInspector() {
               label={opt.label}
               preview={opt.preview}
               active={transition.curve === opt.id}
-              onClick={() => {
-                updateTransition(transition.id, { curve: opt.id });
-                if (opt.id === 'custom') setShowCurveEditor(true);
-              }}
+              onClick={() => updateTransition(transition.id, { curve: opt.id })}
             />
           ))}
         </div>
@@ -187,7 +198,7 @@ export function TransitionInspector() {
       )}
 
       {/* Custom Bezier Editor */}
-      {transition.curve === 'custom' && showCurveEditor && (
+      {transition.curve === 'custom' && (
         <BezierEditor transition={transition} onUpdate={updateTransition} />
       )}
 
@@ -371,104 +382,305 @@ function VariableOptions({ trigger, onUpdate }: { trigger: TriggerConfig; onUpda
 
 // Spring Editor Component
 function SpringEditor({ transition, onUpdate }: { transition: { id: string; springDamping?: number; springResponse?: number; springMass?: number; springStiffness?: number }; onUpdate: (id: string, updates: Record<string, unknown>) => void }) {
+  const currentPreset = SPRING_PRESETS.find(p =>
+    p.damping === (transition.springDamping ?? 0.8) &&
+    p.response === (transition.springResponse ?? 0.5) &&
+    p.mass === (transition.springMass ?? 1) &&
+    p.stiffness === (transition.springStiffness ?? 200)
+  );
+
+  const applyPreset = (preset: typeof SPRING_PRESETS[0]) => {
+    onUpdate(transition.id, {
+      springDamping: preset.damping,
+      springResponse: preset.response,
+      springMass: preset.mass,
+      springStiffness: preset.stiffness,
+    });
+  };
+
   return (
     <div style={springBoxStyle}>
-      <div style={{ fontSize: 10, color: '#888', marginBottom: 8 }}>SPRING PHYSICS</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <div>
-          <Label>Damping</Label>
-          <input
-            type="range"
-            min="0.1"
-            max="2"
-            step="0.1"
-            value={transition.springDamping ?? 0.8}
-            onChange={(e) => onUpdate(transition.id, { springDamping: Number(e.target.value) })}
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: 10, color: '#666', textAlign: 'center' }}>
-            {transition.springDamping ?? 0.8}
-          </div>
-        </div>
-        <div>
-          <Label>Response</Label>
-          <input
-            type="range"
-            min="0.1"
-            max="2"
-            step="0.1"
-            value={transition.springResponse ?? 0.5}
-            onChange={(e) => onUpdate(transition.id, { springResponse: Number(e.target.value) })}
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: 10, color: '#666', textAlign: 'center' }}>
-            {transition.springResponse ?? 0.5}
-          </div>
-        </div>
-        <div>
-          <Label>Mass</Label>
-          <input
-            type="range"
-            min="0.1"
-            max="5"
-            step="0.1"
-            value={transition.springMass ?? 1}
-            onChange={(e) => onUpdate(transition.id, { springMass: Number(e.target.value) })}
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: 10, color: '#666', textAlign: 'center' }}>
-            {transition.springMass ?? 1}
-          </div>
-        </div>
-        <div>
-          <Label>Stiffness</Label>
-          <input
-            type="range"
-            min="50"
-            max="500"
-            step="10"
-            value={transition.springStiffness ?? 200}
-            onChange={(e) => onUpdate(transition.id, { springStiffness: Number(e.target.value) })}
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: 10, color: '#666', textAlign: 'center' }}>
-            {transition.springStiffness ?? 200}
-          </div>
-        </div>
+      <div style={{ fontSize: 10, color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        Spring Physics
+      </div>
+
+      {/* Spring Presets */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
+        {SPRING_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            onClick={() => applyPreset(preset)}
+            style={{
+              padding: '4px 10px',
+              background: currentPreset?.id === preset.id ? '#2563eb' : '#161617',
+              border: '1px solid',
+              borderColor: currentPreset?.id === preset.id ? '#2563eb' : '#333',
+              borderRadius: 4,
+              color: currentPreset?.id === preset.id ? '#fff' : '#888',
+              fontSize: 10,
+              cursor: 'pointer',
+            }}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Spring Preview Animation */}
+      <SpringPreview
+        damping={transition.springDamping ?? 0.8}
+        stiffness={transition.springStiffness ?? 200}
+        mass={transition.springMass ?? 1}
+      />
+
+      {/* Parameter Sliders */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
+        <SpringSlider
+          label="Damping"
+          min={0.1} max={2} step={0.1}
+          value={transition.springDamping ?? 0.8}
+          onChange={(v) => onUpdate(transition.id, { springDamping: v })}
+        />
+        <SpringSlider
+          label="Response"
+          min={0.1} max={2} step={0.1}
+          value={transition.springResponse ?? 0.5}
+          onChange={(v) => onUpdate(transition.id, { springResponse: v })}
+        />
+        <SpringSlider
+          label="Mass"
+          min={0.1} max={5} step={0.1}
+          value={transition.springMass ?? 1}
+          onChange={(v) => onUpdate(transition.id, { springMass: v })}
+        />
+        <SpringSlider
+          label="Stiffness"
+          min={50} max={500} step={10}
+          value={transition.springStiffness ?? 200}
+          onChange={(v) => onUpdate(transition.id, { springStiffness: v })}
+        />
       </div>
     </div>
   );
 }
 
-// Bezier Editor Component
+// Spring slider with value display
+function SpringSlider({ label, min, max, step, value, onChange }: {
+  label: string; min: number; max: number; step: number; value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <Label>{label}</Label>
+        <span style={{ fontSize: 10, color: '#60a5fa', fontFamily: 'monospace' }}>{value}</span>
+      </div>
+      <input
+        type="range"
+        min={min} max={max} step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        style={rangeStyle}
+      />
+    </div>
+  );
+}
+
+// Animated spring preview (bouncing dot)
+function SpringPreview({ damping, stiffness, mass }: { damping: number; stiffness: number; mass: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    let x = 0;
+    let velocity = 0;
+    const target = 1;
+    const dt = 1 / 60;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+
+      // Background line
+      ctx.strokeStyle = '#2a2a2a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      // Target line
+      const targetY = h * 0.15;
+      ctx.strokeStyle = '#333';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(0, targetY);
+      ctx.lineTo(w, targetY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Spring simulation
+      const force = stiffness * (target - x);
+      const dampForce = -damping * 20 * velocity;
+      const acceleration = (force + dampForce) / mass;
+      velocity += acceleration * dt;
+      x += velocity * dt;
+
+      // Draw dot
+      const dotY = h - (x * (h * 0.85));
+      const dotX = w / 2;
+      ctx.fillStyle = '#3b82f6';
+      ctx.beginPath();
+      ctx.arc(dotX, Math.max(4, Math.min(h - 4, dotY)), 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glow
+      ctx.fillStyle = '#3b82f620';
+      ctx.beginPath();
+      ctx.arc(dotX, Math.max(4, Math.min(h - 4, dotY)), 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (Math.abs(velocity) > 0.001 || Math.abs(target - x) > 0.001) {
+        animRef.current = requestAnimationFrame(draw);
+      }
+    };
+
+    // Reset
+    x = 0;
+    velocity = 0;
+    cancelAnimationFrame(animRef.current);
+    animRef.current = requestAnimationFrame(draw);
+
+    return () => cancelAnimationFrame(animRef.current);
+  }, [damping, stiffness, mass]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={200}
+      height={48}
+      style={{
+        width: '100%',
+        height: 48,
+        borderRadius: 6,
+        background: '#161617',
+        border: '1px solid #2a2a2a',
+      }}
+    />
+  );
+}
+
+// Bezier Editor Component with visual curve
 function BezierEditor({ transition, onUpdate }: { transition: { id: string; cubicBezier?: [number, number, number, number] }; onUpdate: (id: string, updates: Record<string, unknown>) => void }) {
   const bezier = transition.cubicBezier || [0.25, 0.1, 0.25, 1];
-  
+  const [x1, y1, x2, y2] = bezier;
+
+  const setBezier = (newBezier: [number, number, number, number]) => {
+    onUpdate(transition.id, { cubicBezier: newBezier });
+  };
+
+  // SVG curve path
+  const pad = 12;
+  const size = 120;
+  const sx = (v: number) => pad + v * size;
+  const sy = (v: number) => pad + (1 - v) * size;
+  const curvePath = `M${sx(0)},${sy(0)} C${sx(x1)},${sy(y1)} ${sx(x2)},${sy(y2)} ${sx(size > 0 ? 1 : 1)},${sy(1)}`;
+
   return (
     <div style={springBoxStyle}>
-      <div style={{ fontSize: 10, color: '#888', marginBottom: 8 }}>CUBIC BEZIER</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {['x1', 'y1', 'x2', 'y2'].map((label, i) => (
+      <div style={{ fontSize: 10, color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        Cubic Bezier
+      </div>
+
+      {/* Bezier Presets */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+        {BEZIER_PRESETS.map((preset) => {
+          const isActive = bezier[0] === preset.value[0] && bezier[1] === preset.value[1] &&
+            bezier[2] === preset.value[2] && bezier[3] === preset.value[3];
+          return (
+            <button
+              key={preset.id}
+              onClick={() => setBezier(preset.value)}
+              style={{
+                flex: 1,
+                padding: '4px 0',
+                background: isActive ? '#2563eb' : '#161617',
+                border: '1px solid',
+                borderColor: isActive ? '#2563eb' : '#333',
+                borderRadius: 4,
+                color: isActive ? '#fff' : '#888',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Visual Curve Preview */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+        <svg width={size + pad * 2} height={size + pad * 2} style={{ background: '#161617', borderRadius: 6, border: '1px solid #2a2a2a' }}>
+          {/* Grid */}
+          <rect x={pad} y={pad} width={size} height={size} fill="none" stroke="#2a2a2a" strokeWidth="1" />
+          {/* Diagonal guide */}
+          <line x1={sx(0)} y1={sy(0)} x2={sx(1)} y2={sy(1)} stroke="#333" strokeWidth="1" strokeDasharray="3,3" />
+          {/* Control point lines */}
+          <line x1={sx(0)} y1={sy(0)} x2={sx(x1)} y2={sy(y1)} stroke="#3b82f650" strokeWidth="1" />
+          <line x1={sx(1)} y1={sy(1)} x2={sx(x2)} y2={sy(y2)} stroke="#3b82f650" strokeWidth="1" />
+          {/* Curve */}
+          <path d={curvePath} fill="none" stroke="#3b82f6" strokeWidth="2" />
+          {/* Control points */}
+          <circle cx={sx(x1)} cy={sy(y1)} r="4" fill="#3b82f6" stroke="#fff" strokeWidth="1" />
+          <circle cx={sx(x2)} cy={sy(y2)} r="4" fill="#3b82f6" stroke="#fff" strokeWidth="1" />
+          {/* Endpoints */}
+          <circle cx={sx(0)} cy={sy(0)} r="3" fill="#666" />
+          <circle cx={sx(1)} cy={sy(1)} r="3" fill="#666" />
+        </svg>
+      </div>
+
+      {/* Number inputs */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
+        {(['x1', 'y1', 'x2', 'y2'] as const).map((label, i) => (
           <div key={label}>
             <Label>{label.toUpperCase()}</Label>
             <input
               type="number"
-              min="0"
-              max="1"
+              min={i % 2 === 0 ? 0 : -0.5}
+              max={i % 2 === 0 ? 1 : 1.5}
               step="0.05"
               value={bezier[i]}
               onChange={(e) => {
                 const newBezier = [...bezier] as [number, number, number, number];
                 newBezier[i] = Number(e.target.value);
-                onUpdate(transition.id, { cubicBezier: newBezier });
+                setBezier(newBezier);
               }}
-              style={inputStyle}
+              style={{ ...inputStyle, padding: '6px 4px', textAlign: 'center' as const, fontSize: 11 }}
             />
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, color: '#666' }}>
-        cubic-bezier({bezier.join(', ')})
+
+      {/* CSS output */}
+      <div style={{
+        marginTop: 10,
+        padding: '6px 10px',
+        background: '#161617',
+        borderRadius: 4,
+        border: '1px solid #2a2a2a',
+        textAlign: 'center',
+        fontSize: 10,
+        color: '#666',
+        fontFamily: 'monospace',
+      }}>
+        cubic-bezier({bezier.map(v => v.toFixed(2)).join(', ')})
       </div>
     </div>
   );
@@ -502,15 +714,24 @@ function Label({ children }: { children: React.ReactNode }) {
 function StateChip({ name }: { name: string }) {
   return (
     <span style={{
-      padding: '4px 8px',
-      background: '#1a1a1b',
-      border: '1px solid #333',
-      borderRadius: 4,
+      padding: '5px 10px',
+      background: '#1a1a2e',
+      border: '1px solid #2563eb40',
+      borderRadius: 6,
       fontSize: 11,
-      color: '#fff',
+      color: '#e5e5e5',
+      fontWeight: 500,
     }}>
       {name}
     </span>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M3 8h10M10 5l3 3-3 3" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -519,23 +740,24 @@ function CurveButton({ label, preview, active, onClick }: { label: string; previ
     <button
       onClick={onClick}
       style={{
-        padding: '6px 8px',
-        background: active ? '#2563eb' : '#0d0d0e',
+        padding: '6px 6px 4px',
+        background: active ? '#1e3a5f' : '#0d0d0e',
         border: '1px solid',
-        borderColor: active ? '#2563eb' : '#333',
-        borderRadius: 4,
+        borderColor: active ? '#2563eb' : '#2a2a2a',
+        borderRadius: 6,
         color: active ? '#fff' : '#888',
-        fontSize: 10,
+        fontSize: 9,
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 4,
-        minWidth: 56,
+        gap: 3,
+        minWidth: 52,
+        transition: 'all 0.15s ease',
       }}
     >
-      <svg width="24" height="16" viewBox="0 0 100 100" style={{ opacity: 0.7 }}>
-        <path d={preview} fill="none" stroke="currentColor" strokeWidth="8" />
+      <svg width="32" height="20" viewBox="0 0 100 100" style={{ opacity: active ? 1 : 0.5 }}>
+        <path d={preview} fill="none" stroke={active ? '#60a5fa' : 'currentColor'} strokeWidth="6" strokeLinecap="round" />
       </svg>
       {label}
     </button>
@@ -654,6 +876,17 @@ const springBoxStyle: React.CSSProperties = {
   border: '1px solid #2a2a2a',
   borderRadius: 8,
   marginBottom: 16,
+};
+
+const rangeStyle: React.CSSProperties = {
+  width: '100%',
+  height: 4,
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  background: '#2a2a2a',
+  borderRadius: 2,
+  outline: 'none',
+  cursor: 'pointer',
 };
 
 const unitStyle: React.CSSProperties = {

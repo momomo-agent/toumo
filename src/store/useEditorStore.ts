@@ -266,7 +266,7 @@ interface EditorActions {
   duplicateInteraction: (id: string) => void;
   getInteractionsForElement: (elementId: string) => Interaction[];
   // Project actions
-  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
+  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[] }) => void;
   // Style clipboard
   copiedStyle: ShapeStyle | null;
   copyStyle: () => void;
@@ -1332,6 +1332,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       components: data.components,
       frameSize: data.frameSize,
       canvasBackground: data.canvasBackground || '#0d0d0e',
+      interactions: data.interactions || [],
+      variables: data.variables || [],
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],

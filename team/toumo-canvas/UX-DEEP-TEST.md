@@ -168,3 +168,19 @@ addKeyframe: () => {
 ---
 
 ## 🧪 测试流程 4: 分享链接
+
+### ShareModal 分析
+
+**架构**: `src/components/ShareModal.tsx` + `src/utils/shareUtils.ts`
+
+**工作原理**:
+1. 用户点击 Share 按钮 → 打开 ShareModal
+2. 点击「Generate Share Link」→ 将整个项目 JSON 用 lz-string 压缩
+3. 生成 URL: `{origin}/toumo/#preview={compressed_data}`
+4. 接收方打开链接 → `isPreviewUrl()` 检测 → 渲染 `PreviewMode`
+
+**优点**:
+- ✅ 纯前端方案，无需后端
+- ✅ lz-string 压缩有效减小 URL 长度
+- ✅ 接收方可直接交互预览
+- ✅ 支持「Edit」按钮进入编辑模式

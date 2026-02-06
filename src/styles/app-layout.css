@@ -1,0 +1,48 @@
+/* ═══════════════════════════════════════════════════
+   App Layout — replaces inline styles in App.tsx
+   ═══════════════════════════════════════════════════ */
+
+/* ── Root Shell ── */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+}
+
+/* ── Top Header Bar ── */
+.app-topbar {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.app-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-topbar-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.app-topbar-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

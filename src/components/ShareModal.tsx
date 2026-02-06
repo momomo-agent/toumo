@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useEditorStore } from '../store';
-import { generateShareUrl } from '../utils/shareUtils';
+import { generateShareUrl, compressProject } from '../utils/shareUtils';
+import type { ProjectData } from '../utils/shareUtils';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -8,37 +9,91 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ isOpen, onClose }: ShareModalProps) {
-  const { keyframes, transitions, functionalStates, components, frameSize, canvasBackground } = useEditorStore();
+  const { keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables } = useEditorStore();
   
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [dataSize, setDataSize] = useState('');
+  const [error, setError] = useState('');
+  const urlInputRef = useRef<HTMLInputElement>(null);
+
+  const buildProjectData = useCallback((): ProjectData => ({
+    version: '1.0',
+    keyframes,
+    transitions,
+    functionalStates,
+    components,
+    frameSize,
+    canvasBackground,
+    interactions,
+    variables,
+  }), [keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables]);
 
   const handleGenerateLink = useCallback(() => {
     setGenerating(true);
+    setError('');
+    setCopied(false);
+    
+    // Use setTimeout to avoid blocking UI
     setTimeout(() => {
-      const projectData = {
-        version: '1.0',
-        keyframes,
-        transitions,
-        functionalStates,
-        components,
-        frameSize,
-        canvasBackground,
-      };
-      const url = generateShareUrl(projectData);
-      setShareUrl(url);
-      setGenerating(false);
-    }, 100);
-  }, [keyframes, transitions, functionalStates, components, frameSize, canvasBackground]);
+      try {
+        const projectData = buildProjectData();
+        
+        // Calculate compressed size for display
+        const compressed = compressProject(projectData);
+        const sizeKB = (compressed.length * 2 / 1024).toFixed(1);
+        setDataSize(sizeKB);
+        
+        // Check URL length limits (browsers typically support ~2MB in hash)
+        const url = generateShareUrl(projectData);
+        if (url.length > 2_000_000) {
+          setError('Project is too large to share via URL. Try reducing elements.');
+          setGenerating(false);
+          return;
+        }
+        
+        setShareUrl(url);
+        setGenerating(false);
+      } catch (err) {
+        console.error('Failed to generate share link:', err);
+        setError('Failed to generate link. Project may be too complex.');
+        setGenerating(false);
+      }
+    }, 50);
+  }, [buildProjectData]);
+
+  // Auto-generate link when modal opens
+  useEffect(() => {
+    if (isOpen && !shareUrl) {
+      handleGenerateLink();
+    }
+  }, [isOpen]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShareUrl('');
+      setCopied(false);
+      setError('');
+      setDataSize('');
+    }
+  }, [isOpen]);
 
   const handleCopy = useCallback(async () => {
+    if (!shareUrl) return;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      // Fallback: select the input text
+      if (urlInputRef.current) {
+        urlInputRef.current.select();
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
     }
   }, [shareUrl]);
 
@@ -50,56 +105,112 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
 
   if (!isOpen) return null;
 
+  const elementCount = keyframes.reduce((sum, kf) => sum + (kf.keyElements?.length || 0), 0);
+  const frameCount = keyframes.length;
+  const transitionCount = transitions.length;
+  const interactionCount = (interactions || []).length;
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        {/* Header */}
         <div style={headerStyle}>
-          <h2 style={{ margin: 0, fontSize: 16 }}>Share Project</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>🔗</span>
+            <h2 style={{ margin: 0, fontSize: 16, color: '#fff' }}>分享项目</h2>
+          </div>
           <button onClick={onClose} style={closeButtonStyle}>×</button>
         </div>
         
         <div style={contentStyle}>
-          <p style={descStyle}>
-            Generate a shareable link that includes your entire project. 
-            Anyone with the link can view and interact with your prototype.
-          </p>
-          
-          {!shareUrl ? (
-            <button 
-              onClick={handleGenerateLink} 
-              style={generateButtonStyle}
-              disabled={generating}
-            >
-              {generating ? '⏳ Generating...' : '🔗 Generate Share Link'}
-            </button>
-          ) : (
-            <div style={urlContainerStyle}>
-              <input
-                type="text"
-                value={shareUrl}
-                readOnly
-                style={urlInputStyle}
-                onClick={e => (e.target as HTMLInputElement).select()}
-              />
-              <div style={buttonGroupStyle}>
-                <button onClick={handleCopy} style={actionButtonStyle}>
-                  {copied ? '✓ Copied!' : '📋 Copy'}
-                </button>
-                <button onClick={handleOpenPreview} style={actionButtonStyle}>
-                  🔗 Open
-                </button>
-              </div>
+          {/* Project summary */}
+          <div style={summaryStyle}>
+            <div style={summaryItemStyle}>
+              <span style={summaryValueStyle}>{frameCount}</span>
+              <span style={summaryLabelStyle}>画面</span>
+            </div>
+            <div style={summaryDividerStyle} />
+            <div style={summaryItemStyle}>
+              <span style={summaryValueStyle}>{elementCount}</span>
+              <span style={summaryLabelStyle}>元素</span>
+            </div>
+            <div style={summaryDividerStyle} />
+            <div style={summaryItemStyle}>
+              <span style={summaryValueStyle}>{transitionCount}</span>
+              <span style={summaryLabelStyle}>转场</span>
+            </div>
+            <div style={summaryDividerStyle} />
+            <div style={summaryItemStyle}>
+              <span style={summaryValueStyle}>{interactionCount}</span>
+              <span style={summaryLabelStyle}>交互</span>
+            </div>
+          </div>
+
+          {/* Error state */}
+          {error && (
+            <div style={errorStyle}>
+              <span>⚠️</span>
+              <span>{error}</span>
             </div>
           )}
           
+          {/* Generating state */}
+          {generating && (
+            <div style={generatingStyle}>
+              <div style={spinnerStyle} />
+              <span>正在生成分享链接...</span>
+            </div>
+          )}
+
+          {/* URL display + actions */}
+          {shareUrl && !generating && (
+            <>
+              <div style={urlContainerStyle}>
+                <input
+                  ref={urlInputRef}
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  style={urlInputStyle}
+                  onClick={e => (e.target as HTMLInputElement).select()}
+                />
+                {dataSize && (
+                  <span style={dataSizeStyle}>
+                    📦 压缩后 {dataSize} KB
+                  </span>
+                )}
+              </div>
+              
+              <div style={buttonGroupStyle}>
+                <button 
+                  onClick={handleCopy} 
+                  style={copied ? copyButtonCopiedStyle : copyButtonStyle}
+                >
+                  {copied ? '✅ 已复制!' : '📋 复制链接'}
+                </button>
+                <button onClick={handleOpenPreview} style={openButtonStyle}>
+                  👁️ 预览
+                </button>
+                <button onClick={handleGenerateLink} style={refreshButtonStyle} title="重新生成">
+                  🔄
+                </button>
+              </div>
+            </>
+          )}
+          
+          {/* Info section */}
           <div style={infoStyle}>
             <div style={infoItemStyle}>
               <span>📦</span>
-              <span>Project data is compressed and stored in the URL</span>
+              <span>项目数据压缩后存储在链接中，无需服务器</span>
             </div>
             <div style={infoItemStyle}>
               <span>👁️</span>
-              <span>Recipients see a full-screen interactive preview</span>
+              <span>打开链接即可全屏预览并体验交互</span>
+            </div>
+            <div style={infoItemStyle}>
+              <span>✏️</span>
+              <span>预览者可点击「编辑」进入编辑模式</span>
             </div>
           </div>
         </div>
@@ -108,7 +219,8 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
   );
 }
 
-// Styles
+// --- Styles ---
+
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   top: 0, left: 0, right: 0, bottom: 0,
@@ -123,7 +235,9 @@ const modalStyle: React.CSSProperties = {
   background: '#1a1a1a',
   borderRadius: 12,
   width: 480,
+  maxWidth: '90vw',
   border: '1px solid #333',
+  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -140,6 +254,8 @@ const closeButtonStyle: React.CSSProperties = {
   color: '#666',
   fontSize: 20,
   cursor: 'pointer',
+  padding: '4px 8px',
+  borderRadius: 4,
 };
 
 const contentStyle: React.CSSProperties = {
@@ -149,27 +265,76 @@ const contentStyle: React.CSSProperties = {
   gap: 16,
 };
 
-const descStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: 13,
-  color: '#888',
-  lineHeight: 1.5,
+const summaryStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 16,
+  padding: '12px 16px',
+  background: '#111',
+  borderRadius: 8,
+  border: '1px solid #252525',
 };
 
-const generateButtonStyle: React.CSSProperties = {
-  padding: '12px 20px',
-  background: '#2563eb',
-  border: 'none',
-  borderRadius: 8,
+const summaryItemStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 2,
+};
+
+const summaryValueStyle: React.CSSProperties = {
+  fontSize: 18,
+  fontWeight: 700,
   color: '#fff',
-  fontSize: 14,
-  cursor: 'pointer',
+};
+
+const summaryLabelStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: '#666',
+};
+
+const summaryDividerStyle: React.CSSProperties = {
+  width: 1,
+  height: 28,
+  background: '#333',
+};
+
+const errorStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '10px 14px',
+  background: '#ef444420',
+  border: '1px solid #ef4444',
+  borderRadius: 8,
+  fontSize: 13,
+  color: '#fca5a5',
+};
+
+const generatingStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10,
+  padding: '20px 0',
+  fontSize: 13,
+  color: '#888',
+};
+
+const spinnerStyle: React.CSSProperties = {
+  width: 16,
+  height: 16,
+  border: '2px solid #333',
+  borderTopColor: '#2563eb',
+  borderRadius: '50%',
+  animation: 'spin 0.8s linear infinite',
 };
 
 const urlContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 8,
+  gap: 6,
 };
 
 const urlInputStyle: React.CSSProperties = {
@@ -179,6 +344,14 @@ const urlInputStyle: React.CSSProperties = {
   borderRadius: 6,
   color: '#e5e5e5',
   fontSize: 12,
+  fontFamily: 'monospace',
+  outline: 'none',
+};
+
+const dataSizeStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: '#555',
+  textAlign: 'right',
 };
 
 const buttonGroupStyle: React.CSSProperties = {
@@ -186,14 +359,41 @@ const buttonGroupStyle: React.CSSProperties = {
   gap: 8,
 };
 
-const actionButtonStyle: React.CSSProperties = {
+const copyButtonStyle: React.CSSProperties = {
+  flex: 2,
+  padding: '10px 16px',
+  background: '#2563eb',
+  border: 'none',
+  borderRadius: 8,
+  color: '#fff',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const copyButtonCopiedStyle: React.CSSProperties = {
+  ...copyButtonStyle,
+  background: '#16a34a',
+};
+
+const openButtonStyle: React.CSSProperties = {
   flex: 1,
-  padding: '8px 12px',
+  padding: '10px 16px',
   background: '#252525',
   border: '1px solid #333',
-  borderRadius: 6,
+  borderRadius: 8,
   color: '#e5e5e5',
-  fontSize: 12,
+  fontSize: 13,
+  cursor: 'pointer',
+};
+
+const refreshButtonStyle: React.CSSProperties = {
+  padding: '10px 12px',
+  background: '#252525',
+  border: '1px solid #333',
+  borderRadius: 8,
+  color: '#888',
+  fontSize: 13,
   cursor: 'pointer',
 };
 
@@ -201,7 +401,11 @@ const infoStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 8,
-  marginTop: 8,
+  marginTop: 4,
+  padding: '12px 14px',
+  background: '#111',
+  borderRadius: 8,
+  border: '1px solid #252525',
 };
 
 const infoItemStyle: React.CSSProperties = {

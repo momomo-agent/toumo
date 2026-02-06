@@ -1,22 +1,25 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useEditorStore } from '../../store';
-import type { Transition, KeyElement, TriggerType, PrototypeTransitionType } from '../../types';
+import type { Transition, KeyElement, TriggerType } from '../../types';
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
 
+// ─── Device Definitions ───────────────────────────────────────────────
 const DEVICE_FRAMES = [
-  { id: 'none', label: 'No Frame', width: 0, height: 0, radius: 0 },
-  { id: 'iphone14', label: 'iPhone 14', width: 390, height: 844, radius: 47 },
-  { id: 'iphone14pro', label: 'iPhone 14 Pro', width: 393, height: 852, radius: 55 },
-  { id: 'iphone15pro', label: 'iPhone 15 Pro', width: 393, height: 852, radius: 55 },
-  { id: 'iphonese', label: 'iPhone SE', width: 375, height: 667, radius: 0 },
-  { id: 'pixel7', label: 'Pixel 7', width: 412, height: 915, radius: 28 },
-  { id: 'galaxys23', label: 'Galaxy S23', width: 360, height: 780, radius: 24 },
-  { id: 'ipadmini', label: 'iPad Mini', width: 744, height: 1133, radius: 18 },
-  { id: 'ipadpro11', label: 'iPad Pro 11"', width: 834, height: 1194, radius: 18 },
-];
+  { id: 'none', label: 'No Frame', width: 0, height: 0, radius: 0, notch: 'none' as const },
+  { id: 'iphone15pro', label: 'iPhone 15 Pro', width: 393, height: 852, radius: 55, notch: 'island' as const },
+  { id: 'iphone14pro', label: 'iPhone 14 Pro', width: 393, height: 852, radius: 55, notch: 'island' as const },
+  { id: 'iphone14', label: 'iPhone 14', width: 390, height: 844, radius: 47, notch: 'notch' as const },
+  { id: 'iphonese', label: 'iPhone SE', width: 375, height: 667, radius: 0, notch: 'none' as const },
+  { id: 'pixel7', label: 'Pixel 7', width: 412, height: 915, radius: 28, notch: 'punch' as const },
+  { id: 'galaxys23', label: 'Galaxy S23', width: 360, height: 780, radius: 24, notch: 'punch' as const },
+  { id: 'ipadmini', label: 'iPad Mini', width: 744, height: 1133, radius: 18, notch: 'none' as const },
+  { id: 'ipadpro11', label: 'iPad Pro 11"', width: 834, height: 1194, radius: 18, notch: 'none' as const },
+] as const;
 
-// Easing functions for animations
+type DeviceFrame = typeof DEVICE_FRAMES[number];
+
+// ─── Easing ───────────────────────────────────────────────────────────
 const easingFunctions: Record<string, string> = {
   'linear': 'linear',
   'ease': 'ease',
@@ -29,63 +32,144 @@ const easingFunctions: Record<string, string> = {
   'spring-stiff': 'cubic-bezier(0.5, 1.8, 0.5, 0.8)',
 };
 
-// Get CSS easing from transition config
 function getTransitionEasing(transition: Transition): string {
-  // Custom cubic bezier takes priority
   if (transition.cubicBezier) {
     const [x1, y1, x2, y2] = transition.cubicBezier;
     return `cubic-bezier(${x1}, ${y1}, ${x2}, ${y2})`;
   }
-  // Then check named easing
   return easingFunctions[transition.curve] || transition.curve || 'ease-out';
 }
 
-// Get spring config from curve name
-function getSpringConfigFromCurve(curve: string): { damping: number; response: number; useSpring: boolean } {
+function getSpringConfigFromCurve(curve: string) {
   switch (curve) {
-    case 'spring-bouncy':
-      return { ...SpringPresets.bouncy, useSpring: true };
-    case 'spring-stiff':
-      return { ...SpringPresets.stiff, useSpring: true };
-    case 'spring-gentle':
-      return { ...SpringPresets.gentle, useSpring: true };
-    case 'spring':
-    default:
-      return { ...SpringPresets.default, useSpring: true };
+    case 'spring-bouncy': return { ...SpringPresets.bouncy, useSpring: true };
+    case 'spring-stiff': return { ...SpringPresets.stiff, useSpring: true };
+    case 'spring-gentle': return { ...SpringPresets.gentle, useSpring: true };
+    default: return { ...SpringPresets.default, useSpring: true };
   }
 }
 
+// ─── Helper: build CSS background from element style ──────────────────
+function buildBackground(el: KeyElement): string {
+  const style = el.style;
+  if (!style) return '#3b82f6';
+
+  // Gradient takes priority
+  if (style.gradientType && style.gradientType !== 'none' && style.gradientStops?.length) {
+    const stops = style.gradientStops.map(s => `${s.color} ${s.position}%`).join(', ');
+    if (style.gradientType === 'radial') return `radial-gradient(circle, ${stops})`;
+    const angle = style.gradientAngle ?? 180;
+    return `linear-gradient(${angle}deg, ${stops})`;
+  }
+
+  return style.fill || '#3b82f6';
+}
+
+// ─── Helper: build CSS filter string ──────────────────────────────────
+function buildFilter(el: KeyElement): string | undefined {
+  const s = el.style;
+  if (!s) return undefined;
+  const parts: string[] = [];
+  if (s.blur) parts.push(`blur(${s.blur}px)`);
+  if (s.brightness != null && s.brightness !== 1) parts.push(`brightness(${s.brightness})`);
+  if (s.contrast != null && s.contrast !== 1) parts.push(`contrast(${s.contrast})`);
+  if (s.saturate != null && s.saturate !== 1) parts.push(`saturate(${s.saturate})`);
+  if (s.hueRotate) parts.push(`hue-rotate(${s.hueRotate}deg)`);
+  if (s.grayscale) parts.push(`grayscale(${s.grayscale})`);
+  if (s.sepia) parts.push(`sepia(${s.sepia})`);
+  if (s.invert) parts.push(`invert(${s.invert})`);
+  return parts.length ? parts.join(' ') : undefined;
+}
+
+// ─── Helper: build CSS transform string ───────────────────────────────
+function buildTransform(el: KeyElement, hovered: boolean): string {
+  const s = el.style;
+  const parts: string[] = [];
+  if (s?.rotation) parts.push(`rotate(${s.rotation}deg)`);
+  if (s?.scale != null && s.scale !== 1) parts.push(`scale(${s.scale})`);
+  if (s?.skewX) parts.push(`skewX(${s.skewX}deg)`);
+  if (s?.skewY) parts.push(`skewY(${s.skewY}deg)`);
+  if (s?.flipX) parts.push('scaleX(-1)');
+  if (s?.flipY) parts.push('scaleY(-1)');
+  if (hovered) parts.push('scale(1.02)');
+  return parts.length ? parts.join(' ') : 'none';
+}
+
+// ─── Helper: build border-radius ──────────────────────────────────────
+function buildBorderRadius(el: KeyElement): string | number {
+  const s = el.style;
+  if (el.shapeType === 'ellipse') return '50%';
+  if (!s) return 8;
+  // Per-corner radii
+  const tl = s.borderRadiusTL ?? s.borderTopLeftRadius ?? s.borderRadius ?? 8;
+  const tr = s.borderRadiusTR ?? s.borderTopRightRadius ?? s.borderRadius ?? 8;
+  const br = s.borderRadiusBR ?? s.borderBottomRightRadius ?? s.borderRadius ?? 8;
+  const bl = s.borderRadiusBL ?? s.borderBottomLeftRadius ?? s.borderRadius ?? 8;
+  if (tl === tr && tr === br && br === bl) return tl;
+  return `${tl}px ${tr}px ${br}px ${bl}px`;
+}
+
+// ─── Helper: build box-shadow ─────────────────────────────────────────
+function buildBoxShadow(el: KeyElement): string | undefined {
+  const s = el.style;
+  if (!s) return undefined;
+  const parts: string[] = [];
+  if (s.shadowColor && (s.shadowBlur || s.shadowOffsetX || s.shadowOffsetY)) {
+    parts.push(`${s.shadowOffsetX || 0}px ${s.shadowOffsetY || 0}px ${s.shadowBlur || 0}px ${s.shadowSpread || 0}px ${s.shadowColor}`);
+  }
+  if (s.innerShadowEnabled && s.innerShadowColor) {
+    parts.push(`inset ${s.innerShadowX || 0}px ${s.innerShadowY || 0}px ${s.innerShadowBlur || 4}px ${s.innerShadowColor}`);
+  }
+  return parts.length ? parts.join(', ') : undefined;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Main LivePreview Component
+// ═══════════════════════════════════════════════════════════════════════
 export function LivePreview() {
   const { keyframes, transitions, selectedKeyframeId, frameSize } = useEditorStore();
-  
-  const [deviceFrame, setDeviceFrame] = useState('iphone14');
+
+  const [deviceFrame, setDeviceFrame] = useState('iphone15pro');
   const [zoom, setZoom] = useState(100);
   const [isZoomLocked, setIsZoomLocked] = useState(false);
-  
-  // State machine state
+
+  // State machine
   const [currentKeyframeId, setCurrentKeyframeId] = useState<string>(selectedKeyframeId);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDuration, setTransitionDuration] = useState(300);
   const [transitionCurve, setTransitionCurve] = useState('ease-out');
-  
-  // Smart Animate state
+
+  // Smart Animate
   const [useSmartAnimateMode, setUseSmartAnimateMode] = useState(true);
   const [smartAnimateState, smartAnimateActions] = useSmartAnimate([], {
     springConfig: { ...SpringPresets.default, duration: 0.4, useSpring: true },
     enabled: true,
   });
-  
-  // Timer refs for timer triggers
+
   const timerRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  
-  // Sync with editor selection when not in preview mode
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 288, height: 480 });
+
+  // ─── Responsive container measurement ─────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) setContainerSize({ width, height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // ─── Sync with editor selection ───────────────────────────────────
   useEffect(() => {
     if (!isTransitioning && !smartAnimateState.isAnimating) {
       setCurrentKeyframeId(selectedKeyframeId);
     }
   }, [selectedKeyframeId, isTransitioning, smartAnimateState.isAnimating]);
 
-  // Initialize smart animate elements when keyframe changes (non-animated)
+  // ─── Init smart animate elements on keyframe change ───────────────
   useEffect(() => {
     const kf = keyframes.find(k => k.id === currentKeyframeId);
     if (kf && !smartAnimateState.isAnimating) {
@@ -93,130 +177,91 @@ export function LivePreview() {
     }
   }, [currentKeyframeId, keyframes]);
 
+  // ─── Derived state ────────────────────────────────────────────────
   const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
-  // Use smart animate elements when animating, otherwise use current keyframe elements
-  const elements = smartAnimateState.isAnimating 
-    ? smartAnimateState.elements 
+  const elements = smartAnimateState.isAnimating
+    ? smartAnimateState.elements
     : (currentKeyframe?.keyElements || []);
   const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
-
-  // Find available transitions from current state
   const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
 
-  // Execute a transition
+  // ─── Execute transition ───────────────────────────────────────────
   const executeTransition = useCallback((transition: Transition) => {
     if (isTransitioning || smartAnimateState.isAnimating) return;
-    
     const targetKeyframe = keyframes.find(kf => kf.id === transition.to);
     if (!targetKeyframe) return;
-    
-    // Check if this transition should use Smart Animate
-    const shouldUseSmartAnimate = useSmartAnimateMode && 
-      (transition.curve === 'spring' || 
-       transition.curve === 'spring-gentle' || 
-       transition.curve === 'spring-bouncy' ||
-       transition.curve === 'spring-stiff');
-    
+
+    const shouldUseSmartAnimate = useSmartAnimateMode &&
+      (transition.curve === 'spring' || transition.curve === 'spring-gentle' ||
+       transition.curve === 'spring-bouncy' || transition.curve === 'spring-stiff');
+
     if (shouldUseSmartAnimate) {
-      // Use Smart Animate with spring physics
       const springConfig = getSpringConfigFromCurve(transition.curve);
-      
       setIsTransitioning(true);
-      
-      // Apply delay if specified
       setTimeout(() => {
         smartAnimateActions.animateTo(targetKeyframe.keyElements, {
-          springConfig: {
-            ...springConfig,
-            duration: transition.duration / 1000,
-          },
+          springConfig: { ...springConfig, duration: transition.duration / 1000 },
         });
-        
         setCurrentKeyframeId(transition.to);
-        
-        // Reset transitioning state after animation completes
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, transition.duration);
+        setTimeout(() => setIsTransitioning(false), transition.duration);
       }, transition.delay || 0);
     } else {
-      // Use CSS transitions (original behavior)
       setIsTransitioning(true);
       setTransitionDuration(transition.duration);
       setTransitionCurve(getTransitionEasing(transition));
-      
-      // Apply delay if specified
       setTimeout(() => {
         setCurrentKeyframeId(transition.to);
-        
-        // Reset transitioning state after animation completes
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, transition.duration);
+        setTimeout(() => setIsTransitioning(false), transition.duration);
       }, transition.delay || 0);
     }
   }, [isTransitioning, smartAnimateState.isAnimating, keyframes, useSmartAnimateMode, smartAnimateActions]);
 
-  // Find and execute transition by trigger type
+  // ─── Trigger handler ──────────────────────────────────────────────
   const handleTrigger = useCallback((triggerType: TriggerType, _elementId?: string) => {
-    const matchingTransition = availableTransitions.find(t => {
-      // Check new triggers array first
-      if (t.triggers && t.triggers.length > 0) {
-        return t.triggers.some(trigger => trigger.type === triggerType);
-      }
-      // Fall back to legacy trigger field
+    const match = availableTransitions.find(t => {
+      if (t.triggers?.length) return t.triggers.some(tr => tr.type === triggerType);
       return t.trigger === triggerType;
     });
-    
-    if (matchingTransition) {
-      executeTransition(matchingTransition);
-    }
+    if (match) executeTransition(match);
   }, [availableTransitions, executeTransition]);
 
-  // Setup timer triggers
+  // ─── Timer triggers ───────────────────────────────────────────────
   useEffect(() => {
-    // Clear existing timers
-    timerRefs.current.forEach(timer => clearTimeout(timer));
+    timerRefs.current.forEach(t => clearTimeout(t));
     timerRefs.current.clear();
-    
-    // Setup new timer triggers
     availableTransitions.forEach(transition => {
       const timerTrigger = transition.triggers?.find(t => t.type === 'timer');
-      if (timerTrigger && timerTrigger.timerDelay) {
-        const timer = setTimeout(() => {
-          executeTransition(transition);
-        }, timerTrigger.timerDelay);
-        timerRefs.current.set(transition.id, timer);
+      if (timerTrigger?.timerDelay) {
+        timerRefs.current.set(transition.id, setTimeout(() => executeTransition(transition), timerTrigger.timerDelay));
       } else if (transition.trigger === 'timer') {
-        // Legacy timer support
-        const timer = setTimeout(() => {
-          executeTransition(transition);
-        }, 1000);
-        timerRefs.current.set(transition.id, timer);
+        timerRefs.current.set(transition.id, setTimeout(() => executeTransition(transition), 1000));
       }
     });
-    
-    return () => {
-      timerRefs.current.forEach(timer => clearTimeout(timer));
-    };
+    return () => { timerRefs.current.forEach(t => clearTimeout(t)); };
   }, [currentKeyframeId, availableTransitions, executeTransition]);
 
-  // Calculate scale to fit preview area
-  const containerWidth = 288;
-  const containerHeight = 480;
-  
+  // ─── Trigger hints ────────────────────────────────────────────────
+  const triggerHints = useMemo(() => {
+    const hints: string[] = [];
+    availableTransitions.forEach(t => {
+      if (t.triggers?.length) t.triggers.forEach(tr => hints.push(tr.type));
+      else if (t.trigger) hints.push(t.trigger);
+    });
+    return [...new Set(hints)];
+  }, [availableTransitions]);
+
+  // ─── Scale calculation ────────────────────────────────────────────
   const contentWidth = device.id === 'none' ? frameSize.width : device.width;
   const contentHeight = device.id === 'none' ? frameSize.height : device.height;
-  
+  const padding = device.id === 'none' ? 16 : 24; // extra padding for device bezel
   const autoScale = Math.min(
-    containerWidth / contentWidth,
-    containerHeight / contentHeight,
-    1
+    (containerSize.width - padding * 2) / (contentWidth + (device.id !== 'none' ? 24 : 0)),
+    (containerSize.height - padding * 2) / (contentHeight + (device.id !== 'none' ? 24 : 0)),
+    1,
   );
-  
   const effectiveScale = (zoom / 100) * autoScale;
 
-  // Intercept browser zoom
+  // ─── Wheel zoom ───────────────────────────────────────────────────
   const handleWheel = useCallback((e: WheelEvent) => {
     if ((e.metaKey || e.ctrlKey) && !isZoomLocked) {
       e.preventDefault();
@@ -226,117 +271,113 @@ export function LivePreview() {
   }, [isZoomLocked]);
 
   useEffect(() => {
-    const container = document.getElementById('live-preview-container');
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-      return () => container.removeEventListener('wheel', handleWheel);
+    const el = document.getElementById('live-preview-container');
+    if (el) {
+      el.addEventListener('wheel', handleWheel, { passive: false });
+      return () => el.removeEventListener('wheel', handleWheel);
     }
   }, [handleWheel]);
 
-  // Reset to initial state
+  // ─── Reset ────────────────────────────────────────────────────────
   const handleReset = useCallback(() => {
-    const initialKeyframe = keyframes.find(kf => kf.id === 'kf-idle') || keyframes[0];
-    if (initialKeyframe) {
-      setCurrentKeyframeId(initialKeyframe.id);
-    }
+    const initial = keyframes.find(kf => kf.id === 'kf-idle') || keyframes[0];
+    if (initial) setCurrentKeyframeId(initial.id);
   }, [keyframes]);
 
-  // Get trigger hints for UI
-  const getTriggerHints = () => {
-    const hints: string[] = [];
-    availableTransitions.forEach(t => {
-      if (t.triggers && t.triggers.length > 0) {
-        t.triggers.forEach(trigger => hints.push(trigger.type));
-      } else if (t.trigger) {
-        hints.push(t.trigger);
-      }
-    });
-    return [...new Set(hints)];
-  };
+  // ─── Status indicator ─────────────────────────────────────────────
+  const isAnimating = isTransitioning || smartAnimateState.isAnimating;
+  const statusText = smartAnimateState.isAnimating
+    ? '🎬 Animating...'
+    : isTransitioning ? '⚡ Transitioning...' : currentKeyframe?.name || '—';
+  const statusColor = isAnimating ? '#22c55e' : '#71717a';
 
-  const triggerHints = getTriggerHints();
-
+  // ═════════════════════════════════════════════════════════════════════
+  // Render
+  // ═════════════════════════════════════════════════════════════════════
   return (
-    <div style={containerStyle}>
-      {/* Header */}
-      <div style={headerStyle}>
-        <span>Live Preview</span>
-        <span style={{ fontSize: 10, color: (isTransitioning || smartAnimateState.isAnimating) ? '#22c55e' : '#666' }}>
-          {smartAnimateState.isAnimating ? '🎬 Smart Animate...' : isTransitioning ? '⚡ Transitioning...' : currentKeyframe?.name}
+    <div style={styles.container}>
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div style={styles.header}>
+        <div style={styles.headerLeft}>
+          <div style={styles.headerDot} />
+          <span style={styles.headerTitle}>Preview</span>
+        </div>
+        <span style={{ ...styles.headerStatus, color: statusColor }}>
+          {statusText}
         </span>
       </div>
 
-      {/* Device Frame Selector */}
-      <div style={controlsStyle}>
+      {/* ── Controls Row ───────────────────────────────────────────── */}
+      <div style={styles.controlsRow}>
         <select
           value={deviceFrame}
           onChange={(e) => setDeviceFrame(e.target.value)}
-          style={selectStyle}
+          style={styles.select}
         >
           {DEVICE_FRAMES.map(d => (
             <option key={d.id} value={d.id}>
-              {d.label} {d.width > 0 ? `(${d.width}×${d.height})` : ''}
+              {d.label}{d.width > 0 ? ` ${d.width}×${d.height}` : ''}
             </option>
           ))}
         </select>
-      </div>
-
-      {/* Smart Animate Toggle */}
-      <div style={smartAnimateToggleStyle}>
-        <label style={toggleLabelStyle}>
+        <label style={styles.toggleLabel}>
           <input
             type="checkbox"
             checked={useSmartAnimateMode}
             onChange={(e) => setUseSmartAnimateMode(e.target.checked)}
-            style={checkboxStyle}
+            style={styles.checkbox}
           />
-          <span>🎬 Smart Animate</span>
+          <span style={{ fontSize: 10, color: '#a1a1aa' }}>Smart</span>
         </label>
       </div>
 
-      {/* Trigger Hints */}
+      {/* ── Trigger Hints ──────────────────────────────────────────── */}
       {triggerHints.length > 0 && (
-        <div style={triggerHintsStyle}>
+        <div style={styles.triggerRow}>
           {triggerHints.map(hint => (
-            <span key={hint} style={triggerBadgeStyle}>
+            <span key={hint} style={styles.triggerBadge}>
               {getTriggerIcon(hint)} {hint}
             </span>
           ))}
         </div>
       )}
 
-      {/* Preview Area */}
-      <div 
+      {/* ── Preview Area ───────────────────────────────────────────── */}
+      <div
         id="live-preview-container"
-        style={previewAreaStyle}
+        ref={containerRef}
+        style={styles.previewArea}
       >
+        {/* Subtle dot grid background */}
+        <div style={styles.dotGrid} />
+
         <div style={{
           transform: `scale(${effectiveScale})`,
           transformOrigin: 'center center',
-          transition: 'transform 0.15s ease',
+          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }}>
-          {/* Device Frame */}
           {device.id !== 'none' ? (
-            <DeviceFrame device={device}>
-              <PreviewContent 
+            <DeviceFrameShell device={device}>
+              <PreviewContent
                 elements={elements}
                 onTrigger={handleTrigger}
                 transitionDuration={transitionDuration}
                 transitionCurve={transitionCurve}
                 availableTriggers={triggerHints}
               />
-            </DeviceFrame>
+            </DeviceFrameShell>
           ) : (
             <div style={{
               width: frameSize.width,
               height: frameSize.height,
               background: '#050506',
-              borderRadius: 8,
-              border: '1px solid #333',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.08)',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             }}>
-              <PreviewContent 
+              <PreviewContent
                 elements={elements}
                 onTrigger={handleTrigger}
                 transitionDuration={transitionDuration}
@@ -348,433 +389,25 @@ export function LivePreview() {
         </div>
       </div>
 
-      {/* Zoom Controls */}
-      <div style={zoomControlsStyle}>
-        <button
-          onClick={() => setZoom(prev => Math.max(25, prev - 25))}
-          style={zoomButtonStyle}
-        >
-          −
-        </button>
+      {/* ── Zoom Controls ──────────────────────────────────────────── */}
+      <div style={styles.zoomRow}>
+        <button onClick={() => setZoom(p => Math.max(25, p - 25))} style={styles.zoomBtn}>−</button>
         <input
-          type="range"
-          min="25"
-          max="200"
-          value={zoom}
+          type="range" min="25" max="200" value={zoom}
           onChange={(e) => setZoom(Number(e.target.value))}
-          style={sliderStyle}
+          style={styles.slider}
         />
-        <button
-          onClick={() => setZoom(prev => Math.min(200, prev + 25))}
-          style={zoomButtonStyle}
-        >
-          +
-        </button>
-        <span style={zoomLabelStyle}>{zoom}%</span>
+        <button onClick={() => setZoom(p => Math.min(200, p + 25))} style={styles.zoomBtn}>+</button>
+        <span style={styles.zoomLabel}>{zoom}%</span>
         <button
           onClick={() => setIsZoomLocked(!isZoomLocked)}
           style={{
-            ...lockButtonStyle,
-            background: isZoomLocked ? '#f59e0b20' : 'transparent',
-            borderColor: isZoomLocked ? '#f59e0b' : '#333',
+            ...styles.zoomBtn,
+            background: isZoomLocked ? 'rgba(245,158,11,0.12)' : 'transparent',
+            borderColor: isZoomLocked ? '#f59e0b' : 'rgba(255,255,255,0.10)',
           }}
           title={isZoomLocked ? 'Unlock zoom' : 'Lock zoom'}
         >
           {isZoomLocked ? '🔒' : '🔓'}
         </button>
       </div>
-
-      {/* Action buttons */}
-      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8 }}>
-        <button
-          onClick={handleReset}
-          style={resetButtonStyle}
-        >
-          ↺ Reset
-        </button>
-        <button
-          onClick={() => setZoom(100)}
-          style={resetButtonStyle}
-        >
-          100%
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Helper function for trigger icons
-function getTriggerIcon(trigger: string): string {
-  switch (trigger) {
-    case 'tap': return '👆';
-    case 'hover': return '🖱️';
-    case 'drag': return '✋';
-    case 'scroll': return '📜';
-    case 'timer': return '⏱️';
-    case 'variable': return '📊';
-    default: return '⚡';
-  }
-}
-
-// Device Frame Component
-function DeviceFrame({ 
-  device, 
-  children 
-}: { 
-  device: typeof DEVICE_FRAMES[0]; 
-  children: React.ReactNode;
-}) {
-  const isIPhone = device.id.startsWith('iphone');
-  const isIPad = device.id.startsWith('ipad');
-  
-  return (
-    <div style={{
-      position: 'relative',
-      padding: isIPhone ? 12 : 8,
-      background: '#1a1a1a',
-      borderRadius: device.radius + (isIPhone ? 8 : 4),
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-    }}>
-      {/* Notch for iPhone */}
-      {isIPhone && device.id !== 'iphonese' && (
-        <div style={{
-          position: 'absolute',
-          top: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 120,
-          height: 34,
-          background: '#000',
-          borderRadius: 20,
-          zIndex: 10,
-        }} />
-      )}
-      
-      {/* Screen */}
-      <div style={{
-        width: device.width,
-        height: device.height,
-        background: '#000',
-        borderRadius: device.radius,
-        overflow: 'hidden',
-        position: 'relative',
-      }}>
-        {children}
-      </div>
-      
-      {/* Home indicator for modern iPhones */}
-      {isIPhone && device.id !== 'iphonese' && (
-        <div style={{
-          position: 'absolute',
-          bottom: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 134,
-          height: 5,
-          background: '#fff',
-          borderRadius: 3,
-          opacity: 0.3,
-        }} />
-      )}
-      
-      {/* iPad home button area */}
-      {isIPad && (
-        <div style={{
-          position: 'absolute',
-          bottom: -4,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 40,
-          height: 4,
-          background: '#333',
-          borderRadius: 2,
-        }} />
-      )}
-    </div>
-  );
-}
-
-// Preview Content Component with interaction support
-function PreviewContent({ 
-  elements,
-  onTrigger,
-  transitionDuration,
-  transitionCurve,
-  availableTriggers,
-}: { 
-  elements: KeyElement[];
-  onTrigger: (type: TriggerType, elementId?: string) => void;
-  transitionDuration: number;
-  transitionCurve: string;
-  availableTriggers: string[];
-}) {
-  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-
-  const handleClick = (e: React.MouseEvent, elementId: string) => {
-    e.stopPropagation();
-    if (availableTriggers.includes('tap')) {
-      onTrigger('tap', elementId);
-    }
-  };
-
-  const handleMouseEnter = (elementId: string) => {
-    setHoveredElement(elementId);
-    if (availableTriggers.includes('hover')) {
-      onTrigger('hover', elementId);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredElement(null);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (dragStartRef.current && availableTriggers.includes('drag')) {
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (distance > 20) { // Minimum drag distance
-        onTrigger('drag');
-      }
-    }
-    dragStartRef.current = null;
-  };
-
-  const handleContainerClick = () => {
-    if (availableTriggers.includes('tap')) {
-      onTrigger('tap');
-    }
-  };
-
-  // Get CSS easing
-  // transitionCurve is already a valid CSS easing value
-  const cssEasing = transitionCurve;
-
-  return (
-    <div 
-      style={{ 
-        width: '100%', 
-        height: '100%', 
-        position: 'relative',
-        cursor: availableTriggers.includes('tap') ? 'pointer' : 'default',
-      }}
-      onClick={handleContainerClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-    >
-      {elements.map((el) => (
-        <div
-          key={el.id}
-          onClick={(e) => handleClick(e, el.id)}
-          onMouseEnter={() => handleMouseEnter(el.id)}
-          onMouseLeave={handleMouseLeave}
-          style={{
-            position: 'absolute',
-            left: el.position.x,
-            top: el.position.y,
-            width: el.size.width,
-            height: el.size.height,
-            background: el.style?.fill || '#3b82f6',
-            opacity: el.style?.fillOpacity ?? 1,
-            borderRadius: el.shapeType === 'ellipse' 
-              ? '50%' 
-              : (el.style?.borderRadius || 8),
-            border: el.style?.stroke 
-              ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}`
-              : 'none',
-            boxShadow: el.style?.shadowColor 
-              ? `${el.style.shadowOffsetX || 0}px ${el.style.shadowOffsetY || 0}px ${el.style.shadowBlur || 0}px ${el.style.shadowColor}`
-              : undefined,
-            // Animation transition
-            transition: `all ${transitionDuration}ms ${cssEasing}`,
-            // Hover effect
-            transform: hoveredElement === el.id ? 'scale(1.02)' : 'scale(1)',
-            cursor: availableTriggers.includes('tap') ? 'pointer' : 'default',
-          }}
-        >
-          {/* Text content */}
-          {el.shapeType === 'text' && el.text && (
-            <div style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: el.style?.textColor || '#fff',
-              fontSize: el.style?.fontSize || 14,
-              fontWeight: el.style?.fontWeight || 400,
-              fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
-              textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
-              padding: el.style?.padding || 0,
-            }}>
-              {el.text}
-            </div>
-          )}
-          
-          {/* Image content */}
-          {el.shapeType === 'image' && el.style?.imageSrc && (
-            <img 
-              src={el.style.imageSrc} 
-              alt=""
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: el.style?.objectFit || 'cover',
-                borderRadius: 'inherit',
-              }}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Styles
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-};
-
-const headerStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  borderBottom: '1px solid #2a2a2a',
-  fontSize: 11,
-  fontWeight: 600,
-  color: '#888',
-  textTransform: 'uppercase',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-};
-
-const controlsStyle: React.CSSProperties = {
-  padding: '8px 16px',
-  borderBottom: '1px solid #2a2a2a',
-};
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '6px 8px',
-  background: '#0d0d0e',
-  border: '1px solid #2a2a2a',
-  borderRadius: 6,
-  color: '#e5e5e5',
-  fontSize: 11,
-};
-
-const triggerHintsStyle: React.CSSProperties = {
-  padding: '6px 16px',
-  borderBottom: '1px solid #2a2a2a',
-  display: 'flex',
-  gap: 6,
-  flexWrap: 'wrap',
-};
-
-const triggerBadgeStyle: React.CSSProperties = {
-  padding: '2px 8px',
-  background: '#1e3a5f',
-  borderRadius: 4,
-  fontSize: 10,
-  color: '#60a5fa',
-};
-
-const previewAreaStyle: React.CSSProperties = {
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: '#0a0a0b',
-  overflow: 'hidden',
-  position: 'relative',
-};
-
-const zoomControlsStyle: React.CSSProperties = {
-  padding: '8px 16px',
-  borderTop: '1px solid #2a2a2a',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-};
-
-const zoomButtonStyle: React.CSSProperties = {
-  width: 24,
-  height: 24,
-  background: '#0d0d0e',
-  border: '1px solid #333',
-  borderRadius: 4,
-  color: '#888',
-  fontSize: 14,
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const sliderStyle: React.CSSProperties = {
-  flex: 1,
-  height: 4,
-  accentColor: '#2563eb',
-};
-
-const zoomLabelStyle: React.CSSProperties = {
-  fontSize: 10,
-  color: '#666',
-  minWidth: 36,
-  textAlign: 'right',
-};
-
-const lockButtonStyle: React.CSSProperties = {
-  width: 24,
-  height: 24,
-  background: 'transparent',
-  border: '1px solid #333',
-  borderRadius: 4,
-  fontSize: 12,
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const resetButtonStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '6px 0',
-  background: 'transparent',
-  border: '1px solid #333',
-  borderRadius: 6,
-  color: '#666',
-  fontSize: 10,
-  cursor: 'pointer',
-};
-
-// Smart Animate toggle styles
-const smartAnimateToggleStyle: React.CSSProperties = {
-  padding: '6px 16px',
-  borderBottom: '1px solid #2a2a2a',
-  display: 'flex',
-  alignItems: 'center',
-};
-
-const toggleLabelStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  fontSize: 10,
-  color: '#888',
-  cursor: 'pointer',
-};
-
-const checkboxStyle: React.CSSProperties = {
-  width: 14,
-  height: 14,
-  accentColor: '#22c55e',
-  cursor: 'pointer',
-};
