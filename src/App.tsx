@@ -146,7 +146,7 @@ export default function App() {
     
     try {
       const canvas = await html2canvas(frameElement, {
-        backgroundColor: '#1a1a1a',
+        backgroundColor: canvasBackground,
         scale: 2,
         logging: false,
       });
