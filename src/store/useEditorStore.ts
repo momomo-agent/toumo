@@ -198,6 +198,7 @@ interface EditorActions {
   setContrast: (amount: number) => void;
   setSaturate: (amount: number) => void;
   setGrayscale: (amount: number) => void;
+  setFlip: (flipX: boolean, flipY: boolean) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2194,6 +2195,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, grayscale: amount } 
+      });
+    }
+  },
+
+  setFlip: (flipX: boolean, flipY: boolean) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, flipX, flipY } 
       });
     }
   },
