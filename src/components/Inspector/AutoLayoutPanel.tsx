@@ -3,6 +3,97 @@ import { useEditorStore } from '../../store';
 import type { AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode } from '../../types';
 import './AutoLayoutPanel.css';
 
+// ============ Child Layout Panel (shown when child of auto layout parent is selected) ============
+
+function ChildLayoutSection() {
+  const {
+    selectedElementId,
+    selectedKeyframeId,
+    keyframes,
+    setChildSizingMode,
+  } = useEditorStore();
+
+  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
+  const selectedElement = selectedKeyframe?.keyElements.find(
+    el => el.id === selectedElementId
+  );
+
+  // Only show if this element has a parent with auto layout enabled
+  if (!selectedElement?.parentId) return null;
+
+  const parent = selectedKeyframe?.keyElements.find(
+    el => el.id === selectedElement.parentId
+  );
+  if (!parent?.autoLayout?.enabled) return null;
+
+  const layoutChild = selectedElement.layoutChild || { widthMode: 'fixed', heightMode: 'fixed' };
+  const isHorizontal = parent.autoLayout.direction === 'horizontal';
+
+  const handleWidthChange = (mode: SizingMode) => {
+    setChildSizingMode(selectedElement.id, mode, layoutChild.heightMode);
+  };
+
+  const handleHeightChange = (mode: SizingMode) => {
+    setChildSizingMode(selectedElement.id, layoutChild.widthMode, mode);
+  };
+
+  const SizingButton = ({ mode, active, onClick }: { mode: SizingMode; active: boolean; onClick: () => void }) => (
+    <button
+      className={`child-sizing-btn ${active ? 'active' : ''}`}
+      onClick={onClick}
+      title={mode === 'fixed' ? 'Fixed size' : mode === 'hug' ? 'Hug contents' : 'Fill container'}
+    >
+      {mode === 'fixed' ? (
+        <FixedIcon active={active} />
+      ) : mode === 'hug' ? (
+        <HugIcon active={active} />
+      ) : (
+        <FillIcon active={active} />
+      )}
+      <span className="child-sizing-label">{mode === 'fixed' ? 'Fixed' : mode === 'hug' ? 'Hug' : 'Fill'}</span>
+    </button>
+  );
+
+  return (
+    <div className="child-layout-section">
+      <div className="child-layout-header">
+        <ChildLayoutIcon />
+        <span className="child-layout-title">Layout Child</span>
+        <span className="child-layout-parent-hint">
+          in {isHorizontal ? '→' : '↓'} {parent.name}
+        </span>
+      </div>
+      <div className="child-layout-content">
+        {/* Width sizing */}
+        <div className="child-layout-row">
+          <span className="child-layout-label">W</span>
+          <div className="child-sizing-group">
+            <SizingButton mode="fixed" active={layoutChild.widthMode === 'fixed'} onClick={() => handleWidthChange('fixed')} />
+            <SizingButton mode="hug" active={layoutChild.widthMode === 'hug'} onClick={() => handleWidthChange('hug')} />
+            <SizingButton mode="fill" active={layoutChild.widthMode === 'fill'} onClick={() => handleWidthChange('fill')} />
+          </div>
+        </div>
+        {/* Height sizing */}
+        <div className="child-layout-row">
+          <span className="child-layout-label">H</span>
+          <div className="child-sizing-group">
+            <SizingButton mode="fixed" active={layoutChild.heightMode === 'fixed'} onClick={() => handleHeightChange('fixed')} />
+            <SizingButton mode="hug" active={layoutChild.heightMode === 'hug'} onClick={() => handleHeightChange('hug')} />
+            <SizingButton mode="fill" active={layoutChild.heightMode === 'fill'} onClick={() => handleHeightChange('fill')} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ChildLayoutIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1" strokeDasharray="2 1" fill="none" />
+    <rect x="4" y="4" width="6" height="6" rx="1" fill="currentColor" opacity="0.5" />
+  </svg>
+);
+
 // Icons
 const AutoLayoutIcon = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -449,3 +540,5 @@ export function AutoLayoutPanel() {
     </div>
   );
 }
+
+export { ChildLayoutSection };

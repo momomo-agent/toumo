@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
 import { GradientEditor } from './GradientEditor';
-import { AutoLayoutPanel } from './AutoLayoutPanel';
+import { AutoLayoutPanel, ChildLayoutSection } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
 import { PrototypeLinkPanel } from './PrototypeLinkPanel';
 import { TextPropertiesPanel } from './TextPropertiesPanel';
@@ -927,6 +927,9 @@ export function DesignPanel() {
     <div className="figma-design-panel">
       {/* Auto Layout Section */}
       <AutoLayoutPanel />
+
+      {/* Child Layout Section (when child of auto layout parent is selected) */}
+      <ChildLayoutSection />
 
       {/* Constraints Section */}
       <ConstraintsPanel />
