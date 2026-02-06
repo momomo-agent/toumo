@@ -1785,6 +1785,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ transformStyle: 'preserve-3d' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>3D</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Clip Path</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ clipPath: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+                <button onClick={() => handleStyleChange({ clipPath: 'circle(50%)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Circle</button>
+              </div>
+            </div>
           </>
         )}
       </>
