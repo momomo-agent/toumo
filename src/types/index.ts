@@ -71,6 +71,7 @@ export type ShapeStyle = {
   textIndent?: number;
   columnCount?: number;
   columnGap?: number;
+  listStyle?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
