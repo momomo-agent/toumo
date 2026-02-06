@@ -119,6 +119,7 @@ interface EditorActions {
   ungroupSelectedElements: () => void;
   enterGroupEditMode: (groupId: string) => void;
   exitGroupEditMode: () => void;
+  resizeGroup: (groupId: string, newSize: Size, newPosition: Position) => void;
   // Alignment actions
   alignElements: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
   distributeElements: (direction: 'horizontal' | 'vertical') => void;
@@ -1105,6 +1106,54 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementIds: [state.editingGroupId],
       selectedElementId: state.editingGroupId,
     });
+  },
+
+  // Resize group with proportional scaling of children
+  resizeGroup: (groupId: string, newSize: Size, newPosition: Position) => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const groupElement = currentKeyframe.keyElements.find(el => el.id === groupId);
+    if (!groupElement) return;
+    
+    const children = currentKeyframe.keyElements.filter(el => el.parentId === groupId);
+    if (children.length === 0) return;
+    
+    // Calculate scale factors
+    const scaleX = newSize.width / groupElement.size.width;
+    const scaleY = newSize.height / groupElement.size.height;
+    
+    set((state) => ({
+      keyframes: state.keyframes.map((kf) => {
+        if (kf.id !== state.selectedKeyframeId) return kf;
+        
+        return {
+          ...kf,
+          keyElements: kf.keyElements.map((el) => {
+            if (el.id === groupId) {
+              // Update group itself
+              return { ...el, size: newSize, position: newPosition };
+            }
+            if (el.parentId === groupId) {
+              // Scale child position and size proportionally
+              return {
+                ...el,
+                position: {
+                  x: Math.round(el.position.x * scaleX),
+                  y: Math.round(el.position.y * scaleY),
+                },
+                size: {
+                  width: Math.round(el.size.width * scaleX),
+                  height: Math.round(el.size.height * scaleY),
+                },
+              };
+            }
+            return el;
+          }),
+        };
+      }),
+    }));
   },
 
   // Align elements

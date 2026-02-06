@@ -172,21 +172,21 @@ function KeyframeInspector({ keyframe, keyframes, transitions }: KeyframeInspect
       <div className="figma-panel-header">State: {keyframe.name}</div>
       
       <div className="figma-section">
-        <div className="figma-section-label">Functional State</div>
+        <div className="figma-section-label">State</div>
         <div className="figma-row">
           <span className="figma-label">ID</span>
           <span className="figma-value">{keyframe.functionalState || keyframe.name.toLowerCase()}</span>
         </div>
         <div className="figma-row">
-          <span className="figma-label">Summary</span>
+          <span className="figma-label">Description</span>
           <span className="figma-value">{keyframe.summary}</span>
         </div>
       </div>
 
       <div className="figma-section">
-        <div className="figma-section-label">Display State</div>
+        <div className="figma-section-label">Variant</div>
         <div className="figma-row">
-          <span className="figma-label">Elements</span>
+          <span className="figma-label">Layers</span>
           <span className="figma-value">{keyframe.keyElements.length}</span>
         </div>
       </div>

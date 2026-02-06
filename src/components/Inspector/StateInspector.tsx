@@ -50,20 +50,20 @@ export function StateInspector() {
     <div>
       <SectionHeader>State Mapping</SectionHeader>
       
-      {/* Current Display State */}
+      {/* Current Variant */}
       <div style={{ marginBottom: 16 }}>
-        <Label>Display State</Label>
+        <Label>Variant</Label>
         <div style={valueBoxStyle}>
           <span style={{ color: '#fff' }}>{selectedKeyframe.name}</span>
           <span style={{ color: '#666', fontSize: 10 }}>
-            {selectedKeyframe.keyElements.length} elements
+            {selectedKeyframe.keyElements.length} layers
           </span>
         </div>
       </div>
 
-      {/* Functional State Mapping */}
+      {/* State Mapping */}
       <div style={{ marginBottom: 16 }}>
-        <Label>Functional State</Label>
+        <Label>State</Label>
         <select
           value={selectedKeyframe.functionalState || ''}
           onChange={(e) => 
@@ -88,12 +88,12 @@ export function StateInspector() {
         <div style={mappingBoxStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={stateChipStyle}>
-              <span style={{ fontSize: 10, color: '#888' }}>Functional</span>
+              <span style={{ fontSize: 10, color: '#888' }}>State</span>
               <span style={{ color: '#fff' }}>{currentFunctionalState.name}</span>
             </div>
             <span style={{ color: '#444' }}>→</span>
             <div style={stateChipStyle}>
-              <span style={{ fontSize: 10, color: '#888' }}>Display</span>
+              <span style={{ fontSize: 10, color: '#888' }}>Variant</span>
               <span style={{ color: '#fff' }}>{selectedKeyframe.name}</span>
             </div>
           </div>
@@ -115,16 +115,16 @@ export function StateInspector() {
         </>
       )}
 
-      {/* Quick add functional state */}
+      {/* Quick add state */}
       <div style={{ marginTop: 16 }}>
         <button
           onClick={() => {
-            const name = prompt('Functional state name:');
+            const name = prompt('State name:');
             if (name) addFunctionalState(name);
           }}
           style={addButtonStyle}
         >
-          + Add Functional State
+          + Add State
         </button>
       </div>
     </div>

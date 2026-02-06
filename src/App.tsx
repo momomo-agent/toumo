@@ -2369,7 +2369,7 @@ export default function App() {
 
           {/* Editor Content */}
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-            {/* Left Panel: Display States + Layers (Figma style) */}
+            {/* Left Panel: Variants + Layers (Figma style) */}
             <aside
               style={{
                 width: 220,
@@ -2380,9 +2380,9 @@ export default function App() {
                 overflow: 'hidden',
               }}
             >
-              {/* Display States (top) */}
+              {/* Variants (top) */}
               <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
-                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8, letterSpacing: '0.5px' }}>Display States</h3>
+                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8, letterSpacing: '0.5px' }}>Variants</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {keyframes.map((kf) => (
                     <button

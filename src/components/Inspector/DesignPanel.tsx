@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
 import './DesignPanel.css';
@@ -384,6 +384,10 @@ export function DesignPanel() {
   // Rotation state
   const [rotation, setRotation] = useState(0);
 
+  // Layer opacity and blend mode
+  const [layerOpacity, setLayerOpacity] = useState(100);
+  const [blendMode, setBlendMode] = useState('normal');
+
   if (!selectedElement) {
     return (
       <div className="figma-design-panel">
@@ -401,11 +405,57 @@ export function DesignPanel() {
     style?: {
       fill?: string;
       fillOpacity?: number;
+      opacity?: number;
       borderRadius?: number;
+      borderTopLeftRadius?: number;
+      borderTopRightRadius?: number;
+      borderBottomLeftRadius?: number;
+      borderBottomRightRadius?: number;
       stroke?: string;
       strokeWidth?: number;
+      strokeOpacity?: number;
+      strokeDasharray?: string;
+      rotation?: number;
+      blendMode?: string;
+      boxShadow?: string;
+      filter?: string;
     };
   };
+
+  // Sync local state with element when selection changes
+  useEffect(() => {
+    if (element?.style) {
+      setRotation(element.style.rotation || 0);
+      setLayerOpacity(Math.round((element.style.opacity ?? 1) * 100));
+      setBlendMode(element.style.blendMode || 'normal');
+      
+      // Corner radius
+      const hasIndependent = element.style.borderTopLeftRadius !== undefined ||
+        element.style.borderTopRightRadius !== undefined ||
+        element.style.borderBottomLeftRadius !== undefined ||
+        element.style.borderBottomRightRadius !== undefined;
+      
+      if (hasIndependent) {
+        setIndependentCorners(true);
+        setCorners({
+          tl: element.style.borderTopLeftRadius || 0,
+          tr: element.style.borderTopRightRadius || 0,
+          bl: element.style.borderBottomLeftRadius || 0,
+          br: element.style.borderBottomRightRadius || 0,
+        });
+      } else {
+        setIndependentCorners(false);
+        setCornerRadius(element.style.borderRadius || 0);
+      }
+    }
+  }, [element?.id]);
+
+  // Update element style helper
+  const updateStyle = useCallback((updates: Partial<typeof element.style>) => {
+    updateElement(element.id, {
+      style: { ...element.style, ...updates }
+    });
+  }, [element?.id, element?.style, updateElement]);
 
   const handlePositionChange = (axis: 'x' | 'y', value: number) => {
     updateElement(element.id, {
@@ -466,6 +516,43 @@ export function DesignPanel() {
 
   return (
     <div className="figma-design-panel">
+      {/* Layer Section - Opacity & Blend Mode */}
+      <Section title="Layer" defaultExpanded={true}>
+        <div className="figma-layer-row">
+          <div className="figma-input-group with-icon">
+            <BlendModeIcon />
+            <select
+              className="figma-select blend-mode-select"
+              value={blendMode}
+              onChange={(e) => {
+                setBlendMode(e.target.value);
+                updateStyle({ blendMode: e.target.value });
+              }}
+            >
+              {BLEND_MODES.map((mode, index) => (
+                <option key={`${mode.value}-${index}`} value={mode.value}>{mode.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="figma-input-group with-icon opacity-group">
+            <OpacityIcon />
+            <input
+              type="number"
+              className="figma-number-input"
+              value={layerOpacity}
+              min={0}
+              max={100}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 0;
+                setLayerOpacity(val);
+                updateStyle({ opacity: val / 100 });
+              }}
+            />
+            <span className="figma-input-unit">%</span>
+          </div>
+        </div>
+      </Section>
+
       {/* Position & Size Section */}
       <Section title="Frame" defaultExpanded={true}>
         <div className="figma-position-grid">
@@ -510,7 +597,11 @@ export function DesignPanel() {
               type="number"
               className="figma-number-input"
               value={rotation}
-              onChange={(e) => setRotation(parseFloat(e.target.value) || 0)}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value) || 0;
+                setRotation(val);
+                updateStyle({ rotation: val });
+              }}
             />
             <span className="figma-input-unit">°</span>
           </div>
@@ -524,9 +615,17 @@ export function DesignPanel() {
               onChange={(e) => {
                 const val = parseInt(e.target.value) || 0;
                 if (independentCorners) {
-                  setCorners({ ...corners, tl: val });
+                  const newCorners = { ...corners, tl: val };
+                  setCorners(newCorners);
+                  updateStyle({
+                    borderTopLeftRadius: newCorners.tl,
+                    borderTopRightRadius: newCorners.tr,
+                    borderBottomLeftRadius: newCorners.bl,
+                    borderBottomRightRadius: newCorners.br,
+                  });
                 } else {
                   setCornerRadius(val);
+                  updateStyle({ borderRadius: val });
                 }
               }}
             />
@@ -546,10 +645,26 @@ export function DesignPanel() {
         </div>
         {independentCorners && (
           <div className="figma-corners-grid">
-            <NumberInput label="TL" value={corners.tl} onChange={(v) => setCorners({ ...corners, tl: v })} min={0} />
-            <NumberInput label="TR" value={corners.tr} onChange={(v) => setCorners({ ...corners, tr: v })} min={0} />
-            <NumberInput label="BL" value={corners.bl} onChange={(v) => setCorners({ ...corners, bl: v })} min={0} />
-            <NumberInput label="BR" value={corners.br} onChange={(v) => setCorners({ ...corners, br: v })} min={0} />
+            <NumberInput label="TL" value={corners.tl} onChange={(v) => {
+              const newCorners = { ...corners, tl: v };
+              setCorners(newCorners);
+              updateStyle({ borderTopLeftRadius: v });
+            }} min={0} />
+            <NumberInput label="TR" value={corners.tr} onChange={(v) => {
+              const newCorners = { ...corners, tr: v };
+              setCorners(newCorners);
+              updateStyle({ borderTopRightRadius: v });
+            }} min={0} />
+            <NumberInput label="BL" value={corners.bl} onChange={(v) => {
+              const newCorners = { ...corners, bl: v };
+              setCorners(newCorners);
+              updateStyle({ borderBottomLeftRadius: v });
+            }} min={0} />
+            <NumberInput label="BR" value={corners.br} onChange={(v) => {
+              const newCorners = { ...corners, br: v };
+              setCorners(newCorners);
+              updateStyle({ borderBottomRightRadius: v });
+            }} min={0} />
           </div>
         )}
       </Section>

@@ -516,7 +516,7 @@ function ComponentEditor({
         </div>
       </div>
 
-      {/* Functional States */}
+      {/* States */}
       <div style={{ marginBottom: 14 }}>
         <div style={{ 
           display: 'flex', 
@@ -525,7 +525,7 @@ function ComponentEditor({
           marginBottom: 8 
         }}>
           <label style={{ fontSize: 10, color: '#666' }}>
-            Functional States
+            States
           </label>
         </div>
 
@@ -589,7 +589,7 @@ function ComponentEditor({
                       ×
                     </button>
                   </div>
-                  {/* Display State Mapping Panel */}
+                  {/* Variant Mapping Panel */}
                   {isExpanded && (
                     <DisplayStateMappingPanel
                       selectedKeyframeIds={displayStates}
@@ -860,7 +860,7 @@ function ComponentStateGraph({
   );
 }
 
-// Display State Mapping Panel - shows keyframes that can be linked to a functional state
+// Variant Mapping Panel - shows keyframes that can be linked to a state
 function DisplayStateMappingPanel({
   selectedKeyframeIds,
   keyframes,
