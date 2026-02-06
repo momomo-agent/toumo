@@ -69,6 +69,7 @@ export type ShapeStyle = {
   hyphens?: 'none' | 'auto';
   writingMode?: 'horizontal-tb' | 'vertical-rl' | 'vertical-lr';
   textIndent?: number;
+  columnCount?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
