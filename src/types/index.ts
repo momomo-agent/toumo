@@ -58,6 +58,7 @@ export type ShapeStyle = {
   alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
   zIndex?: number;
   visibility?: 'visible' | 'hidden';
+  isolation?: 'auto' | 'isolate';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
