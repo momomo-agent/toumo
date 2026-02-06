@@ -229,6 +229,7 @@ interface EditorActions {
   setCssPosition: (position: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky') => void;
   setInset: (top?: number, right?: number, bottom?: number, left?: number) => void;
   setDisplay: (display: 'block' | 'inline' | 'flex' | 'grid' | 'none' | 'inline-block') => void;
+  setMargin: (margin: number | string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2646,6 +2647,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, display } 
+      });
+    }
+  },
+
+  setMargin: (margin: number | string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, margin } 
       });
     }
   },
