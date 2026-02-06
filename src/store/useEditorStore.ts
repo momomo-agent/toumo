@@ -234,6 +234,7 @@ interface EditorActions {
   setIndividualPadding: (top?: number, right?: number, bottom?: number, left?: number) => void;
   setOutline: (width: number, style: string, color: string) => void;
   setOutlineOffset: (offset: number) => void;
+  setTransition: (property: string, duration: number, easing: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2733,6 +2734,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, outlineOffset: offset } 
+      });
+    }
+  },
+
+  setTransition: (property: string, duration: number, easing: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style,
+          transitionProperty: property,
+          transitionDuration: duration,
+          transitionTimingFunction: easing
+        } 
       });
     }
   },
