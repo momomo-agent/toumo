@@ -393,6 +393,7 @@ export function CanvasElement({
           element.style?.flipY ? 'scaleY(-1)' : '',
         ].filter(Boolean).join(' ') || undefined,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
+        backdropFilter: element.style?.backdropBlur ? `blur(${element.style.backdropBlur}px)` : undefined,
         color: element.style?.textColor || '#fff',
         display: 'flex',
         alignItems: 'center',

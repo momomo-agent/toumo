@@ -970,6 +970,19 @@ export default function App() {
           </select>
         </div>
 
+        {/* Backdrop Blur */}
+        <div style={{ marginBottom: 20 }}>
+          <Label>Backdrop Blur</Label>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            value={currentStyle.backdropBlur ?? 0}
+            onChange={(e) => handleStyleChange({ backdropBlur: Number(e.target.value) })}
+            style={{ width: '100%' }}
+          />
+        </div>
+
         {/* Drop Shadow */}
         <div style={{ marginBottom: 20 }}>
           <Label>Drop Shadow</Label>
