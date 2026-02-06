@@ -321,6 +321,18 @@ export type GestureType =
 // 滑动方向
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right' | 'any';
 
+// 手势识别配置 (区分点击和拖拽)
+export type GestureRecognition = {
+  // 移动多少像素后判定为拖拽 (默认 10px)
+  dragThreshold: number;
+  // 按下多久后判定为长按 (默认 500ms)
+  longPressDelay: number;
+  // 双击间隔 (默认 300ms)
+  doubleTapInterval: number;
+  // 滑动速度阈值 (px/ms)
+  swipeVelocity: number;
+};
+
 // 拖拽区域触发条件
 export type DragZoneTrigger = {
   // 区域类型
@@ -344,6 +356,8 @@ export type GestureConfig = {
   direction?: SwipeDirection;
   // 长按时长 (ms)
   duration?: number;
+  // 移动阈值 (超过此值判定为拖拽而非点击)
+  moveThreshold?: number;
   // 滑动距离阈值
   threshold?: number;
   // 拖拽过程中的区域触发
@@ -352,7 +366,7 @@ export type GestureConfig = {
   trackPosition?: boolean;
   // 位置映射到变量
   positionVariable?: {
-    x?: string;  // 变量名
+    x?: string;
     y?: string;
   };
 };
