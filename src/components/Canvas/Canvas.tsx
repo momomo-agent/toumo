@@ -7,6 +7,7 @@ import { CanvasElement, type ResizeHandle } from './CanvasElement';
 import { PenTool } from './PenTool';
 import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
+import { CanvasHints } from './CanvasHints';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -687,6 +688,8 @@ export function Canvas() {
                   cursor: isActive ? 'default' : 'pointer',
                 }}
               >
+                {/* Canvas hints for empty state */}
+                {isActive && frameElements.length === 0 && <CanvasHints />}
                 {isActive
                   ? (() => {
                       // 分离顶层元素和子元素
@@ -741,15 +744,36 @@ export function Canvas() {
                                   }}
                                 />
                               )}
-                              {/* 编组选择层 */}
+                              {/* 编组选择层 - 用于拖拽整个编组 */}
                               {!isEditingThisGroup && (
                                 <CanvasElement
                                   key={`group-${element.id}`}
-                                  element={element}
+                                  element={{
+                                    ...element,
+                                    position: { x: 0, y: 0 }, // 在编组容器内使用相对位置
+                                  }}
                                   allElements={frameElements}
                                   scale={canvasScale}
                                   isSelected={selectedElementIds.includes(element.id)}
-                                  onAlignmentCheck={checkAlignment}
+                                  onAlignmentCheck={(id, pos, size, options) => {
+                                    // 将相对位置转换为绝对位置进行对齐检查
+                                    const absolutePos = {
+                                      x: pos.x + element.position.x,
+                                      y: pos.y + element.position.y,
+                                    };
+                                    const result = checkAlignment(id, absolutePos, size, options);
+                                    if (result?.snappedPosition) {
+                                      // 将对齐后的绝对位置转换回相对位置
+                                      return {
+                                        ...result,
+                                        snappedPosition: {
+                                          x: result.snappedPosition.x - element.position.x,
+                                          y: result.snappedPosition.y - element.position.y,
+                                        },
+                                      };
+                                    }
+                                    return result;
+                                  }}
                                   isGroup={true}
                                 />
                               )}
