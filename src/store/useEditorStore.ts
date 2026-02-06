@@ -233,7 +233,7 @@ interface EditorActions {
   setMargin: (margin: number | string) => void;
   setIndividualMargin: (top?: number, right?: number, bottom?: number, left?: number) => void;
   setIndividualPadding: (top?: number, right?: number, bottom?: number, left?: number) => void;
-  setOutline: (width: number, style: string, color: string) => void;
+  setOutline: (width: number, style: 'none' | 'solid' | 'dashed' | 'dotted' | 'double', color: string) => void;
   setOutlineOffset: (offset: number) => void;
   setTransition: (property: string, duration: number, easing: string) => void;
   setTransitionDelay: (delay: number) => void;
@@ -2716,7 +2716,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 
-  setOutline: (width: number, style: string, color: string) => {
+  setOutline: (width: number, style: 'none' | 'solid' | 'dashed' | 'dotted' | 'double', color: string) => {
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
