@@ -10,8 +10,8 @@ interface WelcomeModalProps {
 
 const STEPS = [
   { icon: '🎨', title: '创建元素', subtitle: '用工具栏快速绘制形状和文字', tips: [['R','矩形'],['O','圆形'],['T','文字']] },
-  { icon: '✨', title: '添加状态', subtitle: '为元素定义不同的视觉状态', tips: [['1','添加新状态'],['2','修改属性'],['3','每个状态=一个画面']] },
-  { icon: '⚡', title: '设置交互', subtitle: '定义状态之间的触发和过渡动画', tips: [['1','选择触发方式'],['2','设置动画类型'],['3','调整时长和缓动']] },
+  { icon: '✨', title: '添加关键帧', subtitle: '每个关键帧代表一个画面状态', tips: [['＋','新建关键帧'],['🎨','修改元素属性'],['📋','每帧独立设计']] },
+  { icon: '⚡', title: '设置交互', subtitle: '定义状态之间的触发和过渡动画', tips: [['Tap','点击触发'],['Hover','悬停触发'],['⚙','自定义缓动曲线']] },
   { icon: '📱', title: '预览效果', subtitle: '实时查看你的交互原型', tips: [['▶','点击预览'],['↔','设备框架测试'],['📤','分享给团队']] },
 ];
 
@@ -59,7 +59,7 @@ export function WelcomeModal({ onLoadExample }: WelcomeModalProps) {
           <div style={{ width:48,height:48,margin:'0 auto 8px',background:'#1f1f1f',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid #333' }}>
             <span style={{ fontSize:22 }}>{s.icon}</span>
           </div>
-          <div style={{ fontSize:11,color:'#555',marginBottom:4 }}>Step {step+1} / {STEPS.length}</div>
+          <div style={{ fontSize:11,color:'#555',marginBottom:4 }}>第 {step+1} 步 / 共 {STEPS.length} 步</div>
           <h2 style={{ margin:'0 0 4px',fontSize:20,fontWeight:700,color:'#fff' }}>{s.title}</h2>
           <p style={{ margin:0,fontSize:13,color:'#888' }}>{s.subtitle}</p>
         </div>
