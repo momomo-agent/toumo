@@ -409,6 +409,7 @@ export function CanvasElement({
         hyphens: element.style?.hyphens || 'none',
         writingMode: element.style?.writingMode || 'horizontal-tb',
         textIndent: element.style?.textIndent || 0,
+        columnCount: element.style?.columnCount || 1,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
