@@ -1702,6 +1702,14 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ transition: 'all 0.3s ease' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0.3s</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Aspect Ratio</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ aspectRatio: 'auto' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Auto</button>
+                <button onClick={() => handleStyleChange({ aspectRatio: '1/1' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1:1</button>
+                <button onClick={() => handleStyleChange({ aspectRatio: '16/9' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16:9</button>
+              </div>
+            </div>
           </>
         )}
       </>
