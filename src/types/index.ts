@@ -68,6 +68,7 @@ export type ShapeStyle = {
   textOverflow?: 'clip' | 'ellipsis';
   hyphens?: 'none' | 'auto';
   writingMode?: 'horizontal-tb' | 'vertical-rl' | 'vertical-lr';
+  textIndent?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
