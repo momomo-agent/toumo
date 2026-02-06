@@ -401,6 +401,7 @@ export function CanvasElement({
         outline: element.style?.outline || undefined,
         backdropFilter: element.style?.backdropFilter || (element.style?.backdropBlur ? `blur(${element.style.backdropBlur}px)` : undefined),
         transition: element.style?.transition || undefined,
+        clipPath: element.style?.clipPath || undefined,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
