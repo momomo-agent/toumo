@@ -68,6 +68,8 @@ interface EditorActions {
   setCurrentTool: (tool: ToolType) => void;
   setCanvasOffset: (offset: Position) => void;
   setCanvasScale: (scale: number) => void;
+  zoomToFit: () => void;
+  zoomTo100: () => void;
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
   toggleRulers: () => void;
@@ -337,6 +339,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setCurrentTool: (tool) => set({ currentTool: tool }),
   setCanvasOffset: (offset) => set({ canvasOffset: offset }),
   setCanvasScale: (scale) => set({ canvasScale: scale }),
+  
+  zoomToFit: () => set((state) => {
+    const containerWidth = 800;
+    const containerHeight = 600;
+    const scale = Math.min(
+      containerWidth / state.frameSize.width,
+      containerHeight / state.frameSize.height,
+      1
+    ) * 0.9;
+    return { canvasScale: scale };
+  }),
+  
+  zoomTo100: () => set({ canvasScale: 1 }),
   addRecentColor: (color: string) => set((state) => ({
     recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
   })),
