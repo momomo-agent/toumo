@@ -8,7 +8,8 @@
  */
 
 import type { KeyElement, ShapeStyle } from '../types';
-import { SpringAnimationEngine, SpringConfig } from './SpringAnimation';
+import { SpringAnimationEngine } from './SpringAnimation';
+import type { SpringConfig } from './SpringAnimation';
 
 // 可动画的属性类型
 export type AnimatableProperty = 
@@ -150,8 +151,8 @@ function compareElements(from: KeyElement, to: KeyElement): PropertyDiff[] {
   }
   
   // 样式差异
-  const fromStyle = from.style || {};
-  const toStyle = to.style || {};
+  const fromStyle = (from.style || {}) as Partial<ShapeStyle>;
+  const toStyle = (to.style || {}) as Partial<ShapeStyle>;
   
   // 数值属性
   const numericProps: Array<{ key: keyof ShapeStyle; prop: AnimatableProperty }> = [
@@ -325,7 +326,7 @@ export class SmartAnimateController {
     // 创建元素映射
     const elementMap = new Map<string, KeyElement>();
     for (const el of fromElements) {
-      elementMap.set(el.id, { ...el, style: { ...el.style }, position: { ...el.position }, size: { ...el.size } });
+      elementMap.set(el.id, { ...el, style: { ...el.style } as ShapeStyle, position: { ...el.position }, size: { ...el.size } });
     }
     
     // 添加新元素（初始透明）

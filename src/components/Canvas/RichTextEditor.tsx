@@ -3,7 +3,7 @@ import type { KeyElement } from '../../types';
 import { useEditorStore } from '../../store';
 
 // Available fonts for the editor
-const FONT_OPTIONS = [
+export const FONT_OPTIONS = [
   { value: 'Inter, sans-serif', label: 'Inter' },
   { value: 'Arial, sans-serif', label: 'Arial' },
   { value: 'Helvetica, sans-serif', label: 'Helvetica' },
@@ -15,7 +15,7 @@ const FONT_OPTIONS = [
 ];
 
 // Font size options
-const FONT_SIZE_OPTIONS = [
+export const FONT_SIZE_OPTIONS = [
   { value: '10px', label: '10' },
   { value: '12px', label: '12' },
   { value: '14px', label: '14' },
@@ -31,7 +31,7 @@ const FONT_SIZE_OPTIONS = [
 ];
 
 // Preset colors for quick selection
-const PRESET_COLORS = [
+export const PRESET_COLORS = [
   '#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff',
   '#ffff00', '#ff00ff', '#00ffff', '#ff6b6b', '#4ecdc4',
   '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#636e72',
