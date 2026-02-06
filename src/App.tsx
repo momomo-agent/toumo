@@ -750,6 +750,11 @@ export default function App() {
               {Math.round((currentStyle.fillOpacity ?? 1) * 100)}%
             </span>
           </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={() => handleStyleChange({ fillOpacity: 1 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>100%</button>
+            <button onClick={() => handleStyleChange({ fillOpacity: 0.5 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>50%</button>
+            <button onClick={() => handleStyleChange({ fillOpacity: 0.25 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>25%</button>
+          </div>
         </div>
 
         {/* Stroke Controls */}
