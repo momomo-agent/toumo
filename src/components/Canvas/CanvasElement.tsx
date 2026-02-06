@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import type { KeyElement, Position } from '../../types';
 import { useEditorStore } from '../../store';
@@ -65,6 +65,29 @@ export const CanvasElement = memo(function CanvasElement({
 
   const [isEditing, setIsEditing] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  const isText = element.shapeType === 'text';
+
+  // Enter key → start editing text; Escape → stop editing
+  useEffect(() => {
+    if (!isSelected || !isText) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (isTyping) return;
+
+      if (e.key === 'Enter' && !isEditing) {
+        e.preventDefault();
+        setIsEditing(true);
+      }
+      if (e.key === 'Escape' && isEditing) {
+        e.preventDefault();
+        setIsEditing(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSelected, isText, isEditing]);
 
   // Don't render hidden elements
   if (element.visible === false) return null;
@@ -437,7 +460,6 @@ export const CanvasElement = memo(function CanvasElement({
     return [rotationHandle, ...cornerHandleElements, ...edgeHandleElements];
   };
 
-  const isText = element.shapeType === 'text';
   const isImage = element.shapeType === 'image';
   const isLine = element.shapeType === 'line';
   const isPath = element.shapeType === 'path';
