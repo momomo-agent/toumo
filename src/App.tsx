@@ -1195,18 +1195,34 @@ export default function App() {
         </div>
 
         {selected.shapeType === 'image' && (
-          <div style={{ marginBottom: 16 }}>
-            <Label>Object Fit</Label>
-            <select
-              value={currentStyle.objectFit || 'cover'}
-              onChange={(e) => handleStyleChange({ objectFit: e.target.value as 'cover' | 'contain' | 'fill' })}
-              style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#fff', fontSize: 12 }}
-            >
-              <option value="cover">Cover</option>
-              <option value="contain">Contain</option>
-              <option value="fill">Fill</option>
-            </select>
-          </div>
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <Label>Object Fit</Label>
+              <select
+                value={currentStyle.objectFit || 'cover'}
+                onChange={(e) => handleStyleChange({ objectFit: e.target.value as 'cover' | 'contain' | 'fill' })}
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#fff', fontSize: 12 }}
+              >
+                <option value="cover">Cover</option>
+                <option value="contain">Contain</option>
+                <option value="fill">Fill</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <Label>Object Position</Label>
+              <select
+                value={currentStyle.objectPosition || 'center'}
+                onChange={(e) => handleStyleChange({ objectPosition: e.target.value })}
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#fff', fontSize: 12 }}
+              >
+                <option value="center">Center</option>
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </>
         )}
 
         {isLineElement && (

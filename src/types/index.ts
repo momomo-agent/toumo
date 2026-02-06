@@ -81,6 +81,7 @@ export type ShapeStyle = {
   imageOriginalWidth?: number;
   imageOriginalHeight?: number;
   objectFit?: "cover" | "contain" | "fill";
+  objectPosition?: string;
 };
 
 export type KeyAttribute = {
