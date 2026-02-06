@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { KeyElement } from '../../types';
+import type { KeyElement, ShapeStyle } from '../../types';
 import { useEditorStore } from '../../store';
 
 // Available fonts for the editor
 export const FONT_OPTIONS = [
   { value: 'Inter, sans-serif', label: 'Inter' },
+  { value: 'system-ui, sans-serif', label: 'System UI' },
   { value: 'Arial, sans-serif', label: 'Arial' },
-  { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+  { value: 'Helvetica Neue, Helvetica, sans-serif', label: 'Helvetica Neue' },
+  { value: 'Verdana, sans-serif', label: 'Verdana' },
+  { value: 'Roboto, sans-serif', label: 'Roboto' },
+  { value: 'SF Pro Display, sans-serif', label: 'SF Pro' },
   { value: 'Georgia, serif', label: 'Georgia' },
   { value: 'Times New Roman, serif', label: 'Times' },
   { value: 'Courier New, monospace', label: 'Courier' },
-  { value: 'Verdana, sans-serif', label: 'Verdana' },
-  { value: 'system-ui, sans-serif', label: 'System' },
+  { value: 'Menlo, monospace', label: 'Menlo' },
+  { value: 'PingFang SC, sans-serif', label: 'PingFang SC' },
 ];
 
 // Font size options
@@ -190,18 +194,79 @@ export function RichTextEditor({ element, onClose }: RichTextEditorProps) {
         className="rich-text-toolbar"
         style={{
           position: 'absolute',
-          top: -40,
+          top: -44,
           left: 0,
           display: 'flex',
-          gap: 4,
-          padding: '4px 8px',
+          gap: 3,
+          padding: '4px 6px',
           background: '#2a2a2a',
-          borderRadius: 6,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          borderRadius: 8,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
           zIndex: 10001,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          maxWidth: Math.max(element.size.width, 420),
         }}
-        onMouseDown={(e) => e.preventDefault()} // Prevent blur
+        onMouseDown={(e) => e.preventDefault()}
       >
+        {/* Font Family */}
+        <select
+          style={{
+            background: '#333',
+            border: '1px solid #444',
+            color: '#fff',
+            padding: '3px 4px',
+            borderRadius: 4,
+            fontSize: 11,
+            maxWidth: 90,
+          }}
+          value={element.style?.fontFamily || 'Inter, sans-serif'}
+          onChange={(e) => {
+            updateElement(element.id, {
+              style: { ...element.style, fontFamily: e.target.value } as ShapeStyle
+            });
+            if (editorRef.current) {
+              editorRef.current.style.fontFamily = e.target.value;
+            }
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {FONT_OPTIONS.map(f => (
+            <option key={f.value} value={f.value}>{f.label}</option>
+          ))}
+        </select>
+
+        {/* Font Size */}
+        <select
+          style={{
+            background: '#333',
+            border: '1px solid #444',
+            color: '#fff',
+            padding: '3px 4px',
+            borderRadius: 4,
+            fontSize: 11,
+            width: 48,
+          }}
+          value={element.style?.fontSize || 14}
+          onChange={(e) => {
+            const size = parseInt(e.target.value);
+            updateElement(element.id, {
+              style: { ...element.style, fontSize: size } as ShapeStyle
+            });
+            if (editorRef.current) {
+              editorRef.current.style.fontSize = `${size}px`;
+            }
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {[10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 64].map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <div style={{ width: 1, height: 18, background: '#444' }} />
+
+        {/* Bold / Italic / Underline */}
         <ToolbarButton
           icon="B"
           title="Bold (⌘B)"
@@ -220,27 +285,45 @@ export function RichTextEditor({ element, onClose }: RichTextEditorProps) {
           style={{ textDecoration: 'underline' }}
           onClick={() => applyFormat('underline')}
         />
-        <div style={{ width: 1, background: '#444', margin: '0 4px' }} />
-        <select
-          style={{
-            background: '#333',
-            border: 'none',
-            color: '#fff',
-            padding: '2px 4px',
-            borderRadius: 4,
-            fontSize: 12,
+
+        <div style={{ width: 1, height: 18, background: '#444' }} />
+
+        {/* Text Alignment */}
+        <ToolbarButton
+          icon="≡"
+          title="Align Left"
+          active={!element.style?.textAlign || element.style?.textAlign === 'left'}
+          onClick={() => {
+            updateElement(element.id, {
+              style: { ...element.style, textAlign: 'left' } as ShapeStyle
+            });
+            if (editorRef.current) editorRef.current.style.textAlign = 'left';
           }}
-          onChange={(e) => applyFormat('fontSize', e.target.value)}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <option value="1">12px</option>
-          <option value="2">14px</option>
-          <option value="3">16px</option>
-          <option value="4">18px</option>
-          <option value="5">24px</option>
-          <option value="6">32px</option>
-          <option value="7">48px</option>
-        </select>
+        />
+        <ToolbarButton
+          icon="≡"
+          title="Align Center"
+          active={element.style?.textAlign === 'center'}
+          style={{ textAlign: 'center' }}
+          onClick={() => {
+            updateElement(element.id, {
+              style: { ...element.style, textAlign: 'center' } as ShapeStyle
+            });
+            if (editorRef.current) editorRef.current.style.textAlign = 'center';
+          }}
+        />
+        <ToolbarButton
+          icon="≡"
+          title="Align Right"
+          active={element.style?.textAlign === 'right'}
+          style={{ textAlign: 'right' }}
+          onClick={() => {
+            updateElement(element.id, {
+              style: { ...element.style, textAlign: 'right' } as ShapeStyle
+            });
+            if (editorRef.current) editorRef.current.style.textAlign = 'right';
+          }}
+        />
       </div>
 
       {/* Editable Content */}
