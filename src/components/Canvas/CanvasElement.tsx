@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import type { KeyElement, Position } from '../../types';
 import { useEditorStore } from '../../store';
+import { ContextMenu } from '../ContextMenu';
 
 const MIN_SIZE = 16;
 
@@ -582,38 +583,15 @@ export function CanvasElement({
       
       {/* Context Menu */}
       {contextMenu && (
-        <div
-          style={{
-            position: 'fixed',
-            left: contextMenu.x,
-            top: contextMenu.y,
-            background: '#1a1a1a',
-            border: '1px solid #333',
-            borderRadius: 6,
-            padding: 4,
-            zIndex: 1000,
-            minWidth: 120,
-          }}
-          onClick={() => setContextMenu(null)}
-        >
-          <button onClick={() => { copySelectedElements(); setContextMenu(null); }} style={menuItemStyle}>Copy</button>
-          <button onClick={() => { pasteElements(); setContextMenu(null); }} style={menuItemStyle}>Paste</button>
-          <div style={{ height: 1, background: '#333', margin: '4px 0' }} />
-          <button onClick={() => { deleteElement(element.id); setContextMenu(null); }} style={{ ...menuItemStyle, color: '#f43f5e' }}>Delete</button>
-        </div>
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          elementId={element.id}
+          onClose={() => setContextMenu(null)}
+        />
       )}
     </div>
   );
 }
 
-const menuItemStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  padding: '6px 12px',
-  background: 'transparent',
-  border: 'none',
-  color: '#fff',
-  fontSize: 12,
-  textAlign: 'left',
-  cursor: 'pointer',
-};
+// Context menu styles moved to ContextMenu component
