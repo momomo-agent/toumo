@@ -41,6 +41,7 @@ export type ShapeStyle = {
   skewY?: number;
   perspective?: number;
   boxSizing?: 'content-box' | 'border-box';
+  outline?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
