@@ -82,6 +82,9 @@ export function Canvas() {
   const previousToolRef = useRef<ToolType>(currentTool);
   // Live preview while drawing shapes
   const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number; tool: string } | null>(null);
+  // File drag-over visual feedback
+  const [fileDragOver, setFileDragOver] = useState(false);
+  const fileDragCounterRef = useRef(0);
   // Zoom percentage toast (two-phase: visible → fading → hidden)
   const [zoomToastVisible, setZoomToastVisible] = useState(false);
   const [zoomToastFading, setZoomToastFading] = useState(false);
@@ -917,6 +920,23 @@ export function Canvas() {
   }, [handleWheel]);
 
   // Handle component drag over
+  const handleDragEnter = useCallback((event: ReactDragEvent) => {
+    if (event.dataTransfer.types.includes('Files')) {
+      fileDragCounterRef.current++;
+      setFileDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((event: ReactDragEvent) => {
+    if (event.dataTransfer.types.includes('Files')) {
+      fileDragCounterRef.current--;
+      if (fileDragCounterRef.current <= 0) {
+        fileDragCounterRef.current = 0;
+        setFileDragOver(false);
+      }
+    }
+  }, []);
+
   const handleDragOver = useCallback((event: ReactDragEvent) => {
     // Support component drag
     if (event.dataTransfer.types.includes('application/toumo-component')) {
@@ -939,6 +959,10 @@ export function Canvas() {
 
   // Handle component drop
   const handleDrop = useCallback((event: ReactDragEvent) => {
+    // Reset file drag overlay
+    fileDragCounterRef.current = 0;
+    setFileDragOver(false);
+
     // Handle component drop
     const componentId = event.dataTransfer.getData('application/toumo-component');
     if (componentId) {
@@ -1013,12 +1037,20 @@ export function Canvas() {
       const stagePoint = toCanvasSpaceFromDrag(event);
       const hitFrame = getFrameUnderPoint(stagePoint);
       
-      if (hitFrame) {
-        if (hitFrame.id !== selectedKeyframeId) {
-          setSelectedKeyframeId(hitFrame.id);
+      // Use hit frame, or fall back to currently selected frame
+      const targetFrame = hitFrame || (selectedKeyframeId ? keyframes.find(kf => kf.id === selectedKeyframeId) : null) || keyframes[0];
+      
+      if (targetFrame) {
+        if (targetFrame.id !== selectedKeyframeId) {
+          setSelectedKeyframeId(targetFrame.id);
         }
         
-        const framePoint = translateToFrameSpace(stagePoint, hitFrame);
+        let dropPosition: Position | undefined;
+        if (hitFrame) {
+          const framePoint = translateToFrameSpace(stagePoint, hitFrame);
+          dropPosition = framePoint;
+        }
+        // If no hitFrame, dropPosition stays undefined → addImageElement will center it
         
         // Process each image file
         Array.from(files).forEach((file) => {
@@ -1032,10 +1064,15 @@ export function Canvas() {
             // Get image dimensions
             const img = new Image();
             img.onload = () => {
-              addImageElement(dataUrl, img.width, img.height, {
-                x: Math.max(0, framePoint.x - Math.min(150, img.width / 2)),
-                y: Math.max(0, framePoint.y - Math.min(150, img.height / 2)),
-              });
+              if (dropPosition) {
+                addImageElement(dataUrl, img.width, img.height, {
+                  x: Math.max(0, dropPosition.x - Math.min(150, img.width / 2)),
+                  y: Math.max(0, dropPosition.y - Math.min(150, img.height / 2)),
+                });
+              } else {
+                // Center in frame (no position override)
+                addImageElement(dataUrl, img.width, img.height);
+              }
             };
             img.src = dataUrl;
           };
@@ -1043,7 +1080,7 @@ export function Canvas() {
         });
       }
     }
-  }, [getFrameUnderPoint, instantiateComponent, selectedKeyframeId, setSelectedKeyframeId, addImageElement]);
+  }, [getFrameUnderPoint, instantiateComponent, selectedKeyframeId, setSelectedKeyframeId, addImageElement, keyframes]);
 
   return (
     <div
@@ -1051,7 +1088,9 @@ export function Canvas() {
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
+      onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onContextMenu={(e) => {
         // Only show canvas context menu when clicking on blank area (not on elements)
@@ -1447,6 +1486,41 @@ export function Canvas() {
           canvasPosition={canvasContextMenu.canvasPos}
           onClose={() => setCanvasContextMenu(null)}
         />
+      )}
+
+      {/* File Drag-Over Overlay */}
+      {fileDragOver && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(59, 130, 246, 0.08)',
+            border: '2px dashed rgba(59, 130, 246, 0.5)',
+            borderRadius: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 300,
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(8px)',
+            color: '#fff',
+            padding: '16px 32px',
+            borderRadius: 12,
+            fontSize: 16,
+            fontWeight: 600,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}>
+            <span style={{ fontSize: 24 }}>🖼</span>
+            Drop image to import
+          </div>
+        </div>
       )}
     </div>
   );

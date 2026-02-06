@@ -718,6 +718,7 @@ export function DesignPanel() {
 
   const element = selectedElement as {
     id: string;
+    shapeType?: string;
     position: { x: number; y: number };
     size: { width: number; height: number };
     style?: {
@@ -742,6 +743,12 @@ export function DesignPanel() {
       gradientStops?: { color: string; position: number }[];
       gradientCenterX?: number;
       gradientCenterY?: number;
+      // Image properties
+      imageSrc?: string;
+      imageOriginalWidth?: number;
+      imageOriginalHeight?: number;
+      objectFit?: 'fill' | 'contain' | 'cover' | 'none';
+      objectPosition?: string;
     };
   };
 
@@ -1120,6 +1127,88 @@ export function DesignPanel() {
           />
         )}
       </Section>
+
+      {/* Image Fit Mode Section */}
+      {element.shapeType === 'image' && element.style?.imageSrc && (
+        <Section title="Image" defaultExpanded={true}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* Fit Mode Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: '#999', minWidth: 36 }}>Fit</span>
+              <div style={{
+                display: 'flex',
+                flex: 1,
+                background: '#2a2a2a',
+                borderRadius: 6,
+                overflow: 'hidden',
+              }}>
+                {(['fill', 'cover', 'contain'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => updateStyle({ objectFit: mode })}
+                    style={{
+                      flex: 1,
+                      padding: '5px 0',
+                      fontSize: 11,
+                      fontWeight: (element.style?.objectFit || 'cover') === mode ? 600 : 400,
+                      color: (element.style?.objectFit || 'cover') === mode ? '#fff' : '#888',
+                      background: (element.style?.objectFit || 'cover') === mode ? '#3b82f6' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Object Position */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: '#999', minWidth: 36 }}>Pos</span>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 2,
+                background: '#2a2a2a',
+                borderRadius: 6,
+                padding: 3,
+              }}>
+                {[
+                  'top left', 'top center', 'top right',
+                  'center left', 'center', 'center right',
+                  'bottom left', 'bottom center', 'bottom right',
+                ].map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={() => updateStyle({ objectPosition: pos })}
+                    title={pos}
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 3,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: (element.style?.objectPosition || 'center') === pos
+                        ? '#3b82f6' : '#444',
+                      transition: 'all 0.15s',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Original dimensions info */}
+            {element.style?.imageOriginalWidth && (
+              <div style={{ fontSize: 10, color: '#666', paddingLeft: 44 }}>
+                Original: {element.style.imageOriginalWidth} × {element.style.imageOriginalHeight}px
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
 
       {/* Stroke Section */}
       <Section title="Stroke" onAdd={addStroke}>
