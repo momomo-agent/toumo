@@ -65,6 +65,14 @@ export const CanvasElement = memo(function CanvasElement({
 
   const [isEditing, setIsEditing] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [isNew, setIsNew] = useState(true);
+
+  // Clear the pop-in animation class after it finishes
+  useEffect(() => {
+    if (!isNew) return;
+    const timer = setTimeout(() => setIsNew(false), 300);
+    return () => clearTimeout(timer);
+  }, [isNew]);
 
   const isText = element.shapeType === 'text';
 
@@ -539,6 +547,7 @@ export const CanvasElement = memo(function CanvasElement({
 
   return (
     <div
+      className={isNew ? 'canvas-element-enter' : undefined}
       data-element-id={element.id}
       onMouseDown={handlePointerDown}
       onMouseEnter={() => setHoveredElementId(element.id)}

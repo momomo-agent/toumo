@@ -17,6 +17,10 @@ import { ExportPanel } from './components/ExportPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
+import { useResizablePanel } from './hooks/useResizablePanel';
+import { useResponsiveLayout } from './hooks/useResponsiveLayout';
+import { ResizeHandle } from './components/ResizeHandle';
+import { CollapseToggle } from './components/CollapseToggle';
 
 const DEFAULT_STYLE: ShapeStyle = {
   ...BASE_STYLE,
