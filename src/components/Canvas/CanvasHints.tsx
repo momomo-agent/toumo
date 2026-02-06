@@ -16,27 +16,29 @@ export function CanvasHints() {
     <div className="canvas-hints">
       <div className="canvas-hints-content">
         <div className="canvas-hints-icon">✨</div>
-        <h3 className="canvas-hints-title">Start Creating</h3>
+        <h3 className="canvas-hints-title">开始创作</h3>
+        <p className="canvas-hints-subtitle">使用快捷键或从工具栏拖拽来创建元素</p>
         <div className="canvas-hints-shortcuts">
           <div className="hint-item">
             <kbd>R</kbd>
-            <span>Rectangle</span>
+            <span>矩形</span>
           </div>
           <div className="hint-item">
             <kbd>O</kbd>
-            <span>Ellipse</span>
+            <span>圆形</span>
           </div>
           <div className="hint-item">
             <kbd>T</kbd>
-            <span>Text</span>
+            <span>文字</span>
           </div>
           <div className="hint-item">
             <kbd>F</kbd>
-            <span>Frame</span>
+            <span>画框</span>
           </div>
         </div>
+        <div className="canvas-hints-divider" />
         <p className="canvas-hints-tip">
-          Or drag from the toolbar to create shapes
+          💡 提示：在画布上拖拽即可绘制，双击文字可编辑
         </p>
       </div>
     </div>
