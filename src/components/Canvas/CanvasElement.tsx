@@ -400,6 +400,7 @@ export function CanvasElement({
         boxSizing: element.style?.boxSizing || 'border-box',
         outline: element.style?.outline || undefined,
         backdropFilter: element.style?.backdropFilter || (element.style?.backdropBlur ? `blur(${element.style.backdropBlur}px)` : undefined),
+        transition: element.style?.transition || undefined,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
