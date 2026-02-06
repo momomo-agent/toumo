@@ -120,6 +120,8 @@ interface EditorActions {
   // Layer order
   bringForward: () => void;
   sendBackward: () => void;
+  bringToFront: () => void;
+  sendToBack: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1094,6 +1096,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el) {
       get().updateElement(state.selectedElementId, { zIndex: (el.zIndex ?? 0) - 1 });
     }
+  },
+
+  bringToFront: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const maxZ = Math.max(...(kf?.keyElements.map(e => e.zIndex ?? 0) || [0]));
+    get().updateElement(state.selectedElementId, { zIndex: maxZ + 1 });
+  },
+
+  sendToBack: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const minZ = Math.min(...(kf?.keyElements.map(e => e.zIndex ?? 0) || [0]));
+    get().updateElement(state.selectedElementId, { zIndex: minZ - 1 });
   },
 
   // Import actions
