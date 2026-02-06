@@ -553,10 +553,8 @@ export function DesignPanel() {
   const [aspectLocked, setAspectLocked] = useState(false);
   const [_aspectRatio, setAspectRatio] = useState(1);
 
-  // Local state for fills, strokes, effects (will be synced with element)
-  const [fills, setFills] = useState<FillItemProps['fill'][]>([
-    { id: '1', color: '#3b82f6', opacity: 1, visible: true }
-  ]);
+  // Local state for fills, strokes, effects (synced with element)
+  const [fills, setFills] = useState<FillItemProps['fill'][]>([]);
   const [strokes, setStrokes] = useState<StrokeItemProps['stroke'][]>([]);
   const [effects, setEffects] = useState<EffectItemProps['effect'][]>([]);
 
@@ -631,6 +629,53 @@ export function DesignPanel() {
         setIndependentCorners(false);
         setCornerRadius(element.style.borderRadius || 0);
       }
+
+      // Initialize fills from element style
+      if (element.style.fill) {
+        setFills([{
+          id: 'fill-0',
+          color: element.style.fill,
+          opacity: element.style.fillOpacity ?? 1,
+          visible: true,
+        }]);
+      } else {
+        setFills([]);
+      }
+
+      // Initialize strokes from element style
+      if (element.style.stroke) {
+        setStrokes([{
+          id: 'stroke-0',
+          color: element.style.stroke,
+          width: element.style.strokeWidth ?? 1,
+          position: 'center',
+          dashArray: element.style.strokeDasharray || '',
+          visible: true,
+        }]);
+      } else {
+        setStrokes([]);
+      }
+
+      // Initialize effects from element style
+      const newEffects: EffectItemProps['effect'][] = [];
+      if (element.style.boxShadow) {
+        newEffects.push({
+          id: 'effect-shadow-0',
+          type: 'dropShadow',
+          visible: true,
+          color: '#00000040',
+          offsetX: 0, offsetY: 4, blur: 8, spread: 0,
+        });
+      }
+      if (element.style.filter) {
+        newEffects.push({
+          id: 'effect-blur-0',
+          type: 'layerBlur',
+          visible: true,
+          blur: 4,
+        });
+      }
+      setEffects(newEffects);
     }
   }, [element?.id]);
 
@@ -667,27 +712,45 @@ export function DesignPanel() {
     }
   };
 
+  // Sync effects array to element style (boxShadow + filter)
+  const syncEffectsToStyle = useCallback((effs: EffectItemProps['effect'][]) => {
+    const shadows = effs
+      .filter(e => e.visible && (e.type === 'dropShadow' || e.type === 'innerShadow'))
+      .map(e => {
+        const inset = e.type === 'innerShadow' ? 'inset ' : '';
+        return `${inset}${e.offsetX || 0}px ${e.offsetY || 0}px ${e.blur || 0}px ${e.spread || 0}px ${e.color || '#00000040'}`;
+      });
+    const blurs = effs
+      .filter(e => e.visible && (e.type === 'layerBlur' || e.type === 'backgroundBlur'))
+      .map(e => `blur(${e.blur || 0}px)`);
+
+    updateStyle({
+      boxShadow: shadows.length > 0 ? shadows.join(', ') : undefined,
+      filter: blurs.length > 0 ? blurs.join(' ') : undefined,
+    });
+  }, [updateStyle]);
+
   const addFill = () => {
-    setFills([...fills, { 
-      id: Date.now().toString(), 
-      color: '#808080', 
-      opacity: 1, 
-      visible: true 
-    }]);
+    const newFill = { id: Date.now().toString(), color: '#808080', opacity: 1, visible: true };
+    const newFills = [...fills, newFill];
+    setFills(newFills);
+    // If this is the first fill, sync to element
+    if (fills.length === 0) {
+      updateStyle({ fill: newFill.color, fillOpacity: newFill.opacity });
+    }
   };
 
   const addStroke = () => {
-    setStrokes([...strokes, {
-      id: Date.now().toString(),
-      color: '#000000',
-      width: 1,
-      position: 'center',
-      visible: true
-    }]);
+    const newStroke = { id: Date.now().toString(), color: '#000000', width: 1, position: 'center', visible: true };
+    const newStrokes = [...strokes, newStroke];
+    setStrokes(newStrokes);
+    if (strokes.length === 0) {
+      updateStyle({ stroke: newStroke.color, strokeWidth: newStroke.width });
+    }
   };
 
   const addEffect = () => {
-    setEffects([...effects, {
+    const newEffect = {
       id: Date.now().toString(),
       type: 'dropShadow',
       visible: true,
@@ -696,7 +759,10 @@ export function DesignPanel() {
       offsetY: 4,
       blur: 8,
       spread: 0
-    }]);
+    };
+    const newEffects = [...effects, newEffect];
+    setEffects(newEffects);
+    syncEffectsToStyle(newEffects);
   };
 
   return (
@@ -873,8 +939,21 @@ export function DesignPanel() {
                 const newFills = [...fills];
                 newFills[index] = { ...fill, ...updates };
                 setFills(newFills);
+                // Sync first visible fill back to element style
+                const updated = newFills[index];
+                if (index === 0) {
+                  updateStyle({ fill: updated.color, fillOpacity: updated.opacity });
+                }
               }}
-              onRemove={() => setFills(fills.filter(f => f.id !== fill.id))}
+              onRemove={() => {
+                const remaining = fills.filter(f => f.id !== fill.id);
+                setFills(remaining);
+                if (remaining.length === 0) {
+                  updateStyle({ fill: undefined, fillOpacity: undefined });
+                } else {
+                  updateStyle({ fill: remaining[0].color, fillOpacity: remaining[0].opacity });
+                }
+              }}
             />
           ))
         )}
@@ -893,8 +972,24 @@ export function DesignPanel() {
                 const newStrokes = [...strokes];
                 newStrokes[index] = { ...stroke, ...updates };
                 setStrokes(newStrokes);
+                if (index === 0) {
+                  const updated = newStrokes[0];
+                  updateStyle({
+                    stroke: updated.color,
+                    strokeWidth: updated.width,
+                    strokeDasharray: updated.dashArray || undefined,
+                  });
+                }
               }}
-              onRemove={() => setStrokes(strokes.filter(s => s.id !== stroke.id))}
+              onRemove={() => {
+                const remaining = strokes.filter(s => s.id !== stroke.id);
+                setStrokes(remaining);
+                if (remaining.length === 0) {
+                  updateStyle({ stroke: undefined, strokeWidth: undefined, strokeDasharray: undefined });
+                } else {
+                  updateStyle({ stroke: remaining[0].color, strokeWidth: remaining[0].width });
+                }
+              }}
             />
           ))
         )}
@@ -913,8 +1008,13 @@ export function DesignPanel() {
                 const newEffects = [...effects];
                 newEffects[index] = { ...effect, ...updates };
                 setEffects(newEffects);
+                syncEffectsToStyle(newEffects);
               }}
-              onRemove={() => setEffects(effects.filter(e => e.id !== effect.id))}
+              onRemove={() => {
+                const remaining = effects.filter(e => e.id !== effect.id);
+                setEffects(remaining);
+                syncEffectsToStyle(remaining);
+              }}
             />
           ))
         )}
