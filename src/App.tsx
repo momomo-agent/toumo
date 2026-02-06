@@ -1665,6 +1665,14 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ skewX: 15 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>15°</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Perspective</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ perspective: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+                <button onClick={() => handleStyleChange({ perspective: 500 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>500</button>
+                <button onClick={() => handleStyleChange({ perspective: 1000 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1000</button>
+              </div>
+            </div>
           </>
         )}
       </>
