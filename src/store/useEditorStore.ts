@@ -133,6 +133,8 @@ interface EditorActions {
   fitToFrame: () => void;
   matchWidth: () => void;
   matchHeight: () => void;
+  spaceEvenlyH: () => void;
+  spaceEvenlyV: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1258,6 +1260,40 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!first) return;
     state.selectedElementIds.slice(1).forEach(id => {
       get().updateElement(id, { size: { width: kf?.keyElements.find(e => e.id === id)?.size.width || 0, height: first.size.height } });
+    });
+  },
+
+  spaceEvenlyH: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 3) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = state.selectedElementIds.map(id => kf?.keyElements.find(e => e.id === id)).filter(Boolean) as KeyElement[];
+    els.sort((a, b) => a.position.x - b.position.x);
+    const minX = els[0].position.x;
+    const maxX = els[els.length - 1].position.x;
+    const gap = (maxX - minX) / (els.length - 1);
+    els.forEach((el, i) => {
+      if (i > 0 && i < els.length - 1) {
+        get().updateElement(el.id, { position: { x: minX + gap * i, y: el.position.y } });
+      }
+    });
+  },
+
+  spaceEvenlyV: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 3) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = state.selectedElementIds.map(id => kf?.keyElements.find(e => e.id === id)).filter(Boolean) as KeyElement[];
+    els.sort((a, b) => a.position.y - b.position.y);
+    const minY = els[0].position.y;
+    const maxY = els[els.length - 1].position.y;
+    const gap = (maxY - minY) / (els.length - 1);
+    els.forEach((el, i) => {
+      if (i > 0 && i < els.length - 1) {
+        get().updateElement(el.id, { position: { x: el.position.x, y: minY + gap * i } });
+      }
     });
   },
 
