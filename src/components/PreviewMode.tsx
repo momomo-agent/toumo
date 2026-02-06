@@ -344,9 +344,10 @@ interface PreviewContentProps {
 
 const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
   function PreviewContent(
-    { elements, frameSize, canvasBackground, onTrigger, transitionDuration, transitionCurve, availableTriggers, elementStates, hasInteractions, onPrototypeNavigation, currentFrameId, prototypeTransition },
+    { elements, frameSize, canvasBackground, onTrigger, transitionDuration, transitionCurve, availableTriggers, elementStates, hasInteractions, onPrototypeNavigation: _onProtoNav, currentFrameId: _curFrameId, prototypeTransition },
     ref
   ) {
+    void _onProtoNav; void _curFrameId; // Reserved for future use
     const [hoveredElement, setHoveredElement] = useState<string | null>(null);
     const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -382,7 +383,6 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
         case 'moveIn':
         case 'slideIn': {
           if (isOut) return {};
-          const offset = direction === 'left' ? '-100%' : direction === 'right' ? '100%' : direction === 'top' ? '-100%' : '100%';
           const axis = direction === 'left' || direction === 'right' ? 'X' : 'Y';
           return {
             transform: `translate${axis}(0)`,
@@ -425,7 +425,8 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
           transform: `scale(${scale})`, 
           transformOrigin: 'center', 
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
-          cursor: hasInteractions || availableTriggers.includes('tap') ? 'pointer' : 'default' 
+          cursor: hasInteractions || availableTriggers.includes('tap') ? 'pointer' : 'default',
+          ...getTransitionStyle(),
         }}
         onClick={handleClick} 
         onMouseDown={handleMouseDown} 
@@ -457,6 +458,7 @@ interface PreviewElementProps {
   useSpring?: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  onPrototypeClick?: (link: PrototypeLink) => void;
 }
 
 function PreviewElement({ 
@@ -468,7 +470,18 @@ function PreviewElement({
   useSpring = true,
   onMouseEnter,
   onMouseLeave,
+  onPrototypeClick,
 }: PreviewElementProps) {
+  const hasPrototypeLink = el.prototypeLink?.enabled && el.prototypeLink?.targetFrameId;
+  
+  // Handle element click for prototype links
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (hasPrototypeLink && el.prototypeLink) {
+      e.stopPropagation();
+      onPrototypeClick?.(el.prototypeLink);
+    }
+  }, [hasPrototypeLink, el.prototypeLink, onPrototypeClick]);
+  
   // 弹簧动画 hook
   const { values, animateTo } = useSpringAnimation({
     initialValues: {
@@ -528,9 +541,14 @@ function PreviewElement({
   return (
     <div 
       data-element-id={el.id}
+      data-has-link={hasPrototypeLink ? 'true' : undefined}
+      onClick={handleClick}
       onMouseEnter={onMouseEnter} 
       onMouseLeave={onMouseLeave}
-      style={style}
+      style={{
+        ...style,
+        cursor: hasPrototypeLink ? 'pointer' : style.cursor,
+      }}
     >
       {el.shapeType === 'text' && el.text && (
         <div style={{ 
