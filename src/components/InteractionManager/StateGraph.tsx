@@ -56,33 +56,25 @@ export function StateGraph() {
 
   // Initialize node positions
   useEffect(() => {
-    if (nodePositions.length === 0 && keyframes.length > 0) {
-      const positions = keyframes.map((kf, index) => ({
+    if (keyframes.length === 0) return;
+    
+    setNodePositions(prev => {
+      const existingIds = new Set(prev.map(n => n.id));
+      const keyframeIds = new Set(keyframes.map(kf => kf.id));
+      
+      // Keep existing positions for keyframes that still exist
+      const kept = prev.filter(n => keyframeIds.has(n.id));
+      
+      // Add new positions for new keyframes
+      const newKeyframes = keyframes.filter(kf => !existingIds.has(kf.id));
+      const newPositions = newKeyframes.map((kf, i) => ({
         id: kf.id,
-        x: 80 + index * 160,
-        y: 60 + (index % 2) * 40,
+        x: 80 + (kept.length + i) * 160,
+        y: 60 + ((kept.length + i) % 2) * 40,
       }));
-      setNodePositions(positions);
-    }
-  }, [keyframes, nodePositions.length]);
-
-  // Add new nodes when keyframes are added
-  useEffect(() => {
-    const existingIds = new Set(nodePositions.map(n => n.id));
-    const newKeyframes = keyframes.filter(kf => !existingIds.has(kf.id));
-    if (newKeyframes.length > 0) {
-      setNodePositions(prev => [
-        ...prev,
-        ...newKeyframes.map((kf, i) => ({
-          id: kf.id,
-          x: 80 + (prev.length + i) * 160,
-          y: 60,
-        })),
-      ]);
-    }
-    // Remove positions for deleted keyframes
-    const keyframeIds = new Set(keyframes.map(kf => kf.id));
-    setNodePositions(prev => prev.filter(n => keyframeIds.has(n.id)));
+      
+      return [...kept, ...newPositions];
+    });
   }, [keyframes]);
 
   const getNodePosition = (id: string): NodePosition => {
