@@ -33,6 +33,7 @@ const shortcuts = [
   { key: '⌥H', desc: 'Align center horizontal' },
   { key: '⌥V', desc: 'Align center vertical' },
   { key: '⌘E', desc: 'Export PNG' },
+  { key: '⌘S', desc: 'Save project' },
 ];
 
 export function ShortcutsPanel() {
