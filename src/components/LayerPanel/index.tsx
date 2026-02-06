@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { memo, useState, useRef, useCallback, useMemo } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement } from '../../types';
 
-// --- Thumbnail component ---
-function LayerThumbnail({ element }: { element: KeyElement }) {
+// --- Thumbnail component (memoized — rendered per layer row) ---
+const LayerThumbnail = memo(function LayerThumbnail({ element }: { element: KeyElement }) {
   const size = 24;
   const padding = 2;
   const inner = size - padding * 2;
@@ -96,10 +96,10 @@ function LayerThumbnail({ element }: { element: KeyElement }) {
       )}
     </svg>
   );
-}
+});
 
-// --- Context Menu ---
-function ContextMenuItem({
+// --- Context Menu (memoized) ---
+const ContextMenuItem = memo(function ContextMenuItem({
   children, onClick, danger,
 }: {
   children: React.ReactNode; onClick: () => void; danger?: boolean;
@@ -120,7 +120,7 @@ function ContextMenuItem({
       {children}
     </button>
   );
-}
+});
 
 function ContextMenuDivider() {
   return <div style={{ height: 1, background: '#333', margin: '4px 0' }} />;

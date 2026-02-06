@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useEditorStore } from '../../store';
 import {
   generateCSSAnimation,
@@ -39,11 +39,35 @@ export function ExportPanel({ isOpen, onClose }: ExportPanelProps) {
     }
   }, [tab, store.keyframes, store.transitions, store.frameSize, store.canvasBackground]);
 
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(code);
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      // Fallback for non-secure contexts
+      const pre = document.querySelector('pre');
+      if (pre) {
+        const range = document.createRange();
+        range.selectNodeContents(pre);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        document.execCommand('copy');
+        sel?.removeAllRanges();
+      }
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
+
+  // Escape key to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -52,7 +76,7 @@ export function ExportPanel({ isOpen, onClose }: ExportPanelProps) {
       <div onClick={e=>e.stopPropagation()} style={{ width:600,maxHeight:'80vh',background:'#141414',border:'1px solid #2a2a2a',borderRadius:16,overflow:'hidden',display:'flex',flexDirection:'column' }}>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #1f1f1f' }}>
           <h3 style={{ margin:0,fontSize:16,color:'#fff' }}>导出代码</h3>
-          <button onClick={onClose} style={{ background:'none',border:'none',color:'#666',fontSize:18,cursor:'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background:'none',border:'none',color:'#666',fontSize:18,cursor:'pointer' }} title="关闭 (Esc)">✕</button>
         </div>
         <div style={{ display:'flex',gap:4,padding:'8px 20px',borderBottom:'1px solid #1f1f1f' }}>
           {TABS.map(t => (

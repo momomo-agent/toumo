@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '../store';
 
 interface ExportModalProps {
@@ -8,6 +8,15 @@ interface ExportModalProps {
 export function ExportModal({ onClose }: ExportModalProps) {
   const { keyframes, transitions, components, functionalStates, frameSize } = useEditorStore();
   const [copied, setCopied] = useState(false);
+
+  // Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const projectData = {
     version: '1.0',
@@ -22,10 +31,21 @@ export function ExportModal({ onClose }: ExportModalProps) {
 
   const jsonString = JSON.stringify(projectData, null, 2);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(jsonString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(jsonString);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback: select textarea content
+      const textarea = document.querySelector('textarea[readonly]') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.select();
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    }
   };
 
   const handleDownload = () => {
@@ -43,7 +63,7 @@ export function ExportModal({ onClose }: ExportModalProps) {
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={headerStyle}>
           <h3 style={{ margin: 0, fontSize: 14 }}>Export Project</h3>
-          <button onClick={onClose} style={closeButtonStyle}>×</button>
+          <button onClick={onClose} style={closeButtonStyle} title="关闭 (Esc)">×</button>
         </div>
         
         <div style={contentStyle}>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useEditorStore } from '../store';
 
 interface ImportModalProps {
@@ -11,6 +11,15 @@ export function ImportModal({ onClose }: ImportModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const store = useEditorStore();
+
+  // Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleImport = (jsonString: string) => {
     try {
@@ -57,7 +66,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={headerStyle}>
           <h3 style={{ margin: 0, fontSize: 14 }}>Import Project</h3>
-          <button onClick={onClose} style={closeButtonStyle}>×</button>
+          <button onClick={onClose} style={closeButtonStyle} title="关闭 (Esc)">×</button>
         </div>
         
         <div style={contentStyle}>
@@ -75,7 +84,11 @@ export function ImportModal({ onClose }: ImportModalProps) {
           
           <button 
             onClick={() => fileInputRef.current?.click()}
-            style={importButtonStyle}
+            style={{
+              ...importButtonStyle,
+              opacity: importing ? 0.6 : 1,
+              cursor: importing ? 'not-allowed' : 'pointer',
+            }}
             disabled={importing}
           >
             {importing ? '⏳ Importing...' : '📂 Select .json File'}

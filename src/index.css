@@ -183,3 +183,9 @@ input:focus, select:focus, textarea:focus {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+/* Spinner animation for loading states */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

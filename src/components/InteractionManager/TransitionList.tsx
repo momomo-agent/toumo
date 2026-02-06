@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useEditorStore } from '../../store';
 
 const CURVE_OPTIONS = [
@@ -99,7 +100,7 @@ export function TransitionList() {
   );
 }
 
-function TransitionRow({
+const TransitionRow = memo(function TransitionRow({
   fromName,
   toName,
   trigger,
@@ -149,7 +150,7 @@ function TransitionRow({
       />
     </button>
   );
-}
+});
 
 function SelectedTransitionEditor({
   transitionId,

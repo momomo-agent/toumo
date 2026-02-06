@@ -27,6 +27,16 @@ export function WelcomeModal({ onLoadExample }: WelcomeModalProps) {
     setOpen(false);
   }, [skip]);
 
+  // Escape key to close
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { close(); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, close]);
+
   if (!open) return null;
 
   const s = STEPS[step];

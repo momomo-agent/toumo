@@ -80,6 +80,16 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
     }
   }, [isOpen]);
 
+  // Escape key to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleCopy = useCallback(async () => {
     if (!shareUrl) return;
     try {
@@ -119,7 +129,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             <span style={{ fontSize: 18 }}>🔗</span>
             <h2 style={{ margin: 0, fontSize: 16, color: '#fff' }}>分享项目</h2>
           </div>
-          <button onClick={onClose} style={closeButtonStyle}>×</button>
+          <button onClick={onClose} style={closeButtonStyle} title="关闭 (Esc)">×</button>
         </div>
         
         <div style={contentStyle}>

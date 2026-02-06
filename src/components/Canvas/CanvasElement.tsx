@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import type { KeyElement, Position } from '../../types';
 import { useEditorStore } from '../../store';
@@ -472,14 +472,10 @@ export const CanvasElement = memo(function CanvasElement({
   const isLine = element.shapeType === 'line';
   const isPath = element.shapeType === 'path';
 
-  const getBackground = () => {
-    if (isText) return 'transparent';
-    if (isImage) return 'transparent';
-    if (isLine) return 'transparent';
-    if (isPath) return 'transparent';
+  const background = useMemo(() => {
+    if (isText || isImage || isLine || isPath) return 'transparent';
     
     const style = element.style;
-    // Check for gradient
     if (style?.gradientType && style.gradientType !== 'none' && style.gradientStops?.length) {
       const stops = style.gradientStops
         .map(s => `${s.color} ${s.position}%`)
@@ -496,12 +492,11 @@ export const CanvasElement = memo(function CanvasElement({
     }
     
     return style?.fill || '#3b82f6';
-  };
+  }, [isText, isImage, isLine, isPath, element.style]);
 
-  const getBorderRadius = () => {
+  const borderRadius = useMemo(() => {
     if (element.shapeType === 'ellipse') return '50%';
     const style = element.style;
-    // Check if individual corners are set
     if (style?.borderRadiusTL !== undefined || style?.borderRadiusTR !== undefined ||
         style?.borderRadiusBR !== undefined || style?.borderRadiusBL !== undefined) {
       const tl = style.borderRadiusTL ?? style.borderRadius ?? 0;
@@ -511,12 +506,11 @@ export const CanvasElement = memo(function CanvasElement({
       return `${tl}px ${tr}px ${br}px ${bl}px`;
     }
     return style?.borderRadius ?? 8;
-  };
+  }, [element.shapeType, element.style]);
 
-  const getBoxShadow = () => {
+  const boxShadow = useMemo(() => {
     const shadows: string[] = [];
     
-    // Element shadow
     if (element.style?.shadowColor && element.style.shadowBlur) {
       const x = element.style.shadowOffsetX || 0;
       const y = element.style.shadowOffsetY || 0;
@@ -525,7 +519,6 @@ export const CanvasElement = memo(function CanvasElement({
       shadows.push(`${x}px ${y}px ${blur}px ${spread}px ${element.style.shadowColor}`);
     }
     
-    // Inner shadow
     if (element.style?.innerShadowEnabled && element.style.innerShadowColor) {
       const x = element.style.innerShadowX || 0;
       const y = element.style.innerShadowY || 0;
@@ -533,19 +526,42 @@ export const CanvasElement = memo(function CanvasElement({
       shadows.push(`inset ${x}px ${y}px ${blur}px ${element.style.innerShadowColor}`);
     }
     
-    // Selection outline removed from box-shadow — now rendered as a separate overlay
-    
     return shadows.length > 0 ? shadows.join(', ') : 'none';
-  };
+  }, [element.style]);
 
-  const getStroke = () => {
+  const stroke = useMemo(() => {
     if (isText) return '1px dashed rgba(255,255,255,0.4)';
     if (element.style?.strokeWidth && element.style.stroke) {
       const style = element.style.strokeStyle || 'solid';
       return `${element.style.strokeWidth}px ${style} ${element.style.stroke}`;
     }
     return undefined;
-  };
+  }, [isText, element.style]);
+
+  const transformStr = useMemo(() => {
+    return [
+      element.style?.rotation ? `rotate(${element.style.rotation}deg)` : '',
+      element.style?.flipX ? 'scaleX(-1)' : '',
+      element.style?.flipY ? 'scaleY(-1)' : '',
+      element.style?.scale && element.style.scale !== 1 ? `scale(${element.style.scale})` : '',
+      element.style?.skewX ? `skewX(${element.style.skewX}deg)` : '',
+      element.style?.skewY ? `skewY(${element.style.skewY}deg)` : '',
+    ].filter(Boolean).join(' ') || undefined;
+  }, [element.style]);
+
+  const filterStr = useMemo(() => {
+    return [
+      element.style?.blur ? `blur(${element.style.blur}px)` : '',
+      element.style?.brightness ? `brightness(${element.style.brightness})` : '',
+      element.style?.contrast ? `contrast(${element.style.contrast})` : '',
+      element.style?.saturate ? `saturate(${element.style.saturate})` : '',
+      element.style?.hueRotate ? `hue-rotate(${element.style.hueRotate}deg)` : '',
+      element.style?.invert ? `invert(${element.style.invert})` : '',
+      element.style?.grayscale ? `grayscale(${element.style.grayscale})` : '',
+      element.style?.sepia ? `sepia(${element.style.sepia})` : '',
+      element.style?.dropShadowX !== undefined ? `drop-shadow(${element.style.dropShadowX || 0}px ${element.style.dropShadowY || 0}px ${element.style.dropShadowBlur || 0}px ${element.style.dropShadowColor || '#000'})` : '',
+    ].filter(Boolean).join(' ') || undefined;
+  }, [element.style]);
 
   return (
     <div
@@ -579,18 +595,11 @@ export const CanvasElement = memo(function CanvasElement({
         width: element.size.width,
         height: element.size.height,
         // 编组元素是透明的，只用于选择和拖拽
-        background: isGroup ? 'transparent' : getBackground(),
+        background: isGroup ? 'transparent' : background,
         opacity: isGroup ? 1 : (element.style?.fillOpacity ?? 1),
-        borderRadius: isGroup ? 0 : getBorderRadius(),
-        border: isGroup ? undefined : getStroke(),
-        transform: [
-          element.style?.rotation ? `rotate(${element.style.rotation}deg)` : '',
-          element.style?.flipX ? 'scaleX(-1)' : '',
-          element.style?.flipY ? 'scaleY(-1)' : '',
-          element.style?.scale && element.style.scale !== 1 ? `scale(${element.style.scale})` : '',
-          element.style?.skewX ? `skewX(${element.style.skewX}deg)` : '',
-          element.style?.skewY ? `skewY(${element.style.skewY}deg)` : '',
-        ].filter(Boolean).join(' ') || undefined,
+        borderRadius: isGroup ? 0 : borderRadius,
+        border: isGroup ? undefined : stroke,
+        transform: transformStr,
         transformOrigin: element.style?.transformOrigin || 'center',
         perspective: element.style?.perspective || undefined,
         boxSizing: element.style?.boxSizing || 'border-box',
@@ -634,18 +643,8 @@ export const CanvasElement = memo(function CanvasElement({
         letterSpacing: element.style?.letterSpacing ?? 0,
         lineHeight: element.style?.lineHeight ?? 1.4,
         cursor: currentTool === 'select' ? 'move' : 'default',
-        boxShadow: getBoxShadow(),
-        filter: [
-          element.style?.blur ? `blur(${element.style.blur}px)` : '',
-          element.style?.brightness ? `brightness(${element.style.brightness})` : '',
-          element.style?.contrast ? `contrast(${element.style.contrast})` : '',
-          element.style?.saturate ? `saturate(${element.style.saturate})` : '',
-          element.style?.hueRotate ? `hue-rotate(${element.style.hueRotate}deg)` : '',
-          element.style?.invert ? `invert(${element.style.invert})` : '',
-          element.style?.grayscale ? `grayscale(${element.style.grayscale})` : '',
-          element.style?.sepia ? `sepia(${element.style.sepia})` : '',
-          element.style?.dropShadowX !== undefined ? `drop-shadow(${element.style.dropShadowX || 0}px ${element.style.dropShadowY || 0}px ${element.style.dropShadowBlur || 0}px ${element.style.dropShadowColor || '#000'})` : '',
-        ].filter(Boolean).join(' ') || undefined,
+        boxShadow: boxShadow,
+        filter: filterStr,
         userSelect: 'none',
       }}
     >
@@ -658,7 +657,7 @@ export const CanvasElement = memo(function CanvasElement({
             height: '100%',
             objectFit: element.style.objectFit || 'cover',
             objectPosition: element.style.objectPosition || 'center',
-            borderRadius: getBorderRadius(),
+            borderRadius: borderRadius,
             pointerEvents: 'none',
           }}
           draggable={false}
@@ -797,7 +796,7 @@ export const CanvasElement = memo(function CanvasElement({
             position: 'absolute',
             inset: -1,
             border: '1.5px solid rgba(59,130,246,0.45)',
-            borderRadius: isGroup ? 0 : getBorderRadius(),
+            borderRadius: isGroup ? 0 : borderRadius,
             pointerEvents: 'none',
             zIndex: 7,
           }}
@@ -810,7 +809,7 @@ export const CanvasElement = memo(function CanvasElement({
             position: 'absolute',
             inset: -1,
             border: '1.5px solid #3b82f6',
-            borderRadius: isGroup ? 0 : getBorderRadius(),
+            borderRadius: isGroup ? 0 : borderRadius,
             pointerEvents: 'none',
             zIndex: 8,
           }}
