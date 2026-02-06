@@ -4,16 +4,45 @@ import { clearPreviewHash, type ProjectData } from '../utils/shareUtils';
 import { useGestureHandler } from '../hooks/useGestureHandler';
 
 // ─── Device Frame Definitions ─────────────────────────────────────────
-const DEVICE_FRAMES = [
-  { id: 'none', label: 'No Frame', width: 0, height: 0, radius: 0, notch: 'none' as const },
-  { id: 'iphone15pro', label: 'iPhone 15 Pro', width: 393, height: 852, radius: 55, notch: 'island' as const },
-  { id: 'iphone14', label: 'iPhone 14', width: 390, height: 844, radius: 47, notch: 'notch' as const },
-  { id: 'iphonese', label: 'iPhone SE', width: 375, height: 667, radius: 0, notch: 'none' as const },
-  { id: 'pixel7', label: 'Pixel 7', width: 412, height: 915, radius: 28, notch: 'punch' as const },
-  { id: 'galaxys23', label: 'Galaxy S23', width: 360, height: 780, radius: 24, notch: 'punch' as const },
-  { id: 'ipadmini', label: 'iPad Mini', width: 744, height: 1133, radius: 18, notch: 'none' as const },
-  { id: 'ipadpro11', label: 'iPad Pro 11"', width: 834, height: 1194, radius: 18, notch: 'none' as const },
-] as const;
+type DeviceCategory = 'none' | 'iphone' | 'android' | 'ipad' | 'desktop';
+
+interface DeviceFrame {
+  id: string;
+  label: string;
+  width: number;
+  height: number;
+  radius: number;
+  notch: 'none' | 'island' | 'notch' | 'punch';
+  category: DeviceCategory;
+  icon: string;
+}
+
+const DEVICE_FRAMES: DeviceFrame[] = [
+  { id: 'none', label: '无边框', width: 0, height: 0, radius: 0, notch: 'none', category: 'none', icon: '🖼️' },
+  // iPhone
+  { id: 'iphone15pro', label: 'iPhone 15 Pro', width: 393, height: 852, radius: 55, notch: 'island', category: 'iphone', icon: '📱' },
+  { id: 'iphone14', label: 'iPhone 14', width: 390, height: 844, radius: 47, notch: 'notch', category: 'iphone', icon: '📱' },
+  { id: 'iphonese', label: 'iPhone SE', width: 375, height: 667, radius: 0, notch: 'none', category: 'iphone', icon: '📱' },
+  // Android
+  { id: 'pixel7', label: 'Pixel 7', width: 412, height: 915, radius: 28, notch: 'punch', category: 'android', icon: '📱' },
+  { id: 'galaxys23', label: 'Galaxy S23', width: 360, height: 780, radius: 24, notch: 'punch', category: 'android', icon: '📱' },
+  // iPad
+  { id: 'ipadmini', label: 'iPad Mini', width: 744, height: 1133, radius: 18, notch: 'none', category: 'ipad', icon: '📋' },
+  { id: 'ipadpro11', label: 'iPad Pro 11"', width: 834, height: 1194, radius: 18, notch: 'none', category: 'ipad', icon: '📋' },
+  // Desktop
+  { id: 'desktop1080', label: 'Desktop 1080p', width: 1920, height: 1080, radius: 0, notch: 'none', category: 'desktop', icon: '🖥️' },
+  { id: 'desktop1440', label: 'Desktop 1440p', width: 2560, height: 1440, radius: 0, notch: 'none', category: 'desktop', icon: '🖥️' },
+  { id: 'macbook14', label: 'MacBook 14"', width: 1512, height: 982, radius: 0, notch: 'none', category: 'desktop', icon: '💻' },
+  { id: 'macbook16', label: 'MacBook 16"', width: 1728, height: 1117, radius: 0, notch: 'none', category: 'desktop', icon: '💻' },
+];
+
+const DEVICE_CATEGORIES: { id: DeviceCategory; label: string; icon: string }[] = [
+  { id: 'none', label: '无', icon: '🖼️' },
+  { id: 'iphone', label: 'iPhone', icon: '' },
+  { id: 'android', label: 'Android', icon: '🤖' },
+  { id: 'ipad', label: 'iPad', icon: '📋' },
+  { id: 'desktop', label: '桌面', icon: '🖥️' },
+];
 
 // ─── Easing helpers ───────────────────────────────────────────────────
 const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
@@ -62,6 +91,9 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
   const [transitionCurve, setTransitionCurve] = useState('ease-out');
   const [showControls, setShowControls] = useState(true);
   const [deviceFrame, setDeviceFrame] = useState('iphone15pro');
+  const [showDevicePicker, setShowDevicePicker] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [windowSize, setWindowSize] = useState({ w: window.innerWidth, h: window.innerHeight });
 
   // Element state management
   const [elementStates, setElementStates] = useState<Map<string, string>>(new Map());
@@ -90,8 +122,7 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
   const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
   const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
-  const device: { id: string; label: string; width: number; height: number; radius: number; notch: string } =
-    DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
+  const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
 
   // ─── Exit preview ────────────────────────────────────────────────
   const handleEdit = useCallback(() => { clearPreviewHash(); onEnterEditMode(); }, [onEnterEditMode]);
@@ -226,15 +257,33 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
     return () => { window.removeEventListener('mousemove', onMove); clearTimeout(timeout); };
   }, []);
 
-  // ─── Scale calculation ───────────────────────────────────────────
-  const contentWidth = device.id === 'none' ? frameSize.width : device.width;
-  const contentHeight = device.id === 'none' ? frameSize.height : device.height;
+  // ─── Window resize listener ──────────────────────────────────────
+  useEffect(() => {
+    const onResize = () => setWindowSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // ─── Close device picker on outside click ────────────────────────
+  useEffect(() => {
+    if (!showDevicePicker) return;
+    const onClick = () => setShowDevicePicker(false);
+    window.addEventListener('click', onClick);
+    return () => window.removeEventListener('click', onClick);
+  }, [showDevicePicker]);
+
+  // ─── Scale calculation (orientation-aware) ───────────────────────
+  const canRotate = device.category === 'iphone' || device.category === 'android' || device.category === 'ipad';
+  const rawW = device.id === 'none' ? frameSize.width : device.width;
+  const rawH = device.id === 'none' ? frameSize.height : device.height;
+  const contentWidth = (isLandscape && canRotate) ? rawH : rawW;
+  const contentHeight = (isLandscape && canRotate) ? rawW : rawH;
   const bezel = device.id === 'none' ? 0 : 12;
   const totalW = contentWidth + bezel * 2;
   const totalH = contentHeight + bezel * 2;
   const scale = Math.min(
-    (window.innerWidth * 0.9) / totalW,
-    (window.innerHeight * 0.85) / totalH,
+    (windowSize.w * 0.9) / totalW,
+    (windowSize.h * 0.85) / totalH,
     1,
   );
 
@@ -246,11 +295,11 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
       {/* Preview area */}
       <div style={{ transform: `scale(${scale})`, transformOrigin: 'center' }}>
         {device.id !== 'none' ? (
-          <DeviceFrameShell device={device as any}>
+          <DeviceFrameShell device={device} landscape={isLandscape && canRotate}>
             <PreviewContent
               ref={gestureRef}
               elements={elements}
-              frameSize={device.id === 'none' ? frameSize : { width: device.width, height: device.height }}
+              frameSize={{ width: contentWidth, height: contentHeight }}
               canvasBackground={canvasBackground || '#0d0d0e'}
               onTrigger={handleTrigger}
               transitionDuration={transitionDuration}
@@ -300,18 +349,37 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
             </div>
           )}
 
-          {/* Device frame selector */}
-          <select
-            value={deviceFrame}
-            onChange={e => setDeviceFrame(e.target.value)}
-            style={S.deviceSelect}
-          >
-            {DEVICE_FRAMES.map(d => (
-              <option key={d.id} value={d.id}>
-                {d.label}{d.width > 0 ? ` ${d.width}×${d.height}` : ''}
-              </option>
-            ))}
-          </select>
+          {/* Device picker trigger */}
+          <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowDevicePicker(p => !p)}
+              style={S.deviceBtn}
+              title="切换设备"
+            >
+              {device.icon} {device.label}
+              {contentWidth > 0 && <span style={S.deviceDim}>{contentWidth}×{contentHeight}</span>}
+              <span style={{ fontSize: 10, marginLeft: 4 }}>▾</span>
+            </button>
+
+            {/* Orientation toggle (only for rotatable devices) */}
+            {canRotate && device.id !== 'none' && (
+              <button
+                onClick={() => setIsLandscape(l => !l)}
+                style={S.orientBtn}
+                title={isLandscape ? '竖屏' : '横屏'}
+              >
+                {isLandscape ? '↔' : '↕'}
+              </button>
+            )}
+
+            {/* Device picker dropdown */}
+            {showDevicePicker && (
+              <DevicePicker
+                current={deviceFrame}
+                onSelect={(id) => { setDeviceFrame(id); setShowDevicePicker(false); }}
+              />
+            )}
+          </div>
 
           {/* Action buttons */}
           <div style={S.buttons}>
@@ -331,47 +399,120 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
 }
 
 // ─── DeviceFrameShell ─────────────────────────────────────────────────
-function DeviceFrameShell({ device, children }: { device: { id: string; width: number; height: number; radius: number; notch: string }; children: React.ReactNode }) {
-  const bezel = 12;
+function DeviceFrameShell({ device, landscape, children }: {
+  device: DeviceFrame;
+  landscape?: boolean;
+  children: React.ReactNode;
+}) {
+  const isDesktop = device.category === 'desktop';
+  const bezel = isDesktop ? 0 : 12;
+  const w = landscape ? device.height : device.width;
+  const h = landscape ? device.width : device.height;
+
+  // Desktop: simple border, no bezel
+  if (isDesktop) {
+    return (
+      <div style={{
+        width: w, height: h,
+        background: '#050506',
+        border: '2px solid rgba(255,255,255,0.12)',
+        borderRadius: 8,
+        position: 'relative', overflow: 'hidden',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+      }}>
+        {children}
+      </div>
+    );
+  }
+
+  // Mobile / Tablet frame
   return (
     <div style={{
-      width: device.width + bezel * 2,
-      height: device.height + bezel * 2,
+      width: w + bezel * 2,
+      height: h + bezel * 2,
       borderRadius: device.radius + bezel,
       background: '#1a1a1a',
       border: '2px solid rgba(255,255,255,0.12)',
       padding: bezel,
       boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
-      position: 'relative',
-      overflow: 'hidden',
+      position: 'relative', overflow: 'hidden',
     }}>
       <div style={{
-        width: device.width,
-        height: device.height,
+        width: w, height: h,
         borderRadius: device.radius,
         background: '#050506',
-        position: 'relative',
-        overflow: 'hidden',
+        position: 'relative', overflow: 'hidden',
       }}>
-        {device.notch === 'island' && (
+        {!landscape && device.notch === 'island' && (
           <div style={{
             position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
             width: 120, height: 36, borderRadius: 18, background: '#000', zIndex: 100,
           }} />
         )}
-        {device.notch === 'notch' && (
+        {!landscape && device.notch === 'notch' && (
           <div style={{
             position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
             width: 160, height: 34, borderRadius: '0 0 20px 20px', background: '#000', zIndex: 100,
           }} />
         )}
-        {device.notch === 'punch' && (
+        {!landscape && device.notch === 'punch' && (
           <div style={{
             position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
             width: 12, height: 12, borderRadius: '50%', background: '#000', zIndex: 100,
           }} />
         )}
         {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── DevicePicker ─────────────────────────────────────────────────────
+function DevicePicker({ current, onSelect }: { current: string; onSelect: (id: string) => void }) {
+  const [activeCategory, setActiveCategory] = useState<DeviceCategory>(() => {
+    const dev = DEVICE_FRAMES.find(d => d.id === current);
+    return dev?.category || 'iphone';
+  });
+
+  const filtered = activeCategory === 'none'
+    ? DEVICE_FRAMES.filter(d => d.category === 'none')
+    : DEVICE_FRAMES.filter(d => d.category === activeCategory);
+
+  return (
+    <div style={S.picker} onClick={e => e.stopPropagation()}>
+      {/* Category tabs */}
+      <div style={S.pickerTabs}>
+        {DEVICE_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+            style={{
+              ...S.pickerTab,
+              ...(activeCategory === cat.id ? S.pickerTabActive : {}),
+            }}
+          >
+            {cat.icon} {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Device list */}
+      <div style={S.pickerList}>
+        {filtered.map(d => (
+          <button
+            key={d.id}
+            onClick={() => onSelect(d.id)}
+            style={{
+              ...S.pickerItem,
+              ...(current === d.id ? S.pickerItemActive : {}),
+            }}
+          >
+            <span style={S.pickerItemName}>{d.icon} {d.label}</span>
+            {d.width > 0 && (
+              <span style={S.pickerItemDim}>{d.width}×{d.height}</span>
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -579,11 +720,23 @@ const S: Record<string, React.CSSProperties> = {
     padding: '4px 8px', borderRadius: 6, fontSize: 11,
     whiteSpace: 'nowrap',
   },
-  deviceSelect: {
+  deviceBtn: {
+    display: 'flex', alignItems: 'center', gap: 6,
     background: 'rgba(255,255,255,0.08)', color: '#ccc',
     border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 8, padding: '6px 10px', fontSize: 12,
-    outline: 'none', cursor: 'pointer',
+    borderRadius: 8, padding: '6px 12px', fontSize: 12,
+    cursor: 'pointer', whiteSpace: 'nowrap' as const,
+  },
+  deviceDim: {
+    color: 'rgba(255,255,255,0.35)', fontSize: 10,
+    marginLeft: 2,
+  },
+  orientBtn: {
+    background: 'rgba(255,255,255,0.08)', color: '#ccc',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 8, padding: '6px 8px', fontSize: 14,
+    cursor: 'pointer', marginLeft: 4,
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
   },
   buttons: {
     display: 'flex', gap: 8,
@@ -615,5 +768,53 @@ const S: Record<string, React.CSSProperties> = {
     position: 'fixed', bottom: 8, right: 16,
     color: 'rgba(255,255,255,0.2)', fontSize: 11,
     zIndex: 10000,
+  },
+  // ── Device Picker styles ──
+  picker: {
+    position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+    marginBottom: 8, width: 280,
+    background: 'rgba(28,28,30,0.98)', backdropFilter: 'blur(16px)',
+    borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+    overflow: 'hidden', zIndex: 10001,
+  },
+  pickerTabs: {
+    display: 'flex', gap: 0,
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    padding: '4px 4px 0',
+  },
+  pickerTab: {
+    flex: 1, padding: '8px 4px', fontSize: 11,
+    background: 'transparent', color: 'rgba(255,255,255,0.45)',
+    border: 'none', borderBottom: '2px solid transparent',
+    cursor: 'pointer', textAlign: 'center' as const,
+    borderRadius: '6px 6px 0 0',
+    transition: 'all 0.15s ease',
+  },
+  pickerTabActive: {
+    color: '#60a5fa',
+    borderBottomColor: '#2563eb',
+    background: 'rgba(37,99,235,0.08)',
+  },
+  pickerList: {
+    display: 'flex', flexDirection: 'column' as const,
+    padding: 4, maxHeight: 220, overflowY: 'auto' as const,
+  },
+  pickerItem: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '8px 12px', fontSize: 12,
+    background: 'transparent', color: '#ccc',
+    border: 'none', borderRadius: 8,
+    cursor: 'pointer', textAlign: 'left' as const,
+    transition: 'background 0.12s ease',
+  },
+  pickerItemActive: {
+    background: 'rgba(37,99,235,0.18)', color: '#93bbfc',
+  },
+  pickerItemName: {
+    display: 'flex', alignItems: 'center', gap: 6,
+  },
+  pickerItemDim: {
+    color: 'rgba(255,255,255,0.3)', fontSize: 10,
   },
 };

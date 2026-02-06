@@ -360,6 +360,64 @@ export const CanvasElement = memo(function CanvasElement({
     document.addEventListener('mouseup', handleUp);
   }, [element, pushHistory, scale, updateElement]);
 
+  // --- Corner radius drag handler ---
+  const handleRadiusDragStart = useCallback((e: ReactMouseEvent, corner: 'tl' | 'tr' | 'br' | 'bl') => {
+    e.stopPropagation();
+    e.preventDefault();
+    pushHistory();
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const style = (element.style || {}) as any;
+    const startRadius: number = (() => {
+      if (corner === 'tl') return style.borderRadiusTL ?? style.borderRadius ?? 0;
+      if (corner === 'tr') return style.borderRadiusTR ?? style.borderRadius ?? 0;
+      if (corner === 'br') return style.borderRadiusBR ?? style.borderRadius ?? 0;
+      return style.borderRadiusBL ?? style.borderRadius ?? 0;
+    })();
+    const maxRadius = Math.min(element.size.width, element.size.height) / 2;
+
+    const handleMove = (moveEvent: globalThis.MouseEvent) => {
+      // Diagonal inward = positive delta means larger radius
+      const dx = (moveEvent.clientX - startX) / scale;
+      const dy = (moveEvent.clientY - startY) / scale;
+      // Direction depends on corner
+      let delta: number;
+      if (corner === 'tl') delta = (dx + dy) / 2;
+      else if (corner === 'tr') delta = (-dx + dy) / 2;
+      else if (corner === 'br') delta = (-dx - dy) / 2;
+      else delta = (dx - dy) / 2;
+
+      const newRadius = Math.round(Math.max(0, Math.min(maxRadius, startRadius + delta)));
+
+      // Check if all four corners should be linked (no individual overrides set)
+      const hasIndependent = style.borderRadiusTL !== undefined || style.borderRadiusTR !== undefined ||
+        style.borderRadiusBR !== undefined || style.borderRadiusBL !== undefined;
+
+      if (!hasIndependent) {
+        // Linked mode: update all corners uniformly
+        updateElement(element.id, {
+          style: { ...style, borderRadius: newRadius } as any,
+        });
+      } else {
+        // Independent mode: update only this corner
+        const key = corner === 'tl' ? 'borderRadiusTL' : corner === 'tr' ? 'borderRadiusTR' : corner === 'br' ? 'borderRadiusBR' : 'borderRadiusBL';
+        updateElement(element.id, {
+          style: { ...style, [key]: newRadius } as any,
+        });
+      }
+    };
+
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  }, [element, pushHistory, scale, updateElement]);
+
   const renderHandles = () => {
     if (!isSelected || currentTool !== 'select') return null;
     const handles: ResizeHandle[] = ['nw', 'ne', 'se', 'sw'];
@@ -465,7 +523,63 @@ export const CanvasElement = memo(function CanvasElement({
       </div>
     );
 
-    return [rotationHandle, ...cornerHandleElements, ...edgeHandleElements];
+    // --- Corner radius drag handles (small diamonds inside each corner) ---
+    const radiusHandles = (() => {
+      // Only show for rectangle-like shapes (not ellipse, line, path, text)
+      if (element.shapeType === 'ellipse' || element.shapeType === 'line' || 
+          element.shapeType === 'path' || element.shapeType === 'text' || isGroup) {
+        return [];
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const st = (element.style || {}) as any;
+      const radii = {
+        tl: st.borderRadiusTL ?? st.borderRadius ?? 0,
+        tr: st.borderRadiusTR ?? st.borderRadius ?? 0,
+        br: st.borderRadiusBR ?? st.borderRadius ?? 0,
+        bl: st.borderRadiusBL ?? st.borderRadius ?? 0,
+      };
+
+      const w = element.size.width;
+      const h = element.size.height;
+      const handleSize = 7;
+      const minDimForHandles = 40; // Don't show if element is too small
+
+      if (w < minDimForHandles || h < minDimForHandles) return [];
+
+      // Minimum offset from corner so handle doesn't overlap resize handles
+      const minOffset = 12;
+
+      const cornerPositions: { key: 'tl' | 'tr' | 'br' | 'bl'; x: number; y: number }[] = [
+        { key: 'tl', x: Math.max(minOffset, radii.tl), y: Math.max(minOffset, radii.tl) },
+        { key: 'tr', x: w - Math.max(minOffset, radii.tr), y: Math.max(minOffset, radii.tr) },
+        { key: 'br', x: w - Math.max(minOffset, radii.br), y: h - Math.max(minOffset, radii.br) },
+        { key: 'bl', x: Math.max(minOffset, radii.bl), y: h - Math.max(minOffset, radii.bl) },
+      ];
+
+      return cornerPositions.map(({ key, x, y }) => (
+        <div
+          key={`radius-${key}`}
+          onMouseDown={(ev) => handleRadiusDragStart(ev, key)}
+          style={{
+            position: 'absolute',
+            left: x - handleSize / 2,
+            top: y - handleSize / 2,
+            width: handleSize,
+            height: handleSize,
+            background: '#fff',
+            border: '1.5px solid #3b82f6',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            zIndex: 12,
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.1)',
+          }}
+          title={`Drag to adjust ${key.toUpperCase()} corner radius`}
+        />
+      ));
+    })();
+
+    return [rotationHandle, ...cornerHandleElements, ...edgeHandleElements, ...radiusHandles];
   };
 
   const isImage = element.shapeType === 'image';
