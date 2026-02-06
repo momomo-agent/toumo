@@ -5,7 +5,8 @@
  * Works with rectangles and ellipses
  */
 
-import type { KeyElement, Position, Size } from '../types';
+import type { KeyElement } from '../types';
+import { DEFAULT_STYLE } from '../types';
 
 export type BooleanOperationType = 'union' | 'subtract' | 'intersect' | 'exclude';
 
@@ -149,6 +150,7 @@ export function booleanUnion(elements: KeyElement[]): KeyElement | null {
     size: { width: unionBounds.width, height: unionBounds.height },
     shapeType: 'path',
     style: {
+      ...DEFAULT_STYLE,
       ...baseElement.style,
       pathData: combinedPath,
       pathClosed: true,
@@ -188,10 +190,10 @@ export function booleanSubtract(elements: KeyElement[]): KeyElement | null {
     size: { width: baseBounds.width, height: baseBounds.height },
     shapeType: 'path',
     style: {
+      ...DEFAULT_STYLE,
       ...baseElement.style,
       pathData: combinedPath,
       pathClosed: true,
-      // Use evenodd fill rule for proper subtraction
     },
   };
   
@@ -226,6 +228,7 @@ export function booleanIntersect(elements: KeyElement[]): KeyElement | null {
     size: { width: intersectionBounds.width, height: intersectionBounds.height },
     shapeType: 'rectangle',
     style: {
+      ...DEFAULT_STYLE,
       ...baseElement.style,
       borderRadius: Math.min(
         baseElement.style?.borderRadius || 0,
@@ -267,10 +270,10 @@ export function booleanExclude(elements: KeyElement[]): KeyElement | null {
     size: { width: unionBounds.width, height: unionBounds.height },
     shapeType: 'path',
     style: {
+      ...DEFAULT_STYLE,
       ...baseElement.style,
       pathData: combinedPath,
       pathClosed: true,
-      // Use evenodd fill rule for XOR effect
     },
   };
   

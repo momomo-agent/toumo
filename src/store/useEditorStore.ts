@@ -3,7 +3,7 @@ import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Compon
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
-import { performBooleanOperation, canPerformBooleanOperation, type BooleanOperationType } from '../utils/booleanOperations';
+import { performBooleanOperation, canPerformBooleanOperation } from '../utils/booleanOperations';
 
 interface HistoryEntry {
   keyframes: Keyframe[];
@@ -3434,6 +3434,143 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const actualGap = justifyContent === 'space-between' ? spaceBetweenGap : gap;
       mainAxisOffset += (isHorizontal ? childWidth : childHeight) + actualGap;
     });
+  },
+
+  // Boolean operations
+  booleanUnion: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selectedElements = state.selectedElementIds
+      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .filter((el): el is KeyElement => el !== undefined);
+    
+    if (!canPerformBooleanOperation(selectedElements)) return;
+    
+    const result = performBooleanOperation('union', selectedElements);
+    if (!result) return;
+    
+    get().pushHistory();
+    
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => {
+        if (kf.id !== s.selectedKeyframeId) return kf;
+        return {
+          ...kf,
+          keyElements: [
+            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
+            result,
+          ],
+        };
+      }),
+      selectedElementIds: [result.id],
+      selectedElementId: result.id,
+    }));
+  },
+
+  booleanSubtract: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selectedElements = state.selectedElementIds
+      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .filter((el): el is KeyElement => el !== undefined);
+    
+    if (!canPerformBooleanOperation(selectedElements)) return;
+    
+    const result = performBooleanOperation('subtract', selectedElements);
+    if (!result) return;
+    
+    get().pushHistory();
+    
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => {
+        if (kf.id !== s.selectedKeyframeId) return kf;
+        return {
+          ...kf,
+          keyElements: [
+            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
+            result,
+          ],
+        };
+      }),
+      selectedElementIds: [result.id],
+      selectedElementId: result.id,
+    }));
+  },
+
+  booleanIntersect: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selectedElements = state.selectedElementIds
+      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .filter((el): el is KeyElement => el !== undefined);
+    
+    if (!canPerformBooleanOperation(selectedElements)) return;
+    
+    const result = performBooleanOperation('intersect', selectedElements);
+    if (!result) return;
+    
+    get().pushHistory();
+    
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => {
+        if (kf.id !== s.selectedKeyframeId) return kf;
+        return {
+          ...kf,
+          keyElements: [
+            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
+            result,
+          ],
+        };
+      }),
+      selectedElementIds: [result.id],
+      selectedElementId: result.id,
+    }));
+  },
+
+  booleanExclude: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selectedElements = state.selectedElementIds
+      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .filter((el): el is KeyElement => el !== undefined);
+    
+    if (!canPerformBooleanOperation(selectedElements)) return;
+    
+    const result = performBooleanOperation('exclude', selectedElements);
+    if (!result) return;
+    
+    get().pushHistory();
+    
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => {
+        if (kf.id !== s.selectedKeyframeId) return kf;
+        return {
+          ...kf,
+          keyElements: [
+            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
+            result,
+          ],
+        };
+      }),
+      selectedElementIds: [result.id],
+      selectedElementId: result.id,
+    }));
   },
 
 }));

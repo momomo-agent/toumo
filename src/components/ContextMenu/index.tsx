@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../../store';
+import { canPerformBooleanOperation } from '../../utils/booleanOperations';
 
 interface ContextMenuProps {
   x: number;
@@ -24,6 +25,10 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
     alignElements,
     keyframes,
     selectedKeyframeId,
+    booleanUnion,
+    booleanSubtract,
+    booleanIntersect,
+    booleanExclude,
   } = useEditorStore();
 
   // Get current element info
@@ -151,6 +156,38 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
           <Divider />
         </>
       )}
+      
+      {/* Boolean Operations - only show when multiple shapes selected */}
+      {hasMultipleSelected && (() => {
+        const selectedElements = selectedElementIds
+          .map(id => currentKeyframe?.keyElements.find(el => el.id === id))
+          .filter((el): el is NonNullable<typeof el> => el !== undefined);
+        const canBoolean = canPerformBooleanOperation(selectedElements);
+        
+        return canBoolean ? (
+          <>
+            <SubMenu label="Boolean">
+              <MenuItem
+                label="Union"
+                onClick={() => { booleanUnion(); onClose(); }}
+              />
+              <MenuItem
+                label="Subtract"
+                onClick={() => { booleanSubtract(); onClose(); }}
+              />
+              <MenuItem
+                label="Intersect"
+                onClick={() => { booleanIntersect(); onClose(); }}
+              />
+              <MenuItem
+                label="Exclude"
+                onClick={() => { booleanExclude(); onClose(); }}
+              />
+            </SubMenu>
+            <Divider />
+          </>
+        ) : null;
+      })()}
       
       {/* Layer Order */}
       <MenuItem
