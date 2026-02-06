@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../../store';
 
 interface ContextMenuProps {
@@ -21,6 +21,7 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
     ungroupSelectedElements,
     bringToFront,
     sendToBack,
+    alignElements,
     keyframes,
     selectedKeyframeId,
   } = useEditorStore();
@@ -117,6 +118,40 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
       )}
       {(hasMultipleSelected || isGroup) && <Divider />}
       
+      {/* Alignment Actions - only show when multiple elements selected */}
+      {hasMultipleSelected && (
+        <>
+          <SubMenu label="Align">
+            <MenuItem
+              label="Align Left"
+              onClick={() => { alignElements('left'); onClose(); }}
+            />
+            <MenuItem
+              label="Align Center"
+              onClick={() => { alignElements('center'); onClose(); }}
+            />
+            <MenuItem
+              label="Align Right"
+              onClick={() => { alignElements('right'); onClose(); }}
+            />
+            <Divider />
+            <MenuItem
+              label="Align Top"
+              onClick={() => { alignElements('top'); onClose(); }}
+            />
+            <MenuItem
+              label="Align Middle"
+              onClick={() => { alignElements('middle'); onClose(); }}
+            />
+            <MenuItem
+              label="Align Bottom"
+              onClick={() => { alignElements('bottom'); onClose(); }}
+            />
+          </SubMenu>
+          <Divider />
+        </>
+      )}
+      
       {/* Layer Order */}
       <MenuItem
         label="Bring to Front"
@@ -192,6 +227,75 @@ function MenuItem({ label, shortcut, onClick, danger, disabled }: MenuItemProps)
 function Divider() {
   return (
     <div style={{ height: 1, background: '#3a3a3a', margin: '4px 0' }} />
+  );
+}
+
+interface SubMenuProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+function SubMenu({ label, children }: SubMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = window.setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
+  };
+
+  return (
+    <div
+      style={{ position: 'relative' }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          padding: '8px 12px',
+          background: isOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
+          border: 'none',
+          color: '#e0e0e0',
+          fontSize: 13,
+          textAlign: 'left',
+          cursor: 'pointer',
+          borderRadius: 4,
+          transition: 'background 0.15s',
+        }}
+      >
+        <span>{label}</span>
+        <span style={{ color: '#666', fontSize: 11 }}>▶</span>
+      </button>
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            left: '100%',
+            top: 0,
+            marginLeft: 4,
+            background: '#1e1e1e',
+            border: '1px solid #3a3a3a',
+            borderRadius: 8,
+            padding: 4,
+            minWidth: 140,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            zIndex: 10001,
+          }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
   );
 }
 

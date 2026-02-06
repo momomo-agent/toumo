@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
+import { AutoLayoutPanel } from './AutoLayoutPanel';
 import './DesignPanel.css';
 
 // Icons as SVG components

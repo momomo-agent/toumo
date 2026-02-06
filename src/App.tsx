@@ -1437,7 +1437,7 @@ export default function App() {
         {selected.shapeType === 'image' && (
           <>
             <div style={{ marginBottom: 16 }}>
-              <Label>Object Fit</Label>
+              <Label>适应方式</Label>
               <select
                 value={currentStyle.objectFit || 'cover'}
                 onChange={(e) => handleStyleChange({ objectFit: e.target.value as 'cover' | 'contain' | 'fill' })}
@@ -1491,7 +1491,7 @@ export default function App() {
         {isTextElement && (
           <>
             <div style={{ marginBottom: 16 }}>
-              <Label>Content</Label>
+              <Label>内容</Label>
               <textarea
                 value={selected.text || ''}
                 onChange={(e) => updateElement(selected.id, { text: e.target.value })}
@@ -1508,7 +1508,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Font Family</Label>
+              <Label>字体</Label>
               <select
                 value={currentStyle.fontFamily || 'Inter, sans-serif'}
                 onChange={(e) => handleStyleChange({ fontFamily: e.target.value })}
@@ -1522,7 +1522,7 @@ export default function App() {
               </select>
             </div>
             <div style={{ marginBottom: 16 }}>
-              <Label>Font Size</Label>
+              <Label>字号</Label>
               <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
                 <button onClick={() => handleStyleChange({ fontSize: 12 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>12</button>
                 <button onClick={() => handleStyleChange({ fontSize: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
@@ -1538,7 +1538,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Text Color</Label>
+              <Label>文字颜色</Label>
               <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                 <button onClick={() => handleStyleChange({ textColor: '#ffffff' })} style={{ width: 20, height: 20, background: '#ffffff', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
                 <button onClick={() => handleStyleChange({ textColor: '#000000' })} style={{ width: 20, height: 20, background: '#000000', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
@@ -1553,7 +1553,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Padding</Label>
+              <Label>内边距</Label>
               <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                 <button onClick={() => handleStyleChange({ padding: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
                 <button onClick={() => handleStyleChange({ padding: 8 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>8</button>
@@ -1569,7 +1569,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Text Shadow</Label>
+              <Label>文字阴影</Label>
               <input
                 type="text"
                 value={currentStyle.textShadow || ''}
@@ -1579,7 +1579,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Text Transform</Label>
+              <Label>文字变换</Label>
               <select
                 value={currentStyle.textTransform || 'none'}
                 onChange={(e) => handleStyleChange({ textTransform: e.target.value })}
@@ -1592,7 +1592,7 @@ export default function App() {
               </select>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Font Weight</Label>
+              <Label>字重</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
                   onClick={() => handleStyleChange({ fontWeight: 'normal' })}
@@ -1660,7 +1660,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Letter Spacing</Label>
+              <Label>字间距</Label>
               <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                 <button onClick={() => handleStyleChange({ letterSpacing: 0 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
                 <button onClick={() => handleStyleChange({ letterSpacing: 1 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1</button>
@@ -1674,7 +1674,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Line Height</Label>
+              <Label>行高</Label>
               <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                 <button onClick={() => handleStyleChange({ lineHeight: 1 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1</button>
                 <button onClick={() => handleStyleChange({ lineHeight: 1.4 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1.4</button>
@@ -1689,7 +1689,7 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Alignment</Label>
+              <Label>对齐</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {TEXT_ALIGNMENTS.map((option) => (
                   <button
@@ -1713,7 +1713,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Vertical Align</Label>
+              <Label>垂直对齐</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ verticalAlign: 'top' })} style={{ flex: 1, padding: 4, background: currentStyle.verticalAlign === 'top' ? '#2563eb20' : '#1a1a1a', border: currentStyle.verticalAlign === 'top' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Top</button>
                 <button onClick={() => handleStyleChange({ verticalAlign: 'middle' })} style={{ flex: 1, padding: 4, background: (currentStyle.verticalAlign ?? 'middle') === 'middle' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.verticalAlign ?? 'middle') === 'middle' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Mid</button>
@@ -1721,42 +1721,42 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Text Wrap</Label>
+              <Label>文字换行</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ whiteSpace: 'nowrap' })} style={{ flex: 1, padding: 4, background: currentStyle.whiteSpace === 'nowrap' ? '#2563eb20' : '#1a1a1a', border: currentStyle.whiteSpace === 'nowrap' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>No</button>
                 <button onClick={() => handleStyleChange({ whiteSpace: 'normal' })} style={{ flex: 1, padding: 4, background: (currentStyle.whiteSpace ?? 'normal') === 'normal' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.whiteSpace ?? 'normal') === 'normal' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Wrap</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Overflow</Label>
+              <Label>溢出</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ overflow: 'visible' })} style={{ flex: 1, padding: 4, background: (currentStyle.overflow ?? 'visible') === 'visible' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.overflow ?? 'visible') === 'visible' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Show</button>
                 <button onClick={() => handleStyleChange({ overflow: 'hidden' })} style={{ flex: 1, padding: 4, background: currentStyle.overflow === 'hidden' ? '#2563eb20' : '#1a1a1a', border: currentStyle.overflow === 'hidden' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Hide</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Cursor</Label>
+              <Label>光标</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ cursor: 'default' })} style={{ flex: 1, padding: 4, background: (currentStyle.cursor ?? 'default') === 'default' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.cursor ?? 'default') === 'default' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>↖</button>
                 <button onClick={() => handleStyleChange({ cursor: 'pointer' })} style={{ flex: 1, padding: 4, background: currentStyle.cursor === 'pointer' ? '#2563eb20' : '#1a1a1a', border: currentStyle.cursor === 'pointer' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>👆</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Pointer Events</Label>
+              <Label>指针事件</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ pointerEvents: 'auto' })} style={{ flex: 1, padding: 4, background: (currentStyle.pointerEvents ?? 'auto') === 'auto' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.pointerEvents ?? 'auto') === 'auto' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>On</button>
                 <button onClick={() => handleStyleChange({ pointerEvents: 'none' })} style={{ flex: 1, padding: 4, background: currentStyle.pointerEvents === 'none' ? '#2563eb20' : '#1a1a1a', border: currentStyle.pointerEvents === 'none' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Off</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>User Select</Label>
+              <Label>文字选择</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ userSelect: 'auto' })} style={{ flex: 1, padding: 4, background: (currentStyle.userSelect ?? 'auto') === 'auto' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.userSelect ?? 'auto') === 'auto' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>On</button>
                 <button onClick={() => handleStyleChange({ userSelect: 'none' })} style={{ flex: 1, padding: 4, background: currentStyle.userSelect === 'none' ? '#2563eb20' : '#1a1a1a', border: currentStyle.userSelect === 'none' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Off</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Transform Origin</Label>
+              <Label>变换原点</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ transformOrigin: 'center' })} style={{ flex: 1, padding: 4, background: (currentStyle.transformOrigin ?? 'center') === 'center' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.transformOrigin ?? 'center') === 'center' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>⊙</button>
                 <button onClick={() => handleStyleChange({ transformOrigin: 'top left' })} style={{ flex: 1, padding: 4, background: currentStyle.transformOrigin === 'top left' ? '#2563eb20' : '#1a1a1a', border: currentStyle.transformOrigin === 'top left' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>↖</button>
@@ -1764,7 +1764,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Scale</Label>
+              <Label>缩放</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ scale: 0.5 })} style={{ flex: 1, padding: 4, background: currentStyle.scale === 0.5 ? '#2563eb20' : '#1a1a1a', border: currentStyle.scale === 0.5 ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>50%</button>
                 <button onClick={() => handleStyleChange({ scale: 1 })} style={{ flex: 1, padding: 4, background: (currentStyle.scale ?? 1) === 1 ? '#2563eb20' : '#1a1a1a', border: (currentStyle.scale ?? 1) === 1 ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>100%</button>
@@ -1772,7 +1772,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Skew</Label>
+              <Label>倾斜</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ skewX: -15 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>-15°</button>
                 <button onClick={() => handleStyleChange({ skewX: 0, skewY: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0°</button>
@@ -1780,7 +1780,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Perspective</Label>
+              <Label>透视</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ perspective: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
                 <button onClick={() => handleStyleChange({ perspective: 500 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>500</button>
@@ -1788,14 +1788,14 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Box Sizing</Label>
+              <Label>盒模型</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ boxSizing: 'border-box' })} style={{ flex: 1, padding: 4, background: (currentStyle.boxSizing ?? 'border-box') === 'border-box' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.boxSizing ?? 'border-box') === 'border-box' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Border</button>
                 <button onClick={() => handleStyleChange({ boxSizing: 'content-box' })} style={{ flex: 1, padding: 4, background: currentStyle.boxSizing === 'content-box' ? '#2563eb20' : '#1a1a1a', border: currentStyle.boxSizing === 'content-box' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Content</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Outline</Label>
+              <Label>轮廓</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ outline: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
                 <button onClick={() => handleStyleChange({ outline: '2px solid #3b82f6' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Blue</button>
@@ -1810,14 +1810,14 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Transition</Label>
+              <Label>过渡</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ transition: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
                 <button onClick={() => handleStyleChange({ transition: 'all 0.3s ease' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0.3s</button>
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Aspect Ratio</Label>
+              <Label>宽高比</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ aspectRatio: 'auto' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Auto</button>
                 <button onClick={() => handleStyleChange({ aspectRatio: '1/1' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1:1</button>
@@ -1825,7 +1825,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Object Fit</Label>
+              <Label>适应方式</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ objectFit: 'cover' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Cover</button>
                 <button onClick={() => handleStyleChange({ objectFit: 'contain' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Contain</button>
@@ -1833,7 +1833,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Flex Direction</Label>
+              <Label>弹性方向</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ flexDirection: 'row' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Row</button>
                 <button onClick={() => handleStyleChange({ flexDirection: 'column' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Col</button>
@@ -1914,9 +1914,9 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Text Shadow</Label>
+              <Label>文字阴影</Label>
               <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => handleStyleChange({ textShadow: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+                <button onClick={() => handleStyleChange({ textShadow: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>无</button>
                 <button onClick={() => handleStyleChange({ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
               </div>
             </div>
