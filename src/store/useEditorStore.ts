@@ -70,6 +70,7 @@ interface EditorActions {
   setCanvasScale: (scale: number) => void;
   zoomToFit: () => void;
   zoomTo100: () => void;
+  duplicateSelectedElements: () => void;
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
   toggleRulers: () => void;
@@ -352,6 +353,42 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   }),
   
   zoomTo100: () => set({ canvasScale: 1 }),
+  
+  duplicateSelectedElements: () => {
+    const state = get();
+    if (state.selectedElementIds.length === 0) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    get().pushHistory();
+    
+    const newIds: string[] = [];
+    const duplicates: KeyElement[] = [];
+    
+    state.selectedElementIds.forEach(id => {
+      const el = currentKeyframe.keyElements.find(e => e.id === id);
+      if (!el) return;
+      const newId = `el-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      newIds.push(newId);
+      duplicates.push({
+        ...el,
+        id: newId,
+        name: `${el.name} copy`,
+        position: { x: el.position.x + 20, y: el.position.y + 20 },
+      });
+    });
+    
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => 
+        kf.id === s.selectedKeyframeId 
+          ? { ...kf, keyElements: [...kf.keyElements, ...duplicates] }
+          : kf
+      ),
+      selectedElementIds: newIds,
+      selectedElementId: newIds.length === 1 ? newIds[0] : null,
+    }));
+  },
   addRecentColor: (color: string) => set((state) => ({
     recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
   })),
