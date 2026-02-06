@@ -1048,6 +1048,40 @@ export function Canvas() {
                         }}
                       />
                     ))}
+                {/* Live draw preview ghost */}
+                {isActive && drawPreview && drawPreview.width > 2 && drawPreview.height > 2 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: drawPreview.x,
+                      top: drawPreview.y,
+                      width: drawPreview.width,
+                      height: drawPreview.height,
+                      background: drawPreview.tool === 'text' ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.15)',
+                      border: '1.5px dashed #3b82f6',
+                      borderRadius: drawPreview.tool === 'ellipse' ? '50%' : drawPreview.tool === 'line' ? 0 : 8,
+                      pointerEvents: 'none',
+                      zIndex: 999,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {/* Size label */}
+                    <span style={{
+                      fontSize: 10,
+                      color: '#3b82f6',
+                      fontWeight: 600,
+                      fontFamily: 'monospace',
+                      background: 'rgba(0,0,0,0.6)',
+                      padding: '1px 5px',
+                      borderRadius: 4,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {Math.round(drawPreview.width)} × {Math.round(drawPreview.height)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           );
