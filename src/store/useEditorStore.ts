@@ -116,7 +116,7 @@ interface EditorActions {
   exitComponentEditMode: () => void;
   syncComponentInstances: (componentId: string) => void;
   // Image actions
-  addImageElement: (imageSrc: string, originalWidth: number, originalHeight: number) => void;
+  addImageElement: (imageSrc: string, originalWidth: number, originalHeight: number, position?: Position) => void;
   // Group actions
   groupSelectedElements: () => void;
   ungroupSelectedElements: () => void;
@@ -981,7 +981,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   // Image element
-  addImageElement: (imageSrc, originalWidth, originalHeight) => {
+  addImageElement: (imageSrc, originalWidth, originalHeight, customPosition) => {
     const state = get();
     get().pushHistory();
     
@@ -996,9 +996,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       height = Math.round(height * ratio);
     }
     
-    // Center in frame
-    const x = Math.max(0, (state.frameSize.width - width) / 2);
-    const y = Math.max(0, (state.frameSize.height - height) / 2);
+    // Use custom position or center in frame
+    const x = customPosition?.x ?? Math.max(0, (state.frameSize.width - width) / 2);
+    const y = customPosition?.y ?? Math.max(0, (state.frameSize.height - height) / 2);
     
     const newElement: KeyElement = {
       id: `el-img-${Date.now()}`,

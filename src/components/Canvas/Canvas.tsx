@@ -5,6 +5,7 @@ import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement, type ResizeHandle } from './CanvasElement';
 import { PenTool } from './PenTool';
+import { PathEditor } from './PathEditor';
 import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine, type DistanceIndicator } from './AlignmentGuides';
 import { CanvasHints } from './CanvasHints';
@@ -49,6 +50,7 @@ export function Canvas() {
     editingGroupId,
     enterGroupEditMode,
     exitGroupEditMode,
+    addImageElement,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -710,26 +712,67 @@ export function Canvas() {
 
   // Handle component drop
   const handleDrop = useCallback((event: ReactDragEvent) => {
+    // Handle component drop
     const componentId = event.dataTransfer.getData('application/toumo-component');
-    if (!componentId) return;
-    
-    event.preventDefault();
-    
-    const stagePoint = toCanvasSpaceFromDrag(event);
-    const hitFrame = getFrameUnderPoint(stagePoint);
-    
-    if (hitFrame) {
-      if (hitFrame.id !== selectedKeyframeId) {
-        setSelectedKeyframeId(hitFrame.id);
-      }
+    if (componentId) {
+      event.preventDefault();
       
-      const framePoint = translateToFrameSpace(stagePoint, hitFrame);
-      instantiateComponent(componentId, {
-        x: Math.max(0, framePoint.x - 50),
-        y: Math.max(0, framePoint.y - 50),
-      });
+      const stagePoint = toCanvasSpaceFromDrag(event);
+      const hitFrame = getFrameUnderPoint(stagePoint);
+      
+      if (hitFrame) {
+        if (hitFrame.id !== selectedKeyframeId) {
+          setSelectedKeyframeId(hitFrame.id);
+        }
+        
+        const framePoint = translateToFrameSpace(stagePoint, hitFrame);
+        instantiateComponent(componentId, {
+          x: Math.max(0, framePoint.x - 50),
+          y: Math.max(0, framePoint.y - 50),
+        });
+      }
+      return;
     }
-  }, [getFrameUnderPoint, instantiateComponent, selectedKeyframeId, setSelectedKeyframeId]);
+    
+    // Handle image file drop
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      event.preventDefault();
+      
+      const stagePoint = toCanvasSpaceFromDrag(event);
+      const hitFrame = getFrameUnderPoint(stagePoint);
+      
+      if (hitFrame) {
+        if (hitFrame.id !== selectedKeyframeId) {
+          setSelectedKeyframeId(hitFrame.id);
+        }
+        
+        const framePoint = translateToFrameSpace(stagePoint, hitFrame);
+        
+        // Process each image file
+        Array.from(files).forEach((file) => {
+          if (!file.type.startsWith('image/')) return;
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            if (!dataUrl) return;
+            
+            // Get image dimensions
+            const img = new Image();
+            img.onload = () => {
+              addImageElement(dataUrl, img.width, img.height, {
+                x: Math.max(0, framePoint.x - Math.min(150, img.width / 2)),
+                y: Math.max(0, framePoint.y - Math.min(150, img.height / 2)),
+              });
+            };
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+  }, [getFrameUnderPoint, instantiateComponent, selectedKeyframeId, setSelectedKeyframeId, addImageElement]);
 
   return (
     <div
@@ -936,6 +979,22 @@ export function Canvas() {
           canvasScale={canvasScale}
           frameLayout={activeFrameLayout || null}
         />
+        
+        {/* Path Editor - 编辑已有路径的锚点 */}
+        {currentTool === 'select' && selectedElementIds.length === 1 && (() => {
+          const selectedEl = elements.find(el => el.id === selectedElementIds[0]);
+          if (selectedEl?.shapeType === 'path' && activeFrameLayout) {
+            return (
+              <PathEditor
+                element={selectedEl}
+                canvasOffset={canvasOffset}
+                canvasScale={canvasScale}
+                frameLayout={activeFrameLayout}
+              />
+            );
+          }
+          return null;
+        })()}
       </div>
       
       {/* Zoom Controls */}
