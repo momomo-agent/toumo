@@ -413,6 +413,7 @@ export function CanvasElement({
         columnGap: element.style?.columnGap || 16,
         listStyle: element.style?.listStyle || 'none',
         caretColor: element.style?.caretColor || 'auto',
+        accentColor: element.style?.accentColor || 'auto',
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
