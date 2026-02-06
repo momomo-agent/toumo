@@ -28,6 +28,10 @@ export type ShapeStyle = {
   verticalAlign?: 'top' | 'middle' | 'bottom';
   whiteSpace?: 'nowrap' | 'normal' | 'pre-wrap';
   overflow?: 'visible' | 'hidden' | 'scroll';
+  borderTopLeftRadius?: number;
+  borderTopRightRadius?: number;
+  borderBottomLeftRadius?: number;
+  borderBottomRightRadius?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
