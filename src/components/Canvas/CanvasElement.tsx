@@ -45,9 +45,10 @@ export const CanvasElement = memo(function CanvasElement({
   onDoubleClick,
 }: CanvasElementProps) {
   // Only subscribe to reactive state we actually need for rendering
-  const { currentTool, selectedElementIds } = useEditorStore(useShallow((s) => ({
+  const { currentTool, selectedElementIds, hoveredElementId } = useEditorStore(useShallow((s) => ({
     currentTool: s.currentTool,
     selectedElementIds: s.selectedElementIds,
+    hoveredElementId: s.hoveredElementId,
   })));
 
   // Actions are stable references — won't cause re-renders
@@ -735,6 +736,19 @@ export const CanvasElement = memo(function CanvasElement({
         </div>
       )}
       
+      {/* Hover highlight overlay (from LayerPanel or Canvas hover) */}
+      {hoveredElementId === element.id && !isSelected && currentTool === 'select' && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: -1,
+            border: '1.5px solid rgba(59,130,246,0.45)',
+            borderRadius: isGroup ? 0 : getBorderRadius(),
+            pointerEvents: 'none',
+            zIndex: 7,
+          }}
+        />
+      )}
       {/* Selection border overlay */}
       {isSelected && currentTool === 'select' && (
         <div
