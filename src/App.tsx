@@ -1440,6 +1440,12 @@ export default function App() {
             </div>
             <div style={{ marginBottom: 8 }}>
               <Label>Padding</Label>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                <button onClick={() => handleStyleChange({ padding: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
+                <button onClick={() => handleStyleChange({ padding: 8 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>8</button>
+                <button onClick={() => handleStyleChange({ padding: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
+                <button onClick={() => handleStyleChange({ padding: 24 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>24</button>
+              </div>
               <input
                 type="number"
                 min={0}
