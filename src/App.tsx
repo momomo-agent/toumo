@@ -951,6 +951,27 @@ export default function App() {
 
         {/* Drop Shadow */}
         <div style={{ marginBottom: 20 }}>
+          <Label>Blend Mode</Label>
+          <select
+            value={currentStyle.blendMode || 'normal'}
+            onChange={(e) => handleStyleChange({ blendMode: e.target.value })}
+            style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#fff', fontSize: 12 }}
+          >
+            <option value="normal">Normal</option>
+            <option value="multiply">Multiply</option>
+            <option value="screen">Screen</option>
+            <option value="overlay">Overlay</option>
+            <option value="darken">Darken</option>
+            <option value="lighten">Lighten</option>
+            <option value="color-dodge">Color Dodge</option>
+            <option value="color-burn">Color Burn</option>
+            <option value="difference">Difference</option>
+            <option value="exclusion">Exclusion</option>
+          </select>
+        </div>
+
+        {/* Drop Shadow */}
+        <div style={{ marginBottom: 20 }}>
           <Label>Drop Shadow</Label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>

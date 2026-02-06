@@ -392,6 +392,7 @@ export function CanvasElement({
           element.style?.flipX ? 'scaleX(-1)' : '',
           element.style?.flipY ? 'scaleY(-1)' : '',
         ].filter(Boolean).join(' ') || undefined,
+        mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
         alignItems: 'center',
