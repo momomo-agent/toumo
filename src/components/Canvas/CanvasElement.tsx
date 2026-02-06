@@ -408,6 +408,7 @@ export function CanvasElement({
         textOverflow: element.style?.textOverflow || 'clip',
         hyphens: element.style?.hyphens || 'none',
         writingMode: element.style?.writingMode || 'horizontal-tb',
+        textIndent: element.style?.textIndent || 0,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
