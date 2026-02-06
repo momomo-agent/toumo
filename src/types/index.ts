@@ -51,6 +51,7 @@ export type ShapeStyle = {
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
+  gap?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
