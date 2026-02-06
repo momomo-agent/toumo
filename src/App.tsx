@@ -71,6 +71,7 @@ export default function App() {
     currentTool,
     setCurrentTool,
     copySelectedElements,
+    duplicateSelectedElements,
     pasteElements,
     undo,
     redo,
@@ -250,6 +251,11 @@ export default function App() {
         } else {
           copySelectedElements();
         }
+        event.preventDefault();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
+        duplicateSelectedElements();
         event.preventDefault();
         return;
       }
