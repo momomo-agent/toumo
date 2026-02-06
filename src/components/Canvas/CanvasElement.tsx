@@ -411,6 +411,7 @@ export function CanvasElement({
         textIndent: element.style?.textIndent || 0,
         columnCount: element.style?.columnCount || 1,
         columnGap: element.style?.columnGap || 16,
+        listStyle: element.style?.listStyle || 'none',
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
