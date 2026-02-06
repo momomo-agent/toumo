@@ -416,3 +416,76 @@
 .figma-icon-btn.active {
   color: #3b82f6;
 }
+
+/* Layer Row */
+.figma-layer-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.figma-layer-row .figma-input-group.with-icon {
+  flex: 1;
+}
+
+.figma-layer-row .opacity-group {
+  flex: 0 0 auto;
+  min-width: 80px;
+}
+
+.figma-select.blend-mode-select {
+  flex: 1;
+  background: transparent;
+  border: none;
+  min-width: 80px;
+}
+
+/* Stroke Advanced Options */
+.figma-stroke-advanced {
+  padding: 8px 0 4px 26px;
+  border-top: 1px solid #252525;
+  margin-top: 6px;
+}
+
+.figma-stroke-dash-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.figma-stroke-caps-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.figma-input-label-text {
+  color: #666;
+  font-size: 10px;
+  min-width: 24px;
+}
+
+.figma-button-group {
+  display: flex;
+  background: #252525;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.figma-button-group .figma-icon-btn {
+  width: 22px;
+  height: 22px;
+}
+
+.figma-button-group .figma-icon-btn.active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.figma-stroke-width-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
