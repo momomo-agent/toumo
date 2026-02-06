@@ -71,6 +71,8 @@ export function Canvas() {
   const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number; canvasPos: { x: number; y: number } } | null>(null);
   const handOverrideRef = useRef(false);
   const previousToolRef = useRef<ToolType>(currentTool);
+  // Live preview while drawing shapes
+  const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number; tool: string } | null>(null);
 
   const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
@@ -487,7 +489,21 @@ export function Canvas() {
       setSelectionBox({ ...selectionBox, end: clampPointToFrame(framePoint) });
       return;
     }
-  }, [activeFrameLayout, clampPointToFrame, selectionBox, setCanvasOffset, setSelectionBox]);
+
+    // Live preview while drawing shapes
+    if (drawStartRef.current && activeFrameLayout && ['rectangle', 'ellipse', 'text', 'line', 'frame'].includes(currentTool)) {
+      const framePoint = translateToFrameSpace(stagePoint, activeFrameLayout);
+      const clamped = clampPointToFrame(framePoint);
+      const start = drawStartRef.current;
+      setDrawPreview({
+        x: Math.min(start.x, clamped.x),
+        y: Math.min(start.y, clamped.y),
+        width: Math.abs(clamped.x - start.x),
+        height: Math.abs(clamped.y - start.y),
+        tool: currentTool,
+      });
+    }
+  }, [activeFrameLayout, clampPointToFrame, currentTool, selectionBox, setCanvasOffset, setSelectionBox]);
 
   const handleCanvasMouseUp = useCallback((event: ReactMouseEvent) => {
     const stagePoint = toCanvasSpace(event);
@@ -529,6 +545,7 @@ export function Canvas() {
 
       if (width < 5 && height < 5) {
         drawStartRef.current = null;
+        setDrawPreview(null);
         return;
       }
 
@@ -596,6 +613,7 @@ export function Canvas() {
 
       addElement(newElement);
       drawStartRef.current = null;
+      setDrawPreview(null);
     }
   }, [activeFrameLayout, addElement, clampPointToFrame, currentTool, elements, selectionBox, setIsSelecting, setSelectedElementIds, setSelectionBox]);
 
