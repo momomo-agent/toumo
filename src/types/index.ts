@@ -53,6 +53,7 @@ export type ShapeStyle = {
   maxHeight?: number;
   gap?: number;
   flexDirection?: 'row' | 'column';
+  flexWrap?: 'nowrap' | 'wrap';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
