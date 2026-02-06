@@ -216,6 +216,7 @@ interface EditorActions {
   setScrollSnapAlign: (align: 'none' | 'start' | 'center' | 'end') => void;
   setGap: (gap: number) => void;
   setFlexWrap: (wrap: 'nowrap' | 'wrap' | 'wrap-reverse') => void;
+  setFlexGrow: (grow: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2454,6 +2455,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flexWrap: wrap } 
+      });
+    }
+  },
+
+  setFlexGrow: (grow: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, flexGrow: grow } 
       });
     }
   },
