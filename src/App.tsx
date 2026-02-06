@@ -1634,6 +1634,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ pointerEvents: 'none' })} style={{ flex: 1, padding: 4, background: currentStyle.pointerEvents === 'none' ? '#2563eb20' : '#1a1a1a', border: currentStyle.pointerEvents === 'none' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Off</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>User Select</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ userSelect: 'auto' })} style={{ flex: 1, padding: 4, background: (currentStyle.userSelect ?? 'auto') === 'auto' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.userSelect ?? 'auto') === 'auto' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>On</button>
+                <button onClick={() => handleStyleChange({ userSelect: 'none' })} style={{ flex: 1, padding: 4, background: currentStyle.userSelect === 'none' ? '#2563eb20' : '#1a1a1a', border: currentStyle.userSelect === 'none' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Off</button>
+              </div>
+            </div>
           </>
         )}
       </>
