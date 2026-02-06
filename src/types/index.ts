@@ -91,7 +91,7 @@ export type ShapeStyle = {
   fontWeight?: string;
   color?: string;
   fontStyle?: 'normal' | 'italic';
-  textDecoration?: 'none' | 'underline';
+  textDecoration?: 'none' | 'underline' | 'line-through';
   letterSpacing?: number;
   lineHeight?: number;
   textAlign?: "left" | "center" | "right";
