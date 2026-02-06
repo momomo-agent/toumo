@@ -521,7 +521,16 @@ export const CanvasElement = memo(function CanvasElement({
       onMouseDown={handlePointerDown}
       onMouseEnter={() => setHoveredElementId(element.id)}
       onMouseLeave={() => setHoveredElementId(null)}
-      onDoubleClick={onDoubleClick}
+      onDoubleClick={(e) => {
+        // Text elements: double-click enters inline editing
+        if (isText && !isEditing) {
+          e.stopPropagation();
+          setIsEditing(true);
+          return;
+        }
+        // Groups or other elements: delegate to parent handler
+        onDoubleClick?.();
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
         setSelectedElementId(element.id);

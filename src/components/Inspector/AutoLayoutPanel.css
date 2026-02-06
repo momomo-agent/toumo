@@ -111,6 +111,10 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.direction-btn:active {
+  transform: scale(0.92);
+}
+
 .direction-btn.active {
   background: rgba(59, 130, 246, 0.2);
   border-color: #3b82f6;
@@ -210,6 +214,11 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.align-btn:active,
+.justify-btn:active {
+  transform: scale(0.92);
+}
+
 .align-btn.active,
 .justify-btn.active {
   background: rgba(59, 130, 246, 0.2);
@@ -245,6 +254,10 @@
 .sizing-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
+}
+
+.sizing-btn:active {
+  transform: scale(0.92);
 }
 
 .sizing-btn.active {

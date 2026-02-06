@@ -86,8 +86,13 @@
 }
 
 .figma-icon-btn:hover {
-  background: #333;
-  color: #e5e5e5;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.figma-icon-btn:active {
+  background: var(--bg-active);
+  transform: scale(0.9);
 }
 
 .figma-icon-btn.visibility-btn {
@@ -533,6 +538,11 @@
 
 .add-interaction-btn:hover {
   background: #3b82f6 !important;
+}
+
+.add-interaction-btn:active {
+  background: #1d4ed8 !important;
+  transform: scale(0.97);
 }
 
 .interaction-add-menu {
