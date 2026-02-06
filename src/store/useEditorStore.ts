@@ -102,6 +102,7 @@ interface EditorActions {
   setSelectionBox: (box: { start: Position; end: Position } | null) => void;
   setFrameSize: (size: Size) => void;
   copySelectedElements: () => void;
+  cutSelectedElements: () => void;
   pasteElements: () => void;
   undo: () => void;
   redo: () => void;
@@ -669,6 +670,28 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       el => state.selectedElementIds.includes(el.id)
     );
     set({ clipboard: elementsToCopy });
+  },
+
+  cutSelectedElements: () => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    const elementsToCut = currentKeyframe.keyElements.filter(
+      el => state.selectedElementIds.includes(el.id)
+    );
+    if (elementsToCut.length === 0) return;
+    get().pushHistory();
+    const cutIds = new Set(state.selectedElementIds);
+    set((s) => ({
+      clipboard: elementsToCut,
+      keyframes: s.keyframes.map(kf =>
+        kf.id === s.selectedKeyframeId
+          ? { ...kf, keyElements: kf.keyElements.filter(el => !cutIds.has(el.id)) }
+          : kf
+      ),
+      selectedElementIds: [],
+      selectedElementId: null,
+    }));
   },
 
   pasteElements: () => {

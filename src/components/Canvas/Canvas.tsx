@@ -1427,6 +1427,34 @@ export function Canvas() {
         )}
         
         {/* Pen Tool */}
+        {/* Multi-select bounding box */}
+        {currentTool === 'select' && selectedElementIds.length >= 2 && (() => {
+          const sel = elements.filter(e => selectedElementIds.includes(e.id));
+          if (sel.length < 2) return null;
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          sel.forEach(e => {
+            minX = Math.min(minX, e.position.x);
+            minY = Math.min(minY, e.position.y);
+            maxX = Math.max(maxX, e.position.x + e.size.width);
+            maxY = Math.max(maxY, e.position.y + e.size.height);
+          });
+          const w = maxX - minX;
+          const h = maxY - minY;
+          return (
+            <div style={{
+              position: 'absolute',
+              left: minX - 1,
+              top: minY - 1,
+              width: w + 2,
+              height: h + 2,
+              border: '1.5px dashed rgba(59,130,246,0.5)',
+              borderRadius: 2,
+              pointerEvents: 'none',
+              zIndex: 998,
+            }} />
+          );
+        })()}
+
         <PenTool
           isActive={currentTool === 'pen'}
           canvasOffset={canvasOffset}
