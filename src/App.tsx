@@ -1449,6 +1449,11 @@ export default function App() {
             </div>
             <div style={{ marginBottom: 8 }}>
               <Label>Line Height</Label>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                <button onClick={() => handleStyleChange({ lineHeight: 1 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1</button>
+                <button onClick={() => handleStyleChange({ lineHeight: 1.4 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1.4</button>
+                <button onClick={() => handleStyleChange({ lineHeight: 1.8 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1.8</button>
+              </div>
               <input
                 type="number"
                 step="0.1"
