@@ -37,6 +37,8 @@ export type ShapeStyle = {
   userSelect?: 'auto' | 'none' | 'text';
   transformOrigin?: string;
   scale?: number;
+  skewX?: number;
+  skewY?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
