@@ -247,6 +247,11 @@ export default function App() {
         event.preventDefault();
         return;
       }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'e') {
+        handleExportPNG();
+        event.preventDefault();
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'g') {
         if (event.shiftKey) {
           ungroupSelectedElements();
