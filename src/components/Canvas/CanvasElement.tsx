@@ -405,6 +405,7 @@ export function CanvasElement({
         maskImage: element.style?.maskImage || undefined,
         textShadow: element.style?.textShadow || undefined,
         wordBreak: element.style?.wordBreak || 'normal',
+        textOverflow: element.style?.textOverflow || 'clip',
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
