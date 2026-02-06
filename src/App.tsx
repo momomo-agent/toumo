@@ -86,6 +86,8 @@ export default function App() {
     setCanvasBackground,
     showRulers,
     toggleRulers,
+    snapToGrid,
+    toggleSnapToGrid,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -1638,8 +1640,24 @@ export default function App() {
               fontSize: 12,
               cursor: 'pointer',
             }}
+            title="Toggle Rulers"
           >
             📏
+          </button>
+          <button
+            onClick={() => toggleSnapToGrid()}
+            style={{
+              padding: '6px 12px',
+              background: snapToGrid ? '#2563eb20' : 'transparent',
+              border: snapToGrid ? '1px solid #2563eb' : '1px solid #333',
+              borderRadius: 6,
+              color: snapToGrid ? '#2563eb' : '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+            title="Snap to Grid"
+          >
+            #
           </button>
           <button
             onClick={() => projectInputRef.current?.click()}
