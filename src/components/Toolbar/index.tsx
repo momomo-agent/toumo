@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useEditorStore } from '../../store';
 import type { ToolType } from '../../types';
+import { ExportModal } from '../ExportModal';
 
 const tools: { id: ToolType; icon: string; label: string }[] = [
   { id: 'select', icon: '↖', label: 'Select (V)' },
@@ -17,6 +18,7 @@ const tools: { id: ToolType; icon: string; label: string }[] = [
 export function Toolbar() {
   const { currentTool, setCurrentTool, addImageElement } = useEditorStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,6 +66,24 @@ export function Toolbar() {
           {tool.icon}
         </button>
       ))}
+      
+      {/* Divider */}
+      <div style={{ width: 1, height: 24, background: '#333', margin: '0 8px' }} />
+      
+      {/* Export button */}
+      <button
+        className="tool-btn"
+        onClick={() => setShowExportModal(true)}
+        title="Export Project"
+        style={{ fontSize: 14 }}
+      >
+        📤
+      </button>
+      
+      {/* Export Modal */}
+      {showExportModal && (
+        <ExportModal onClose={() => setShowExportModal(false)} />
+      )}
     </div>
   );
 }

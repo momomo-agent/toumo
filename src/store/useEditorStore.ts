@@ -46,6 +46,9 @@ interface EditorState {
   isResizing: boolean;
   isSelecting: boolean;
   selectionBox: { start: Position; end: Position } | null;
+  // Component edit mode
+  editingComponentId: string | null;
+  editingInstanceId: string | null;
 }
 
 interface EditorActions {
@@ -94,6 +97,14 @@ interface EditorActions {
   addComponent: (name: string) => void;
   updateComponent: (id: string, updates: Partial<Component>) => void;
   deleteComponent: (id: string) => void;
+  createComponentFromSelection: () => void;
+  instantiateComponent: (componentId: string, position: Position) => void;
+  enterComponentEditMode: (instanceId: string) => void;
+  exitComponentEditMode: () => void;
+  syncComponentInstances: (componentId: string) => void;
+  // Component edit mode state
+  editingComponentId: string | null;
+  editingInstanceId: string | null;
   // Image actions
   addImageElement: (imageSrc: string, originalWidth: number, originalHeight: number) => void;
   // Group actions
@@ -146,6 +157,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   isResizing: false,
   isSelecting: false,
   selectionBox: null,
+  editingComponentId: null,
+  editingInstanceId: null,
 
   // Actions
   setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
@@ -486,6 +499,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       functionalStates: [],
       displayStateMappings: [],
       transitions: [],
+      masterElements: [],
+      createdAt: Date.now(),
     };
     return {
       components: [...state.components, newComponent],
@@ -498,9 +513,193 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     ),
   })),
 
-  deleteComponent: (id) => set((state) => ({
-    components: state.components.filter((c) => c.id !== id),
-  })),
+  deleteComponent: (id) => set((state) => {
+    // Also remove all instances of this component from keyframes
+    const newKeyframes = state.keyframes.map(kf => ({
+      ...kf,
+      keyElements: kf.keyElements.filter(el => el.componentId !== id),
+    }));
+    return {
+      components: state.components.filter((c) => c.id !== id),
+      keyframes: newKeyframes,
+    };
+  }),
+
+  // Create component from selected elements
+  createComponentFromSelection: () => {
+    const state = get();
+    if (state.selectedElementIds.length === 0) return;
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const selectedElements = currentKeyframe.keyElements.filter(
+      el => state.selectedElementIds.includes(el.id)
+    );
+    if (selectedElements.length === 0) return;
+    
+    // Calculate bounding box
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    selectedElements.forEach(el => {
+      minX = Math.min(minX, el.position.x);
+      minY = Math.min(minY, el.position.y);
+      maxX = Math.max(maxX, el.position.x + el.size.width);
+      maxY = Math.max(maxY, el.position.y + el.size.height);
+    });
+    
+    // Normalize element positions relative to bounding box
+    const normalizedElements: KeyElement[] = selectedElements.map(el => ({
+      ...el,
+      id: `master-${el.id}`,
+      position: {
+        x: el.position.x - minX,
+        y: el.position.y - minY,
+      },
+    }));
+    
+    const componentId = `comp-${Date.now()}`;
+    const newComponent: Component = {
+      id: componentId,
+      name: `Component ${state.components.length + 1}`,
+      functionalStates: [
+        { id: `cfs-${Date.now()}`, name: 'Default', isInitial: true, componentId },
+      ],
+      displayStateMappings: [],
+      transitions: [],
+      masterElements: normalizedElements,
+      createdAt: Date.now(),
+    };
+    
+    // Create instance element to replace selected elements
+    const instanceId = `inst-${Date.now()}`;
+    const instanceElement: KeyElement = {
+      id: instanceId,
+      name: newComponent.name,
+      category: 'component',
+      isKeyElement: true,
+      attributes: [],
+      position: { x: minX, y: minY },
+      size: { width: maxX - minX, height: maxY - minY },
+      shapeType: 'rectangle',
+      componentId,
+      componentInstanceId: instanceId,
+      currentStateId: newComponent.functionalStates[0].id,
+      styleOverrides: {},
+    };
+    
+    get().pushHistory();
+    set((state) => ({
+      components: [...state.components, newComponent],
+      keyframes: state.keyframes.map(kf => {
+        if (kf.id !== state.selectedKeyframeId) return kf;
+        // Remove selected elements and add instance
+        const remainingElements = kf.keyElements.filter(
+          el => !state.selectedElementIds.includes(el.id)
+        );
+        return {
+          ...kf,
+          keyElements: [...remainingElements, instanceElement],
+        };
+      }),
+      selectedElementId: instanceId,
+      selectedElementIds: [instanceId],
+    }));
+  },
+
+  // Instantiate component at position
+  instantiateComponent: (componentId, position) => {
+    const state = get();
+    const component = state.components.find(c => c.id === componentId);
+    if (!component) return;
+    
+    // Calculate size from master elements
+    let maxX = 0, maxY = 0;
+    component.masterElements.forEach(el => {
+      maxX = Math.max(maxX, el.position.x + el.size.width);
+      maxY = Math.max(maxY, el.position.y + el.size.height);
+    });
+    
+    const instanceId = `inst-${Date.now()}`;
+    const instanceElement: KeyElement = {
+      id: instanceId,
+      name: component.name,
+      category: 'component',
+      isKeyElement: true,
+      attributes: [],
+      position,
+      size: { width: maxX || 100, height: maxY || 100 },
+      shapeType: 'rectangle',
+      componentId,
+      componentInstanceId: instanceId,
+      currentStateId: component.functionalStates[0]?.id,
+      styleOverrides: {},
+    };
+    
+    get().pushHistory();
+    set((state) => ({
+      keyframes: state.keyframes.map(kf => {
+        if (kf.id !== state.selectedKeyframeId) return kf;
+        return {
+          ...kf,
+          keyElements: [...kf.keyElements, instanceElement],
+        };
+      }),
+      selectedElementId: instanceId,
+      selectedElementIds: [instanceId],
+    }));
+  },
+
+  // Enter component edit mode
+  enterComponentEditMode: (instanceId) => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const instance = currentKeyframe?.keyElements.find(el => el.id === instanceId);
+    if (!instance?.componentId) return;
+    
+    set({
+      editingComponentId: instance.componentId,
+      editingInstanceId: instanceId,
+      selectedElementId: null,
+      selectedElementIds: [],
+    });
+  },
+
+  // Exit component edit mode
+  exitComponentEditMode: () => {
+    set({
+      editingComponentId: null,
+      editingInstanceId: null,
+    });
+  },
+
+  // Sync all instances of a component after editing
+  syncComponentInstances: (componentId) => {
+    const state = get();
+    const component = state.components.find(c => c.id === componentId);
+    if (!component) return;
+    
+    // Calculate new size from master elements
+    let maxX = 0, maxY = 0;
+    component.masterElements.forEach(el => {
+      maxX = Math.max(maxX, el.position.x + el.size.width);
+      maxY = Math.max(maxY, el.position.y + el.size.height);
+    });
+    
+    // Update all instances in all keyframes
+    set((state) => ({
+      keyframes: state.keyframes.map(kf => ({
+        ...kf,
+        keyElements: kf.keyElements.map(el => {
+          if (el.componentId !== componentId) return el;
+          return {
+            ...el,
+            name: component.name,
+            size: { width: maxX || el.size.width, height: maxY || el.size.height },
+          };
+        }),
+      })),
+    }));
+  },
 
   // Image element
   addImageElement: (imageSrc, originalWidth, originalHeight) => {

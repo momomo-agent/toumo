@@ -6,6 +6,8 @@ import { StateInspector } from './components/Inspector/StateInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { LivePreview } from './components/LivePreview';
 import { ShortcutsPanel } from './components/ShortcutsPanel';
+import { WelcomeModal } from './components/WelcomeModal';
+import { EmptyState } from './components/EmptyState';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -2360,6 +2362,7 @@ export default function App() {
                   }}
                 >
                   <Canvas />
+                  {elements.length === 0 && <EmptyState />}
                 </div>
               </div>
 
@@ -2433,6 +2436,7 @@ export default function App() {
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
       </div>
       <ShortcutsPanel />
+      <WelcomeModal />
     </div>
   );
 }

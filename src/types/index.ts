@@ -160,6 +160,11 @@ export type KeyElement = {
   shapeType?: ShapeType;
   style?: ShapeStyle;
   text?: string;
+  // Component instance fields
+  componentId?: string; // If this is a component instance
+  componentInstanceId?: string; // Unique instance id
+  currentStateId?: string; // Current functional state
+  styleOverrides?: Record<string, Partial<ShapeStyle>>; // Per-child overrides
 };
 
 export const DEFAULT_STYLE: ShapeStyle = {
@@ -238,4 +243,23 @@ export type Component = {
   functionalStates: FunctionalState[];
   displayStateMappings: DisplayStateMapping[];
   transitions: Transition[];
+  // Master element data - the source of truth
+  masterElements: KeyElement[];
+  // Thumbnail for preview
+  thumbnail?: string;
+  // Creation timestamp
+  createdAt: number;
+};
+
+// Component Instance - placed on canvas
+export type ComponentInstance = {
+  id: string;
+  componentId: string;
+  // Current functional state
+  currentStateId?: string;
+  // Style overrides (per element id)
+  styleOverrides: Record<string, Partial<ShapeStyle>>;
+  // Position overrides
+  positionOverride?: Position;
+  sizeOverride?: Size;
 };
