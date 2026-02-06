@@ -49,6 +49,8 @@ export type ShapeStyle = {
   objectFit?: 'fill' | 'contain' | 'cover' | 'none';
   minWidth?: number;
   minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
