@@ -60,6 +60,7 @@ export type ShapeStyle = {
   visibility?: 'visible' | 'hidden';
   isolation?: 'auto' | 'isolate';
   backfaceVisibility?: 'visible' | 'hidden';
+  transformStyle?: 'flat' | 'preserve-3d';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
