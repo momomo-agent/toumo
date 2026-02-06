@@ -65,6 +65,7 @@ export type ShapeStyle = {
   maskImage?: string;
   textShadow?: string;
   wordBreak?: 'normal' | 'break-all' | 'break-word';
+  textOverflow?: 'clip' | 'ellipsis';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
