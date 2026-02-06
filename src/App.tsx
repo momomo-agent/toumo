@@ -88,6 +88,7 @@ export default function App() {
     toggleRulers,
     snapToGrid,
     toggleSnapToGrid,
+    setCanvasOffset,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -2042,6 +2043,7 @@ export default function App() {
           <button onClick={() => setCanvasScale(1)} style={{ padding: '2px 6px', background: canvasScale === 1 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>100%</button>
           <button onClick={() => setCanvasScale(2)} style={{ padding: '2px 6px', background: canvasScale === 2 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>200%</button>
           <button onClick={() => setCanvasScale(Math.min(0.8, 600 / frameSize.width))} style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>Fit</button>
+          <button onClick={() => setCanvasOffset({ x: 0, y: 0 })} style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>⊙</button>
         </div>
         <span>{selectedElementIds.length === 1 && selectedKeyframe?.keyElements.find(e => e.id === selectedElementIds[0]) 
           ? `X: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
