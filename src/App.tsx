@@ -1309,6 +1309,12 @@ export default function App() {
             </div>
             <div style={{ marginBottom: 16 }}>
               <Label>Font Size</Label>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                <button onClick={() => handleStyleChange({ fontSize: 12 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>12</button>
+                <button onClick={() => handleStyleChange({ fontSize: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
+                <button onClick={() => handleStyleChange({ fontSize: 24 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>24</button>
+                <button onClick={() => handleStyleChange({ fontSize: 48 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>48</button>
+              </div>
               <input
                 type="number"
                 value={currentStyle.fontSize ?? 18}
