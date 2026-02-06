@@ -2826,4 +2826,14 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     transitions,
   })),
 
+  setTransitionDelay: (delay: number) => set((state) => {
+    const selectedId = state.selectedTransitionId;
+    if (!selectedId) return state;
+    return {
+      transitions: state.transitions.map(t =>
+        t.id === selectedId ? { ...t, delay } : t
+      ),
+    };
+  }),
+
 }));

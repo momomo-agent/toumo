@@ -1,5 +1,5 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
-import type { Keyframe, Transition, FunctionalState, Component, Size } from '../types';
+import type { Keyframe, Transition, FunctionalState, Component, Size, Interaction, Variable } from '../types';
 
 export interface ProjectData {
   version: string;
@@ -9,6 +9,9 @@ export interface ProjectData {
   components: Component[];
   frameSize: Size;
   canvasBackground?: string;
+  // 交互系统数据
+  interactions?: Interaction[];
+  variables?: Variable[];
 }
 
 /**

@@ -157,10 +157,10 @@ export function useGestureHandler(
       onPanEnd: (elementId, x, y) => {
         onGesture?.('panEnd', elementId, x, y);
       },
-      onSwipe: (elementId, direction) => {
+      onSwipe: (elementId, _direction) => {
         onGesture?.('swipe', elementId, 0, 0);
       },
-      onInteraction: (interaction, gesture) => {
+      onInteraction: (interaction, _gesture) => {
         if (executorRef.current) {
           executorRef.current.execute(interaction);
         }

@@ -13,7 +13,6 @@ import type {
   GestureConfig,
   GestureRecognition,
   Interaction,
-  InteractionAction,
   SwipeDirection,
 } from '../types';
 
@@ -57,7 +56,6 @@ export class GestureEngine {
   private callbacks: GestureCallbacks = {};
   private interactions: Interaction[] = [];
   private state: GestureState;
-  private elementStates: Map<string, GestureState> = new Map();
 
   constructor(config?: Partial<GestureRecognition>) {
     this.recognition = { ...DEFAULT_RECOGNITION, ...config };
@@ -313,8 +311,8 @@ export class GestureEngine {
   private triggerGesture(
     gesture: GestureType,
     elementId: string | null,
-    x: number,
-    y: number,
+    _x: number,
+    _y: number,
     direction?: SwipeDirection
   ): void {
     if (!elementId) return;
@@ -406,7 +404,7 @@ export class GestureEngine {
     this.unbind();
     this.handleCancel();
     this.interactions = [];
-    this.callbacks = ;
+    this.callbacks = {};
   }
 }
 
