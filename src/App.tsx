@@ -84,6 +84,8 @@ export default function App() {
     addRecentColor,
     canvasBackground,
     setCanvasBackground,
+    showRulers,
+    toggleRulers,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -1625,6 +1627,20 @@ export default function App() {
             title="Canvas Background"
             style={{ width: 32, height: 32, border: '1px solid #333', borderRadius: 6, cursor: 'pointer' }}
           />
+          <button
+            onClick={() => toggleRulers()}
+            style={{
+              padding: '6px 12px',
+              background: showRulers ? '#2563eb20' : 'transparent',
+              border: showRulers ? '1px solid #2563eb' : '1px solid #333',
+              borderRadius: 6,
+              color: showRulers ? '#2563eb' : '#fff',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            📏
+          </button>
           <button
             onClick={() => projectInputRef.current?.click()}
             style={{
