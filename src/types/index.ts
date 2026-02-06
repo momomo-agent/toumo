@@ -10,6 +10,45 @@ export type Size = {
   height: number;
 };
 
+// Auto Layout types (Figma-style)
+export type AutoLayoutDirection = 'horizontal' | 'vertical';
+export type AutoLayoutAlign = 'start' | 'center' | 'end' | 'stretch';
+export type AutoLayoutJustify = 'start' | 'center' | 'end' | 'space-between';
+export type SizingMode = 'fixed' | 'hug' | 'fill';
+
+export type AutoLayoutConfig = {
+  enabled: boolean;
+  direction: AutoLayoutDirection;
+  gap: number;
+  paddingTop: number;
+  paddingRight: number;
+  paddingBottom: number;
+  paddingLeft: number;
+  alignItems: AutoLayoutAlign;      // Cross-axis alignment
+  justifyContent: AutoLayoutJustify; // Main-axis distribution
+  wrap: boolean;                     // Allow wrapping
+};
+
+export type ChildLayoutConfig = {
+  // How this child sizes itself within auto layout parent
+  widthMode: SizingMode;   // fixed | hug | fill
+  heightMode: SizingMode;  // fixed | hug | fill
+  alignSelf?: AutoLayoutAlign; // Override parent's alignItems
+};
+
+export const DEFAULT_AUTO_LAYOUT: AutoLayoutConfig = {
+  enabled: false,
+  direction: 'vertical',
+  gap: 8,
+  paddingTop: 8,
+  paddingRight: 8,
+  paddingBottom: 8,
+  paddingLeft: 8,
+  alignItems: 'start',
+  justifyContent: 'start',
+  wrap: false,
+};
+
 export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "hand" | "eyedropper" | "pen";
 
 export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "keyframe-element" | "path";
@@ -198,6 +237,10 @@ export type KeyElement = {
   componentInstanceId?: string; // Unique instance id
   currentStateId?: string; // Current functional state
   styleOverrides?: Record<string, Partial<ShapeStyle>>; // Per-child overrides
+  // Auto Layout (Figma-style)
+  autoLayout?: AutoLayoutConfig;
+  // Child layout settings (when inside auto layout parent)
+  layoutChild?: ChildLayoutConfig;
 };
 
 export const DEFAULT_STYLE: ShapeStyle = {
