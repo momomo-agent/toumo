@@ -1613,6 +1613,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ whiteSpace: 'normal' })} style={{ flex: 1, padding: 4, background: (currentStyle.whiteSpace ?? 'normal') === 'normal' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.whiteSpace ?? 'normal') === 'normal' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Wrap</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Overflow</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ overflow: 'visible' })} style={{ flex: 1, padding: 4, background: (currentStyle.overflow ?? 'visible') === 'visible' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.overflow ?? 'visible') === 'visible' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Show</button>
+                <button onClick={() => handleStyleChange({ overflow: 'hidden' })} style={{ flex: 1, padding: 4, background: currentStyle.overflow === 'hidden' ? '#2563eb20' : '#1a1a1a', border: currentStyle.overflow === 'hidden' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Hide</button>
+              </div>
+            </div>
           </>
         )}
       </>
