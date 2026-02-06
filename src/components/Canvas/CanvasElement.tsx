@@ -23,6 +23,10 @@ interface CanvasElementProps {
     size: { width: number; height: number },
     options?: { mode?: 'move' | 'resize'; handle?: ResizeHandle }
   ) => AlignmentResult | void;
+  // Group-related props
+  isGroup?: boolean;
+  parentOffset?: Position;
+  isInEditingGroup?: boolean;
 }
 
 export function CanvasElement({
@@ -31,6 +35,9 @@ export function CanvasElement({
   scale,
   allElements,
   onAlignmentCheck,
+  isGroup = false,
+  parentOffset: _parentOffset,
+  isInEditingGroup = false,
 }: CanvasElementProps) {
   const {
     currentTool,
@@ -74,6 +81,12 @@ export function CanvasElement({
   const handlePointerDown = useCallback((event: ReactMouseEvent) => {
     if (currentTool !== 'select') return;
     if (element.locked) return; // Don't allow dragging locked elements
+    
+    // 如果是编组内的子元素，但不在编辑模式，不响应点击
+    if (element.parentId && !isInEditingGroup) {
+      return;
+    }
+    
     event.stopPropagation();
 
     const multiSelect = event.shiftKey || event.metaKey || event.ctrlKey;
@@ -384,10 +397,11 @@ export function CanvasElement({
         top: element.position.y,
         width: element.size.width,
         height: element.size.height,
-        background: getBackground(),
-        opacity: element.style?.fillOpacity ?? 1,
-        borderRadius: getBorderRadius(),
-        border: getStroke(),
+        // 编组元素是透明的，只用于选择和拖拽
+        background: isGroup ? 'transparent' : getBackground(),
+        opacity: isGroup ? 1 : (element.style?.fillOpacity ?? 1),
+        borderRadius: isGroup ? 0 : getBorderRadius(),
+        border: isGroup ? undefined : getStroke(),
         transform: [
           element.style?.rotation ? `rotate(${element.style.rotation}deg)` : '',
           element.style?.flipX ? 'scaleX(-1)' : '',

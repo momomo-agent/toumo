@@ -347,6 +347,10 @@ export function Canvas() {
     const framePoint = translateToFrameSpace(stagePoint, activeLayout);
 
     if (currentTool === 'select') {
+      // 点击空白处时退出编组编辑模式
+      if (editingGroupId) {
+        exitGroupEditMode();
+      }
       setSelectedElementId(null);
       setIsSelecting(true);
       setSelectionBox({ start: clampPointToFrame(framePoint), end: clampPointToFrame(framePoint) });
@@ -684,16 +688,101 @@ export function Canvas() {
                 }}
               >
                 {isActive
-                  ? frameElements.map((element) => (
-                      <CanvasElement
-                        key={element.id}
-                        element={element}
-                        allElements={frameElements}
-                        scale={canvasScale}
-                        isSelected={selectedElementIds.includes(element.id)}
-                        onAlignmentCheck={checkAlignment}
-                      />
-                    ))
+                  ? (() => {
+                      // 分离顶层元素和子元素
+                      const topLevelElements = frameElements.filter(el => !el.parentId);
+                      const getChildren = (parentId: string) => 
+                        frameElements.filter(el => el.parentId === parentId);
+                      
+                      return topLevelElements.map((element) => {
+                        const children = getChildren(element.id);
+                        const isGroupElement = children.length > 0;
+                        const isEditingThisGroup = editingGroupId === element.id;
+                        
+                        if (isGroupElement) {
+                          // 渲染编组
+                          return (
+                            <div
+                              key={element.id}
+                              style={{
+                                position: 'absolute',
+                                left: element.position.x,
+                                top: element.position.y,
+                                width: element.size.width,
+                                height: element.size.height,
+                                pointerEvents: 'auto',
+                              }}
+                              onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                enterGroupEditMode(element.id);
+                              }}
+                            >
+                              {/* 编组边框 */}
+                              {selectedElementIds.includes(element.id) && !isEditingThisGroup && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    inset: -1,
+                                    border: '2px solid #3b82f6',
+                                    borderRadius: 4,
+                                    pointerEvents: 'none',
+                                  }}
+                                />
+                              )}
+                              {/* 编辑模式边框 */}
+                              {isEditingThisGroup && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    inset: -1,
+                                    border: '2px dashed #3b82f6',
+                                    borderRadius: 4,
+                                    pointerEvents: 'none',
+                                  }}
+                                />
+                              )}
+                              {/* 编组选择层 */}
+                              {!isEditingThisGroup && (
+                                <CanvasElement
+                                  key={`group-${element.id}`}
+                                  element={element}
+                                  allElements={frameElements}
+                                  scale={canvasScale}
+                                  isSelected={selectedElementIds.includes(element.id)}
+                                  onAlignmentCheck={checkAlignment}
+                                  isGroup={true}
+                                />
+                              )}
+                              {/* 子元素 */}
+                              {children.map((child) => (
+                                <CanvasElement
+                                  key={child.id}
+                                  element={child}
+                                  allElements={frameElements}
+                                  scale={canvasScale}
+                                  isSelected={isEditingThisGroup && selectedElementIds.includes(child.id)}
+                                  onAlignmentCheck={checkAlignment}
+                                  parentOffset={{ x: element.position.x, y: element.position.y }}
+                                  isInEditingGroup={isEditingThisGroup}
+                                />
+                              ))}
+                            </div>
+                          );
+                        }
+                        
+                        // 普通元素
+                        return (
+                          <CanvasElement
+                            key={element.id}
+                            element={element}
+                            allElements={frameElements}
+                            scale={canvasScale}
+                            isSelected={selectedElementIds.includes(element.id)}
+                            onAlignmentCheck={checkAlignment}
+                          />
+                        );
+                      });
+                    })()
                   : frameElements.map((element) => (
                       <div
                         key={element.id}
