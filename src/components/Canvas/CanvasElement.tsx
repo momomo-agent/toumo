@@ -59,6 +59,7 @@ export const CanvasElement = memo(function CanvasElement({
   const setIsResizing = useEditorStore((s) => s.setIsResizing);
   const pushHistory = useEditorStore((s) => s.pushHistory);
   const resizeGroup = useEditorStore((s) => s.resizeGroup);
+  const updateElement = useEditorStore((s) => s.updateElement);
 
   const [isEditing, setIsEditing] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -284,6 +285,47 @@ export const CanvasElement = memo(function CanvasElement({
     document.addEventListener('mouseup', handleUp);
   }, [element.id, element.position.x, element.position.y, element.size.height, element.size.width, onAlignmentCheck, scale, setIsResizing, updateElementPosition, updateElementSize, pushHistory]);
 
+  const handleRotateStart = useCallback((event: ReactMouseEvent) => {
+    if (element.locked) return;
+    event.stopPropagation();
+    event.preventDefault();
+
+    pushHistory();
+
+    const centerX = element.position.x + element.size.width / 2;
+    const centerY = element.position.y + element.size.height / 2;
+    const startRotation = element.style?.rotation || 0;
+
+    const handleMove = (moveEvent: MouseEvent) => {
+      // Get canvas-space pointer via the element's parent frame
+      const frameEl = (event.target as HTMLElement)?.closest('[data-frame-id]');
+      if (!frameEl) return;
+      const rect = frameEl.getBoundingClientRect();
+      const px = (moveEvent.clientX - rect.left) / scale;
+      const py = (moveEvent.clientY - rect.top) / scale;
+
+      const angle = Math.atan2(py - centerY, px - centerX) * (180 / Math.PI) + 90;
+      let newRotation = Math.round(angle);
+
+      // Snap to 15° increments when holding Shift
+      if (moveEvent.shiftKey) {
+        newRotation = Math.round(newRotation / 15) * 15;
+      }
+
+      updateElement(element.id, {
+        style: { ...element.style, rotation: newRotation },
+      });
+    };
+
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  }, [element, pushHistory, scale, updateElement]);
+
   const renderHandles = () => {
     if (!isSelected || currentTool !== 'select') return null;
     const handles: ResizeHandle[] = ['nw', 'ne', 'se', 'sw'];
@@ -353,7 +395,44 @@ export const CanvasElement = memo(function CanvasElement({
       );
     });
 
-    return [...cornerHandleElements, ...edgeHandleElements];
+    // Rotation handle — sits above the element, connected by a thin line
+    const rotationHandle = (
+      <div key="rotate" style={{ position: 'absolute', left: '50%', top: -36, marginLeft: -7, zIndex: 11 }}>
+        {/* Connector line */}
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: 14,
+          width: 1,
+          height: 22,
+          background: '#3b82f6',
+          marginLeft: -0.5,
+        }} />
+        {/* Rotation circle */}
+        <div
+          onMouseDown={handleRotateStart}
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: '50%',
+            background: '#fff',
+            border: '2px solid #3b82f6',
+            cursor: 'grab',
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {/* Tiny rotate icon */}
+          <svg width="8" height="8" viewBox="0 0 16 16" fill="none">
+            <path d="M14 2v4h-4M2 14v-4h4M13.5 6.5A6 6 0 0 0 3.8 3.8M2.5 9.5a6 6 0 0 0 9.7 2.7" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    );
+
+    return [rotationHandle, ...cornerHandleElements, ...edgeHandleElements];
   };
 
   const isText = element.shapeType === 'text';
