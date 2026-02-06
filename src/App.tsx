@@ -1771,6 +1771,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ isolation: 'isolate' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Isolate</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Backface</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ backfaceVisibility: 'visible' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Show</button>
+                <button onClick={() => handleStyleChange({ backfaceVisibility: 'hidden' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Hide</button>
+              </div>
+            </div>
           </>
         )}
       </>
