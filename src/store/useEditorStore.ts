@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT } from '../types';
+import { applyConstraints } from '../utils/constraintsUtils';
 
 interface HistoryEntry {
   keyframes: Keyframe[];
@@ -454,20 +455,32 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     ),
   })),
 
-  updateElementSize: (id, size) => set((state) => ({
-    keyframes: state.keyframes.map((kf) =>
-      kf.id === state.selectedKeyframeId
-        ? {
-            ...kf,
-            keyElements: kf.keyElements.map((el) =>
-              el.id === id
-                ? clampElementToFrame({ ...el, size }, state.frameSize)
-                : el
-            ),
-          }
-        : kf
-    ),
-  })),
+  updateElementSize: (id, size) => set((state) => {
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const targetElement = currentKeyframe?.keyElements.find(el => el.id === id);
+    const oldSize = targetElement?.size;
+
+    return {
+      keyframes: state.keyframes.map((kf) =>
+        kf.id === state.selectedKeyframeId
+          ? {
+              ...kf,
+              keyElements: kf.keyElements.map((el) => {
+                if (el.id === id) {
+                  return clampElementToFrame({ ...el, size }, state.frameSize);
+                }
+                // Apply constraints to children of the resized element
+                if (el.parentId === id && oldSize) {
+                  const { position, size: newSize } = applyConstraints(el, oldSize, size);
+                  return { ...el, position, size: newSize };
+                }
+                return el;
+              }),
+            }
+          : kf
+      ),
+    };
+  }),
 
   updateElementName: (id, name) => set((state) => ({
     keyframes: state.keyframes.map((kf) =>
@@ -598,13 +611,23 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
   setSelectionBox: (selectionBox) => set({ selectionBox }),
-  setFrameSize: (frameSize) => set((state) => ({
-    frameSize,
-    keyframes: state.keyframes.map((kf) => ({
-      ...kf,
-      keyElements: kf.keyElements.map((el) => clampElementToFrame(el, frameSize)),
-    })),
-  })),
+  setFrameSize: (frameSize) => set((state) => {
+    const oldFrameSize = state.frameSize;
+    return {
+      frameSize,
+      keyframes: state.keyframes.map((kf) => ({
+        ...kf,
+        keyElements: kf.keyElements.map((el) => {
+          // Apply constraints for top-level elements (no parentId)
+          if (!el.parentId) {
+            const { position, size } = applyConstraints(el, oldFrameSize, frameSize);
+            return clampElementToFrame({ ...el, position, size }, frameSize);
+          }
+          return el;
+        }),
+      })),
+    };
+  }),
 
   copySelectedElements: () => {
     const state = get();
