@@ -398,6 +398,7 @@ export function CanvasElement({
         transformOrigin: element.style?.transformOrigin || 'center',
         perspective: element.style?.perspective || undefined,
         boxSizing: element.style?.boxSizing || 'border-box',
+        outline: element.style?.outline || undefined,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         backdropFilter: element.style?.backdropBlur ? `blur(${element.style.backdropBlur}px)` : undefined,
         color: element.style?.textColor || '#fff',
