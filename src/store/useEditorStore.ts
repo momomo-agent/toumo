@@ -177,6 +177,7 @@ interface EditorActions {
   setCursor: (cursor: string) => void;
   setZIndex: (zIndex: number) => void;
   setAspectRatio: (ratio: string | null) => void;
+  setOverflow: (overflow: 'visible' | 'hidden' | 'scroll') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -1883,6 +1884,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, aspectRatio: ratio || undefined } 
+      });
+    }
+  },
+
+  setOverflow: (overflow: 'visible' | 'hidden' | 'scroll') => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, overflow } 
       });
     }
   },
