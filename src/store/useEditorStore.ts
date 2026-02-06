@@ -156,6 +156,8 @@ interface EditorActions {
   setFontWeight: (weight: string) => void;
   setTextColor: (color: string) => void;
   setGradient: (type: 'none' | 'linear' | 'radial', stops?: { color: string; position: number }[]) => void;
+  setPosition: (x: number, y: number) => void;
+  setSize: (width: number, height: number) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1571,6 +1573,20 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         style: { ...el.style, gradientType: type, gradientStops: stops } 
       });
     }
+  },
+
+  setPosition: (x: number, y: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    get().updateElement(state.selectedElementId, { position: { x, y } });
+  },
+
+  setSize: (width: number, height: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    get().updateElement(state.selectedElementId, { size: { width, height } });
   },
 
   // Import actions
