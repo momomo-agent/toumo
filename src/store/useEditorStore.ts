@@ -40,6 +40,7 @@ interface EditorState {
   snapToGrid: boolean;
   gridSize: number;
   frameSize: Size;
+  frameBackground: string;
   history: HistoryEntry[];
   historyIndex: number;
   isDragging: boolean;
@@ -145,6 +146,7 @@ interface EditorActions {
   reorderKeyframes: (fromIndex: number, toIndex: number) => void;
   clearCanvas: () => void;
   resetProject: () => void;
+  setFrameBackground: (color: string) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -180,6 +182,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   snapToGrid: false,
   gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
+  frameBackground: '#1a1a1a',
   history: [{ keyframes: initialKeyframes }],
   historyIndex: 0,
   isDragging: false,
@@ -1438,6 +1441,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       history: [],
       historyIndex: -1,
     });
+  },
+
+  setFrameBackground: (color: string) => {
+    set({ frameBackground: color });
   },
 
   // Import actions
