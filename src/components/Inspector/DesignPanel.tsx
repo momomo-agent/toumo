@@ -96,6 +96,16 @@ const OpacityIcon = () => (
   </svg>
 );
 
+// Interaction icon
+const InteractionIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <circle cx="4" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <circle cx="10" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <path d="M6.5 7H7.5" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M7 5.5L8.5 7L7 8.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
 // Number input with label
 interface NumberInputProps {
   label: string;
