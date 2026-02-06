@@ -28,13 +28,23 @@ const BEZIER_PRESETS = [
   { id: 'overshoot', label: 'Overshoot', value: [0.34, 1.56, 0.64, 1] as [number, number, number, number] },
 ];
 
-const TRIGGER_OPTIONS: { id: TriggerType; label: string; icon: string }[] = [
-  { id: 'tap', label: 'Tap', icon: '👆' },
-  { id: 'drag', label: 'Drag', icon: '✋' },
-  { id: 'scroll', label: 'Scroll', icon: '📜' },
-  { id: 'hover', label: 'Hover', icon: '🎯' },
-  { id: 'timer', label: 'Timer', icon: '⏱️' },
-  { id: 'variable', label: 'Variable', icon: '📊' },
+// SVG icon paths for triggers (16x16 viewBox)
+const TRIGGER_ICONS: Record<TriggerType, string> = {
+  tap: 'M8 2a1 1 0 011 1v4.5l2.3 1.15a1 1 0 01-.9 1.78L7.5 9V3a1 1 0 011-1z',
+  drag: 'M8 1l3 3H9v3h3V5l3 3-3 3V9H9v3h2l-3 3-3-3h2V9H4v2l-3-3 3-3v2h3V4H5l3-3z',
+  scroll: 'M8 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zm0 2a1 1 0 011 1v2a1 1 0 01-2 0V4a1 1 0 011-1z',
+  hover: 'M8 3a5 5 0 100 10A5 5 0 008 3zm0 2a3 3 0 110 6 3 3 0 010-6zm0 1.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z',
+  timer: 'M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a5 5 0 110 10A5 5 0 018 3zm-.5 1v4.5l3 1.5',
+  variable: 'M2 4h12M2 8h8M2 12h10',
+};
+
+const TRIGGER_OPTIONS: { id: TriggerType; label: string }[] = [
+  { id: 'tap', label: 'Tap' },
+  { id: 'drag', label: 'Drag' },
+  { id: 'scroll', label: 'Scroll' },
+  { id: 'hover', label: 'Hover' },
+  { id: 'timer', label: 'Timer' },
+  { id: 'variable', label: 'Variable' },
 ];
 
 const DRAG_DIRECTIONS = [
@@ -234,20 +244,24 @@ function TriggerEditor({ trigger, index, canRemove, onUpdate, onRemove }: Trigge
       
       {/* Trigger Type Selection */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
-        {TRIGGER_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => onUpdate({ type: opt.id })}
-            style={{
-              ...triggerTypeButtonStyle,
-              background: trigger.type === opt.id ? '#2563eb' : '#0d0d0e',
-              borderColor: trigger.type === opt.id ? '#2563eb' : '#333',
-            }}
-          >
-            <span>{opt.icon}</span>
-            <span>{opt.label}</span>
-          </button>
-        ))}
+        {TRIGGER_OPTIONS.map((opt) => {
+          const isActive = trigger.type === opt.id;
+          return (
+            <button
+              key={opt.id}
+              onClick={() => onUpdate({ type: opt.id })}
+              style={{
+                ...triggerTypeButtonStyle,
+                background: isActive ? '#1e3a5f' : '#161617',
+                borderColor: isActive ? '#2563eb' : '#2a2a2a',
+                color: isActive ? '#60a5fa' : '#888',
+              }}
+            >
+              <TriggerIcon type={opt.id} active={isActive} />
+              <span>{opt.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Type-specific options */}
@@ -735,6 +749,22 @@ function ArrowIcon() {
   );
 }
 
+function TriggerIcon({ type, active }: { type: TriggerType; active: boolean }) {
+  const path = TRIGGER_ICONS[type];
+  const isStroke = type === 'variable' || type === 'timer';
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+      <path
+        d={path}
+        fill={isStroke ? 'none' : (active ? '#60a5fa' : '#888')}
+        stroke={isStroke ? (active ? '#60a5fa' : '#888') : 'none'}
+        strokeWidth={isStroke ? '2' : '0'}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function CurveButton({ label, preview, active, onClick }: { label: string; preview: string; active: boolean; onClick: () => void }) {
   return (
     <button
@@ -800,12 +830,13 @@ const deleteButtonStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 0',
   background: 'transparent',
-  border: '1px solid #dc2626',
+  border: '1px solid #3a2020',
   borderRadius: 6,
-  color: '#dc2626',
+  color: '#f87171',
   fontSize: 11,
   cursor: 'pointer',
-  marginTop: 16,
+  marginTop: 20,
+  transition: 'all 0.15s ease',
 };
 
 const smallButtonStyle: React.CSSProperties = {
@@ -827,15 +858,16 @@ const triggerBoxStyle: React.CSSProperties = {
 };
 
 const triggerTypeButtonStyle: React.CSSProperties = {
-  padding: '4px 8px',
-  border: '1px solid #333',
-  borderRadius: 4,
+  padding: '5px 8px',
+  border: '1px solid #2a2a2a',
+  borderRadius: 6,
   color: '#fff',
   fontSize: 10,
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   gap: 4,
+  transition: 'all 0.15s ease',
 };
 
 const removeButtonStyle: React.CSSProperties = {
@@ -853,11 +885,13 @@ const removeButtonStyle: React.CSSProperties = {
 
 const presetButtonStyle: React.CSSProperties = {
   flex: 1,
-  padding: '4px 0',
-  border: '1px solid #333',
-  borderRadius: 4,
+  padding: '5px 0',
+  border: '1px solid #2a2a2a',
+  borderRadius: 6,
   fontSize: 10,
   cursor: 'pointer',
+  transition: 'all 0.15s ease',
+  fontFamily: 'monospace',
 };
 
 const comboHintStyle: React.CSSProperties = {

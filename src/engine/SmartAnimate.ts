@@ -332,10 +332,10 @@ export class SmartAnimateController {
     for (const el of result.addedElements) {
       const newEl = { 
         ...el, 
-        style: { ...el.style, fillOpacity: 0 }, 
+        style: { ...el.style, fill: el.style?.fill || '#000000', fillOpacity: 0 }, 
         position: { ...el.position }, 
         size: { ...el.size } 
-      };
+      } as KeyElement;
       elementMap.set(el.id, newEl);
     }
     

@@ -139,3 +139,54 @@
   color: #666;
   font-size: 10px;
 }
+
+/* Range Slider - Custom Thumb */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #2a2a2a;
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #1e1e1e;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #1e1e1e;
+  cursor: pointer;
+}
+
+/* Transition Inspector - Focus States */
+.inspector-panel input[type="number"]:focus,
+.inspector-panel input[type="text"]:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.inspector-panel select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Delete button hover */
+.inspector-panel button:hover {
+  opacity: 0.9;
+}
