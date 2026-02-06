@@ -166,6 +166,7 @@ interface EditorActions {
   setFilter: (filter: { blur?: number; brightness?: number; contrast?: number; saturate?: number; grayscale?: number }) => void;
   setBackdropBlur: (blur: number) => void;
   setBlendMode: (mode: string) => void;
+  setClipPath: (path: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -1729,6 +1730,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, blendMode: mode } 
+      });
+    }
+  },
+
+  setClipPath: (path: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, clipPath: path } 
       });
     }
   },
