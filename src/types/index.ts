@@ -46,6 +46,7 @@ export type ShapeStyle = {
   transition?: string;
   willChange?: string;
   aspectRatio?: string;
+  objectFit?: 'fill' | 'contain' | 'cover' | 'none';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
@@ -103,7 +104,6 @@ export type ShapeStyle = {
   imageSrc?: string;
   imageOriginalWidth?: number;
   imageOriginalHeight?: number;
-  objectFit?: "cover" | "contain" | "fill";
   objectPosition?: string;
 };
 
