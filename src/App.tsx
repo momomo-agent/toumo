@@ -528,6 +528,11 @@ export default function App() {
         </div>
         <div style={{ marginBottom: 16 }}>
           <Label>Layer (zIndex)</Label>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => updateElement(selected.id, { zIndex: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Back</button>
+            <button onClick={() => updateElement(selected.id, { zIndex: 50 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Mid</button>
+            <button onClick={() => updateElement(selected.id, { zIndex: 100 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Front</button>
+          </div>
           <input
             type="number"
             value={selected.zIndex ?? 0}
