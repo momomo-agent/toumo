@@ -1,51 +1,41 @@
-interface RulerProps {
-  direction: 'horizontal' | 'vertical';
-  size: number;
-  offset: number;
-  scale: number;
+import { useEditorStore } from '../../store';
+
+export function HorizontalRuler() {
+  const { canvasScale, canvasOffset, frameSize } = useEditorStore();
+  const ticks = [];
+  const step = 50;
+  
+  for (let i = 0; i <= frameSize.width; i += step) {
+    ticks.push(
+      <div key={i} style={{ position: 'absolute', left: i * canvasScale + canvasOffset.x, fontSize: 9, color: '#666' }}>
+        {i}
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 240, right: 280, height: 20, background: '#1a1a1a', borderBottom: '1px solid #333', overflow: 'hidden' }}>
+      {ticks}
+    </div>
+  );
 }
 
-export function Ruler({ direction, size, offset, scale }: RulerProps) {
-  const isHorizontal = direction === 'horizontal';
-  const tickInterval = scale > 0.5 ? 50 : 100;
-  const ticks: number[] = [];
+export function VerticalRuler() {
+  const { canvasScale, canvasOffset, frameSize } = useEditorStore();
+  const ticks = [];
+  const step = 50;
   
-  const start = Math.floor(-offset / scale / tickInterval) * tickInterval;
-  const end = Math.ceil((size - offset) / scale / tickInterval) * tickInterval;
-  
-  for (let i = start; i <= end; i += tickInterval) {
-    ticks.push(i);
+  for (let i = 0; i <= frameSize.height; i += step) {
+    ticks.push(
+      <div key={i} style={{ position: 'absolute', top: i * canvasScale + canvasOffset.y, fontSize: 9, color: '#666', transform: 'rotate(-90deg)', transformOrigin: 'left top' }}>
+        {i}
+      </div>
+    );
   }
-
+  
   return (
-    <div style={{
-      position: 'absolute',
-      background: '#1a1a1a',
-      [isHorizontal ? 'left' : 'top']: 20,
-      [isHorizontal ? 'top' : 'left']: 0,
-      [isHorizontal ? 'width' : 'height']: size - 20,
-      [isHorizontal ? 'height' : 'width']: 20,
-      overflow: 'hidden',
-      fontSize: 9,
-      color: '#666',
-      zIndex: 10,
-    }}>
-      {ticks.map(tick => {
-        const pos = tick * scale + offset;
-        if (pos < 0 || pos > size) return null;
-        return (
-          <div key={tick} style={{
-            position: 'absolute',
-            [isHorizontal ? 'left' : 'top']: pos - 20,
-            [isHorizontal ? 'bottom' : 'right']: 0,
-          }}>
-            <span style={{ 
-              display: 'block',
-              [isHorizontal ? 'marginLeft' : 'marginTop']: 2,
-            }}>{tick}</span>
-          </div>
-        );
-      })}
+    <div style={{ position: 'absolute', top: 60, left: 240, width: 20, bottom: 0, background: '#1a1a1a', borderRight: '1px solid #333', overflow: 'hidden' }}>
+      {ticks}
     </div>
   );
 }
