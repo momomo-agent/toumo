@@ -392,7 +392,8 @@ function ComponentEditor({
   onDelete: () => void;
 }) {
   const [newStateName, setNewStateName] = useState('');
-  const { syncComponentInstances } = useEditorStore();
+  const [expandedStateId, setExpandedStateId] = useState<string | null>(null);
+  const { syncComponentInstances, keyframes } = useEditorStore();
 
   const handleAddState = () => {
     if (!newStateName.trim()) return;
@@ -424,6 +425,40 @@ function ComponentEditor({
         isInitial: s.id === stateId,
       })),
     });
+  };
+
+  // Display state mapping handlers
+  const getDisplayStatesForFunctionalState = (functionalStateId: string): string[] => {
+    const mapping = component.displayStateMappings?.find(
+      m => m.functionalStateId === functionalStateId
+    );
+    return mapping?.displayStateIds || [];
+  };
+
+  const handleToggleDisplayState = (functionalStateId: string, keyframeId: string) => {
+    const currentMappings = component.displayStateMappings || [];
+    const existingMapping = currentMappings.find(m => m.functionalStateId === functionalStateId);
+    
+    let newMappings;
+    if (existingMapping) {
+      const hasKeyframe = existingMapping.displayStateIds.includes(keyframeId);
+      newMappings = currentMappings.map(m => {
+        if (m.functionalStateId !== functionalStateId) return m;
+        return {
+          ...m,
+          displayStateIds: hasKeyframe
+            ? m.displayStateIds.filter(id => id !== keyframeId)
+            : [...m.displayStateIds, keyframeId],
+        };
+      });
+    } else {
+      newMappings = [
+        ...currentMappings,
+        { functionalStateId, displayStateIds: [keyframeId] },
+      ];
+    }
+    
+    onUpdate({ displayStateMappings: newMappings });
   };
 
   const handleNameChange = (name: string) => {
@@ -500,50 +535,71 @@ function ComponentEditor({
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-            {component.functionalStates.map(state => (
-              <div
-                key={state.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 8px',
-                  background: '#0d0d0e',
-                  borderRadius: 4,
-                }}
-              >
-                <span style={{ flex: 1, fontSize: 11, color: '#fff' }}>
-                  {state.name}
-                </span>
-                {state.isInitial && (
-                  <span style={{
-                    fontSize: 9,
-                    color: '#22c55e',
-                    background: '#22c55e20',
-                    padding: '2px 6px',
-                    borderRadius: 3,
-                  }}>
-                    INITIAL
-                  </span>
-                )}
-                {!state.isInitial && (
-                  <button
-                    onClick={() => handleSetInitial(state.id)}
-                    style={smallBtnStyle}
-                    title="Set as initial"
+            {component.functionalStates.map(state => {
+              const isExpanded = expandedStateId === state.id;
+              const displayStates = getDisplayStatesForFunctionalState(state.id);
+              return (
+                <div key={state.id}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 8px',
+                      background: isExpanded ? '#1e3a5f' : '#0d0d0e',
+                      borderRadius: isExpanded ? '4px 4px 0 0' : 4,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setExpandedStateId(isExpanded ? null : state.id)}
                   >
-                    ★
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDeleteState(state.id)}
-                  style={{ ...smallBtnStyle, color: '#dc2626' }}
-                  title="Delete state"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+                    <span style={{ fontSize: 10, color: '#666' }}>
+                      {isExpanded ? '▼' : '▶'}
+                    </span>
+                    <span style={{ flex: 1, fontSize: 11, color: '#fff' }}>
+                      {state.name}
+                    </span>
+                    <span style={{ fontSize: 9, color: '#555' }}>
+                      {displayStates.length} frame{displayStates.length !== 1 ? 's' : ''}
+                    </span>
+                    {state.isInitial && (
+                      <span style={{
+                        fontSize: 9,
+                        color: '#22c55e',
+                        background: '#22c55e20',
+                        padding: '2px 6px',
+                        borderRadius: 3,
+                      }}>
+                        INITIAL
+                      </span>
+                    )}
+                    {!state.isInitial && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSetInitial(state.id); }}
+                        style={smallBtnStyle}
+                        title="Set as initial"
+                      >
+                        ★
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteState(state.id); }}
+                      style={{ ...smallBtnStyle, color: '#dc2626' }}
+                      title="Delete state"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {/* Display State Mapping Panel */}
+                  {isExpanded && (
+                    <DisplayStateMappingPanel
+                      selectedKeyframeIds={displayStates}
+                      keyframes={keyframes}
+                      onToggle={(kfId) => handleToggleDisplayState(state.id, kfId)}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -796,6 +852,56 @@ function ComponentStateGraph({
                   ×
                 </button>
               </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Display State Mapping Panel - shows keyframes that can be linked to a functional state
+function DisplayStateMappingPanel({
+  selectedKeyframeIds,
+  keyframes,
+  onToggle,
+}: {
+  selectedKeyframeIds: string[];
+  keyframes: { id: string; name: string }[];
+  onToggle: (keyframeId: string) => void;
+}) {
+  return (
+    <div style={{
+      padding: '8px 10px',
+      background: '#0d0d0e',
+      borderRadius: '0 0 4px 4px',
+      borderTop: '1px solid #1e3a5f',
+    }}>
+      <div style={{ fontSize: 9, color: '#666', marginBottom: 6 }}>
+        Display Frames (click to toggle)
+      </div>
+      {keyframes.length === 0 ? (
+        <div style={{ fontSize: 10, color: '#555' }}>No keyframes available</div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {keyframes.map(kf => {
+            const isSelected = selectedKeyframeIds.includes(kf.id);
+            return (
+              <button
+                key={kf.id}
+                onClick={() => onToggle(kf.id)}
+                style={{
+                  padding: '4px 8px',
+                  background: isSelected ? '#2563eb' : '#1a1a1b',
+                  border: `1px solid ${isSelected ? '#2563eb' : '#333'}`,
+                  borderRadius: 4,
+                  color: isSelected ? '#fff' : '#888',
+                  fontSize: 10,
+                  cursor: 'pointer',
+                }}
+              >
+                {kf.name}
+              </button>
             );
           })}
         </div>

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 
 interface HistoryEntry {
@@ -50,6 +50,8 @@ interface EditorState {
   // Component edit mode
   editingComponentId: string | null;
   editingInstanceId: string | null;
+  // Variables for state machine logic
+  variables: Variable[];
 }
 
 interface EditorActions {
@@ -160,6 +162,11 @@ interface EditorActions {
   setSize: (width: number, height: number) => void;
   setRotation: (angle: number) => void;
   setScale: (scale: number) => void;
+  // Variable actions
+  addVariable: (variable: Variable) => void;
+  updateVariable: (id: string, updates: Partial<Variable>) => void;
+  deleteVariable: (id: string) => void;
+  setVariableValue: (id: string, value: string | number | boolean) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -180,6 +187,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     { id: 'fs-success', name: 'Success', isInitial: false },
   ],
   components: [],
+  variables: [],
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -204,6 +212,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectionBox: null,
   editingComponentId: null,
   editingInstanceId: null,
+  variables: [],
 
   // Actions
   setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
@@ -1616,6 +1625,27 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       });
     }
   },
+
+  // Variable actions
+  addVariable: (variable: Variable) => set((state) => ({
+    variables: [...state.variables, variable],
+  })),
+
+  updateVariable: (id: string, updates: Partial<Variable>) => set((state) => ({
+    variables: state.variables.map(v => 
+      v.id === id ? { ...v, ...updates } : v
+    ),
+  })),
+
+  deleteVariable: (id: string) => set((state) => ({
+    variables: state.variables.filter(v => v.id !== id),
+  })),
+
+  setVariableValue: (id: string, value: string | number | boolean) => set((state) => ({
+    variables: state.variables.map(v =>
+      v.id === id ? { ...v, currentValue: value } : v
+    ),
+  })),
 
   // Import actions
   importKeyframes: (keyframes: Keyframe[]) => set(() => ({

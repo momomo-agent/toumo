@@ -271,3 +271,15 @@ export type ComponentInstance = {
   positionOverride?: Position;
   sizeOverride?: Size;
 };
+
+// Variable types for state machine logic
+export type VariableType = 'string' | 'number' | 'boolean';
+
+export type Variable = {
+  id: string;
+  name: string;
+  type: VariableType;
+  defaultValue: string | number | boolean;
+  currentValue?: string | number | boolean;
+  description?: string;
+};
