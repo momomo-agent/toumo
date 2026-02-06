@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useEditorStore } from '../../store';
-import type { AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify } from '../../types';
+import type { AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode } from '../../types';
 import './AutoLayoutPanel.css';
 
 // Icons
@@ -93,6 +93,30 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   </svg>
 );
 
+// Sizing mode icons
+const FixedIcon = ({ active }: { active: boolean }) => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="2" y="2" width="10" height="10" rx="1" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+    <line x1="5" y1="7" x2="9" y2="7" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" />
+  </svg>
+);
+
+const HugIcon = ({ active }: { active: boolean }) => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="3" y="4" width="8" height="6" rx="1" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+    <path d="M1 7H3M11 7H13" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1" />
+    <path d="M2 6L1 7L2 8" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="0.8" fill="none" />
+    <path d="M12 6L13 7L12 8" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="0.8" fill="none" />
+  </svg>
+);
+
+const FillIcon = ({ active }: { active: boolean }) => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="1" y="4" width="12" height="6" rx="1" fill={active ? "#3b82f6" : "currentColor"} opacity={active ? 0.3 : 0.2} />
+    <rect x="1" y="4" width="12" height="6" rx="1" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
 export function AutoLayoutPanel() {
   const {
     selectedElementId,
@@ -104,6 +128,7 @@ export function AutoLayoutPanel() {
     setAutoLayoutPadding,
     setAutoLayoutAlign,
     setAutoLayoutJustify,
+    updateAutoLayout,
   } = useEditorStore();
 
   const [expanded, setExpanded] = useState(true);
@@ -165,6 +190,14 @@ export function AutoLayoutPanel() {
     setAutoLayoutJustify(justify);
   };
 
+  const handleSizingChange = (axis: 'primary' | 'counter', mode: SizingMode) => {
+    if (axis === 'primary') {
+      updateAutoLayout({ primaryAxisSizing: mode });
+    } else {
+      updateAutoLayout({ counterAxisSizing: mode });
+    }
+  };
+
   return (
     <div className="auto-layout-panel">
       <div className="auto-layout-header" onClick={() => setExpanded(!expanded)}>
@@ -198,6 +231,66 @@ export function AutoLayoutPanel() {
                 title="Vertical"
               >
                 <VerticalIcon active={autoLayout.direction === 'vertical'} />
+              </button>
+            </div>
+          </div>
+
+          {/* Sizing - Primary Axis */}
+          <div className="auto-layout-row">
+            <span className="auto-layout-label">
+              {autoLayout.direction === 'horizontal' ? 'Width' : 'Height'}
+            </span>
+            <div className="auto-layout-sizing-btns">
+              <button
+                className={`sizing-btn ${(autoLayout.primaryAxisSizing || 'fixed') === 'fixed' ? 'active' : ''}`}
+                onClick={() => handleSizingChange('primary', 'fixed')}
+                title="Fixed size"
+              >
+                <FixedIcon active={(autoLayout.primaryAxisSizing || 'fixed') === 'fixed'} />
+              </button>
+              <button
+                className={`sizing-btn ${autoLayout.primaryAxisSizing === 'hug' ? 'active' : ''}`}
+                onClick={() => handleSizingChange('primary', 'hug')}
+                title="Hug contents"
+              >
+                <HugIcon active={autoLayout.primaryAxisSizing === 'hug'} />
+              </button>
+              <button
+                className={`sizing-btn ${autoLayout.primaryAxisSizing === 'fill' ? 'active' : ''}`}
+                onClick={() => handleSizingChange('primary', 'fill')}
+                title="Fill container"
+              >
+                <FillIcon active={autoLayout.primaryAxisSizing === 'fill'} />
+              </button>
+            </div>
+          </div>
+
+          {/* Sizing - Counter Axis */}
+          <div className="auto-layout-row">
+            <span className="auto-layout-label">
+              {autoLayout.direction === 'horizontal' ? 'Height' : 'Width'}
+            </span>
+            <div className="auto-layout-sizing-btns">
+              <button
+                className={`sizing-btn ${(autoLayout.counterAxisSizing || 'fixed') === 'fixed' ? 'active' : ''}`}
+                onClick={() => handleSizingChange('counter', 'fixed')}
+                title="Fixed size"
+              >
+                <FixedIcon active={(autoLayout.counterAxisSizing || 'fixed') === 'fixed'} />
+              </button>
+              <button
+                className={`sizing-btn ${autoLayout.counterAxisSizing === 'hug' ? 'active' : ''}`}
+                onClick={() => handleSizingChange('counter', 'hug')}
+                title="Hug contents"
+              >
+                <HugIcon active={autoLayout.counterAxisSizing === 'hug'} />
+              </button>
+              <button
+                className={`sizing-btn ${autoLayout.counterAxisSizing === 'fill' ? 'active' : ''}`}
+                onClick={() => handleSizingChange('counter', 'fill')}
+                title="Fill container"
+              >
+                <FillIcon active={autoLayout.counterAxisSizing === 'fill'} />
               </button>
             </div>
           </div>
