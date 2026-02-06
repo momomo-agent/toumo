@@ -360,6 +360,16 @@ export default function App() {
         case 'escape':
           setSelectedElementId(null);
           break;
+        case 'h':
+          if (event.shiftKey && selectedElementIds.length > 0) {
+            selectedElementIds.forEach(id => {
+              const el = elements.find(e => e.id === id);
+              if (el) updateElement(id, { visible: !el.visible });
+            });
+          } else {
+            setCurrentTool('hand');
+          }
+          break;
         case 'arrowup':
           nudgeSelectedElements(0, event.shiftKey ? -10 : -1);
           event.preventDefault();
