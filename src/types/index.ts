@@ -17,6 +17,7 @@ export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "f
 export type ShapeStyle = {
   fill: string;
   fillOpacity: number;
+  opacity?: number;
   // Gradient
   gradientType?: 'none' | 'linear' | 'radial';
   gradientAngle?: number;
