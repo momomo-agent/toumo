@@ -469,6 +469,14 @@ const EFFECT_TYPES = [
   { value: 'backgroundBlur', label: 'Background Blur' },
 ];
 
+// Shadow presets
+const SHADOW_PRESETS = [
+  { label: 'Subtle', offsetX: 0, offsetY: 1, blur: 3, spread: 0, color: '#00000026' },
+  { label: 'Medium', offsetX: 0, offsetY: 4, blur: 12, spread: -2, color: '#00000040' },
+  { label: 'Heavy', offsetX: 0, offsetY: 12, blur: 32, spread: -4, color: '#00000066' },
+  { label: 'Glow', offsetX: 0, offsetY: 0, blur: 20, spread: 4, color: '#3b82f680' },
+];
+
 // Effect item component
 interface EffectItemProps {
   effect: {
@@ -488,9 +496,12 @@ interface EffectItemProps {
 function EffectItem({ effect, onUpdate, onRemove }: EffectItemProps) {
   const isShadow = effect.type === 'dropShadow' || effect.type === 'innerShadow';
   const isBlur = effect.type === 'layerBlur' || effect.type === 'backgroundBlur';
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="figma-effect-item">
+    <div className={`figma-effect-item ${!effect.visible ? 'disabled' : ''}`}>
       <div className="figma-effect-header">
         <button 
           className="figma-icon-btn visibility-btn"
@@ -501,26 +512,94 @@ function EffectItem({ effect, onUpdate, onRemove }: EffectItemProps) {
         <select
           className="figma-select effect-type-select"
           value={effect.type}
-          onChange={(e) => onUpdate({ type: e.target.value })}
+          onChange={(e) => {
+            const newType = e.target.value;
+            // When switching between shadow types, preserve values
+            if ((newType === 'dropShadow' || newType === 'innerShadow') && !isShadow) {
+              onUpdate({ type: newType, color: '#00000040', offsetX: 0, offsetY: 4, blur: 8, spread: 0 });
+            } else {
+              onUpdate({ type: newType });
+            }
+          }}
         >
           {EFFECT_TYPES.map(type => (
             <option key={type.value} value={type.value}>{type.label}</option>
           ))}
         </select>
+        {isShadow && (
+          <button
+            className="figma-icon-btn"
+            onClick={() => setExpanded(!expanded)}
+            title={expanded ? 'Collapse' : 'Expand'}
+          >
+            <ChevronIcon expanded={expanded} />
+          </button>
+        )}
         <button className="figma-icon-btn remove-btn" onClick={onRemove}>
           <MinusIcon />
         </button>
       </div>
-      {isShadow && (
+      {isShadow && expanded && (
         <div className="figma-effect-details">
+          {/* Shadow presets */}
+          <div className="figma-effect-presets-row">
+            <button
+              className="figma-preset-toggle"
+              onClick={() => setShowPresets(!showPresets)}
+            >
+              Presets ▾
+            </button>
+            {showPresets && (
+              <div className="figma-preset-menu">
+                {SHADOW_PRESETS.map(preset => (
+                  <button
+                    key={preset.label}
+                    className="figma-preset-option"
+                    onClick={() => {
+                      onUpdate({
+                        offsetX: preset.offsetX,
+                        offsetY: preset.offsetY,
+                        blur: preset.blur,
+                        spread: preset.spread,
+                        color: preset.color,
+                      });
+                      setShowPresets(false);
+                    }}
+                  >
+                    <span
+                      className="figma-preset-preview"
+                      style={{
+                        boxShadow: `${effect.type === 'innerShadow' ? 'inset ' : ''}${preset.offsetX}px ${preset.offsetY}px ${preset.blur}px ${preset.spread}px ${preset.color}`,
+                      }}
+                    />
+                    <span>{preset.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Color + offsets */}
           <div className="figma-effect-row">
-            <div 
-              className="figma-color-swatch small"
-              style={{ backgroundColor: effect.color || '#000000' }}
-            />
+            <div className="figma-color-swatch-wrapper">
+              <div 
+                className="figma-color-swatch small"
+                style={{ backgroundColor: effect.color || '#000000' }}
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                title="Click to change color"
+              />
+              {showColorPicker && (
+                <ColorPicker
+                  color={effect.color || '#000000'}
+                  opacity={1}
+                  onChange={(color) => onUpdate({ color })}
+                  onClose={() => setShowColorPicker(false)}
+                />
+              )}
+            </div>
             <NumberInput label="X" value={effect.offsetX || 0} onChange={(v) => onUpdate({ offsetX: v })} />
             <NumberInput label="Y" value={effect.offsetY || 0} onChange={(v) => onUpdate({ offsetY: v })} />
           </div>
+          {/* Blur + Spread */}
           <div className="figma-effect-row">
             <NumberInput label="Blur" value={effect.blur || 0} onChange={(v) => onUpdate({ blur: v })} min={0} />
             <NumberInput label="Spread" value={effect.spread || 0} onChange={(v) => onUpdate({ spread: v })} />
@@ -534,6 +613,60 @@ function EffectItem({ effect, onUpdate, onRemove }: EffectItemProps) {
       )}
     </div>
   );
+}
+
+// Parse CSS box-shadow string into structured shadow objects
+function parseBoxShadow(value: string): { inset: boolean; offsetX: number; offsetY: number; blur: number; spread: number; color: string }[] {
+  if (!value || value === 'none') return [];
+  
+  const results: { inset: boolean; offsetX: number; offsetY: number; blur: number; spread: number; color: string }[] = [];
+  
+  // Split by comma but respect parentheses (for rgba/hsla)
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of value) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) {
+      parts.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) parts.push(current.trim());
+
+  for (const part of parts) {
+    const inset = part.includes('inset');
+    const cleaned = part.replace('inset', '').trim();
+    
+    // Extract color (rgba, hsla, hex, or named)
+    let color = '#00000040';
+    const rgbaMatch = cleaned.match(/rgba?\([^)]+\)/);
+    const hslaMatch = cleaned.match(/hsla?\([^)]+\)/);
+    const hexMatch = cleaned.match(/#[0-9a-fA-F]{3,8}/);
+    
+    if (rgbaMatch) color = rgbaMatch[0];
+    else if (hslaMatch) color = hslaMatch[0];
+    else if (hexMatch) color = hexMatch[0];
+    
+    // Extract numeric values (px)
+    const nums = cleaned
+      .replace(/rgba?\([^)]+\)/, '')
+      .replace(/hsla?\([^)]+\)/, '')
+      .replace(/#[0-9a-fA-F]{3,8}/, '')
+      .match(/-?\d+(?:\.\d+)?/g);
+    
+    const offsetX = nums?.[0] ? parseFloat(nums[0]) : 0;
+    const offsetY = nums?.[1] ? parseFloat(nums[1]) : 0;
+    const blur = nums?.[2] ? parseFloat(nums[2]) : 0;
+    const spread = nums?.[3] ? parseFloat(nums[3]) : 0;
+    
+    results.push({ inset, offsetX, offsetY, blur, spread, color });
+  }
+  
+  return results;
 }
 
 // Main Design Panel
@@ -662,23 +795,30 @@ export function DesignPanel() {
         setStrokes([]);
       }
 
-      // Initialize effects from element style
+      // Initialize effects from element style - parse actual boxShadow values
       const newEffects: EffectItemProps['effect'][] = [];
       if (element.style.boxShadow) {
-        newEffects.push({
-          id: 'effect-shadow-0',
-          type: 'dropShadow',
-          visible: true,
-          color: '#00000040',
-          offsetX: 0, offsetY: 4, blur: 8, spread: 0,
+        const parsed = parseBoxShadow(element.style.boxShadow);
+        parsed.forEach((s, i) => {
+          newEffects.push({
+            id: `effect-shadow-${i}`,
+            type: s.inset ? 'innerShadow' : 'dropShadow',
+            visible: true,
+            color: s.color,
+            offsetX: s.offsetX,
+            offsetY: s.offsetY,
+            blur: s.blur,
+            spread: s.spread,
+          });
         });
       }
       if (element.style.filter) {
+        const blurMatch = element.style.filter.match(/blur\((\d+(?:\.\d+)?)px\)/);
         newEffects.push({
           id: 'effect-blur-0',
           type: 'layerBlur',
           visible: true,
-          blur: 4,
+          blur: blurMatch ? parseFloat(blurMatch[1]) : 4,
         });
       }
       setEffects(newEffects);
