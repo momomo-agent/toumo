@@ -1225,6 +1225,19 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Text Transform</Label>
+              <select
+                value={currentStyle.textTransform || 'none'}
+                onChange={(e) => handleStyleChange({ textTransform: e.target.value })}
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#fff', fontSize: 12 }}
+              >
+                <option value="none">None</option>
+                <option value="uppercase">UPPERCASE</option>
+                <option value="lowercase">lowercase</option>
+                <option value="capitalize">Capitalize</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Font Weight</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button

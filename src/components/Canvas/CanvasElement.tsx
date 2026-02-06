@@ -404,6 +404,7 @@ export function CanvasElement({
         textDecoration: element.style?.textDecoration || 'none',
         textShadow: element.style?.textShadow,
         fontFamily: element.style?.fontFamily || 'Inter, sans-serif',
+        textTransform: element.style?.textTransform as React.CSSProperties['textTransform'],
         letterSpacing: element.style?.letterSpacing ?? 0,
         lineHeight: element.style?.lineHeight ?? 1.4,
         overflow: 'hidden',

@@ -71,6 +71,7 @@ export type ShapeStyle = {
   backdropBlur?: number;
   textShadow?: string;
   fontFamily?: string;
+  textTransform?: string;
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;
