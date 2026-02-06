@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import './ColorPicker.css';
 
 interface ColorPickerProps {
@@ -8,8 +8,17 @@ interface ColorPickerProps {
   onClose: () => void;
 }
 
+// Preset colors (Figma-style palette)
+const PRESET_COLORS = [
+  '#000000', '#434343', '#666666', '#999999', '#B7B7B7', '#CCCCCC', '#D9D9D9', '#EFEFEF', '#F3F3F3', '#FFFFFF',
+  '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9900FF', '#FF00FF', '#FF6666', '#FFB366',
+  '#E06666', '#F6B26B', '#FFD966', '#93C47D', '#76A5AF', '#6FA8DC', '#8E7CC3', '#C27BA0', '#CC0000', '#E69138',
+];
+
 // Convert hex to HSV
 function hexToHsv(hex: string): { h: number; s: number; v: number } {
+  // Sanitize input
+  if (!hex || hex.length < 7) return { h: 0, s: 0, v: 0 };
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;
   const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -62,9 +71,16 @@ function hsvToHex(h: number, s: number, v: number): string {
 export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerProps) {
   const [hsv, setHsv] = useState(() => hexToHsv(color));
   const [hexInput, setHexInput] = useState(color.toUpperCase());
+  const [localOpacity, setLocalOpacity] = useState(Math.round(opacity * 100));
   const satValRef = useRef<HTMLDivElement>(null);
   const hueRef = useRef<HTMLDivElement>(null);
+  const opacityRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
+
+  // Sync external opacity changes
+  useEffect(() => {
+    setLocalOpacity(Math.round(opacity * 100));
+  }, [opacity]);
 
   // Click outside to close
   useEffect(() => {
@@ -73,11 +89,28 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
         onClose();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    // Use setTimeout to avoid closing immediately on the same click that opened it
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [onClose]);
 
-  const handleSatValChange = (e: React.MouseEvent | MouseEvent) => {
+  // Close on Escape
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const currentColor = hsvToHex(hsv.h, hsv.s, hsv.v);
+
+  const handleSatValChange = useCallback((e: React.MouseEvent | MouseEvent) => {
     if (!satValRef.current) return;
     const rect = satValRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -87,10 +120,10 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
     setHsv(newHsv);
     const newColor = hsvToHex(newHsv.h, newHsv.s, newHsv.v);
     setHexInput(newColor.toUpperCase());
-    onChange(newColor, opacity);
-  };
+    onChange(newColor, localOpacity / 100);
+  }, [hsv, localOpacity, onChange]);
 
-  const handleHueChange = (e: React.MouseEvent | MouseEvent) => {
+  const handleHueChange = useCallback((e: React.MouseEvent | MouseEvent) => {
     if (!hueRef.current) return;
     const rect = hueRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -99,38 +132,71 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
     setHsv(newHsv);
     const newColor = hsvToHex(newHsv.h, newHsv.s, newHsv.v);
     setHexInput(newColor.toUpperCase());
-    onChange(newColor, opacity);
+    onChange(newColor, localOpacity / 100);
+  }, [hsv, localOpacity, onChange]);
+
+  const handleOpacitySliderChange = useCallback((e: React.MouseEvent | MouseEvent) => {
+    if (!opacityRef.current) return;
+    const rect = opacityRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newOpacity = Math.round(x * 100);
+    setLocalOpacity(newOpacity);
+    onChange(currentColor, newOpacity / 100);
+  }, [currentColor, onChange]);
+
+  const makeDraggable = (handler: (e: React.MouseEvent | MouseEvent) => void) => {
+    return (e: React.MouseEvent) => {
+      handler(e);
+      const onMove = (ev: MouseEvent) => handler(ev);
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
   };
 
   const handleHexChange = (value: string) => {
     setHexInput(value);
     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
       setHsv(hexToHsv(value));
-      onChange(value, opacity);
+      onChange(value, localOpacity / 100);
     }
   };
 
-  const handleOpacityChange = (value: number) => {
-    onChange(color, value / 100);
+  const handleOpacityInputChange = (value: number) => {
+    const clamped = Math.max(0, Math.min(100, value));
+    setLocalOpacity(clamped);
+    onChange(currentColor, clamped / 100);
+  };
+
+  const handlePresetClick = (presetColor: string) => {
+    setHsv(hexToHsv(presetColor));
+    setHexInput(presetColor.toUpperCase());
+    onChange(presetColor, localOpacity / 100);
   };
 
   return (
     <div className="figma-color-picker" ref={popupRef}>
+      {/* Color preview + current swatch */}
+      <div className="figma-cp-preview-row">
+        <div className="figma-cp-preview-swatch">
+          <div className="figma-cp-checkerboard" />
+          <div
+            className="figma-cp-preview-color"
+            style={{ backgroundColor: currentColor, opacity: localOpacity / 100 }}
+          />
+        </div>
+        <div className="figma-cp-preview-hex">{currentColor.toUpperCase()}</div>
+      </div>
+
       {/* Saturation/Value picker */}
       <div
         ref={satValRef}
         className="figma-cp-satval"
         style={{ backgroundColor: hsvToHex(hsv.h, 100, 100) }}
-        onMouseDown={(e) => {
-          handleSatValChange(e);
-          const onMove = (ev: MouseEvent) => handleSatValChange(ev);
-          const onUp = () => {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-          };
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        }}
+        onMouseDown={makeDraggable(handleSatValChange)}
       >
         <div className="figma-cp-satval-white" />
         <div className="figma-cp-satval-black" />
@@ -139,29 +205,43 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
           style={{
             left: `${hsv.s}%`,
             top: `${100 - hsv.v}%`,
+            backgroundColor: currentColor,
           }}
         />
       </div>
 
-      {/* Hue slider */}
-      <div
-        ref={hueRef}
-        className="figma-cp-hue"
-        onMouseDown={(e) => {
-          handleHueChange(e);
-          const onMove = (ev: MouseEvent) => handleHueChange(ev);
-          const onUp = () => {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-          };
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        }}
-      >
+      {/* Sliders row */}
+      <div className="figma-cp-sliders">
+        {/* Hue slider */}
         <div
-          className="figma-cp-hue-cursor"
-          style={{ left: `${(hsv.h / 360) * 100}%` }}
-        />
+          ref={hueRef}
+          className="figma-cp-hue"
+          onMouseDown={makeDraggable(handleHueChange)}
+        >
+          <div
+            className="figma-cp-hue-cursor"
+            style={{ left: `${(hsv.h / 360) * 100}%` }}
+          />
+        </div>
+
+        {/* Opacity slider */}
+        <div
+          ref={opacityRef}
+          className="figma-cp-opacity-slider"
+          onMouseDown={makeDraggable(handleOpacitySliderChange)}
+        >
+          <div className="figma-cp-checkerboard" />
+          <div
+            className="figma-cp-opacity-gradient"
+            style={{
+              background: `linear-gradient(to right, transparent, ${currentColor})`,
+            }}
+          />
+          <div
+            className="figma-cp-opacity-cursor"
+            style={{ left: `${localOpacity}%` }}
+          />
+        </div>
       </div>
 
       {/* Inputs */}
@@ -173,20 +253,35 @@ export function ColorPicker({ color, opacity, onChange, onClose }: ColorPickerPr
             className="figma-cp-hex-input"
             value={hexInput}
             onChange={(e) => handleHexChange(e.target.value)}
+            onFocus={(e) => e.target.select()}
           />
         </div>
         <div className="figma-cp-input-group">
-          <span className="figma-cp-label">Opacity</span>
+          <span className="figma-cp-label">A</span>
           <input
             type="number"
             className="figma-cp-opacity-input"
-            value={Math.round(opacity * 100)}
+            value={localOpacity}
             min={0}
             max={100}
-            onChange={(e) => handleOpacityChange(parseInt(e.target.value) || 0)}
+            onChange={(e) => handleOpacityInputChange(parseInt(e.target.value) || 0)}
+            onFocus={(e) => e.target.select()}
           />
           <span className="figma-cp-unit">%</span>
         </div>
+      </div>
+
+      {/* Preset colors */}
+      <div className="figma-cp-presets">
+        {PRESET_COLORS.map((c, i) => (
+          <button
+            key={i}
+            className={`figma-cp-preset ${c.toUpperCase() === currentColor.toUpperCase() ? 'active' : ''}`}
+            style={{ backgroundColor: c }}
+            onClick={() => handlePresetClick(c)}
+            title={c}
+          />
+        ))}
       </div>
     </div>
   );
