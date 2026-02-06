@@ -1718,6 +1718,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ objectFit: 'fill' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Fill</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Flex Direction</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ flexDirection: 'row' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Row</button>
+                <button onClick={() => handleStyleChange({ flexDirection: 'column' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Col</button>
+              </div>
+            </div>
           </>
         )}
       </>
