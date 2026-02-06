@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
+import type { Transition, KeyElement, TriggerType } from '../../types';
 
 const DEVICE_FRAMES = [
   { id: 'none', label: 'No Frame', width: 0, height: 0, radius: 0 },
@@ -13,19 +14,111 @@ const DEVICE_FRAMES = [
   { id: 'ipadpro11', label: 'iPad Pro 11"', width: 834, height: 1194, radius: 18 },
 ];
 
+// Easing functions for animations
+const easingFunctions: Record<string, string> = {
+  'linear': 'linear',
+  'ease': 'ease',
+  'ease-in': 'ease-in',
+  'ease-out': 'ease-out',
+  'ease-in-out': 'ease-in-out',
+  'spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+};
+
 export function LivePreview() {
-  const { keyframes, selectedKeyframeId, frameSize } = useEditorStore();
+  const { keyframes, transitions, selectedKeyframeId, frameSize } = useEditorStore();
   
   const [deviceFrame, setDeviceFrame] = useState('iphone14');
   const [zoom, setZoom] = useState(100);
   const [isZoomLocked, setIsZoomLocked] = useState(false);
+  
+  // State machine state
+  const [currentKeyframeId, setCurrentKeyframeId] = useState<string>(selectedKeyframeId);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDuration, setTransitionDuration] = useState(300);
+  const [transitionCurve, setTransitionCurve] = useState('ease-out');
+  
+  // Timer refs for timer triggers
+  const timerRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  
+  // Sync with editor selection when not in preview mode
+  useEffect(() => {
+    if (!isTransitioning) {
+      setCurrentKeyframeId(selectedKeyframeId);
+    }
+  }, [selectedKeyframeId, isTransitioning]);
 
-  const keyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const elements = keyframe?.keyElements || [];
+  const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
+  const elements = currentKeyframe?.keyElements || [];
   const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
 
+  // Find available transitions from current state
+  const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
+
+  // Execute a transition
+  const executeTransition = useCallback((transition: Transition) => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    setTransitionDuration(transition.duration);
+    setTransitionCurve(transition.curve || 'ease-out');
+    
+    // Apply delay if specified
+    setTimeout(() => {
+      setCurrentKeyframeId(transition.to);
+      
+      // Reset transitioning state after animation completes
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, transition.duration);
+    }, transition.delay || 0);
+  }, [isTransitioning]);
+
+  // Find and execute transition by trigger type
+  const handleTrigger = useCallback((triggerType: TriggerType, _elementId?: string) => {
+    const matchingTransition = availableTransitions.find(t => {
+      // Check new triggers array first
+      if (t.triggers && t.triggers.length > 0) {
+        return t.triggers.some(trigger => trigger.type === triggerType);
+      }
+      // Fall back to legacy trigger field
+      return t.trigger === triggerType;
+    });
+    
+    if (matchingTransition) {
+      executeTransition(matchingTransition);
+    }
+  }, [availableTransitions, executeTransition]);
+
+  // Setup timer triggers
+  useEffect(() => {
+    // Clear existing timers
+    timerRefs.current.forEach(timer => clearTimeout(timer));
+    timerRefs.current.clear();
+    
+    // Setup new timer triggers
+    availableTransitions.forEach(transition => {
+      const timerTrigger = transition.triggers?.find(t => t.type === 'timer');
+      if (timerTrigger && timerTrigger.timerDelay) {
+        const timer = setTimeout(() => {
+          executeTransition(transition);
+        }, timerTrigger.timerDelay);
+        timerRefs.current.set(transition.id, timer);
+      } else if (transition.trigger === 'timer') {
+        // Legacy timer support
+        const timer = setTimeout(() => {
+          executeTransition(transition);
+        }, 1000);
+        timerRefs.current.set(transition.id, timer);
+      }
+    });
+    
+    return () => {
+      timerRefs.current.forEach(timer => clearTimeout(timer));
+    };
+  }, [currentKeyframeId, availableTransitions, executeTransition]);
+
   // Calculate scale to fit preview area
-  const containerWidth = 288; // 320 - 32 padding
+  const containerWidth = 288;
   const containerHeight = 480;
   
   const contentWidth = device.id === 'none' ? frameSize.width : device.width;
@@ -39,7 +132,7 @@ export function LivePreview() {
   
   const effectiveScale = (zoom / 100) * autoScale;
 
-  // Intercept browser zoom (Cmd/Ctrl + scroll)
+  // Intercept browser zoom
   const handleWheel = useCallback((e: WheelEvent) => {
     if ((e.metaKey || e.ctrlKey) && !isZoomLocked) {
       e.preventDefault();
@@ -56,12 +149,37 @@ export function LivePreview() {
     }
   }, [handleWheel]);
 
+  // Reset to initial state
+  const handleReset = useCallback(() => {
+    const initialKeyframe = keyframes.find(kf => kf.id === 'kf-idle') || keyframes[0];
+    if (initialKeyframe) {
+      setCurrentKeyframeId(initialKeyframe.id);
+    }
+  }, [keyframes]);
+
+  // Get trigger hints for UI
+  const getTriggerHints = () => {
+    const hints: string[] = [];
+    availableTransitions.forEach(t => {
+      if (t.triggers && t.triggers.length > 0) {
+        t.triggers.forEach(trigger => hints.push(trigger.type));
+      } else if (t.trigger) {
+        hints.push(t.trigger);
+      }
+    });
+    return [...new Set(hints)];
+  };
+
+  const triggerHints = getTriggerHints();
+
   return (
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
         <span>Live Preview</span>
-        <span style={{ fontSize: 10, color: '#666' }}>{keyframe?.name}</span>
+        <span style={{ fontSize: 10, color: isTransitioning ? '#22c55e' : '#666' }}>
+          {isTransitioning ? '⚡ Transitioning...' : currentKeyframe?.name}
+        </span>
       </div>
 
       {/* Device Frame Selector */}
@@ -79,6 +197,17 @@ export function LivePreview() {
         </select>
       </div>
 
+      {/* Trigger Hints */}
+      {triggerHints.length > 0 && (
+        <div style={triggerHintsStyle}>
+          {triggerHints.map(hint => (
+            <span key={hint} style={triggerBadgeStyle}>
+              {getTriggerIcon(hint)} {hint}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Preview Area */}
       <div 
         id="live-preview-container"
@@ -92,7 +221,13 @@ export function LivePreview() {
           {/* Device Frame */}
           {device.id !== 'none' ? (
             <DeviceFrame device={device}>
-              <PreviewContent elements={elements} />
+              <PreviewContent 
+                elements={elements}
+                onTrigger={handleTrigger}
+                transitionDuration={transitionDuration}
+                transitionCurve={transitionCurve}
+                availableTriggers={triggerHints}
+              />
             </DeviceFrame>
           ) : (
             <div style={{
@@ -104,7 +239,13 @@ export function LivePreview() {
               position: 'relative',
               overflow: 'hidden',
             }}>
-              <PreviewContent elements={elements} />
+              <PreviewContent 
+                elements={elements}
+                onTrigger={handleTrigger}
+                transitionDuration={transitionDuration}
+                transitionCurve={transitionCurve}
+                availableTriggers={triggerHints}
+              />
             </div>
           )}
         </div>
@@ -146,17 +287,36 @@ export function LivePreview() {
         </button>
       </div>
 
-      {/* Reset button */}
-      <div style={{ padding: '0 16px 12px' }}>
+      {/* Action buttons */}
+      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8 }}>
+        <button
+          onClick={handleReset}
+          style={resetButtonStyle}
+        >
+          ↺ Reset
+        </button>
         <button
           onClick={() => setZoom(100)}
           style={resetButtonStyle}
         >
-          Reset Zoom
+          100%
         </button>
       </div>
     </div>
   );
+}
+
+// Helper function for trigger icons
+function getTriggerIcon(trigger: string): string {
+  switch (trigger) {
+    case 'tap': return '👆';
+    case 'hover': return '🖱️';
+    case 'drag': return '✋';
+    case 'scroll': return '📜';
+    case 'timer': return '⏱️';
+    case 'variable': return '📊';
+    default: return '⚡';
+  }
 }
 
 // Device Frame Component
@@ -237,23 +397,85 @@ function DeviceFrame({
   );
 }
 
-// Preview Content Component
+// Preview Content Component with interaction support
 function PreviewContent({ 
-  elements, 
+  elements,
+  onTrigger,
+  transitionDuration,
+  transitionCurve,
+  availableTriggers,
 }: { 
-  elements: Array<{
-    id: string;
-    position: { x: number; y: number };
-    size: { width: number; height: number };
-    style?: { fill?: string; borderRadius?: number };
-    shapeType?: string;
-  }>;
+  elements: KeyElement[];
+  onTrigger: (type: TriggerType, elementId?: string) => void;
+  transitionDuration: number;
+  transitionCurve: string;
+  availableTriggers: string[];
 }) {
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleClick = (e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    if (availableTriggers.includes('tap')) {
+      onTrigger('tap', elementId);
+    }
+  };
+
+  const handleMouseEnter = (elementId: string) => {
+    setHoveredElement(elementId);
+    if (availableTriggers.includes('hover')) {
+      onTrigger('hover', elementId);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredElement(null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (dragStartRef.current && availableTriggers.includes('drag')) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance > 20) { // Minimum drag distance
+        onTrigger('drag');
+      }
+    }
+    dragStartRef.current = null;
+  };
+
+  const handleContainerClick = () => {
+    if (availableTriggers.includes('tap')) {
+      onTrigger('tap');
+    }
+  };
+
+  // Get CSS easing
+  const cssEasing = easingFunctions[transitionCurve] || transitionCurve;
+
   return (
-    <>
+    <div 
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        position: 'relative',
+        cursor: availableTriggers.includes('tap') ? 'pointer' : 'default',
+      }}
+      onClick={handleContainerClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+    >
       {elements.map((el) => (
         <div
           key={el.id}
+          onClick={(e) => handleClick(e, el.id)}
+          onMouseEnter={() => handleMouseEnter(el.id)}
+          onMouseLeave={handleMouseLeave}
           style={{
             position: 'absolute',
             left: el.position.x,
@@ -261,14 +483,58 @@ function PreviewContent({
             width: el.size.width,
             height: el.size.height,
             background: el.style?.fill || '#3b82f6',
+            opacity: el.style?.fillOpacity ?? 1,
             borderRadius: el.shapeType === 'ellipse' 
               ? '50%' 
               : (el.style?.borderRadius || 8),
-            transition: 'all 0.3s ease',
+            border: el.style?.stroke 
+              ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}`
+              : 'none',
+            boxShadow: el.style?.shadowColor 
+              ? `${el.style.shadowOffsetX || 0}px ${el.style.shadowOffsetY || 0}px ${el.style.shadowBlur || 0}px ${el.style.shadowColor}`
+              : undefined,
+            // Animation transition
+            transition: `all ${transitionDuration}ms ${cssEasing}`,
+            // Hover effect
+            transform: hoveredElement === el.id ? 'scale(1.02)' : 'scale(1)',
+            cursor: availableTriggers.includes('tap') ? 'pointer' : 'default',
           }}
-        />
+        >
+          {/* Text content */}
+          {el.shapeType === 'text' && el.text && (
+            <div style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: el.style?.textColor || '#fff',
+              fontSize: el.style?.fontSize || 14,
+              fontWeight: el.style?.fontWeight || 400,
+              fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
+              textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
+              padding: el.style?.padding || 0,
+            }}>
+              {el.text}
+            </div>
+          )}
+          
+          {/* Image content */}
+          {el.shapeType === 'image' && el.style?.imageSrc && (
+            <img 
+              src={el.style.imageSrc} 
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: el.style?.objectFit || 'cover',
+                borderRadius: 'inherit',
+              }}
+            />
+          )}
+        </div>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -304,6 +570,22 @@ const selectStyle: React.CSSProperties = {
   borderRadius: 6,
   color: '#e5e5e5',
   fontSize: 11,
+};
+
+const triggerHintsStyle: React.CSSProperties = {
+  padding: '6px 16px',
+  borderBottom: '1px solid #2a2a2a',
+  display: 'flex',
+  gap: 6,
+  flexWrap: 'wrap',
+};
+
+const triggerBadgeStyle: React.CSSProperties = {
+  padding: '2px 8px',
+  background: '#1e3a5f',
+  borderRadius: 4,
+  fontSize: 10,
+  color: '#60a5fa',
 };
 
 const previewAreaStyle: React.CSSProperties = {
@@ -365,7 +647,7 @@ const lockButtonStyle: React.CSSProperties = {
 };
 
 const resetButtonStyle: React.CSSProperties = {
-  width: '100%',
+  flex: 1,
   padding: '6px 0',
   background: 'transparent',
   border: '1px solid #333',

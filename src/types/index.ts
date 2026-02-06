@@ -74,6 +74,7 @@ export type ShapeStyle = {
   listStyle?: string;
   caretColor?: string;
   accentColor?: string;
+  scrollBehavior?: 'auto' | 'smooth';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
