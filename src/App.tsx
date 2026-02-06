@@ -1741,6 +1741,14 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ alignItems: 'flex-end' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>End</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Gap</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ gap: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
+                <button onClick={() => handleStyleChange({ gap: 8 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>8</button>
+                <button onClick={() => handleStyleChange({ gap: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
+              </div>
+            </div>
           </>
         )}
       </>
