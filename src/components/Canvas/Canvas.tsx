@@ -57,6 +57,7 @@ export function Canvas() {
   const setSelectedKeyframeId = useEditorStore((s) => s.setSelectedKeyframeId);
   const setCanvasOffset = useEditorStore((s) => s.setCanvasOffset);
   const setCanvasScale = useEditorStore((s) => s.setCanvasScale);
+  const zoomToFit = useEditorStore((s) => s.zoomToFit);
   const addElement = useEditorStore((s) => s.addElement);
   const setSelectionBox = useEditorStore((s) => s.setSelectionBox);
   const setIsSelecting = useEditorStore((s) => s.setIsSelecting);
@@ -78,6 +79,20 @@ export function Canvas() {
   const previousToolRef = useRef<ToolType>(currentTool);
   // Live preview while drawing shapes
   const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number; tool: string } | null>(null);
+  // Zoom percentage toast
+  const [showZoomToast, setShowZoomToast] = useState(false);
+  const zoomToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevScaleRef = useRef(canvasScale);
+
+  // Show zoom toast when scale changes
+  useEffect(() => {
+    if (canvasScale !== prevScaleRef.current) {
+      prevScaleRef.current = canvasScale;
+      setShowZoomToast(true);
+      if (zoomToastTimerRef.current) clearTimeout(zoomToastTimerRef.current);
+      zoomToastTimerRef.current = setTimeout(() => setShowZoomToast(false), 800);
+    }
+  }, [canvasScale]);
 
   const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
@@ -640,19 +655,35 @@ export function Canvas() {
       if (event.metaKey || event.ctrlKey) {
         if (event.key === '0') {
           event.preventDefault();
-          setCanvasScale(1);
+          zoomToFit();
           return;
         }
         if (event.key === '=' || event.key === '+') {
           event.preventDefault();
-          const nextScale = Math.min(4, canvasScale * 1.25);
-          setCanvasScale(nextScale);
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (rect) {
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const originX = (cx - canvasOffset.x) / canvasScale;
+            const originY = (cy - canvasOffset.y) / canvasScale;
+            const nextScale = Math.min(4, canvasScale * 1.25);
+            setCanvasScale(nextScale);
+            setCanvasOffset({ x: cx - originX * nextScale, y: cy - originY * nextScale });
+          }
           return;
         }
         if (event.key === '-') {
           event.preventDefault();
-          const nextScale = Math.max(0.25, canvasScale * 0.8);
-          setCanvasScale(nextScale);
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (rect) {
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const originX = (cx - canvasOffset.x) / canvasScale;
+            const originY = (cy - canvasOffset.y) / canvasScale;
+            const nextScale = Math.max(0.1, canvasScale * 0.8);
+            setCanvasScale(nextScale);
+            setCanvasOffset({ x: cx - originX * nextScale, y: cy - originY * nextScale });
+          }
           return;
         }
       }
@@ -697,7 +728,7 @@ export function Canvas() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [currentTool, nudgeSelectedElements, setCurrentTool, canvasScale, setCanvasScale]);
+  }, [currentTool, nudgeSelectedElements, setCurrentTool, canvasScale, canvasOffset, setCanvasScale, setCanvasOffset, zoomToFit]);
 
   // Handle paste event for images
   useEffect(() => {
@@ -740,23 +771,33 @@ export function Canvas() {
   }, [addImageElement]);
 
   const handleWheel = useCallback((event: WheelEvent) => {
-    if (!event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
     if (!canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
     const pointerX = event.clientX - rect.left;
     const pointerY = event.clientY - rect.top;
-    const originX = (pointerX - canvasOffset.x) / canvasScale;
-    const originY = (pointerY - canvasOffset.y) / canvasScale;
 
-    const factor = event.deltaY < 0 ? 1.05 : 0.95;
-    const nextScale = Math.min(4, Math.max(0.25, canvasScale * factor));
+    // Pinch-to-zoom (trackpad) or Ctrl/Cmd+scroll → zoom at mouse position
+    if (event.ctrlKey || event.metaKey) {
+      const originX = (pointerX - canvasOffset.x) / canvasScale;
+      const originY = (pointerY - canvasOffset.y) / canvasScale;
 
-    setCanvasScale(nextScale);
+      const factor = event.deltaY < 0 ? 1.06 : 1 / 1.06;
+      const nextScale = Math.min(4, Math.max(0.1, canvasScale * factor));
+
+      setCanvasScale(nextScale);
+      setCanvasOffset({
+        x: pointerX - originX * nextScale,
+        y: pointerY - originY * nextScale,
+      });
+      return;
+    }
+
+    // Plain scroll → pan canvas
     setCanvasOffset({
-      x: pointerX - originX * nextScale,
-      y: pointerY - originY * nextScale,
+      x: canvasOffset.x - event.deltaX,
+      y: canvasOffset.y - event.deltaY,
     });
   }, [canvasOffset.x, canvasOffset.y, canvasScale, setCanvasOffset, setCanvasScale]);
 
@@ -1249,6 +1290,33 @@ export function Canvas() {
         })()}
       </div>
       
+      {/* Zoom Percentage Toast */}
+      {showZoomToast && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(8px)',
+            color: '#fff',
+            fontSize: 28,
+            fontWeight: 700,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            padding: '12px 28px',
+            borderRadius: 12,
+            pointerEvents: 'none',
+            zIndex: 200,
+            letterSpacing: '-0.5px',
+            opacity: showZoomToast ? 1 : 0,
+            transition: 'opacity 0.15s ease-out',
+          }}
+        >
+          {Math.round(canvasScale * 100)}%
+        </div>
+      )}
+
       {/* Zoom Controls */}
       <ZoomControls />
 

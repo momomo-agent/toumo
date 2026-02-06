@@ -40,6 +40,8 @@ interface EditorState {
   recentColors: string[];
   canvasBackground: string;
   showRulers: boolean;
+  guides: Array<{ id: string; orientation: 'horizontal' | 'vertical'; position: number }>;
+  snapToGuides: boolean;
   snapToGrid: boolean;
   gridSize: number;
   frameSize: Size;
@@ -87,6 +89,11 @@ interface EditorActions {
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
   toggleRulers: () => void;
+  addGuide: (orientation: 'horizontal' | 'vertical', position: number) => void;
+  updateGuide: (id: string, position: number) => void;
+  removeGuide: (id: string) => void;
+  clearGuides: () => void;
+  toggleSnapToGuides: () => void;
   toggleSnapToGrid: () => void;
   setGridSize: (size: number) => void;
   setIsDragging: (isDragging: boolean) => void;
@@ -318,6 +325,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   recentColors: [],
   canvasBackground: '#0d0d0e',
   showRulers: false,
+  guides: [],
+  snapToGuides: true,
   snapToGrid: false,
   gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
@@ -617,6 +626,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   })),
   setCanvasBackground: (color: string) => set({ canvasBackground: color }),
   toggleRulers: () => set((state) => ({ showRulers: !state.showRulers })),
+  addGuide: (orientation, position) => set((state) => ({
+    guides: [...state.guides, { id: `guide-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, orientation, position }],
+  })),
+  updateGuide: (id, position) => set((state) => ({
+    guides: state.guides.map(g => g.id === id ? { ...g, position } : g),
+  })),
+  removeGuide: (id) => set((state) => ({
+    guides: state.guides.filter(g => g.id !== id),
+  })),
+  clearGuides: () => set({ guides: [] }),
+  toggleSnapToGuides: () => set((state) => ({ snapToGuides: !state.snapToGuides })),
   toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
   setGridSize: (size: number) => set({ gridSize: size }),
   setIsDragging: (isDragging) => set({ isDragging }),
