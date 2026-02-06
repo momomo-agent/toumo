@@ -2037,6 +2037,11 @@ export default function App() {
         <span>Tool: {currentTool}</span>
         <span>{frameSize.width} × {frameSize.height}</span>
         <span>Zoom: {Math.round(canvasScale * 100)}%</span>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={() => setCanvasScale(0.5)} style={{ padding: '2px 6px', background: canvasScale === 0.5 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>50%</button>
+          <button onClick={() => setCanvasScale(1)} style={{ padding: '2px 6px', background: canvasScale === 1 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>100%</button>
+          <button onClick={() => setCanvasScale(2)} style={{ padding: '2px 6px', background: canvasScale === 2 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>200%</button>
+        </div>
         <span>{selectedElementIds.length === 1 && selectedKeyframe?.keyElements.find(e => e.id === selectedElementIds[0]) 
           ? `X: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
