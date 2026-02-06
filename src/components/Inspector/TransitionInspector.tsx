@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '../../store';
-import type { TriggerConfig, TriggerType } from '../../types';
+import type { TriggerConfig, TriggerType, KeyElement, ShapeStyle } from '../../types';
 import { SPRING_PRESETS as SPRING_PRESETS_DATA } from '../../data/curvePresets';
 import type { EasingPreset, SpringPreset } from '../../data/curvePresets';
 import { PresetSelector, DraggableBezierEditor, BallPreview } from '../CurveEditor';
@@ -40,6 +41,8 @@ export function TransitionInspector() {
     selectedTransitionId,
     updateTransition,
     deleteTransition,
+    previewTransitionId,
+    setPreviewTransitionId,
   } = useEditorStore();
 
   const transition = transitions.find((t) => t.id === selectedTransitionId);
@@ -80,12 +83,36 @@ export function TransitionInspector() {
     <div>
       <SectionHeader>Transition</SectionHeader>
 
-      {/* From → To display */}
+      {/* From → To display + Preview button */}
       <div style={flowBoxStyle}>
         <StateChip name={fromKeyframe?.name || 'Unknown'} />
         <ArrowIcon />
         <StateChip name={toKeyframe?.name || 'Unknown'} />
       </div>
+      <button
+        onClick={() => setPreviewTransitionId(transition.id)}
+        disabled={previewTransitionId === transition.id}
+        style={{
+          ...previewButtonStyle,
+          opacity: previewTransitionId === transition.id ? 0.5 : 1,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M4 2.5v11l9-5.5-9-5.5z" fill="currentColor" />
+        </svg>
+        {previewTransitionId === transition.id ? 'Playing…' : 'Preview Transition'}
+      </button>
+
+      {/* Timeline Visualization */}
+      {fromKeyframe && toKeyframe && (
+        <TransitionTimeline
+          fromElements={fromKeyframe.keyElements}
+          toElements={toKeyframe.keyElements}
+          duration={transition.duration}
+          delay={transition.delay}
+          isPlaying={previewTransitionId === transition.id}
+        />
+      )}
 
       {/* Triggers Section */}
       <div style={{ marginBottom: 20 }}>
@@ -216,6 +243,171 @@ export function TransitionInspector() {
       >
         Delete Transition
       </button>
+    </div>
+  );
+}
+
+// ─── Diff helper: find changed properties between two keyframe element sets ───
+type PropertyChange = {
+  elementName: string;
+  property: string;
+  from: string | number;
+  to: string | number;
+  color: string;
+};
+
+const PROP_COLORS: Record<string, string> = {
+  x: '#3b82f6',
+  y: '#8b5cf6',
+  width: '#f59e0b',
+  height: '#ef4444',
+  opacity: '#22c55e',
+  fill: '#ec4899',
+  borderRadius: '#06b6d4',
+  rotation: '#a855f7',
+  fontSize: '#f97316',
+  scale: '#14b8a6',
+};
+
+function diffElements(fromEls: KeyElement[], toEls: KeyElement[]): PropertyChange[] {
+  const changes: PropertyChange[] = [];
+  for (const fromEl of fromEls) {
+    const toEl = toEls.find(e => e.id === fromEl.id);
+    if (!toEl) continue;
+    const name = fromEl.name || fromEl.id;
+    // Position
+    if (fromEl.position.x !== toEl.position.x)
+      changes.push({ elementName: name, property: 'x', from: Math.round(fromEl.position.x), to: Math.round(toEl.position.x), color: PROP_COLORS.x });
+    if (fromEl.position.y !== toEl.position.y)
+      changes.push({ elementName: name, property: 'y', from: Math.round(fromEl.position.y), to: Math.round(toEl.position.y), color: PROP_COLORS.y });
+    // Size
+    if (fromEl.size.width !== toEl.size.width)
+      changes.push({ elementName: name, property: 'width', from: Math.round(fromEl.size.width), to: Math.round(toEl.size.width), color: PROP_COLORS.width });
+    if (fromEl.size.height !== toEl.size.height)
+      changes.push({ elementName: name, property: 'height', from: Math.round(fromEl.size.height), to: Math.round(toEl.size.height), color: PROP_COLORS.height });
+    // Style props
+    const fStyle: Partial<ShapeStyle> = fromEl.style ?? {};
+    const tStyle: Partial<ShapeStyle> = toEl.style ?? {};
+    if ((fStyle.opacity ?? 1) !== (tStyle.opacity ?? 1))
+      changes.push({ elementName: name, property: 'opacity', from: fStyle.opacity ?? 1, to: tStyle.opacity ?? 1, color: PROP_COLORS.opacity });
+    if (fStyle.fill !== tStyle.fill)
+      changes.push({ elementName: name, property: 'fill', from: fStyle.fill || '—', to: tStyle.fill || '—', color: PROP_COLORS.fill });
+    if ((fStyle.borderRadius ?? 0) !== (tStyle.borderRadius ?? 0))
+      changes.push({ elementName: name, property: 'borderRadius', from: fStyle.borderRadius ?? 0, to: tStyle.borderRadius ?? 0, color: PROP_COLORS.borderRadius });
+    if ((fStyle.rotation ?? 0) !== (tStyle.rotation ?? 0))
+      changes.push({ elementName: name, property: 'rotation', from: `${fStyle.rotation ?? 0}°`, to: `${tStyle.rotation ?? 0}°`, color: PROP_COLORS.rotation });
+    if ((fStyle.scale ?? 1) !== (tStyle.scale ?? 1))
+      changes.push({ elementName: name, property: 'scale', from: fStyle.scale ?? 1, to: tStyle.scale ?? 1, color: PROP_COLORS.scale });
+  }
+  return changes;
+}
+
+// ─── TransitionTimeline Component ─────────────────────────────────────
+function TransitionTimeline({
+  fromElements, toElements, duration, delay, isPlaying,
+}: {
+  fromElements: KeyElement[];
+  toElements: KeyElement[];
+  duration: number;
+  delay: number;
+  isPlaying: boolean;
+}) {
+  const changes = diffElements(fromElements, toElements);
+  const [progress, setProgress] = useState(0);
+
+  // Animate progress bar when playing
+  useEffect(() => {
+    if (!isPlaying) { setProgress(0); return; }
+    const totalMs = delay + duration;
+    const start = performance.now();
+    let raf = 0;
+    const tick = () => {
+      const elapsed = performance.now() - start;
+      const p = Math.min(elapsed / totalMs, 1);
+      setProgress(p);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isPlaying, duration, delay]);
+
+  if (changes.length === 0) {
+    return (
+      <div style={timelineBoxStyle}>
+        <div style={{ fontSize: 10, color: '#555', textAlign: 'center', padding: '8px 0' }}>
+          No property changes detected
+        </div>
+      </div>
+    );
+  }
+
+  const totalMs = delay + duration;
+  const delayPct = totalMs > 0 ? (delay / totalMs) * 100 : 0;
+  const durationPct = totalMs > 0 ? (duration / totalMs) * 100 : 100;
+
+  return (
+    <div style={timelineBoxStyle}>
+      <div style={{ fontSize: 10, color: '#888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        Timeline · {changes.length} change{changes.length > 1 ? 's' : ''}
+      </div>
+
+      {/* Time ruler */}
+      <div style={timeRulerStyle}>
+        <span>0ms</span>
+        {delay > 0 && <span style={{ position: 'absolute', left: `${delayPct}%`, transform: 'translateX(-50%)' }}>{delay}ms</span>}
+        <span style={{ marginLeft: 'auto' }}>{totalMs}ms</span>
+      </div>
+
+      {/* Playhead */}
+      {isPlaying && (
+        <div style={{
+          position: 'absolute', top: 28, bottom: 4,
+          left: `${progress * 100}%`, width: 1,
+          background: '#fff', zIndex: 10, opacity: 0.6,
+          transition: 'left 16ms linear',
+        }} />
+      )}
+
+      {/* Property rows */}
+      {changes.map((ch, i) => (
+        <div key={`${ch.elementName}-${ch.property}-${i}`} style={timelineRowStyle}>
+          <div style={timelineLabelStyle}>
+            <span style={{ color: '#aaa', fontSize: 10, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {ch.elementName}
+            </span>
+            <span style={{ color: ch.color, fontSize: 10, fontWeight: 600 }}>.{ch.property}</span>
+          </div>
+          <div style={timelineTrackStyle}>
+            {/* Delay gap */}
+            {delay > 0 && (
+              <div style={{ width: `${delayPct}%`, height: '100%', background: 'rgba(255,255,255,0.03)', borderRadius: '3px 0 0 3px' }} />
+            )}
+            {/* Active bar */}
+            <div style={{
+              width: `${durationPct}%`, height: '100%',
+              background: `${ch.color}30`, border: `1px solid ${ch.color}60`,
+              borderRadius: delay > 0 ? '0 3px 3px 0' : 3,
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {/* Fill animation */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: `${ch.color}50`,
+                transformOrigin: 'left',
+                transform: isPlaying
+                  ? `scaleX(${Math.max(0, (progress * totalMs - delay) / duration)})`
+                  : 'scaleX(0)',
+                transition: isPlaying ? 'transform 16ms linear' : 'none',
+              }} />
+            </div>
+          </div>
+          <div style={timelineValueStyle}>
+            <span style={{ color: '#666' }}>{String(ch.from)}</span>
+            <span style={{ color: '#444' }}>→</span>
+            <span style={{ color: ch.color }}>{String(ch.to)}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -765,4 +957,77 @@ const unitStyle: React.CSSProperties = {
   fontSize: 10,
   color: '#666',
   pointerEvents: 'none',
+};
+
+const previewButtonStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 0',
+  background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+  border: 'none',
+  borderRadius: 6,
+  color: '#fff',
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: 'pointer',
+  marginBottom: 16,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
+  transition: 'opacity 0.15s ease',
+};
+
+const timelineBoxStyle: React.CSSProperties = {
+  padding: 10,
+  background: '#0d0d0e',
+  border: '1px solid #2a2a2a',
+  borderRadius: 8,
+  marginBottom: 16,
+  position: 'relative',
+  overflow: 'hidden',
+};
+
+const timeRulerStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  fontSize: 9,
+  color: '#555',
+  fontFamily: 'monospace',
+  marginBottom: 6,
+  position: 'relative',
+};
+
+const timelineRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  marginBottom: 4,
+};
+
+const timelineLabelStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 2,
+  minWidth: 80,
+  maxWidth: 80,
+  overflow: 'hidden',
+};
+
+const timelineTrackStyle: React.CSSProperties = {
+  flex: 1,
+  height: 14,
+  background: 'rgba(255,255,255,0.02)',
+  borderRadius: 3,
+  display: 'flex',
+  overflow: 'hidden',
+};
+
+const timelineValueStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 3,
+  fontSize: 9,
+  fontFamily: 'monospace',
+  minWidth: 70,
+  justifyContent: 'flex-end',
 };

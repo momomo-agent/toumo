@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useEditorStore } from '../../store';
-import type { Transition, KeyElement, TriggerType } from '../../types';
+import type { Transition, KeyElement, TriggerType, PrototypeLink, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../../types';
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
+
+// ─── Prototype easing map ─────────────────────────────────────────────
+const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
+  linear: 'linear', ease: 'ease', easeIn: 'ease-in',
+  easeOut: 'ease-out', easeInOut: 'ease-in-out',
+  spring: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+};
 
 // ─── Device Definitions ───────────────────────────────────────────────
 const DEVICE_FRAMES = [
@@ -53,7 +60,7 @@ function getSpringConfigFromCurve(curve: string) {
 // Main LivePreview Component
 // ═══════════════════════════════════════════════════════════════════════
 export function LivePreview() {
-  const { keyframes, transitions, selectedKeyframeId, frameSize } = useEditorStore();
+  const { keyframes, transitions, selectedKeyframeId, frameSize, previewTransitionId, setPreviewTransitionId } = useEditorStore();
 
   const [deviceFrame, setDeviceFrame] = useState('iphone15pro');
   const [zoom, setZoom] = useState(100);
@@ -87,6 +94,40 @@ export function LivePreview() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // ─── Prototype link navigation state ──────────────────────────────
+  const navigationHistory = useRef<string[]>([]);
+  const [prototypeTransition, setPrototypeTransition] = useState<{
+    active: boolean;
+    type: PrototypeTransitionType;
+    direction?: PrototypeTransitionDirection;
+    duration: number;
+    easing: string;
+    phase: 'out' | 'in';
+  } | null>(null);
+
+  const handlePrototypeNavigation = useCallback((link: PrototypeLink, fromFrameId: string) => {
+    if (!link.enabled || !link.targetFrameId || isTransitioning || prototypeTransition?.active) return;
+    let targetId = link.targetFrameId;
+    if (targetId === 'back') {
+      const prev = navigationHistory.current.pop();
+      if (!prev) return;
+      targetId = prev;
+    } else {
+      navigationHistory.current.push(fromFrameId);
+    }
+    const target = keyframes.find(kf => kf.id === targetId);
+    if (!target) return;
+    const { type, direction, duration, easing } = link.transition;
+    const easingCss = prototypeEasings[easing] || 'ease-out';
+    if (type === 'instant') { setCurrentKeyframeId(targetId); return; }
+    setPrototypeTransition({ active: true, type, direction, duration, easing: easingCss, phase: 'out' });
+    setTimeout(() => {
+      setCurrentKeyframeId(targetId);
+      setPrototypeTransition(p => p ? { ...p, phase: 'in' } : null);
+    }, type === 'dissolve' || type === 'smartAnimate' ? duration / 2 : duration);
+    setTimeout(() => setPrototypeTransition(null), duration);
+  }, [keyframes, isTransitioning, prototypeTransition]);
 
   // ─── Sync with editor selection ───────────────────────────────────
   useEffect(() => {
@@ -165,6 +206,29 @@ export function LivePreview() {
     });
     return () => { timerRefs.current.forEach(t => clearTimeout(t)); };
   }, [currentKeyframeId, availableTransitions, executeTransition]);
+
+  // ─── Preview transition (triggered from TransitionInspector) ──────
+  useEffect(() => {
+    if (!previewTransitionId) return;
+    const transition = transitions.find(t => t.id === previewTransitionId);
+    if (!transition) { setPreviewTransitionId(null); return; }
+
+    // Jump to the "from" keyframe first, then play the transition
+    setCurrentKeyframeId(transition.from);
+    smartAnimateActions.setElements(
+      keyframes.find(k => k.id === transition.from)?.keyElements || []
+    );
+
+    const playTimer = setTimeout(() => {
+      executeTransition(transition);
+    }, 120); // small delay so the "from" state renders first
+
+    const clearTimer = setTimeout(() => {
+      setPreviewTransitionId(null);
+    }, 120 + (transition.delay || 0) + transition.duration + 100);
+
+    return () => { clearTimeout(playTimer); clearTimeout(clearTimer); };
+  }, [previewTransitionId]);
 
   // ─── Trigger hints ────────────────────────────────────────────────
   const triggerHints = useMemo(() => {
@@ -290,6 +354,9 @@ export function LivePreview() {
                 transitionDuration={transitionDuration}
                 transitionCurve={transitionCurve}
                 availableTriggers={triggerHints}
+                onPrototypeNavigation={handlePrototypeNavigation}
+                currentFrameId={currentKeyframeId}
+                prototypeTransition={prototypeTransition}
               />
             </DeviceFrameShell>
           ) : (
@@ -309,6 +376,9 @@ export function LivePreview() {
                 transitionDuration={transitionDuration}
                 transitionCurve={transitionCurve}
                 availableTriggers={triggerHints}
+                onPrototypeNavigation={handlePrototypeNavigation}
+                currentFrameId={currentKeyframeId}
+                prototypeTransition={prototypeTransition}
               />
             </div>
           )}
@@ -418,12 +488,25 @@ function PreviewContent({
   transitionDuration,
   transitionCurve,
   availableTriggers,
+  onPrototypeNavigation,
+  currentFrameId,
+  prototypeTransition,
 }: {
   elements: KeyElement[];
   onTrigger: (type: TriggerType, elementId?: string) => void;
   transitionDuration: number;
   transitionCurve: string;
   availableTriggers: string[];
+  onPrototypeNavigation?: (link: PrototypeLink, fromFrameId: string) => void;
+  currentFrameId?: string;
+  prototypeTransition?: {
+    active: boolean;
+    type: PrototypeTransitionType;
+    direction?: PrototypeTransitionDirection;
+    duration: number;
+    easing: string;
+    phase: 'out' | 'in';
+  } | null;
 }) {
   const dragStartRef = useRef<{ x: number; y: number; elementId?: string } | null>(null);
   const isDraggingRef = useRef(false);
@@ -467,47 +550,76 @@ function PreviewContent({
   const hasTap = availableTriggers.includes('tap');
   const hasHover = availableTriggers.includes('hover');
 
+  // Transition animation style for prototype links
+  const contentStyle: React.CSSProperties = (() => {
+    if (!prototypeTransition?.active) return {};
+    const { type, direction, duration, easing, phase } = prototypeTransition;
+    const base: React.CSSProperties = { transition: `all ${duration}ms ${easing}` };
+    if (type === 'dissolve') return { ...base, opacity: phase === 'out' ? 0 : 1 };
+    if (type === 'slideIn' || type === 'push') {
+      const dirMap: Record<string, string> = {
+        left: phase === 'in' ? 'translateX(100%)' : 'translateX(-100%)',
+        right: phase === 'in' ? 'translateX(-100%)' : 'translateX(100%)',
+        top: phase === 'in' ? 'translateY(100%)' : 'translateY(-100%)',
+        bottom: phase === 'in' ? 'translateY(-100%)' : 'translateY(100%)',
+      };
+      return { ...base, transform: phase === 'out' ? (dirMap[direction || 'left']) : 'translate(0,0)' };
+    }
+    return base;
+  })();
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }} onWheel={handleWheel}>
-      {elements.map(el => (
-        <div
-          key={el.id}
-          onMouseDown={(e) => handleMouseDown(e, el.id)}
-          onMouseUp={(e) => handleMouseUp(e, el.id)}
-          onMouseEnter={() => handleMouseEnter(el.id)}
-          style={{
-            position: 'absolute',
-            left: el.position.x,
-            top: el.position.y,
-            width: el.size.width,
-            height: el.size.height,
-            background: el.style?.fill || '#3b82f6',
-            opacity: el.style?.opacity ?? 1,
-            borderRadius: el.style?.borderRadius ?? 8,
-            border: el.style?.stroke ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}` : undefined,
-            transition: `all ${transitionDuration}ms ${transitionCurve}`,
-            cursor: hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          }}
-        >
-          {el.text && (
-            <span style={{
-              color: el.style?.textColor || '#fff',
-              fontSize: el.style?.fontSize || 14,
-              fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
-              fontWeight: el.style?.fontWeight || 'normal',
-              textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
-              padding: 4,
-              userSelect: 'none',
-            }}>
-              {el.text}
-            </span>
-          )}
-        </div>
-      ))}
+    <div style={{ width: '100%', height: '100%', position: 'relative', ...contentStyle }} onWheel={handleWheel}>
+      {elements.map(el => {
+        const hasProtoLink = el.prototypeLink?.enabled && el.prototypeLink?.targetFrameId;
+        const handleElClick = (e: React.MouseEvent) => {
+          if (hasProtoLink && onPrototypeNavigation && currentFrameId) {
+            e.stopPropagation();
+            onPrototypeNavigation(el.prototypeLink!, currentFrameId);
+          }
+        };
+
+        return (
+          <div
+            key={el.id}
+            onMouseDown={(e) => handleMouseDown(e, el.id)}
+            onMouseUp={(e) => handleMouseUp(e, el.id)}
+            onMouseEnter={() => handleMouseEnter(el.id)}
+            onClick={handleElClick}
+            style={{
+              position: 'absolute',
+              left: el.position.x,
+              top: el.position.y,
+              width: el.size.width,
+              height: el.size.height,
+              background: el.style?.fill || '#3b82f6',
+              opacity: el.style?.opacity ?? 1,
+              borderRadius: el.style?.borderRadius ?? 8,
+              border: el.style?.stroke ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}` : undefined,
+              transition: `all ${transitionDuration}ms ${transitionCurve}`,
+              cursor: hasProtoLink ? 'pointer' : hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            {el.text && (
+              <span style={{
+                color: el.style?.textColor || '#fff',
+                fontSize: el.style?.fontSize || 14,
+                fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
+                fontWeight: el.style?.fontWeight || 'normal',
+                textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
+                padding: 4,
+                userSelect: 'none',
+              }}>
+                {el.text}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

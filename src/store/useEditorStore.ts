@@ -32,6 +32,7 @@ interface EditorState {
   selectedElementId: string | null;
   selectedElementIds: string[];
   selectedTransitionId: string | null;
+  previewTransitionId: string | null;
   currentTool: ToolType;
   clipboard: KeyElement[];
   copiedStyle: ShapeStyle | null;
@@ -109,6 +110,7 @@ interface EditorActions {
   redo: () => void;
   pushHistory: () => void;
   setSelectedTransitionId: (id: string | null) => void;
+  setPreviewTransitionId: (id: string | null) => void;
   updateTransition: (id: string, updates: Partial<Transition>) => void;
   addTransition: (from: string, to: string) => void;
   deleteTransition: (id: string) => void;
@@ -327,6 +329,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectedElementId: null,
   selectedElementIds: [],
   selectedTransitionId: null,
+  previewTransitionId: null,
   currentTool: 'select',
   clipboard: [],
   copiedStyle: null,
@@ -766,6 +769,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     selectedElementId: id ? null : undefined,
     selectedElementIds: id ? [] : undefined,
   }),
+
+  setPreviewTransitionId: (id) => set({ previewTransitionId: id }),
 
   updateTransition: (id, updates) => set((state) => ({
     transitions: state.transitions.map((tr) =>
