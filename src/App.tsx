@@ -1440,6 +1440,11 @@ export default function App() {
             </div>
             <div style={{ marginBottom: 8 }}>
               <Label>Letter Spacing</Label>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                <button onClick={() => handleStyleChange({ letterSpacing: 0 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
+                <button onClick={() => handleStyleChange({ letterSpacing: 1 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1</button>
+                <button onClick={() => handleStyleChange({ letterSpacing: 2 })} style={{ flex: 1, padding: 3, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>2</button>
+              </div>
               <input
                 type="number"
                 value={currentStyle.letterSpacing ?? 0}
