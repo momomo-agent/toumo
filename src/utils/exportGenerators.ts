@@ -427,3 +427,213 @@ export function generateFramerMotionCode(
 
   return lines.join('\n');
 }
+
+// ============================================
+// 3. SVG Export
+// ============================================
+
+export function generateSVGCode(
+  keyframe: Keyframe,
+  frameSize: Size,
+  canvasBackground: string,
+): string {
+  const elements = keyframe.keyElements;
+  const lines: string[] = [];
+  const defs: string[] = [];
+  let defId = 0;
+
+  lines.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${frameSize.width}" height="${frameSize.height}" viewBox="0 0 ${frameSize.width} ${frameSize.height}">`);
+
+  if (canvasBackground && canvasBackground !== 'transparent') {
+    lines.push(`  <rect width="100%" height="100%" fill="${canvasBackground}" />`);
+  }
+
+  for (const el of elements) {
+    const style = el.style;
+    const gradId = style?.gradientType && style.gradientType !== 'none' ? `grad-${++defId}` : null;
+    const shadId = (style?.shadowBlur || style?.shadowOffsetX || style?.shadowOffsetY) ? `shadow-${++defId}` : null;
+    const clipId = el.shapeType === 'image' && style?.borderRadius ? `clip-${++defId}` : null;
+
+    // Gradient defs
+    if (gradId && style?.gradientStops?.length) {
+      if (style.gradientType === 'linear') {
+        const ang = style.gradientAngle || 180;
+        const rad = (ang - 90) * Math.PI / 180;
+        const x1 = 50 - Math.cos(rad) * 50;
+        const y1 = 50 - Math.sin(rad) * 50;
+        const x2 = 50 + Math.cos(rad) * 50;
+        const y2 = 50 + Math.sin(rad) * 50;
+        defs.push(`    <linearGradient id="${gradId}" x1="${x1.toFixed(1)}%" y1="${y1.toFixed(1)}%" x2="${x2.toFixed(1)}%" y2="${y2.toFixed(1)}%">`);
+        for (const stop of style.gradientStops) {
+          defs.push(`      <stop offset="${stop.position}%" stop-color="${stop.color}" />`);
+        }
+        defs.push(`    </linearGradient>`);
+      } else {
+        defs.push(`    <radialGradient id="${gradId}">`);
+        for (const stop of style.gradientStops!) {
+          defs.push(`      <stop offset="${stop.position}%" stop-color="${stop.color}" />`);
+        }
+        defs.push(`    </radialGradient>`);
+      }
+    }
+
+    // Shadow filter
+    if (shadId && style) {
+      const dx = style.shadowOffsetX || 0;
+      const dy = style.shadowOffsetY || 0;
+      const blur = style.shadowBlur || 0;
+      const color = style.shadowColor || 'rgba(0,0,0,0.25)';
+      defs.push(`    <filter id="${shadId}" x="-20%" y="-20%" width="140%" height="140%">`);
+      defs.push(`      <feDropShadow dx="${dx}" dy="${dy}" stdDeviation="${blur / 2}" flood-color="${color}" />`);
+      defs.push(`    </filter>`);
+    }
+
+    // Clip path for images with border radius
+    if (clipId && style?.borderRadius) {
+      defs.push(`    <clipPath id="${clipId}">`);
+      defs.push(`      <rect x="${el.position.x}" y="${el.position.y}" width="${el.size.width}" height="${el.size.height}" rx="${style.borderRadius}" />`);
+      defs.push(`    </clipPath>`);
+    }
+
+    const fill = gradId ? `url(#${gradId})` : (style?.fill || 'none');
+    const opAttr = style?.fillOpacity != null && style.fillOpacity !== 1 ? ` opacity="${style.fillOpacity}"` : '';
+    const stAttr = style?.stroke ? ` stroke="${style.stroke}" stroke-width="${style.strokeWidth || 1}"` : '';
+    const fiAttr = shadId ? ` filter="url(#${shadId})"` : '';
+    const ecx = el.position.x + el.size.width / 2;
+    const ecy = el.position.y + el.size.height / 2;
+    const trAttr = style?.rotation ? ` transform="rotate(${style.rotation} ${ecx} ${ecy})"` : '';
+
+    renderSVGElement(el, lines, fill, opAttr, stAttr, fiAttr, trAttr, ecx, ecy, clipId);
+  }
+
+  if (defs.length > 0) {
+    lines.splice(1, 0, `  <defs>\n${defs.join('\n')}\n  </defs>`);
+  }
+
+  lines.push(`</svg>`);
+  return lines.join('\n');
+}
+
+function renderSVGElement(
+  el: KeyElement,
+  lines: string[],
+  fill: string,
+  opAttr: string,
+  stAttr: string,
+  fiAttr: string,
+  trAttr: string,
+  ecx: number,
+  ecy: number,
+  clipId: string | null,
+): void {
+  const style = el.style;
+
+  switch (el.shapeType) {
+    case 'ellipse': {
+      const rx = el.size.width / 2;
+      const ry = el.size.height / 2;
+      lines.push(`  <ellipse cx="${ecx}" cy="${ecy}" rx="${rx}" ry="${ry}" fill="${fill}"${opAttr}${stAttr}${fiAttr}${trAttr} />`);
+      break;
+    }
+    case 'text': {
+      const tc = style?.textColor || style?.color || '#ffffff';
+      const fs = style?.fontSize || 14;
+      const fw = style?.fontWeight || 'normal';
+      const ff = style?.fontFamily || 'sans-serif';
+      const anchor = style?.textAlign === 'center' ? 'middle' : style?.textAlign === 'right' ? 'end' : 'start';
+      const tx = style?.textAlign === 'center' ? ecx : style?.textAlign === 'right' ? el.position.x + el.size.width : el.position.x;
+      lines.push(`  <text x="${tx}" y="${ecy}" fill="${tc}" font-size="${fs}" font-weight="${fw}" font-family="${ff}" text-anchor="${anchor}" dominant-baseline="middle"${opAttr}${trAttr}>${el.text || ''}</text>`);
+      break;
+    }
+    case 'line': {
+      const x2 = el.position.x + el.size.width;
+      const y2 = el.position.y + el.size.height;
+      const ls = style?.stroke || '#ffffff';
+      const lw = style?.strokeWidth || 1;
+      lines.push(`  <line x1="${el.position.x}" y1="${el.position.y}" x2="${x2}" y2="${y2}" stroke="${ls}" stroke-width="${lw}"${opAttr}${trAttr} />`);
+      break;
+    }
+    case 'path': {
+      if (style?.pathData) {
+        lines.push(`  <path d="${style.pathData}" fill="${fill}"${opAttr}${stAttr}${fiAttr}${trAttr} />`);
+      }
+      break;
+    }
+    case 'image': {
+      if (style?.imageSrc) {
+        const clip = clipId ? ` clip-path="url(#${clipId})"` : '';
+        lines.push(`  <image href="${style.imageSrc}" x="${el.position.x}" y="${el.position.y}" width="${el.size.width}" height="${el.size.height}"${opAttr}${clip}${trAttr} />`);
+      }
+      break;
+    }
+    default: {
+      const rx = style?.borderRadius ? ` rx="${style.borderRadius}"` : '';
+      lines.push(`  <rect x="${el.position.x}" y="${el.position.y}" width="${el.size.width}" height="${el.size.height}" fill="${fill}"${rx}${opAttr}${stAttr}${fiAttr}${trAttr} />`);
+      break;
+    }
+  }
+}
+
+// ============================================
+// 4. Static HTML/CSS Export
+// ============================================
+
+export function generateStaticHTML(
+  keyframe: Keyframe,
+  frameSize: Size,
+  canvasBackground: string,
+): string {
+  const elements = keyframe.keyElements;
+  const lines: string[] = [];
+
+  lines.push(`<!DOCTYPE html>`);
+  lines.push(`<html lang="en">`);
+  lines.push(`<head>`);
+  lines.push(`  <meta charset="UTF-8">`);
+  lines.push(`  <meta name="viewport" content="width=device-width, initial-scale=1.0">`);
+  lines.push(`  <title>${keyframe.name || 'Design Export'}</title>`);
+  lines.push(`  <style>`);
+  lines.push(`    * { margin: 0; padding: 0; box-sizing: border-box; }`);
+  lines.push(`    .container {`);
+  lines.push(`      position: relative;`);
+  lines.push(`      width: ${frameSize.width}px;`);
+  lines.push(`      height: ${frameSize.height}px;`);
+  lines.push(`      margin: 40px auto;`);
+  if (canvasBackground) {
+    lines.push(`      background: ${canvasBackground};`);
+  }
+  lines.push(`      overflow: hidden;`);
+  lines.push(`    }`);
+
+  for (const el of elements) {
+    const className = toClassName(el.name);
+    const props = buildCSSProps(el);
+    lines.push(`    .${className} {`);
+    for (const [k, v] of Object.entries(props)) {
+      lines.push(`      ${k}: ${v};`);
+    }
+    lines.push(`    }`);
+  }
+
+  lines.push(`  </style>`);
+  lines.push(`</head>`);
+  lines.push(`<body>`);
+  lines.push(`  <div class="container">`);
+
+  for (const el of elements) {
+    const className = toClassName(el.name);
+    if (el.shapeType === 'text') {
+      lines.push(`    <div class="${className}">${el.text || ''}</div>`);
+    } else if (el.shapeType === 'image' && el.style?.imageSrc) {
+      lines.push(`    <img class="${className}" src="${el.style.imageSrc}" alt="${el.name}" />`);
+    } else {
+      lines.push(`    <div class="${className}"></div>`);
+    }
+  }
+
+  lines.push(`  </div>`);
+  lines.push(`</body>`);
+  lines.push(`</html>`);
+
+  return lines.join('\n');
+}
