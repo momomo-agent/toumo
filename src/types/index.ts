@@ -35,6 +35,7 @@ export type ShapeStyle = {
   cursor?: 'default' | 'pointer' | 'grab' | 'text';
   pointerEvents?: 'auto' | 'none';
   userSelect?: 'auto' | 'none' | 'text';
+  transformOrigin?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
