@@ -129,6 +129,7 @@ interface EditorActions {
   toggleLock: () => void;
   toggleVisibility: () => void;
   nudgeElement: (dx: number, dy: number) => void;
+  centerElement: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1207,6 +1208,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       get().updateElement(state.selectedElementId, { 
         position: { x: el.position.x + dx, y: el.position.y + dy } 
       });
+    }
+  },
+
+  centerElement: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && !el.locked) {
+      const x = (state.frameSize.width - el.size.width) / 2;
+      const y = (state.frameSize.height - el.size.height) / 2;
+      get().updateElement(state.selectedElementId, { position: { x, y } });
     }
   },
 
