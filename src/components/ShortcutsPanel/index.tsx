@@ -9,6 +9,7 @@ const shortcuts = [
   { key: 'I', desc: 'Image tool' },
   { key: 'F', desc: 'Frame tool' },
   { key: 'H', desc: 'Hand tool' },
+  { key: 'E', desc: 'Eyedropper tool' },
   { key: '⌘C', desc: 'Copy' },
   { key: '⌘V', desc: 'Paste' },
   { key: '⌘D', desc: 'Duplicate' },
