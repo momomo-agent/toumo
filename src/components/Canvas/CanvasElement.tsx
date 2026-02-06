@@ -576,6 +576,64 @@ export function CanvasElement({
           </span>
         )
       ) : null}
+      
+      {/* Auto Layout visual indicators */}
+      {isSelected && element.autoLayout?.enabled && (
+        <div className="auto-layout-indicators" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          {/* Padding visualization */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: element.autoLayout.paddingTop,
+            background: 'rgba(236, 72, 153, 0.15)',
+            borderBottom: '1px dashed rgba(236, 72, 153, 0.5)',
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: element.autoLayout.paddingBottom,
+            background: 'rgba(236, 72, 153, 0.15)',
+            borderTop: '1px dashed rgba(236, 72, 153, 0.5)',
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: element.autoLayout.paddingTop,
+            left: 0,
+            bottom: element.autoLayout.paddingBottom,
+            width: element.autoLayout.paddingLeft,
+            background: 'rgba(236, 72, 153, 0.15)',
+            borderRight: '1px dashed rgba(236, 72, 153, 0.5)',
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: element.autoLayout.paddingTop,
+            right: 0,
+            bottom: element.autoLayout.paddingBottom,
+            width: element.autoLayout.paddingRight,
+            background: 'rgba(236, 72, 153, 0.15)',
+            borderLeft: '1px dashed rgba(236, 72, 153, 0.5)',
+          }} />
+          {/* Direction indicator */}
+          <div style={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            padding: '2px 4px',
+            background: 'rgba(59, 130, 246, 0.9)',
+            borderRadius: 3,
+            fontSize: 8,
+            color: 'white',
+            fontWeight: 600,
+          }}>
+            {element.autoLayout.direction === 'horizontal' ? '→' : '↓'}
+          </div>
+        </div>
+      )}
+      
       {renderHandles()}
       
       {/* Context Menu */}
