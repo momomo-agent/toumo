@@ -106,7 +106,7 @@ interface EditorActions {
   bringForward: () => void;
   sendBackward: () => void;
   // Project actions
-  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size }) => void;
+  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
   copiedStyle: ShapeStyle | null;
   copyStyle: () => void;
@@ -776,6 +776,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       functionalStates: data.functionalStates,
       components: data.components,
       frameSize: data.frameSize,
+      canvasBackground: data.canvasBackground || '#0d0d0e',
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],
