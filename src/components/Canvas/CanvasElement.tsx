@@ -27,6 +27,7 @@ interface CanvasElementProps {
   isGroup?: boolean;
   parentOffset?: Position;
   isInEditingGroup?: boolean;
+  onDoubleClick?: () => void;
 }
 
 export function CanvasElement({
@@ -38,6 +39,7 @@ export function CanvasElement({
   isGroup = false,
   parentOffset: _parentOffset,
   isInEditingGroup = false,
+  onDoubleClick,
 }: CanvasElementProps) {
   const {
     currentTool,
@@ -386,6 +388,7 @@ export function CanvasElement({
   return (
     <div
       onMouseDown={handlePointerDown}
+      onDoubleClick={onDoubleClick}
       onContextMenu={(e) => {
         e.preventDefault();
         setSelectedElementId(element.id);
