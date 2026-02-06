@@ -69,6 +69,7 @@ export type ShapeStyle = {
   dropShadowColor?: string;
   blendMode?: string;
   backdropBlur?: number;
+  textShadow?: string;
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;

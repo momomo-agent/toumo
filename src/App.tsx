@@ -1201,6 +1201,16 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Text Shadow</Label>
+              <input
+                type="text"
+                value={currentStyle.textShadow || ''}
+                onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
+                placeholder="2px 2px 4px #000"
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, padding: 6, color: '#fff', fontSize: 11 }}
+              />
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Font Weight</Label>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button

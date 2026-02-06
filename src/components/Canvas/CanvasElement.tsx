@@ -402,6 +402,7 @@ export function CanvasElement({
         fontWeight: element.style?.fontWeight || 'normal',
         fontStyle: element.style?.fontStyle || 'normal',
         textDecoration: element.style?.textDecoration || 'none',
+        textShadow: element.style?.textShadow,
         letterSpacing: element.style?.letterSpacing ?? 0,
         lineHeight: element.style?.lineHeight ?? 1.4,
         overflow: 'hidden',
