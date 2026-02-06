@@ -1,6 +1,6 @@
 /* Canvas Element */
 .canvas-element {
-  transition: box-shadow 0.15s;
+  transition: box-shadow var(--transition-fast);
 }
 
 .canvas-element.selected {
@@ -8,5 +8,5 @@
 }
 
 .canvas-element.key {
-  box-shadow: 0 0 0 2px #f59e0b;
+  box-shadow: 0 0 0 2px var(--warning);
 }

@@ -7,16 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        // 深色主题配色
-        'bg-primary': '#0a0a0b',
-        'bg-secondary': '#141415',
-        'bg-tertiary': '#1c1c1e',
-        'bg-hover': '#252528',
-        'border': '#2a2a2d',
-        'border-light': '#3a3a3d',
+        'bg-base': '#09090b',
+        'bg-surface': '#111113',
+        'bg-elevated': '#18181b',
+        'bg-hover': '#1f1f23',
+        'bg-active': '#27272b',
+        'border-subtle': 'rgba(255,255,255,0.06)',
+        'border-default': 'rgba(255,255,255,0.10)',
+        'border-strong': 'rgba(255,255,255,0.16)',
         'text-primary': '#fafafa',
-        'text-secondary': '#a1a1a6',
-        'text-tertiary': '#6b6b70',
+        'text-secondary': '#a1a1aa',
+        'text-tertiary': '#71717a',
+        'text-muted': '#52525b',
         'accent': '#6366f1',
         'accent-hover': '#818cf8',
       },

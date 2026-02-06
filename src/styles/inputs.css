@@ -9,7 +9,7 @@
 }
 
 .property-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-tertiary);
   min-width: 48px;
   flex-shrink: 0;
@@ -25,17 +25,17 @@
   width: 100%;
   padding: 6px 8px;
   padding-right: 24px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-muted);
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-family: var(--font-mono);
   transition: all var(--transition-fast);
 }
 
 .number-input:hover {
-  border-color: var(--border-default);
+  border-color: var(--border-strong);
 }
 
 .number-input:focus {

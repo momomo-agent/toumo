@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent, DragEvent as ReactDragEvent } from 'react';
 import { useEditorStore } from '../../store';
+import { useShallow } from 'zustand/react/shallow';
 import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement, type ResizeHandle } from './CanvasElement';
@@ -24,34 +25,42 @@ type AlignmentResult = {
 };
 
 export function Canvas() {
+  // Split store access into precise selectors to prevent unnecessary re-renders
   const {
-    keyframes,
-    selectedKeyframeId,
-    selectedElementIds,
-    setSelectedElementId,
-    setSelectedElementIds,
-    setSelectedKeyframeId,
-    currentTool,
-    canvasOffset,
-    canvasScale,
-    setCanvasOffset,
-    setCanvasScale,
-    addElement,
-    selectionBox,
-    setSelectionBox,
-    setIsSelecting,
-    nudgeSelectedElements,
-    setCurrentTool,
-    frameSize,
-    canvasBackground,
-    snapToGrid,
-    gridSize,
-    instantiateComponent,
-    editingGroupId,
-    enterGroupEditMode,
-    exitGroupEditMode,
-    addImageElement,
-  } = useEditorStore();
+    keyframes, selectedKeyframeId, selectedElementIds,
+    currentTool, canvasOffset, canvasScale,
+    selectionBox, frameSize, canvasBackground,
+    snapToGrid, gridSize, editingGroupId,
+  } = useEditorStore(useShallow((s) => ({
+    keyframes: s.keyframes,
+    selectedKeyframeId: s.selectedKeyframeId,
+    selectedElementIds: s.selectedElementIds,
+    currentTool: s.currentTool,
+    canvasOffset: s.canvasOffset,
+    canvasScale: s.canvasScale,
+    selectionBox: s.selectionBox,
+    frameSize: s.frameSize,
+    canvasBackground: s.canvasBackground,
+    snapToGrid: s.snapToGrid,
+    gridSize: s.gridSize,
+    editingGroupId: s.editingGroupId,
+  })));
+
+  // Actions don't cause re-renders — grab them once via getState or stable selectors
+  const setSelectedElementId = useEditorStore((s) => s.setSelectedElementId);
+  const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds);
+  const setSelectedKeyframeId = useEditorStore((s) => s.setSelectedKeyframeId);
+  const setCanvasOffset = useEditorStore((s) => s.setCanvasOffset);
+  const setCanvasScale = useEditorStore((s) => s.setCanvasScale);
+  const addElement = useEditorStore((s) => s.addElement);
+  const setSelectionBox = useEditorStore((s) => s.setSelectionBox);
+  const setIsSelecting = useEditorStore((s) => s.setIsSelecting);
+  const nudgeSelectedElements = useEditorStore((s) => s.nudgeSelectedElements);
+  const setCurrentTool = useEditorStore((s) => s.setCurrentTool);
+  const instantiateComponent = useEditorStore((s) => s.instantiateComponent);
+  const enterGroupEditMode = useEditorStore((s) => s.enterGroupEditMode);
+  const exitGroupEditMode = useEditorStore((s) => s.exitGroupEditMode);
+  const addImageElement = useEditorStore((s) => s.addImageElement);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const drawStartRef = useRef<Position | null>(null);

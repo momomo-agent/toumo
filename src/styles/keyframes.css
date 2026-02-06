@@ -4,7 +4,7 @@
   flex-shrink: 0;
   width: 280px;
   background: var(--bg-elevated);
-  border: 1px solid var(--border-muted);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
   overflow: hidden;
   cursor: pointer;
@@ -27,11 +27,11 @@
   justify-content: space-between;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-overlay);
+  background: var(--bg-hover);
 }
 
 .keyframe-name {
-  font-size: 13px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -41,7 +41,7 @@
   padding: 2px 6px;
   background: var(--accent-subtle);
   color: var(--accent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .keyframe-canvas {
@@ -51,5 +51,5 @@
     linear-gradient(var(--border-subtle) 1px, transparent 1px),
     linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
   background-size: 16px 16px;
-  background-color: var(--bg-subtle);
+  background-color: var(--bg-base);
 }

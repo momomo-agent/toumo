@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import type { KeyElement, Position } from '../../types';
 import { useEditorStore } from '../../store';
+import { useShallow } from 'zustand/react/shallow';
 import { ContextMenu } from '../ContextMenu';
 import { RichTextEditor } from './RichTextEditor';
 
@@ -32,7 +33,7 @@ interface CanvasElementProps {
   onDoubleClick?: () => void;
 }
 
-export function CanvasElement({
+export const CanvasElement = memo(function CanvasElement({
   element,
   isSelected,
   scale,
@@ -43,18 +44,21 @@ export function CanvasElement({
   isInEditingGroup = false,
   onDoubleClick,
 }: CanvasElementProps) {
-  const {
-    currentTool,
-    selectedElementIds,
-    setSelectedElementId,
-    setSelectedElementIds,
-    updateElementPosition,
-    updateElementSize,
-    setIsDragging,
-    setIsResizing,
-    pushHistory,
-    resizeGroup,
-  } = useEditorStore();
+  // Only subscribe to reactive state we actually need for rendering
+  const { currentTool, selectedElementIds } = useEditorStore(useShallow((s) => ({
+    currentTool: s.currentTool,
+    selectedElementIds: s.selectedElementIds,
+  })));
+
+  // Actions are stable references — won't cause re-renders
+  const setSelectedElementId = useEditorStore((s) => s.setSelectedElementId);
+  const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds);
+  const updateElementPosition = useEditorStore((s) => s.updateElementPosition);
+  const updateElementSize = useEditorStore((s) => s.updateElementSize);
+  const setIsDragging = useEditorStore((s) => s.setIsDragging);
+  const setIsResizing = useEditorStore((s) => s.setIsResizing);
+  const pushHistory = useEditorStore((s) => s.pushHistory);
+  const resizeGroup = useEditorStore((s) => s.resizeGroup);
 
   const [isEditing, setIsEditing] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -631,6 +635,6 @@ export function CanvasElement({
       )}
     </div>
   );
-}
+});
 
 // Context menu styles moved to ContextMenu component
