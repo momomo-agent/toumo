@@ -3,6 +3,7 @@ import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
 import { AutoLayoutPanel } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
+import { PrototypeLinkPanel } from './PrototypeLinkPanel';
 import './DesignPanel.css';
 
 // Icons as SVG components
@@ -785,6 +786,9 @@ export function DesignPanel() {
           ))
         )}
       </Section>
+
+      {/* Prototype Link Section */}
+      <PrototypeLinkPanel />
 
       {/* Interactions Section */}
       <InteractionsSection
