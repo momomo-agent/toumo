@@ -6,9 +6,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   SpringAnimationEngine, 
-  SpringConfig, 
   SpringPresets 
 } from '../engine/SpringAnimation';
+import type { SpringConfig } from '../engine/SpringAnimation';
 
 export interface AnimatedValues {
   [key: string]: number;

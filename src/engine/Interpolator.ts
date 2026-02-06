@@ -96,11 +96,13 @@ export class SpringInterpolator {
   private r: number; // 衰减率
   private c1: number; // 系数1
   private c2: number; // 系数2
+  
+  damping: number;
+  response: number;
 
-  constructor(
-    public damping: number = 0.8,
-    public response: number = 0.4
-  ) {
+  constructor(damping: number = 0.8, response: number = 0.4) {
+    this.damping = damping;
+    this.response = response;
     const mInitial = -1.0;
 
     // 计算弹簧参数

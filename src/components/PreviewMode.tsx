@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { Transition, KeyElement, TriggerType, Size, InteractionAction } from '../types';
 import { clearPreviewHash, type ProjectData } from '../utils/shareUtils';
 import { useGestureHandler } from '../hooks/useGestureHandler';
+import { useSpringAnimation, SpringPresets } from '../hooks/useSpringAnimation';
 
 interface PreviewModeProps {
   projectData: ProjectData;
@@ -317,6 +318,7 @@ interface PreviewElementProps {
   currentState?: string;
   transitionDuration: number;
   transitionCurve: string;
+  useSpring?: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }
@@ -327,27 +329,72 @@ function PreviewElement({
   currentState: _currentState,
   transitionDuration, 
   transitionCurve,
+  useSpring = true,
   onMouseEnter,
   onMouseLeave,
 }: PreviewElementProps) {
+  // 弹簧动画 hook
+  const { values, animateTo } = useSpringAnimation({
+    initialValues: {
+      x: el.position.x,
+      y: el.position.y,
+      width: el.size.width,
+      height: el.size.height,
+      opacity: el.style?.fillOpacity ?? 1,
+      scale: 1,
+    },
+    config: {
+      ...SpringPresets.default,
+      duration: transitionDuration / 1000,
+    },
+  });
+
+  // 当 hover 状态变化时触发弹簧动画
+  useEffect(() => {
+    if (useSpring) {
+      animateTo({
+        x: el.position.x,
+        y: el.position.y,
+        width: el.size.width,
+        height: el.size.height,
+        opacity: el.style?.fillOpacity ?? 1,
+        scale: isHovered ? 1.02 : 1,
+      });
+    }
+  }, [isHovered, el.position.x, el.position.y, el.size.width, el.size.height, el.style?.fillOpacity, useSpring, animateTo]);
+
+  // 使用弹簧动画值或 CSS transition
+  const style: React.CSSProperties = useSpring ? {
+    position: 'absolute',
+    left: values.x ?? el.position.x,
+    top: values.y ?? el.position.y,
+    width: values.width ?? el.size.width,
+    height: values.height ?? el.size.height,
+    background: el.style?.fill || '#3b82f6',
+    opacity: values.opacity ?? 1,
+    borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8),
+    transform: `scale(${values.scale ?? 1})`,
+    cursor: 'pointer',
+  } : {
+    position: 'absolute',
+    left: el.position.x,
+    top: el.position.y,
+    width: el.size.width,
+    height: el.size.height,
+    background: el.style?.fill || '#3b82f6',
+    opacity: el.style?.fillOpacity ?? 1,
+    borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8),
+    transition: `all ${transitionDuration}ms ${transitionCurve}`,
+    transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+    cursor: 'pointer',
+  };
+
   return (
     <div 
       data-element-id={el.id}
       onMouseEnter={onMouseEnter} 
       onMouseLeave={onMouseLeave}
-      style={{ 
-        position: 'absolute', 
-        left: el.position.x, 
-        top: el.position.y, 
-        width: el.size.width, 
-        height: el.size.height, 
-        background: el.style?.fill || '#3b82f6', 
-        opacity: el.style?.fillOpacity ?? 1, 
-        borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8), 
-        transition: `all ${transitionDuration}ms ${transitionCurve}`, 
-        transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-        cursor: 'pointer',
-      }}
+      style={style}
     >
       {el.shapeType === 'text' && el.text && (
         <div style={{ 

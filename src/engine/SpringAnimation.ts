@@ -3,14 +3,17 @@
  * 基于 Folme 的弹簧物理模拟
  */
 
-import { lerp, SpringInterpolator, SpringPresets, Easing, EasingFunction } from './Interpolator';
+import { lerp, SpringInterpolator, SpringPresets, Easing } from './Interpolator';
+import type { EasingFunction } from './Interpolator';
 
 // 动画状态
-export enum AnimationStatus {
-  STOPPED = 'stopped',
-  PLAYING = 'playing',
-  PAUSED = 'paused',
-}
+export const AnimationStatus = {
+  STOPPED: 'stopped',
+  PLAYING: 'playing',
+  PAUSED: 'paused',
+} as const;
+
+export type AnimationStatusType = typeof AnimationStatus[keyof typeof AnimationStatus];
 
 // 动画配置
 export interface SpringConfig {
@@ -33,7 +36,7 @@ export interface Animation {
   id: string;
   properties: Record<string, PropertyAnimation>;
   config: Required<SpringConfig>;
-  status: AnimationStatus;
+  status: AnimationStatusType;
   progress: number;
   startTime: number;
   interpolator: SpringInterpolator | null;
@@ -146,7 +149,8 @@ export class SpringAnimationEngine {
    * 动画帧更新
    */
   private tick(currentTime: number): void {
-    const deltaTime = currentTime - this.lastTime;
+    // deltaTime 保留用于未来的物理模拟
+    void (currentTime - this.lastTime);
     this.lastTime = currentTime;
 
     const completedIds: string[] = [];
