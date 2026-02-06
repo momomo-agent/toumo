@@ -126,6 +126,8 @@ interface EditorActions {
   flipVertical: () => void;
   rotate90: () => void;
   resetTransform: () => void;
+  toggleLock: () => void;
+  toggleVisibility: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1170,6 +1172,28 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, rotation: 0, flipX: false, flipY: false, scale: 1 } 
       });
+    }
+  },
+
+  toggleLock: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el) {
+      get().updateElement(state.selectedElementId, { locked: !el.locked });
+    }
+  },
+
+  toggleVisibility: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el) {
+      get().updateElement(state.selectedElementId, { visible: el.visible === false ? true : false });
     }
   },
 
