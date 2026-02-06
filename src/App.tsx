@@ -5,6 +5,7 @@ import { InteractionManager } from './components/InteractionManager';
 import { StateInspector } from './components/Inspector/StateInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { LivePreview } from './components/LivePreview';
+import { ComponentLibrary } from './components/ComponentLibrary';
 import { ShortcutsPanel } from './components/ShortcutsPanel';
 import { ShareModal } from './components/ShareModal';
 import { PreviewMode } from './components/PreviewMode';
@@ -2214,6 +2215,9 @@ export default function App() {
       </header>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Component Library Panel */}
+        <ComponentLibrary />
+
         {/* Live Preview Panel */}
         <div
           style={{

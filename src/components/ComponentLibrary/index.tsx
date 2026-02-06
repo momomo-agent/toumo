@@ -689,22 +689,31 @@ export const ComponentLibrary: React.FC = () => {
   const handleAddComponent = useCallback((component: PresetComponent) => {
     if (!selectedKeyframeId) return;
 
-    const elements = component.createElements();
+    const elementsData = component.createElements();
     const centerX = frameSize.width / 2;
     const centerY = frameSize.height / 2;
 
-    elements.forEach((elementData, index) => {
+    // 计算组件边界框
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    elementsData.forEach((el) => {
+      const pos = el.position || { x: 0, y: 0 };
+      minX = Math.min(minX, pos.x);
+      minY = Math.min(minY, pos.y);
+      maxX = Math.max(maxX, pos.x + el.size.width);
+      maxY = Math.max(maxY, pos.y + el.size.height);
+    });
+    const totalWidth = maxX - minX;
+    const totalHeight = maxY - minY;
+
+    elementsData.forEach((elementData) => {
       const basePosition = elementData.position || { x: 0, y: 0 };
-      const size = elementData.size || { width: 100, height: 40 };
 
       // 计算居中位置
-      const offsetX = elements.length > 1 ? basePosition.x : centerX - size.width / 2;
-      const offsetY = elements.length > 1 ? centerY - 50 + basePosition.y : centerY - size.height / 2;
+      const offsetX = centerX - totalWidth / 2 + (basePosition.x - minX);
+      const offsetY = centerY - totalHeight / 2 + (basePosition.y - minY);
 
-      addElement({
-        ...elementData,
-        position: { x: offsetX, y: offsetY },
-      } as Partial<KeyElement>);
+      const keyElement = createKeyElement(elementData, { x: offsetX, y: offsetY });
+      addElement(keyElement);
     });
   }, [selectedKeyframeId, frameSize, addElement]);
 
