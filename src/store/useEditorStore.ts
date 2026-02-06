@@ -232,6 +232,7 @@ interface EditorActions {
   setMargin: (margin: number | string) => void;
   setIndividualMargin: (top?: number, right?: number, bottom?: number, left?: number) => void;
   setIndividualPadding: (top?: number, right?: number, bottom?: number, left?: number) => void;
+  setOutline: (width: number, style: string, color: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2699,6 +2700,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           ...(right !== undefined && { paddingRight: right }),
           ...(bottom !== undefined && { paddingBottom: bottom }),
           ...(left !== undefined && { paddingLeft: left })
+        } 
+      });
+    }
+  },
+
+  setOutline: (width: number, style: string, color: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style,
+          outlineWidth: width,
+          outlineStyle: style,
+          outlineColor: color
         } 
       });
     }
