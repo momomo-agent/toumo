@@ -665,6 +665,46 @@ export function Canvas() {
     };
   }, [currentTool, nudgeSelectedElements, setCurrentTool, canvasScale, setCanvasScale]);
 
+  // Handle paste event for images
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (isTyping) return;
+
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          event.preventDefault();
+          const file = item.getAsFile();
+          if (!file) continue;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            if (!dataUrl) return;
+
+            const img = new Image();
+            img.onload = () => {
+              // Center the image in the frame
+              addImageElement(dataUrl, img.width, img.height);
+            };
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+          break; // Only handle first image
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [addImageElement]);
+
   const handleWheel = useCallback((event: WheelEvent) => {
     if (!event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
