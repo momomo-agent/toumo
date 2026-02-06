@@ -246,7 +246,7 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
       {/* Preview area */}
       <div style={{ transform: `scale(${scale})`, transformOrigin: 'center' }}>
         {device.id !== 'none' ? (
-          <DeviceFrameShell device={device}>
+          <DeviceFrameShell device={device as any}>
             <PreviewContent
               ref={gestureRef}
               elements={elements}
