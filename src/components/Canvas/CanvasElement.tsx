@@ -491,7 +491,7 @@ export function CanvasElement({
               fontSize: element.style?.fontSize || 14,
               textAlign: element.style?.textAlign || 'center',
               outline: 'none',
-              padding: '0 8px',
+              padding: element.style?.padding ? `${element.style.padding}px` : '0 8px',
             }}
           />
         ) : (
