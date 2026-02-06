@@ -455,7 +455,7 @@ export function StateGraph() {
               transition: draggingNode === kf.id
                 ? 'transform 0.15s ease-out, box-shadow 0.15s ease-out'
                 : 'left 0.12s ease-out, top 0.12s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s, background 0.2s',
-            }
+            }}
           >
             {isInitial && (
               <div

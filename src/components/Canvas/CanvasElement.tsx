@@ -296,7 +296,8 @@ export const CanvasElement = memo(function CanvasElement({
 
     const centerX = element.position.x + element.size.width / 2;
     const centerY = element.position.y + element.size.height / 2;
-    const startRotation = element.style?.rotation || 0;
+    const _startRotation = element.style?.rotation || 0;
+    void _startRotation;
 
     const handleMove = (moveEvent: MouseEvent) => {
       // Get canvas-space pointer via the element's parent frame
@@ -315,7 +316,7 @@ export const CanvasElement = memo(function CanvasElement({
       }
 
       updateElement(element.id, {
-        style: { ...element.style, rotation: newRotation },
+        style: { ...element.style, fill: element.style.fill || '#000000', rotation: newRotation },
       });
     };
 
@@ -336,7 +337,6 @@ export const CanvasElement = memo(function CanvasElement({
     const cornerSize = 10;
     const cornerOffset = -cornerSize / 2;
     const edgeSize = 6;
-    const edgeOffset = -edgeSize / 2;
 
     const cornerHandleElements = handles.map((handle) => {
       const baseStyle: CSSProperties = {
