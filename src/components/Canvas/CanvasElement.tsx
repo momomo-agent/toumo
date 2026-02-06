@@ -316,7 +316,7 @@ export const CanvasElement = memo(function CanvasElement({
       }
 
       updateElement(element.id, {
-        style: { ...element.style, fill: element.style.fill || '#000000', rotation: newRotation },
+        style: { ...(element.style || {}), fill: element.style?.fill || '#000000', rotation: newRotation } as any,
       });
     };
 
