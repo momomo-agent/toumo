@@ -1439,6 +1439,16 @@ export default function App() {
               />
             </div>
             <div style={{ marginBottom: 8 }}>
+              <Label>Padding</Label>
+              <input
+                type="number"
+                min={0}
+                value={currentStyle.padding ?? 0}
+                onChange={(e) => handleStyleChange({ padding: Number(e.target.value) })}
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, padding: 6, color: '#fff', fontSize: 11 }}
+              />
+            </div>
+            <div style={{ marginBottom: 8 }}>
               <Label>Text Shadow</Label>
               <input
                 type="text"
