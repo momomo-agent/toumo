@@ -1799,6 +1799,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ maskImage: 'linear-gradient(black, transparent)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Fade</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Text Shadow</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ textShadow: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+                <button onClick={() => handleStyleChange({ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
+              </div>
+            </div>
           </>
         )}
       </>
