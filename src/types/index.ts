@@ -283,3 +283,108 @@ export type Variable = {
   currentValue?: string | number | boolean;
   description?: string;
 };
+
+// ============================================
+// 交互系统 - Mobile-First Design
+// ============================================
+
+// 手势类型 (移动端优先)
+export type GestureType = 
+  | 'tap'           // 点击
+  | 'doubleTap'     // 双击
+  | 'longPress'     // 长按
+  | 'swipe'         // 滑动
+  | 'pan'           // 拖拽
+  | 'pinch'         // 捏合缩放
+  | 'rotate'        // 旋转手势
+  | 'hover'         // 悬停 (桌面端)
+  | 'focus'         // 聚焦
+  | 'blur';         // 失焦
+
+// 滑动方向
+export type SwipeDirection = 'up' | 'down' | 'left' | 'right' | 'any';
+
+// 手势配置
+export type GestureConfig = {
+  type: GestureType;
+  // 滑动方向
+  direction?: SwipeDirection;
+  // 长按时长 (ms)
+  duration?: number;
+  // 滑动距离阈值
+  threshold?: number;
+};
+
+// 动作类型
+export type InteractionActionType = 
+  | 'goToState'      // 切换到指定状态
+  | 'toggleState'    // 在两个状态间切换
+  | 'setVariable'    // 设置变量
+  | 'navigate'       // 页面跳转
+  | 'openOverlay'    // 打开弹层
+  | 'closeOverlay'   // 关闭弹层
+  | 'scrollTo'       // 滚动到位置
+  | 'playSound'      // 播放声音
+  | 'haptic'         // 触觉反馈
+  | 'openUrl';       // 打开链接
+
+// 触觉反馈类型
+export type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
+
+// 动作定义
+export type InteractionAction = {
+  id: string;
+  type: InteractionActionType;
+  // goToState / toggleState
+  targetElementId?: string;
+  targetStateId?: string;
+  toggleStates?: [string, string];
+  // setVariable
+  variableId?: string;
+  variableValue?: string | number | boolean;
+  variableOperation?: 'set' | 'increment' | 'decrement' | 'toggle';
+  // navigate
+  targetFrameId?: string;
+  // overlay
+  overlayId?: string;
+  overlayPosition?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  // scrollTo
+  scrollTargetId?: string;
+  scrollOffset?: number;
+  // haptic
+  hapticType?: HapticType;
+  // openUrl
+  url?: string;
+  openInNewTab?: boolean;
+  // 动画配置
+  animation?: {
+    duration: number;
+    easing: string;
+    delay?: number;
+  };
+};
+
+// 条件判断
+export type InteractionCondition = {
+  variableId: string;
+  operator: '==' | '!=' | '>' | '<' | '>=' | '<=';
+  value: string | number | boolean;
+};
+
+// 交互定义
+export type Interaction = {
+  id: string;
+  name?: string;
+  elementId: string;        // 触发元素
+  gesture: GestureConfig;   // 手势配置
+  conditions?: InteractionCondition[];  // 触发条件
+  actions: InteractionAction[];         // 执行动作
+  enabled: boolean;
+};
+
+// 交互组 - 用于管理相关交互
+export type InteractionGroup = {
+  id: string;
+  name: string;
+  interactions: Interaction[];
+};

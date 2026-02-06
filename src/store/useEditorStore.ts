@@ -235,6 +235,7 @@ interface EditorActions {
   setOutline: (width: number, style: string, color: string) => void;
   setOutlineOffset: (offset: number) => void;
   setTransition: (property: string, duration: number, easing: string) => void;
+  setTransitionDelay: (delay: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
