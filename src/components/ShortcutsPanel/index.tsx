@@ -28,6 +28,8 @@ const shortcuts = [
   { key: 'Del', desc: 'Delete' },
   { key: '1-9', desc: 'Set opacity 10-90%' },
   { key: '0', desc: 'Set opacity 100%' },
+  { key: '⇧H', desc: 'Toggle visibility' },
+  { key: '⇧L', desc: 'Toggle lock' },
 ];
 
 export function ShortcutsPanel() {
