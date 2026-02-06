@@ -212,6 +212,7 @@ interface EditorActions {
   setUserSelect: (select: 'none' | 'auto' | 'text' | 'all') => void;
   setTouchAction: (action: 'auto' | 'none' | 'pan-x' | 'pan-y' | 'manipulation') => void;
   setScrollBehavior: (behavior: 'auto' | 'smooth') => void;
+  setScrollSnapType: (type: 'none' | 'x mandatory' | 'y mandatory' | 'both mandatory') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2398,6 +2399,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, scrollBehavior: behavior } 
+      });
+    }
+  },
+
+  setScrollSnapType: (type: 'none' | 'x mandatory' | 'y mandatory' | 'both mandatory') => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, scrollSnapType: type } 
       });
     }
   },
