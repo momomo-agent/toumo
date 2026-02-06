@@ -796,6 +796,12 @@ export default function App() {
             />
           </div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => handleStyleChange({ stroke: '#ffffff' })} style={{ width: 24, height: 24, background: '#ffffff', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+            <button onClick={() => handleStyleChange({ stroke: '#000000' })} style={{ width: 24, height: 24, background: '#000000', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+            <button onClick={() => handleStyleChange({ stroke: '#ef4444' })} style={{ width: 24, height: 24, background: '#ef4444', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+            <button onClick={() => handleStyleChange({ stroke: '#3b82f6' })} style={{ width: 24, height: 24, background: '#3b82f6', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => handleStyleChange({ strokeWidth: 1 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>1</button>
             <button onClick={() => handleStyleChange({ strokeWidth: 2 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>2</button>
             <button onClick={() => handleStyleChange({ strokeWidth: 4 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>4</button>
