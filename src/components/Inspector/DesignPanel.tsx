@@ -237,7 +237,7 @@ function NumberInput({ label, value, onChange, min, max, step = 1, unit, disable
   );
 }
 
-// Collapsible section
+// Collapsible section with animated expand/collapse
 interface SectionProps {
   title: string;
   children: React.ReactNode;
@@ -247,6 +247,41 @@ interface SectionProps {
 
 function Section({ title, children, defaultExpanded = true, onAdd }: SectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  // Animate height on expand/collapse
+  useEffect(() => {
+    const el = contentRef.current;
+    const inner = innerRef.current;
+    if (!el || !inner) return;
+
+    if (expanded) {
+      // Expanding: measure target height, animate from 0
+      const targetHeight = inner.scrollHeight;
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      // Force reflow
+      el.offsetHeight;
+      el.style.height = `${targetHeight}px`;
+      el.style.opacity = '1';
+
+      const onEnd = () => {
+        el.style.height = 'auto';
+        el.removeEventListener('transitionend', onEnd);
+      };
+      el.addEventListener('transitionend', onEnd);
+    } else {
+      // Collapsing: set explicit height first, then animate to 0
+      const currentHeight = el.scrollHeight;
+      el.style.height = `${currentHeight}px`;
+      el.style.opacity = '1';
+      // Force reflow
+      el.offsetHeight;
+      el.style.height = '0px';
+      el.style.opacity = '0';
+    }
+  }, [expanded]);
 
   return (
     <div className="figma-section">
@@ -259,7 +294,15 @@ function Section({ title, children, defaultExpanded = true, onAdd }: SectionProp
           </button>
         )}
       </div>
-      {expanded && <div className="figma-section-content">{children}</div>}
+      <div
+        ref={contentRef}
+        className="figma-section-collapse"
+        style={{ height: defaultExpanded ? 'auto' : 0, opacity: defaultExpanded ? 1 : 0 }}
+      >
+        <div ref={innerRef} className="figma-section-content">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
