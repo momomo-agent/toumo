@@ -53,9 +53,6 @@ export function CanvasElement({
     setIsResizing,
     pushHistory,
     updateElement,
-    deleteElement,
-    copySelectedElements,
-    pasteElements,
     resizeGroup,
   } = useEditorStore();
 

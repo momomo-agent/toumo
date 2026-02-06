@@ -22,13 +22,13 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
     bringToFront,
     sendToBack,
     keyframes,
-    currentKeyframeIndex,
+    selectedKeyframeId,
   } = useEditorStore();
 
   // Get current element info
-  const currentKeyframe = keyframes[currentKeyframeIndex];
+  const currentKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const element = currentKeyframe?.keyElements.find(el => el.id === elementId);
-  const isGroup = element?.shapeType === 'group';
+  const isGroup = element?.id.startsWith('group-');
   const hasMultipleSelected = selectedElementIds.length > 1;
 
   // Close menu when clicking outside

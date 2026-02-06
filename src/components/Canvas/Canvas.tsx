@@ -8,7 +8,8 @@ import { PenTool } from './PenTool';
 import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
 import { CanvasHints } from './CanvasHints';
-import { ContextMenu, useCanvasContextMenu, useElementContextMenu } from '../ContextMenu';
+import { ZoomControls } from './ZoomControls';
+// ContextMenu is now integrated directly in CanvasElement
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
