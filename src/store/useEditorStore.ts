@@ -135,6 +135,7 @@ interface EditorActions {
   matchHeight: () => void;
   spaceEvenlyH: () => void;
   spaceEvenlyV: () => void;
+  swapSize: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1295,6 +1296,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         get().updateElement(el.id, { position: { x: el.position.x, y: minY + gap * i } });
       }
     });
+  },
+
+  swapSize: () => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el) {
+      get().updateElement(state.selectedElementId, { 
+        size: { width: el.size.height, height: el.size.width } 
+      });
+    }
   },
 
   // Import actions
