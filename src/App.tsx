@@ -917,6 +917,11 @@ export default function App() {
               Reset
             </button>
           </div>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => handleStyleChange({ grayscale: 1, saturate: 1 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>B&W</button>
+            <button onClick={() => handleStyleChange({ sepia: 0.8, contrast: 1.1 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Vintage</button>
+            <button onClick={() => handleStyleChange({ saturate: 1.5, contrast: 1.2 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Vivid</button>
+          </div>
           <div style={{ marginBottom: 8 }}>
             <span style={{ fontSize: 10, color: '#666' }}>Blur</span>
             <input
