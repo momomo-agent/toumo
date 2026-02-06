@@ -5,6 +5,21 @@ import { ExportModal } from '../ExportModal';
 import { ImportModal } from '../ImportModal';
 import { Tooltip } from './Tooltip';
 
+// Undo/Redo icons
+const UndoIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7v6h6" />
+    <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+  </svg>
+);
+
+const RedoIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 7v6h-6" />
+    <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+  </svg>
+);
+
 // Alignment icons (compact versions for toolbar)
 const AlignLeftIcon = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -106,6 +121,10 @@ export function Toolbar() {
     addImageElement,
     selectedElementIds,
     alignElements,
+    undo,
+    redo,
+    historyIndex,
+    history,
   } = useEditorStore();
   
   const hasMultipleSelected = selectedElementIds.length >= 2;
@@ -243,6 +262,32 @@ export function Toolbar() {
             disabled={!hasMultipleSelected}
           >
             <AlignBottomIcon />
+          </button>
+        </Tooltip>
+      </div>
+      
+      <ToolDivider />
+      
+      {/* Undo/Redo buttons */}
+      <div className="toolbar-group">
+        <Tooltip label="Undo" shortcut="⌘Z">
+          <button
+            className={`tool-btn ${historyIndex <= 0 ? 'disabled' : ''}`}
+            onClick={undo}
+            disabled={historyIndex <= 0}
+            style={{ opacity: historyIndex <= 0 ? 0.35 : 1, cursor: historyIndex <= 0 ? 'not-allowed' : 'pointer' }}
+          >
+            <UndoIcon />
+          </button>
+        </Tooltip>
+        <Tooltip label="Redo" shortcut="⌘⇧Z">
+          <button
+            className={`tool-btn ${historyIndex >= history.length - 1 ? 'disabled' : ''}`}
+            onClick={redo}
+            disabled={historyIndex >= history.length - 1}
+            style={{ opacity: historyIndex >= history.length - 1 ? 0.35 : 1, cursor: historyIndex >= history.length - 1 ? 'not-allowed' : 'pointer' }}
+          >
+            <RedoIcon />
           </button>
         </Tooltip>
       </div>
