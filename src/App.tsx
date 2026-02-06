@@ -1352,6 +1352,12 @@ export default function App() {
             </div>
             <div style={{ marginBottom: 8 }}>
               <Label>Text Color</Label>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                <button onClick={() => handleStyleChange({ textColor: '#ffffff' })} style={{ width: 20, height: 20, background: '#ffffff', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+                <button onClick={() => handleStyleChange({ textColor: '#000000' })} style={{ width: 20, height: 20, background: '#000000', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+                <button onClick={() => handleStyleChange({ textColor: '#ef4444' })} style={{ width: 20, height: 20, background: '#ef4444', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+                <button onClick={() => handleStyleChange({ textColor: '#3b82f6' })} style={{ width: 20, height: 20, background: '#3b82f6', border: '1px solid #333', borderRadius: 4, cursor: 'pointer' }} />
+              </div>
               <input
                 type="color"
                 value={currentStyle.textColor || '#ffffff'}
