@@ -55,6 +55,7 @@ export default function App() {
     selectedElementId,
     setSelectedElementId,
     selectedElementIds,
+    setSelectedElementIds,
     selectedTransitionId,
     deleteSelectedElements,
     currentTool,
@@ -254,6 +255,12 @@ export default function App() {
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
         handleSaveProject();
+        event.preventDefault();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
+        const allIds = elements.map(e => e.id);
+        setSelectedElementIds(allIds);
         event.preventDefault();
         return;
       }
