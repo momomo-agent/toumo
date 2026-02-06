@@ -12,6 +12,7 @@ export function Inspector() {
     transitions,
     selectedKeyframeId, 
     selectedElementId,
+    selectedElementIds,
     selectedTransitionId,
     updateTransition,
   } = useEditorStore();
@@ -33,7 +34,19 @@ export function Inspector() {
     );
   }
 
-  // Show Figma-style design panel when element is selected
+  // Show alignment panel when multiple elements are selected
+  if (selectedElementIds.length >= 2) {
+    return (
+      <section className="inspector-panel figma-style">
+        <div className="figma-panel-header">
+          {selectedElementIds.length} Elements Selected
+        </div>
+        <AlignmentPanel />
+      </section>
+    );
+  }
+
+  // Show Figma-style design panel when single element is selected
   if (selectedElement) {
     return <DesignPanel />;
   }

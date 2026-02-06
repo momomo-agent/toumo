@@ -489,16 +489,28 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setCanvasOffset: (offset) => set({ canvasOffset: offset }),
   setCanvasScale: (scale) => set({ canvasScale: scale }),
   
-  zoomToFit: () => set((state) => {
-    const containerWidth = 800;
-    const containerHeight = 600;
-    const scale = Math.min(
-      containerWidth / state.frameSize.width,
-      containerHeight / state.frameSize.height,
-      1
-    ) * 0.9;
-    return { canvasScale: scale };
-  }),
+  zoomToFit: () => {
+    // This will be called with actual container dimensions from Canvas component
+    // For now, use reasonable defaults
+    const containerWidth = window.innerWidth - 560; // Approximate canvas area
+    const containerHeight = window.innerHeight - 100;
+    set((state) => {
+      const frameWidth = state.frameSize.width + 200; // Include margins
+      const frameHeight = state.frameSize.height + 200;
+      const scale = Math.min(
+        containerWidth / frameWidth,
+        containerHeight / frameHeight,
+        1
+      ) * 0.85;
+      // Center the canvas
+      const offsetX = (containerWidth - state.frameSize.width * scale) / 2 - 100 * scale;
+      const offsetY = (containerHeight - state.frameSize.height * scale) / 2 - 60 * scale;
+      return { 
+        canvasScale: scale,
+        canvasOffset: { x: offsetX, y: offsetY }
+      };
+    });
+  },
   
   zoomTo100: () => set({ canvasScale: 1 }),
   
@@ -1256,6 +1268,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 
+  // Individual align functions (shortcuts for alignElements)
+  alignLeft: () => get().alignElements('left'),
+  alignCenterH: () => get().alignElements('center'),
+  alignRight: () => get().alignElements('right'),
+  alignTop: () => get().alignElements('top'),
+  alignCenterV: () => get().alignElements('middle'),
+  alignBottom: () => get().alignElements('bottom'),
+  distributeH: () => get().distributeElements('horizontal'),
+  distributeV: () => get().distributeElements('vertical'),
+
   // Load project
   loadProject: (data) => {
     set({
@@ -1336,6 +1358,119 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
     const minZ = Math.min(...(kf?.keyElements.map(e => e.zIndex ?? 0) || [0]));
     get().updateElement(state.selectedElementId, { zIndex: minZ - 1 });
+  },
+
+  // Align functions
+  alignLeft: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const minX = Math.min(...els.map(e => e.position.x));
+    els.forEach(el => get().updateElement(el.id, { position: { ...el.position, x: minX } }));
+  },
+
+  alignCenterH: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const centers = els.map(e => e.position.x + e.size.width / 2);
+    const avgCenter = centers.reduce((a, b) => a + b, 0) / centers.length;
+    els.forEach(el => get().updateElement(el.id, { 
+      position: { ...el.position, x: avgCenter - el.size.width / 2 } 
+    }));
+  },
+
+  alignRight: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const maxRight = Math.max(...els.map(e => e.position.x + e.size.width));
+    els.forEach(el => get().updateElement(el.id, { 
+      position: { ...el.position, x: maxRight - el.size.width } 
+    }));
+  },
+
+  alignTop: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const minY = Math.min(...els.map(e => e.position.y));
+    els.forEach(el => get().updateElement(el.id, { position: { ...el.position, y: minY } }));
+  },
+
+  alignCenterV: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const centers = els.map(e => e.position.y + e.size.height / 2);
+    const avgCenter = centers.reduce((a, b) => a + b, 0) / centers.length;
+    els.forEach(el => get().updateElement(el.id, { 
+      position: { ...el.position, y: avgCenter - el.size.height / 2 } 
+    }));
+  },
+
+  alignBottom: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const maxBottom = Math.max(...els.map(e => e.position.y + e.size.height));
+    els.forEach(el => get().updateElement(el.id, { 
+      position: { ...el.position, y: maxBottom - el.size.height } 
+    }));
+  },
+
+  distributeH: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 3) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = (kf?.keyElements.filter(e => ids.includes(e.id)) || [])
+      .sort((a, b) => a.position.x - b.position.x);
+    const first = els[0], last = els[els.length - 1];
+    const totalWidth = (last.position.x + last.size.width) - first.position.x;
+    const gap = (totalWidth - els.reduce((s, e) => s + e.size.width, 0)) / (els.length - 1);
+    let x = first.position.x;
+    els.forEach(el => {
+      get().updateElement(el.id, { position: { ...el.position, x } });
+      x += el.size.width + gap;
+    });
+  },
+
+  distributeV: () => {
+    const state = get();
+    const ids = state.selectedElementIds;
+    if (ids.length < 3) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const els = (kf?.keyElements.filter(e => ids.includes(e.id)) || [])
+      .sort((a, b) => a.position.y - b.position.y);
+    const first = els[0], last = els[els.length - 1];
+    const totalHeight = (last.position.y + last.size.height) - first.position.y;
+    const gap = (totalHeight - els.reduce((s, e) => s + e.size.height, 0)) / (els.length - 1);
+    let y = first.position.y;
+    els.forEach(el => {
+      get().updateElement(el.id, { position: { ...el.position, y } });
+      y += el.size.height + gap;
+    });
   },
 
   flipHorizontal: () => {
