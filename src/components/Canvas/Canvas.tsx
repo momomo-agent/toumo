@@ -39,6 +39,8 @@ export function Canvas() {
     setCurrentTool,
     frameSize,
     canvasBackground,
+    snapToGrid,
+    gridSize,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -623,7 +625,9 @@ export function Canvas() {
                   width: layout.width,
                   height: layout.height,
                   position: 'relative',
-                  background: canvasBackground,
+                  background: snapToGrid 
+                    ? `${canvasBackground} repeating-linear-gradient(0deg, transparent, transparent ${gridSize - 1}px, #333 ${gridSize - 1}px, #333 ${gridSize}px), repeating-linear-gradient(90deg, transparent, transparent ${gridSize - 1}px, #333 ${gridSize - 1}px, #333 ${gridSize}px)`
+                    : canvasBackground,
                   borderRadius: 32,
                   border: '1px solid #2f2f2f',
                   boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
