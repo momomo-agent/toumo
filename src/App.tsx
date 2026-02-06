@@ -512,6 +512,11 @@ export default function App() {
         </div>
         <div style={{ marginBottom: 16 }}>
           <Label>Position</Label>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => updateElement(selected.id, { position: { x: 0, y: 0 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>↖</button>
+            <button onClick={() => updateElement(selected.id, { position: { x: (frameSize.width - selected.size.width) / 2, y: 0 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>↑</button>
+            <button onClick={() => updateElement(selected.id, { position: { x: frameSize.width - selected.size.width, y: 0 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>↗</button>
+          </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
