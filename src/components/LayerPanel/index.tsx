@@ -22,10 +22,34 @@ export function LayerPanel() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null);
   const draggedIdRef = useRef<string | null>(null);
   
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
 
-  // Sort by zIndex descending (higher zIndex = top of list)
+  // Get root elements (no parent) sorted by zIndex
+  const rootElements = elements
+    .filter(el => !el.parentId)
+    .sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0));
+  
+  // Get children of a parent
+  const getChildren = (parentId: string) => 
+    elements
+      .filter(el => el.parentId === parentId)
+      .sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0));
+  
+  // Toggle collapse state
+  const toggleCollapse = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCollapsedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  
+  // For drag reorder - use flat list for simple cases
   const sortedElements = [...elements].sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0));
 
   const toggleVisibility = (id: string, e: React.MouseEvent) => {
@@ -169,6 +193,9 @@ export function LayerPanel() {
   };
 
   const renderLayer = (el: KeyElement, depth: number = 0) => {
+    const children = getChildren(el.id);
+    const hasChildren = children.length > 0;
+    const isCollapsed = collapsedIds.has(el.id);
     const isSelected = selectedElementIds.includes(el.id) || selectedElementId === el.id;
     const isDragOver = dragOverId === el.id;
     const isHidden = el.visible === false;
@@ -206,9 +233,9 @@ export function LayerPanel() {
             opacity: isHidden ? 0.4 : 1,
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            padding: '6px 8px',
-            paddingLeft: 8 + depth * 12,
+            gap: 4,
+            padding: '5px 8px',
+            paddingLeft: 6 + depth * 12,
             background: isSelected ? '#2563eb25' : 'transparent',
             borderLeft: isSelected ? '2px solid #2563eb' : '2px solid transparent',
             cursor: isLocked ? 'not-allowed' : 'grab',
@@ -216,23 +243,37 @@ export function LayerPanel() {
             transition: 'background 0.1s',
           }}
           onMouseEnter={(e) => {
-            if (!isSelected) {
-              e.currentTarget.style.background = '#ffffff08';
-            }
+            if (!isSelected) e.currentTarget.style.background = '#ffffff08';
           }}
           onMouseLeave={(e) => {
-            if (!isSelected) {
-              e.currentTarget.style.background = 'transparent';
-            }
+            if (!isSelected) e.currentTarget.style.background = 'transparent';
           }}
         >
+          {/* Collapse toggle */}
+          {hasChildren ? (
+            <span 
+              onClick={(e) => toggleCollapse(el.id, e)} 
+              style={{ 
+                cursor: 'pointer', 
+                width: 12, 
+                fontSize: 8, 
+                color: '#666',
+                textAlign: 'center',
+              }}
+            >
+              {isCollapsed ? '▶' : '▼'}
+            </span>
+          ) : (
+            <span style={{ width: 12 }} />
+          )}
+          
           {/* Type icon */}
-          <span style={{ fontSize: 10, color: '#666', width: 14, textAlign: 'center' }}>
+          <span style={{ fontSize: 10, color: '#666', width: 12, textAlign: 'center' }}>
             {getTypeIcon(el)}
           </span>
           
           {/* Color preview */}
-          {el.style?.fill && (
+          {el.style?.fill && el.style.fill !== 'transparent' && (
             <span style={{ 
               width: 10, 
               height: 10, 
@@ -278,8 +319,7 @@ export function LayerPanel() {
             style={{ 
               cursor: 'pointer', 
               opacity: isLocked ? 1 : 0,
-              fontSize: 11,
-              padding: '2px',
+              fontSize: 10,
               transition: 'opacity 0.15s',
             }}
             onMouseEnter={(e) => { if (!isLocked) e.currentTarget.style.opacity = '0.5'; }}
@@ -294,8 +334,7 @@ export function LayerPanel() {
             style={{ 
               cursor: 'pointer', 
               opacity: isHidden ? 0.5 : 0,
-              fontSize: 11,
-              padding: '2px',
+              fontSize: 10,
               transition: 'opacity 0.15s',
             }}
             onMouseEnter={(e) => { if (!isHidden) e.currentTarget.style.opacity = '0.5'; }}
@@ -316,6 +355,13 @@ export function LayerPanel() {
             background: '#2563eb',
             borderRadius: 1,
           }} />
+        )}
+        
+        {/* Children */}
+        {hasChildren && !isCollapsed && (
+          <div>
+            {children.map(child => renderLayer(child, depth + 1))}
+          </div>
         )}
       </div>
     );
@@ -353,7 +399,7 @@ export function LayerPanel() {
             No layers yet
           </p>
         ) : (
-          sortedElements.map(el => renderLayer(el, 0))
+          rootElements.map(el => renderLayer(el, 0))
         )}
       </div>
       
