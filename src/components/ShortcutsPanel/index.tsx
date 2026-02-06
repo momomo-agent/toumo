@@ -25,6 +25,8 @@ const shortcuts = [
   { key: '⇧+Arrow', desc: 'Nudge 10px' },
   { key: 'Esc', desc: 'Deselect' },
   { key: 'Del', desc: 'Delete' },
+  { key: '1-9', desc: 'Set opacity 10-90%' },
+  { key: '0', desc: 'Set opacity 100%' },
 ];
 
 export function ShortcutsPanel() {
