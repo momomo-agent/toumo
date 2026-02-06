@@ -302,7 +302,11 @@ export default function App() {
 
       switch (event.key.toLowerCase()) {
         case 'v':
-          setCurrentTool('select');
+          if (event.altKey && selectedElementIds.length > 0) {
+            alignElements('middle');
+          } else {
+            setCurrentTool('select');
+          }
           break;
         case 'r':
           setCurrentTool('rectangle');
