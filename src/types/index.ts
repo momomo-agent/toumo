@@ -64,6 +64,7 @@ export type ShapeStyle = {
   clipPath?: string;
   maskImage?: string;
   textShadow?: string;
+  wordBreak?: 'normal' | 'break-all' | 'break-word';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
