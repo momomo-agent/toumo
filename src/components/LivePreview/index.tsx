@@ -425,13 +425,56 @@ function PreviewContent({
   transitionCurve: string;
   availableTriggers: string[];
 }) {
+  const dragStartRef = useRef<{ x: number; y: number; elementId?: string } | null>(null);
+  const isDraggingRef = useRef(false);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, elementId?: string) => {
+    dragStartRef.current = { x: e.clientX, y: e.clientY, elementId };
+    isDraggingRef.current = false;
+  }, []);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent, elementId?: string) => {
+    if (dragStartRef.current && availableTriggers.includes('drag')) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 20) {
+        onTrigger('drag', elementId);
+        isDraggingRef.current = true;
+      }
+    }
+    // Only fire tap if it wasn't a drag
+    if (!isDraggingRef.current && availableTriggers.includes('tap')) {
+      onTrigger('tap', elementId);
+    }
+    dragStartRef.current = null;
+    isDraggingRef.current = false;
+  }, [availableTriggers, onTrigger]);
+
+  const handleMouseEnter = useCallback((elementId: string) => {
+    if (availableTriggers.includes('hover')) onTrigger('hover', elementId);
+  }, [availableTriggers, onTrigger]);
+
+  // Scroll trigger (debounced)
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleWheel = useCallback((_e: React.WheelEvent) => {
+    if (!availableTriggers.includes('scroll')) return;
+    if (scrollTimerRef.current) return; // debounce
+    onTrigger('scroll');
+    scrollTimerRef.current = setTimeout(() => { scrollTimerRef.current = null; }, 500);
+  }, [availableTriggers, onTrigger]);
+
+  const hasDrag = availableTriggers.includes('drag');
+  const hasTap = availableTriggers.includes('tap');
+  const hasHover = availableTriggers.includes('hover');
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }} onWheel={handleWheel}>
       {elements.map(el => (
         <div
           key={el.id}
-          onClick={() => { if (availableTriggers.includes('tap')) onTrigger('tap', el.id); }}
-          onMouseEnter={() => { if (availableTriggers.includes('hover')) onTrigger('hover', el.id); }}
+          onMouseDown={(e) => handleMouseDown(e, el.id)}
+          onMouseUp={(e) => handleMouseUp(e, el.id)}
+          onMouseEnter={() => handleMouseEnter(el.id)}
           style={{
             position: 'absolute',
             left: el.position.x,
@@ -443,7 +486,7 @@ function PreviewContent({
             borderRadius: el.style?.borderRadius ?? 8,
             border: el.style?.stroke ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}` : undefined,
             transition: `all ${transitionDuration}ms ${transitionCurve}`,
-            cursor: availableTriggers.includes('tap') ? 'pointer' : 'default',
+            cursor: hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

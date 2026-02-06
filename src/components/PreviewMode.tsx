@@ -221,6 +221,10 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
       if (timerTrigger && timerTrigger.timerDelay) {
         const timer = setTimeout(() => executeTransition(transition), timerTrigger.timerDelay);
         timerRefs.current.set(transition.id, timer);
+      } else if (transition.trigger === 'timer') {
+        // Legacy fallback: default 1000ms
+        const timer = setTimeout(() => executeTransition(transition), 1000);
+        timerRefs.current.set(transition.id, timer);
       }
     });
     return () => { timerRefs.current.forEach(timer => clearTimeout(timer)); };
@@ -365,6 +369,15 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
       dragStartRef.current = null;
     };
 
+    // Scroll trigger (debounced)
+    const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const handleWheel = (_e: React.WheelEvent) => {
+      if (!availableTriggers.includes('scroll')) return;
+      if (scrollTimerRef.current) return;
+      onTrigger('scroll');
+      scrollTimerRef.current = setTimeout(() => { scrollTimerRef.current = null; }, 500);
+    };
+
     const scale = Math.min((window.innerWidth * 0.9) / frameSize.width, (window.innerHeight * 0.85) / frameSize.height, 1);
     
     // Calculate transition animation styles
@@ -431,6 +444,7 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
         onClick={handleClick} 
         onMouseDown={handleMouseDown} 
         onMouseUp={handleMouseUp}
+        onWheel={handleWheel}
       >
         {elements.map(el => (
           <PreviewElement

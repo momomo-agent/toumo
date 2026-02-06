@@ -213,7 +213,21 @@ function SelectedTransitionEditor({
         <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>Trigger</label>
         <select
           value={transition.trigger}
-          onChange={(e) => onUpdate(transitionId, { trigger: e.target.value })}
+          onChange={(e) => {
+            const newTrigger = e.target.value;
+            const triggerConfig: Record<string, unknown> = { trigger: newTrigger };
+            // Sync triggers array for runtime
+            if (newTrigger === 'timer') {
+              const existingDelay = transition.triggers?.find(t => t.type === 'timer')?.timerDelay || 1000;
+              triggerConfig.triggers = [{ type: 'timer', timerDelay: existingDelay }];
+            } else if (newTrigger === 'drag') {
+              const existingDir = transition.triggers?.find(t => t.type === 'drag')?.direction || 'any';
+              triggerConfig.triggers = [{ type: 'drag', direction: existingDir, threshold: 20 }];
+            } else {
+              triggerConfig.triggers = [{ type: newTrigger }];
+            }
+            onUpdate(transitionId, triggerConfig);
+          }}
           style={selectStyle}
         >
           {TRIGGER_OPTIONS.map(opt => (
@@ -221,6 +235,58 @@ function SelectedTransitionEditor({
           ))}
         </select>
       </div>
+
+      {/* Timer-specific: delay */}
+      {transition.trigger === 'timer' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>
+            ⏱️ Timer Delay (ms)
+          </label>
+          <input
+            type="number"
+            min={100}
+            step={100}
+            value={transition.triggers?.find(t => t.type === 'timer')?.timerDelay ?? 1000}
+            onChange={(e) => {
+              const delay = Math.max(100, Number(e.target.value));
+              onUpdate(transitionId, {
+                triggers: [{ type: 'timer', timerDelay: delay }],
+              });
+            }}
+            style={inputStyle}
+            placeholder="1000"
+          />
+          <span style={{ fontSize: 9, color: '#555', marginTop: 2, display: 'block' }}>
+            Auto-triggers after entering this state
+          </span>
+        </div>
+      )}
+
+      {/* Drag-specific: direction */}
+      {transition.trigger === 'drag' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>
+            ✋ Drag Direction
+          </label>
+          <select
+            value={transition.triggers?.find(t => t.type === 'drag')?.direction ?? 'any'}
+            onChange={(e) => {
+              onUpdate(transitionId, {
+                triggers: [{ type: 'drag', direction: e.target.value, threshold: 20 }],
+              });
+            }}
+            style={selectStyle}
+          >
+            <option value="any">Any</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+            <option value="up">Up</option>
+            <option value="down">Down</option>
+            <option value="horizontal">Horizontal</option>
+            <option value="vertical">Vertical</option>
+          </select>
+        </div>
+      )}
 
       {/* Duration & Delay */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
