@@ -1268,16 +1268,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 
-  // Individual align functions (shortcuts for alignElements)
-  alignLeft: () => get().alignElements('left'),
-  alignCenterH: () => get().alignElements('center'),
-  alignRight: () => get().alignElements('right'),
-  alignTop: () => get().alignElements('top'),
-  alignCenterV: () => get().alignElements('middle'),
-  alignBottom: () => get().alignElements('bottom'),
-  distributeH: () => get().distributeElements('horizontal'),
-  distributeV: () => get().distributeElements('vertical'),
-
   // Load project
   loadProject: (data) => {
     set({
