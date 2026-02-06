@@ -1827,6 +1827,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ hyphens: 'auto' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Auto</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Writing Mode</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ writingMode: 'horizontal-tb' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>H</button>
+                <button onClick={() => handleStyleChange({ writingMode: 'vertical-rl' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>V</button>
+              </div>
+            </div>
           </>
         )}
       </>
