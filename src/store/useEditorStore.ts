@@ -36,6 +36,7 @@ interface EditorState {
   canvasScale: number;
   recentColors: string[];
   canvasBackground: string;
+  showRulers: boolean;
   frameSize: Size;
   history: HistoryEntry[];
   historyIndex: number;
@@ -64,6 +65,7 @@ interface EditorActions {
   setCanvasScale: (scale: number) => void;
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
+  toggleRulers: () => void;
   setIsDragging: (isDragging: boolean) => void;
   setIsResizing: (isResizing: boolean) => void;
   setIsSelecting: (isSelecting: boolean) => void;
@@ -130,6 +132,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   canvasScale: 1,
   recentColors: [],
   canvasBackground: '#0d0d0e',
+  showRulers: false,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   history: [{ keyframes: initialKeyframes }],
   historyIndex: 0,
@@ -319,6 +322,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
   })),
   setCanvasBackground: (color: string) => set({ canvasBackground: color }),
+  toggleRulers: () => set((state) => ({ showRulers: !state.showRulers })),
   setIsDragging: (isDragging) => set({ isDragging }),
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
