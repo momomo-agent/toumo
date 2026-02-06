@@ -141,7 +141,7 @@ export function VariablePanel() {
 
 function VariableItem({
   variable,
-  onUpdate,
+  onUpdate: _onUpdate,
   onDelete,
   onSetValue,
 }: {
@@ -150,7 +150,7 @@ function VariableItem({
   onDelete: () => void;
   onSetValue: (value: string | number | boolean) => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
 
   const typeColors: Record<VariableType, string> = {
     string: '#f59e0b',
