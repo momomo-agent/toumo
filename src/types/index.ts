@@ -61,6 +61,7 @@ export type ShapeStyle = {
   isolation?: 'auto' | 'isolate';
   backfaceVisibility?: 'visible' | 'hidden';
   transformStyle?: 'flat' | 'preserve-3d';
+  clipPath?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
