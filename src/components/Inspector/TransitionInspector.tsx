@@ -1,32 +1,8 @@
-import { useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store';
 import type { TriggerConfig, TriggerType } from '../../types';
-
-const CURVE_OPTIONS = [
-  { id: 'linear', label: 'Linear', preview: 'M0,100 L100,0' },
-  { id: 'ease', label: 'Ease', preview: 'M0,100 C20,100 40,0 100,0' },
-  { id: 'ease-in', label: 'Ease In', preview: 'M0,100 C60,100 100,0 100,0' },
-  { id: 'ease-out', label: 'Ease Out', preview: 'M0,100 C0,100 40,0 100,0' },
-  { id: 'ease-in-out', label: 'Ease In Out', preview: 'M0,100 C40,100 60,0 100,0' },
-  { id: 'spring', label: 'Spring', preview: 'M0,100 Q50,-20 100,0' },
-  { id: 'custom', label: 'Custom', preview: 'M0,100 C25,75 75,25 100,0' },
-];
-
-const SPRING_PRESETS = [
-  { id: 'gentle', label: 'Gentle', damping: 1.0, response: 0.8, mass: 1, stiffness: 120 },
-  { id: 'bouncy', label: 'Bouncy', damping: 0.4, response: 0.6, mass: 1, stiffness: 180 },
-  { id: 'snappy', label: 'Snappy', damping: 0.9, response: 0.3, mass: 0.8, stiffness: 300 },
-  { id: 'stiff', label: 'Stiff', damping: 1.2, response: 0.2, mass: 1, stiffness: 400 },
-  { id: 'wobbly', label: 'Wobbly', damping: 0.3, response: 0.7, mass: 1.5, stiffness: 150 },
-  { id: 'slow', label: 'Slow', damping: 1.0, response: 1.2, mass: 2, stiffness: 80 },
-];
-
-const BEZIER_PRESETS = [
-  { id: 'material', label: 'Material', value: [0.4, 0, 0.2, 1] as [number, number, number, number] },
-  { id: 'ios', label: 'iOS', value: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
-  { id: 'sharp', label: 'Sharp', value: [0.4, 0, 0.6, 1] as [number, number, number, number] },
-  { id: 'overshoot', label: 'Overshoot', value: [0.34, 1.56, 0.64, 1] as [number, number, number, number] },
-];
+import { SPRING_PRESETS as SPRING_PRESETS_DATA } from '../../data/curvePresets';
+import type { EasingPreset, SpringPreset } from '../../data/curvePresets';
+import { PresetSelector, DraggableBezierEditor, BallPreview } from '../CurveEditor';
 
 // SVG icon paths for triggers (16x16 viewBox)
 const TRIGGER_ICONS: Record<TriggerType, string> = {
@@ -188,28 +164,49 @@ export function TransitionInspector() {
 
       {/* Easing Section */}
       <SectionHeader>Easing</SectionHeader>
+
+      {/* Preset Selector (easing + spring tabs with ball preview) */}
       <div style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {CURVE_OPTIONS.map((opt) => (
-            <CurveButton
-              key={opt.id}
-              label={opt.label}
-              preview={opt.preview}
-              active={transition.curve === opt.id}
-              onClick={() => updateTransition(transition.id, { curve: opt.id })}
-            />
-          ))}
-        </div>
+        <PresetSelector
+          currentCurve={transition.curve}
+          currentBezier={transition.cubicBezier}
+          currentSpring={transition.curve === 'spring' ? {
+            damping: transition.springDamping ?? 0.8,
+            stiffness: transition.springStiffness ?? 200,
+            mass: transition.springMass ?? 1,
+          } : undefined}
+          onSelectEasing={(preset: EasingPreset) => {
+            updateTransition(transition.id, {
+              curve: preset.id,
+              cubicBezier: preset.bezier,
+            });
+          }}
+          onSelectSpring={(preset: SpringPreset) => {
+            updateTransition(transition.id, {
+              curve: 'spring',
+              springDamping: preset.damping,
+              springResponse: preset.response,
+              springMass: preset.mass,
+              springStiffness: preset.stiffness,
+            });
+          }}
+          onSelectCustom={() => {
+            updateTransition(transition.id, {
+              curve: 'custom',
+              cubicBezier: transition.cubicBezier || [0.25, 0.1, 0.25, 1],
+            });
+          }}
+        />
       </div>
 
-      {/* Spring Parameters */}
+      {/* Spring Parameters (expanded when spring selected) */}
       {transition.curve === 'spring' && (
         <SpringEditor transition={transition} onUpdate={updateTransition} />
       )}
 
-      {/* Custom Bezier Editor */}
+      {/* Custom Bezier Editor with draggable control points */}
       {transition.curve === 'custom' && (
-        <BezierEditor transition={transition} onUpdate={updateTransition} />
+        <CustomBezierSection transition={transition} onUpdate={updateTransition} />
       )}
 
       {/* Delete */}
@@ -394,16 +391,16 @@ function VariableOptions({ trigger, onUpdate }: { trigger: TriggerConfig; onUpda
   );
 }
 
-// Spring Editor Component
+// Spring Editor Component (uses centralized presets)
 function SpringEditor({ transition, onUpdate }: { transition: { id: string; springDamping?: number; springResponse?: number; springMass?: number; springStiffness?: number }; onUpdate: (id: string, updates: Record<string, unknown>) => void }) {
-  const currentPreset = SPRING_PRESETS.find(p =>
+  const currentPreset = SPRING_PRESETS_DATA.find(p =>
     p.damping === (transition.springDamping ?? 0.8) &&
     p.response === (transition.springResponse ?? 0.5) &&
     p.mass === (transition.springMass ?? 1) &&
     p.stiffness === (transition.springStiffness ?? 200)
   );
 
-  const applyPreset = (preset: typeof SPRING_PRESETS[0]) => {
+  const applyPreset = (preset: typeof SPRING_PRESETS_DATA[0]) => {
     onUpdate(transition.id, {
       springDamping: preset.damping,
       springResponse: preset.response,
@@ -420,7 +417,7 @@ function SpringEditor({ transition, onUpdate }: { transition: { id: string; spri
 
       {/* Spring Presets */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
-        {SPRING_PRESETS.map((preset) => (
+        {SPRING_PRESETS_DATA.map((preset) => (
           <button
             key={preset.id}
             onClick={() => applyPreset(preset)}
@@ -441,10 +438,13 @@ function SpringEditor({ transition, onUpdate }: { transition: { id: string; spri
       </div>
 
       {/* Spring Preview Animation */}
-      <SpringPreview
-        damping={transition.springDamping ?? 0.8}
-        stiffness={transition.springStiffness ?? 200}
-        mass={transition.springMass ?? 1}
+      <BallPreview
+        spring={{
+          damping: transition.springDamping ?? 0.8,
+          stiffness: transition.springStiffness ?? 200,
+          mass: transition.springMass ?? 1,
+        }}
+        duration={1200}
       />
 
       {/* Parameter Sliders */}
@@ -500,164 +500,30 @@ function SpringSlider({ label, min, max, step, value, onChange }: {
   );
 }
 
-// Animated spring preview (bouncing dot)
-function SpringPreview({ damping, stiffness, mass }: { damping: number; stiffness: number; mass: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
+// (SpringPreview replaced by BallPreview from CurveEditor)
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const w = canvas.width;
-    const h = canvas.height;
-    let x = 0;
-    let velocity = 0;
-    const target = 1;
-    const dt = 1 / 60;
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h);
-
-      // Background line
-      ctx.strokeStyle = '#2a2a2a';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, h / 2);
-      ctx.lineTo(w, h / 2);
-      ctx.stroke();
-
-      // Target line
-      const targetY = h * 0.15;
-      ctx.strokeStyle = '#333';
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath();
-      ctx.moveTo(0, targetY);
-      ctx.lineTo(w, targetY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Spring simulation
-      const force = stiffness * (target - x);
-      const dampForce = -damping * 20 * velocity;
-      const acceleration = (force + dampForce) / mass;
-      velocity += acceleration * dt;
-      x += velocity * dt;
-
-      // Draw dot
-      const dotY = h - (x * (h * 0.85));
-      const dotX = w / 2;
-      ctx.fillStyle = '#3b82f6';
-      ctx.beginPath();
-      ctx.arc(dotX, Math.max(4, Math.min(h - 4, dotY)), 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Glow
-      ctx.fillStyle = '#3b82f620';
-      ctx.beginPath();
-      ctx.arc(dotX, Math.max(4, Math.min(h - 4, dotY)), 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (Math.abs(velocity) > 0.001 || Math.abs(target - x) > 0.001) {
-        animRef.current = requestAnimationFrame(draw);
-      }
-    };
-
-    // Reset
-    x = 0;
-    velocity = 0;
-    cancelAnimationFrame(animRef.current);
-    animRef.current = requestAnimationFrame(draw);
-
-    return () => cancelAnimationFrame(animRef.current);
-  }, [damping, stiffness, mass]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      width={200}
-      height={48}
-      style={{
-        width: '100%',
-        height: 48,
-        borderRadius: 6,
-        background: '#161617',
-        border: '1px solid #2a2a2a',
-      }}
-    />
-  );
-}
-
-// Bezier Editor Component with visual curve
-function BezierEditor({ transition, onUpdate }: { transition: { id: string; cubicBezier?: [number, number, number, number] }; onUpdate: (id: string, updates: Record<string, unknown>) => void }) {
-  const bezier = transition.cubicBezier || [0.25, 0.1, 0.25, 1];
-  const [x1, y1, x2, y2] = bezier;
+// Custom Bezier Section with draggable editor + ball preview
+function CustomBezierSection({ transition, onUpdate }: { transition: { id: string; cubicBezier?: [number, number, number, number] }; onUpdate: (id: string, updates: Record<string, unknown>) => void }) {
+  const bezier = (transition.cubicBezier || [0.25, 0.1, 0.25, 1]) as [number, number, number, number];
 
   const setBezier = (newBezier: [number, number, number, number]) => {
     onUpdate(transition.id, { cubicBezier: newBezier });
   };
 
-  // SVG curve path
-  const pad = 12;
-  const size = 120;
-  const sx = (v: number) => pad + v * size;
-  const sy = (v: number) => pad + (1 - v) * size;
-  const curvePath = `M${sx(0)},${sy(0)} C${sx(x1)},${sy(y1)} ${sx(x2)},${sy(y2)} ${sx(size > 0 ? 1 : 1)},${sy(1)}`;
-
   return (
     <div style={springBoxStyle}>
       <div style={{ fontSize: 10, color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        Cubic Bezier
+        Custom Bezier
       </div>
 
-      {/* Bezier Presets */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
-        {BEZIER_PRESETS.map((preset) => {
-          const isActive = bezier[0] === preset.value[0] && bezier[1] === preset.value[1] &&
-            bezier[2] === preset.value[2] && bezier[3] === preset.value[3];
-          return (
-            <button
-              key={preset.id}
-              onClick={() => setBezier(preset.value)}
-              style={{
-                flex: 1,
-                padding: '4px 0',
-                background: isActive ? '#2563eb' : '#161617',
-                border: '1px solid',
-                borderColor: isActive ? '#2563eb' : '#333',
-                borderRadius: 4,
-                color: isActive ? '#fff' : '#888',
-                fontSize: 10,
-                cursor: 'pointer',
-              }}
-            >
-              {preset.label}
-            </button>
-          );
-        })}
+      {/* Ball preview */}
+      <div style={{ marginBottom: 10 }}>
+        <BallPreview bezier={bezier} width={220} height={32} />
       </div>
 
-      {/* Visual Curve Preview */}
+      {/* Draggable curve editor */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-        <svg width={size + pad * 2} height={size + pad * 2} style={{ background: '#161617', borderRadius: 6, border: '1px solid #2a2a2a' }}>
-          {/* Grid */}
-          <rect x={pad} y={pad} width={size} height={size} fill="none" stroke="#2a2a2a" strokeWidth="1" />
-          {/* Diagonal guide */}
-          <line x1={sx(0)} y1={sy(0)} x2={sx(1)} y2={sy(1)} stroke="#333" strokeWidth="1" strokeDasharray="3,3" />
-          {/* Control point lines */}
-          <line x1={sx(0)} y1={sy(0)} x2={sx(x1)} y2={sy(y1)} stroke="#3b82f650" strokeWidth="1" />
-          <line x1={sx(1)} y1={sy(1)} x2={sx(x2)} y2={sy(y2)} stroke="#3b82f650" strokeWidth="1" />
-          {/* Curve */}
-          <path d={curvePath} fill="none" stroke="#3b82f6" strokeWidth="2" />
-          {/* Control points */}
-          <circle cx={sx(x1)} cy={sy(y1)} r="4" fill="#3b82f6" stroke="#fff" strokeWidth="1" />
-          <circle cx={sx(x2)} cy={sy(y2)} r="4" fill="#3b82f6" stroke="#fff" strokeWidth="1" />
-          {/* Endpoints */}
-          <circle cx={sx(0)} cy={sy(0)} r="3" fill="#666" />
-          <circle cx={sx(1)} cy={sy(1)} r="3" fill="#666" />
-        </svg>
+        <DraggableBezierEditor value={bezier} onChange={setBezier} size={140} padding={14} />
       </div>
 
       {/* Number inputs */}
@@ -672,9 +538,9 @@ function BezierEditor({ transition, onUpdate }: { transition: { id: string; cubi
               step="0.05"
               value={bezier[i]}
               onChange={(e) => {
-                const newBezier = [...bezier] as [number, number, number, number];
-                newBezier[i] = Number(e.target.value);
-                setBezier(newBezier);
+                const nb = [...bezier] as [number, number, number, number];
+                nb[i] = Number(e.target.value);
+                setBezier(nb);
               }}
               style={{ ...inputStyle, padding: '6px 4px', textAlign: 'center' as const, fontSize: 11 }}
             />
@@ -684,15 +550,10 @@ function BezierEditor({ transition, onUpdate }: { transition: { id: string; cubi
 
       {/* CSS output */}
       <div style={{
-        marginTop: 10,
-        padding: '6px 10px',
-        background: '#161617',
-        borderRadius: 4,
-        border: '1px solid #2a2a2a',
-        textAlign: 'center',
-        fontSize: 10,
-        color: '#666',
-        fontFamily: 'monospace',
+        marginTop: 10, padding: '6px 10px',
+        background: '#161617', borderRadius: 4,
+        border: '1px solid #2a2a2a', textAlign: 'center',
+        fontSize: 10, color: '#666', fontFamily: 'monospace',
       }}>
         cubic-bezier({bezier.map(v => v.toFixed(2)).join(', ')})
       </div>
@@ -765,34 +626,7 @@ function TriggerIcon({ type, active }: { type: TriggerType; active: boolean }) {
   );
 }
 
-function CurveButton({ label, preview, active, onClick }: { label: string; preview: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '6px 6px 4px',
-        background: active ? '#1e3a5f' : '#0d0d0e',
-        border: '1px solid',
-        borderColor: active ? '#2563eb' : '#2a2a2a',
-        borderRadius: 6,
-        color: active ? '#fff' : '#888',
-        fontSize: 9,
-        cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 3,
-        minWidth: 52,
-        transition: 'all 0.15s ease',
-      }}
-    >
-      <svg width="32" height="20" viewBox="0 0 100 100" style={{ opacity: active ? 1 : 0.5 }}>
-        <path d={preview} fill="none" stroke={active ? '#60a5fa' : 'currentColor'} strokeWidth="6" strokeLinecap="round" />
-      </svg>
-      {label}
-    </button>
-  );
-}
+// (CurveButton removed - replaced by PresetSelector)
 
 // Styles
 const selectStyle: React.CSSProperties = {
