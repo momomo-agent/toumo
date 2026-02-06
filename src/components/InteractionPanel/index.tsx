@@ -95,8 +95,8 @@ export const InteractionPanel: React.FC = () => {
   return (
     <div className="p-3 space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-200 flex items-center gap-2">
+      <div className="panel-header" style={{ padding: 0, border: 'none' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Zap size={14} />
           交互
         </h3>

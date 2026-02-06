@@ -516,26 +516,9 @@ export function LayerPanel() {
       onMouseLeave={() => setHoveredElementId(null)}
     >
       {/* Header */}
-      <div style={{
-        padding: '8px 12px',
-        borderBottom: '1px solid #2a2a2a',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <h3 style={{
-          fontSize: 11, fontWeight: 600, color: '#888',
-          margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px',
-        }}>
-          Layers
-        </h3>
-        <span style={{
-          fontSize: 10, color: '#555',
-          background: '#1a1a1a', padding: '1px 6px',
-          borderRadius: 8,
-        }}>
-          {elements.length}
-        </span>
+      <div className="panel-header">
+        <h3>Layers</h3>
+        <span className="panel-count">{elements.length}</span>
       </div>
 
       {/* Layer list */}

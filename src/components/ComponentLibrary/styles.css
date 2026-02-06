@@ -27,15 +27,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid #1a1a1a;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .library-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
 }
 
 .collapse-toggle {

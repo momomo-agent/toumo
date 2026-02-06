@@ -36,7 +36,7 @@
 
 /* Section */
 .figma-section {
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .figma-section-header {
@@ -49,14 +49,14 @@
 }
 
 .figma-section-header:hover {
-  background: #252525;
+  background: var(--bg-hover);
 }
 
 .figma-section-title {
   flex: 1;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 500;
-  color: #e5e5e5;
+  color: var(--text-primary);
 }
 
 .figma-section-content {

@@ -175,13 +175,11 @@ export function LayerManager() {
 
   return (
     <section className="layer-panel">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <h3 style={{ fontSize: 11, fontWeight: 600, color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Layers ({elements.length})
-        </h3>
+      <div className="panel-header" style={{ marginBottom: 8, borderBottom: 'none' }}>
+        <h3>Layers ({elements.length})</h3>
         <button
           onClick={() => setSelectedElementIds(elements.map(e => e.id))}
-          style={{ background: 'none', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 10, cursor: 'pointer' }}
         >
           Select All
         </button>
