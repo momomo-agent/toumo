@@ -15,7 +15,7 @@ const DEFAULT_STYLE: ShapeStyle = {
   textAlign: 'left',
 };
 
-const COLOR_PRESETS = ['#6366f1', '#22d3ee', '#22c55e', '#f97316', '#f43f5e', '#eab308', '#a855f7'];
+const COLOR_PRESETS = ['#ffffff', '#000000', '#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7'];
 
 const TEXT_ALIGNMENTS: Array<{ id: NonNullable<ShapeStyle['textAlign']>; label: string }> = [
   { id: 'left', label: 'L' },
