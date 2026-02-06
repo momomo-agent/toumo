@@ -872,6 +872,11 @@ export default function App() {
         {/* Inner Shadow Controls */}
         <div style={{ marginBottom: 20 }}>
           <Label>Inner Shadow</Label>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => handleStyleChange({ innerShadowEnabled: true, innerShadowX: 0, innerShadowY: 2, innerShadowBlur: 4, innerShadowColor: '#00000040' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
+            <button onClick={() => handleStyleChange({ innerShadowEnabled: true, innerShadowX: 0, innerShadowY: 4, innerShadowBlur: 8, innerShadowColor: '#00000060' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Deep</button>
+            <button onClick={() => handleStyleChange({ innerShadowEnabled: false })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <input
               type="checkbox"
