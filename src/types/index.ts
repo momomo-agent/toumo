@@ -97,9 +97,11 @@ export type ShapeStyle = {
   textColor?: string;
   // Shadow
   shadowColor?: string;
+  shadowX?: number;
+  shadowY?: number;
+  shadowBlur?: number;
   shadowOffsetX?: number;
   shadowOffsetY?: number;
-  shadowBlur?: number;
   shadowSpread?: number;
   // Inner shadow
   innerShadowEnabled?: boolean;
