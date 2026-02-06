@@ -1068,6 +1068,12 @@ export default function App() {
         {/* Border Radius Control */}
         <div style={{ marginBottom: 20 }}>
           <Label>Border Radius</Label>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => handleStyleChange({ borderRadius: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 2, color: '#888', fontSize: 10, cursor: 'pointer' }}>0</button>
+            <button onClick={() => handleStyleChange({ borderRadius: 8 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>8</button>
+            <button onClick={() => handleStyleChange({ borderRadius: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, color: '#888', fontSize: 10, cursor: 'pointer' }}>16</button>
+            <button onClick={() => handleStyleChange({ borderRadius: 999 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 8, color: '#888', fontSize: 10, cursor: 'pointer' }}>Full</button>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <input
               type="number"
