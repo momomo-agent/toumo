@@ -21,10 +21,15 @@ export function ImportModal({ onClose }: ImportModalProps) {
         throw new Error('Invalid project: missing keyframes');
       }
 
-      // Import data into store
-      if (data.keyframes) store.importKeyframes(data.keyframes);
-      if (data.transitions) store.importTransitions(data.transitions);
-      if (data.frameSize) store.setFrameSize(data.frameSize);
+      // Import data into store using loadProject
+      store.loadProject({
+        keyframes: data.keyframes || [],
+        transitions: data.transitions || [],
+        functionalStates: data.functionalStates || [],
+        components: data.components || [],
+        frameSize: data.frameSize || { width: 390, height: 844 },
+        canvasBackground: data.canvasBackground,
+      });
       
       setImporting(false);
       onClose();

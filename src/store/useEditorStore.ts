@@ -1030,4 +1030,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       get().updateElement(state.selectedElementId, { zIndex: (el.zIndex ?? 0) - 1 });
     }
   },
+
+  // Import actions
+  importKeyframes: (keyframes: Keyframe[]) => set(() => ({
+    keyframes,
+    selectedKeyframeId: keyframes[0]?.id || '',
+  })),
+
+  importTransitions: (transitions: Transition[]) => set(() => ({
+    transitions,
+  })),
+
 }));

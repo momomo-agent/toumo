@@ -41,7 +41,6 @@ export function Canvas() {
     canvasBackground,
     snapToGrid,
     gridSize,
-    components,
     instantiateComponent,
   } = useEditorStore();
 
