@@ -4,6 +4,7 @@ import { ColorPicker } from './ColorPicker';
 import { GradientEditor } from './GradientEditor';
 import { AutoLayoutPanel, ChildLayoutSection } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
+import { OverflowPanel } from './OverflowPanel';
 import { PrototypeLinkPanel } from './PrototypeLinkPanel';
 import { TextPropertiesPanel } from './TextPropertiesPanel';
 import './TextPropertiesPanel.css';
@@ -933,6 +934,9 @@ export function DesignPanel() {
 
       {/* Constraints Section */}
       <ConstraintsPanel />
+
+      {/* Overflow Scroll Section (Frame only) */}
+      <OverflowPanel />
 
       {/* Layer Section - Opacity & Blend Mode */}
       <Section title="Layer" defaultExpanded={true}>

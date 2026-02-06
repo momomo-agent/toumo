@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
@@ -62,6 +62,7 @@ interface EditorState {
   // Variables for state machine logic
   variables: Variable[];
   interactions: Interaction[];
+  conditionRules: ConditionRule[];
 }
 
 interface EditorActions {
@@ -276,8 +277,15 @@ interface EditorActions {
   deleteInteraction: (id: string) => void;
   duplicateInteraction: (id: string) => void;
   getInteractionsForElement: (elementId: string) => Interaction[];
+  // Condition rules actions
+  addConditionRule: (rule: ConditionRule) => void;
+  updateConditionRule: (id: string, updates: Partial<ConditionRule>) => void;
+  deleteConditionRule: (id: string) => void;
+  // Variable binding actions
+  addVariableBinding: (elementId: string, binding: VariableBinding) => void;
+  removeVariableBinding: (elementId: string, variableId: string, property: string) => void;
   // Project actions
-  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[] }) => void;
+  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[]; conditionRules?: ConditionRule[] }) => void;
   // Style clipboard
   copiedStyle: ShapeStyle | null;
   copyStyle: () => void;
@@ -314,6 +322,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   components: [],
   variables: [],
   interactions: [],
+  conditionRules: [],
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -1385,6 +1394,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       canvasBackground: data.canvasBackground || '#0d0d0e',
       interactions: data.interactions || [],
       variables: data.variables || [],
+      conditionRules: data.conditionRules || [],
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],
@@ -3141,6 +3151,57 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   getInteractionsForElement: (elementId: string) => {
     return get().interactions.filter(i => i.elementId === elementId);
   },
+
+  // Condition rules actions
+  addConditionRule: (rule: ConditionRule) => set((state) => ({
+    conditionRules: [...state.conditionRules, rule],
+  })),
+
+  updateConditionRule: (id: string, updates: Partial<ConditionRule>) => set((state) => ({
+    conditionRules: state.conditionRules.map(r =>
+      r.id === id ? { ...r, ...updates } : r
+    ),
+  })),
+
+  deleteConditionRule: (id: string) => set((state) => ({
+    conditionRules: state.conditionRules.filter(r => r.id !== id),
+  })),
+
+  // Variable binding actions
+  addVariableBinding: (elementId: string, binding: VariableBinding) => set((state) => ({
+    keyframes: state.keyframes.map(kf =>
+      kf.id === state.selectedKeyframeId
+        ? {
+            ...kf,
+            keyElements: kf.keyElements.map(el =>
+              el.id === elementId
+                ? { ...el, variableBindings: [...(el.variableBindings || []), binding] }
+                : el
+            ),
+          }
+        : kf
+    ),
+  })),
+
+  removeVariableBinding: (elementId: string, variableId: string, property: string) => set((state) => ({
+    keyframes: state.keyframes.map(kf =>
+      kf.id === state.selectedKeyframeId
+        ? {
+            ...kf,
+            keyElements: kf.keyElements.map(el =>
+              el.id === elementId
+                ? {
+                    ...el,
+                    variableBindings: (el.variableBindings || []).filter(
+                      b => !(b.variableId === variableId && b.property === property)
+                    ),
+                  }
+                : el
+            ),
+          }
+        : kf
+    ),
+  })),
 
   // Import actions
   importKeyframes: (keyframes: Keyframe[]) => set(() => ({

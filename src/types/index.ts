@@ -39,6 +39,30 @@ export type ChildLayoutConfig = {
   alignSelf?: AutoLayoutAlign; // Override parent's alignItems
 };
 
+// Overflow Scroll types (Figma/ProtoPie-style)
+export type OverflowScrollDirection = 'none' | 'horizontal' | 'vertical' | 'both';
+
+export type OverflowScrollConfig = {
+  enabled: boolean;
+  direction: OverflowScrollDirection;
+  showScrollbar: boolean;
+  scrollbarStyle: 'auto' | 'thin' | 'hidden';
+  scrollBehavior: 'auto' | 'smooth';
+  // Snap scrolling (optional)
+  snapEnabled: boolean;
+  snapType: 'none' | 'x mandatory' | 'y mandatory' | 'both mandatory' | 'x proximity' | 'y proximity';
+};
+
+export const DEFAULT_OVERFLOW_SCROLL: OverflowScrollConfig = {
+  enabled: false,
+  direction: 'vertical',
+  showScrollbar: true,
+  scrollbarStyle: 'thin',
+  scrollBehavior: 'auto',
+  snapEnabled: false,
+  snapType: 'none',
+};
+
 // Constraints types (Figma-style)
 export type HorizontalConstraint = 'left' | 'right' | 'left-right' | 'center' | 'scale';
 export type VerticalConstraint = 'top' | 'bottom' | 'top-bottom' | 'center' | 'scale';
@@ -262,10 +286,14 @@ export type KeyElement = {
   autoLayout?: AutoLayoutConfig;
   // Child layout settings (when inside auto layout parent)
   layoutChild?: ChildLayoutConfig;
+  // Overflow scroll (Figma-style) - frame scrollable content
+  overflowScroll?: OverflowScrollConfig;
   // Constraints (Figma-style) - how element responds to parent resize
   constraints?: ConstraintsConfig;
   // Prototype link - navigate to another frame on interaction
   prototypeLink?: PrototypeLink;
+  // Variable bindings - connect variables to element properties
+  variableBindings?: VariableBinding[];
 };
 
 // Prototype Link types (Figma-style)
@@ -418,7 +446,7 @@ export type ComponentInstance = {
 };
 
 // Variable types for state machine logic
-export type VariableType = 'string' | 'number' | 'boolean';
+export type VariableType = 'string' | 'number' | 'boolean' | 'color';
 
 export type Variable = {
   id: string;
@@ -427,6 +455,32 @@ export type Variable = {
   defaultValue: string | number | boolean;
   currentValue?: string | number | boolean;
   description?: string;
+};
+
+// Variable binding - connect a variable to an element property
+export type VariableBinding = {
+  variableId: string;
+  property: string; // e.g. 'style.fill', 'style.opacity', 'text', 'position.x'
+  transform?: string; // optional expression, e.g. 'value * 2', 'value + "px"'
+};
+
+// Condition rule for conditional logic
+export type ConditionRule = {
+  id: string;
+  variableId: string;
+  operator: '==' | '!=' | '>' | '<' | '>=' | '<=';
+  value: string | number | boolean;
+  // What to do when condition is true
+  actions: ConditionAction[];
+};
+
+export type ConditionAction = {
+  type: 'setProperty' | 'setVariable' | 'goToState';
+  targetElementId?: string;
+  property?: string;
+  value?: string | number | boolean;
+  variableId?: string;
+  stateId?: string;
 };
 
 // ============================================

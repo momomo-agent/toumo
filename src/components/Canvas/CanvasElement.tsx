@@ -549,7 +549,10 @@ export const CanvasElement = memo(function CanvasElement({
 
   return (
     <div
-      className={isNew ? 'canvas-element-enter' : undefined}
+      className={[
+        isNew ? 'canvas-element-enter' : '',
+        element.overflowScroll?.enabled ? `toumo-scroll toumo-scroll-${element.overflowScroll.scrollbarStyle || 'thin'}` : '',
+      ].filter(Boolean).join(' ') || undefined}
       data-element-id={element.id}
       onMouseDown={handlePointerDown}
       onMouseEnter={() => setHoveredElementId(element.id)}
@@ -619,6 +622,14 @@ export const CanvasElement = memo(function CanvasElement({
         fontFamily: element.style?.fontFamily || 'Inter, sans-serif',
         whiteSpace: element.style?.whiteSpace || 'normal',
         overflow: element.style?.overflow || 'visible',
+        overflowX: element.overflowScroll?.enabled
+          ? (element.overflowScroll.direction === 'horizontal' || element.overflowScroll.direction === 'both' ? 'auto' : 'hidden')
+          : undefined,
+        overflowY: element.overflowScroll?.enabled
+          ? (element.overflowScroll.direction === 'vertical' || element.overflowScroll.direction === 'both' ? 'auto' : 'hidden')
+          : undefined,
+        scrollBehavior: element.overflowScroll?.enabled ? element.overflowScroll.scrollBehavior : undefined,
+        scrollSnapType: element.overflowScroll?.snapEnabled ? element.overflowScroll.snapType as React.CSSProperties['scrollSnapType'] : undefined,
         textTransform: element.style?.textTransform as React.CSSProperties['textTransform'],
         letterSpacing: element.style?.letterSpacing ?? 0,
         lineHeight: element.style?.lineHeight ?? 1.4,

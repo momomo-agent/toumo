@@ -485,6 +485,19 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
             transition: `all ${transitionDuration}ms ${transitionCurve}`,
             overflow: s?.overflow || 'hidden',
           };
+          // Apply overflow scroll config in preview
+          if (el.overflowScroll?.enabled) {
+            const dir = el.overflowScroll.direction;
+            elStyle.overflowX = (dir === 'horizontal' || dir === 'both') ? 'auto' : 'hidden';
+            elStyle.overflowY = (dir === 'vertical' || dir === 'both') ? 'auto' : 'hidden';
+            elStyle.overflow = undefined; // let overflowX/Y take precedence
+            if (el.overflowScroll.scrollBehavior) {
+              elStyle.scrollBehavior = el.overflowScroll.scrollBehavior;
+            }
+            if (el.overflowScroll.snapEnabled && el.overflowScroll.snapType !== 'none') {
+              (elStyle as any).scrollSnapType = el.overflowScroll.snapType;
+            }
+          }
           if (s?.rotation) elStyle.transform = `rotate(${s.rotation}deg)`;
           if (s?.shadowColor && s?.shadowBlur) {
             elStyle.boxShadow = `${s.shadowX ?? 0}px ${s.shadowY ?? 0}px ${s.shadowBlur}px ${s.shadowSpread ?? 0}px ${s.shadowColor}`;
@@ -506,6 +519,7 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
           return (
             <div
               key={el.id}
+              className={el.overflowScroll?.enabled ? `toumo-scroll toumo-scroll-${el.overflowScroll.scrollbarStyle || 'thin'}` : undefined}
               style={elStyle}
               onClick={handleElClick}
               onMouseEnter={() => handleMouseEnter(el.id)}

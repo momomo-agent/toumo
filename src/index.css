@@ -136,3 +136,50 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ── Toumo Scroll Overflow Styles ── */
+.toumo-scroll {
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+/* Thin scrollbar (default) */
+.toumo-scroll-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.toumo-scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
+}
+.toumo-scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
+}
+.toumo-scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Auto scrollbar */
+.toumo-scroll-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.toumo-scroll-auto::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+}
+.toumo-scroll-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.35);
+}
+.toumo-scroll-auto::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 999px;
+}
+
+/* Hidden scrollbar */
+.toumo-scroll-hidden::-webkit-scrollbar {
+  display: none;
+}
+.toumo-scroll-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
