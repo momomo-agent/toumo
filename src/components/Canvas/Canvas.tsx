@@ -44,6 +44,8 @@ export function Canvas() {
     snapToGrid: s.snapToGrid,
     gridSize: s.gridSize,
     editingGroupId: s.editingGroupId,
+    isDragging: s.isDragging,
+    isResizing: s.isResizing,
   })));
 
   // Actions don't cause re-renders — grab them once via getState or stable selectors
@@ -1096,6 +1098,58 @@ export function Canvas() {
               distanceIndicators={distanceIndicators}
             />
             {selectionBox && <SelectionBox start={selectionBox.start} end={selectionBox.end} />}
+            {/* Position tooltip while dragging */}
+            {isDragging && selectedElementIds.length > 0 && (() => {
+              const el = elements.find(e => e.id === selectedElementIds[0]);
+              if (!el) return null;
+              return (
+                <div style={{
+                  position: 'absolute',
+                  left: el.position.x + el.size.width / 2,
+                  top: el.position.y - 28,
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(59,130,246,0.92)',
+                  color: '#fff',
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  fontWeight: 600,
+                  padding: '2px 7px',
+                  borderRadius: 4,
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}>
+                  X: {Math.round(el.position.x)}  Y: {Math.round(el.position.y)}
+                </div>
+              );
+            })()}
+            {/* Size tooltip while resizing */}
+            {isResizing && selectedElementIds.length > 0 && (() => {
+              const el = elements.find(e => e.id === selectedElementIds[0]);
+              if (!el) return null;
+              return (
+                <div style={{
+                  position: 'absolute',
+                  left: el.position.x + el.size.width / 2,
+                  top: el.position.y + el.size.height + 12,
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(139,92,246,0.92)',
+                  color: '#fff',
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  fontWeight: 600,
+                  padding: '2px 7px',
+                  borderRadius: 4,
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}>
+                  {Math.round(el.size.width)} × {Math.round(el.size.height)}
+                </div>
+              );
+            })()}
           </div>
         )}
         
