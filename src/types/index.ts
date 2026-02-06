@@ -59,6 +59,7 @@ export type ShapeStyle = {
   zIndex?: number;
   visibility?: 'visible' | 'hidden';
   isolation?: 'auto' | 'isolate';
+  backfaceVisibility?: 'visible' | 'hidden';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
