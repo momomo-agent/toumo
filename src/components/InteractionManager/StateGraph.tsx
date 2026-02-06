@@ -102,7 +102,7 @@ export function StateGraph() {
     
     setDragConnection({
       fromId: nodeId,
-      fromX: pos.x + 120, // Right edge of node
+      fromX: pos.x + 140, // Right edge of node
       fromY: pos.y + 16,
       toX: e.clientX - rect.left,
       toY: e.clientY - rect.top,
@@ -138,8 +138,8 @@ export function StateGraph() {
       
       // Check if dropped on a node
       const targetNode = nodePositions.find(n => {
-        return mouseX >= n.x && mouseX <= n.x + 120 &&
-               mouseY >= n.y && mouseY <= n.y + 40;
+        return mouseX >= n.x && mouseX <= n.x + 140 &&
+               mouseY >= n.y && mouseY <= n.y + 44;
       });
       
       if (targetNode && targetNode.id !== dragConnection.fromId) {
@@ -207,7 +207,7 @@ export function StateGraph() {
     const cy1 = from.y;
     const cx2 = from.x + dx * 0.6;
     const cy2 = to.y;
-    return `M ${from.x + 120} ${from.y + 16} C ${cx1 + 60} ${cy1 + 16}, ${cx2} ${cy2 + 16}, ${to.x} ${to.y + 16}`;
+    return `M ${from.x + 140} ${from.y + 20} C ${cx1 + 70} ${cy1 + 20}, ${cx2} ${cy2 + 20}, ${to.x} ${to.y + 20}`;
   };
 
   // Get midpoint for transition label
@@ -349,37 +349,45 @@ export function StateGraph() {
               position: 'absolute',
               left: pos.x,
               top: pos.y,
-              width: 120,
-              padding: '8px 12px',
-              background: isSelected ? '#1e3a5f' : '#1a1a1b',
-              border: `2px solid ${isSelected ? '#2563eb' : '#333'}`,
-              borderRadius: 8,
+              width: 140,
+              padding: '10px 14px',
+              background: isSelected
+                ? 'linear-gradient(135deg, #1e3a5f 0%, #1a2e4a 100%)'
+                : 'linear-gradient(135deg, #1e1e20 0%, #161618 100%)',
+              border: `2px solid ${isSelected ? '#3b82f6' : '#2a2a2d'}`,
+              borderRadius: 12,
               cursor: draggingNode === kf.id ? 'grabbing' : 'grab',
               userSelect: 'none',
               zIndex: isSelected ? 10 : 1,
+              boxShadow: isSelected
+                ? '0 0 20px rgba(59,130,246,0.25), 0 4px 16px rgba(0,0,0,0.4)'
+                : '0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)',
+              backdropFilter: 'blur(8px)',
             }}
           >
             {isInitial && (
               <div
                 style={{
                   position: 'absolute',
-                  top: -8,
-                  left: 8,
-                  background: '#22c55e',
-                  color: '#000',
+                  top: -9,
+                  left: 10,
+                  background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                  color: '#fff',
                   fontSize: 9,
-                  padding: '1px 6px',
-                  borderRadius: 4,
-                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  boxShadow: '0 2px 6px rgba(34,197,94,0.35)',
                 }}
               >
                 START
               </div>
             )}
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#f0f0f0', letterSpacing: '0.2px' }}>
               {kf.name}
             </div>
-            <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: '#777', marginTop: 3 }}>
               {kf.functionalState || 'state'}
             </div>
             
@@ -388,20 +396,27 @@ export function StateGraph() {
               onMouseDown={(e) => handleConnectionDragStart(e, kf.id)}
               style={{
                 position: 'absolute',
-                right: -6,
+                right: -7,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: 12,
-                height: 12,
-                background: '#22c55e',
+                width: 14,
+                height: 14,
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
                 borderRadius: '50%',
                 cursor: 'crosshair',
                 border: '2px solid #0a0a0b',
-                opacity: 0.8,
-                transition: 'opacity 0.15s',
+                opacity: 0,
+                transition: 'opacity 0.2s, transform 0.2s',
+                boxShadow: '0 0 8px rgba(34,197,94,0.4)',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.8')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '0';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
               title="Drag to create transition"
             />
           </div>
