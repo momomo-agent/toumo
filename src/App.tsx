@@ -558,24 +558,24 @@ export default function App() {
         {/* Alignment Tools */}
         {selectedElementIds.length >= 2 && (
           <div style={{ marginBottom: 16 }}>
-            <Label>Align</Label>
+            <Label>对齐</Label>
             <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-              <button onClick={() => alignElements('left')} style={alignBtnStyle} title="Align Left">⬅</button>
-              <button onClick={() => alignElements('center')} style={alignBtnStyle} title="Align Center H">↔</button>
-              <button onClick={() => alignElements('right')} style={alignBtnStyle} title="Align Right">➡</button>
-              <button onClick={() => alignElements('top')} style={alignBtnStyle} title="Align Top">⬆</button>
-              <button onClick={() => alignElements('middle')} style={alignBtnStyle} title="Align Center V">↕</button>
-              <button onClick={() => alignElements('bottom')} style={alignBtnStyle} title="Align Bottom">⬇</button>
+              <button onClick={() => alignElements('left')} style={alignBtnStyle} title="左对齐">⬅</button>
+              <button onClick={() => alignElements('center')} style={alignBtnStyle} title="水平居中">↔</button>
+              <button onClick={() => alignElements('right')} style={alignBtnStyle} title="右对齐">➡</button>
+              <button onClick={() => alignElements('top')} style={alignBtnStyle} title="顶部对齐">⬆</button>
+              <button onClick={() => alignElements('middle')} style={alignBtnStyle} title="垂直居中">↕</button>
+              <button onClick={() => alignElements('bottom')} style={alignBtnStyle} title="底部对齐">⬇</button>
             </div>
             {selectedElementIds.length >= 3 && (
               <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => distributeElements('horizontal')} style={{ ...alignBtnStyle, flex: 1 }}>Distribute H</button>
-                <button onClick={() => distributeElements('vertical')} style={{ ...alignBtnStyle, flex: 1 }}>Distribute V</button>
+                <button onClick={() => distributeElements('horizontal')} style={{ ...alignBtnStyle, flex: 1 }}>水平分布</button>
+                <button onClick={() => distributeElements('vertical')} style={{ ...alignBtnStyle, flex: 1 }}>垂直分布</button>
               </div>
             )}
           </div>
         )}
-        <SectionHeader>Element Properties</SectionHeader>
+        <SectionHeader>元素属性</SectionHeader>
         <div style={{ marginBottom: 16 }}>
           <Label>
             {selected.shapeType === 'rectangle' && '⬜ '}
@@ -584,7 +584,7 @@ export default function App() {
             {selected.shapeType === 'image' && '🖼️ '}
             {selected.shapeType === 'line' && '📏 '}
             {selected.shapeType === 'frame' && '📐 '}
-            Name
+            名称
           </Label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
@@ -702,7 +702,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
-          <Label>Layer (zIndex)</Label>
+          <Label>图层 (zIndex)</Label>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => updateElement(selected.id, { zIndex: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Back</button>
             <button onClick={() => updateElement(selected.id, { zIndex: 50 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Mid</button>
@@ -716,7 +716,7 @@ export default function App() {
           />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <Label>Position</Label>
+          <Label>位置</Label>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => updateElement(selected.id, { position: { x: 0, y: 0 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>↖</button>
             <button onClick={() => updateElement(selected.id, { position: { x: (frameSize.width - selected.size.width) / 2, y: 0 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>↑</button>
@@ -750,7 +750,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
-          <Label>Size</Label>
+          <Label>尺寸</Label>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => updateElement(selected.id, { size: { width: 100, height: 100 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>100²</button>
             <button onClick={() => updateElement(selected.id, { size: { width: 200, height: 200 } })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>200²</button>
@@ -795,7 +795,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <Label>Fill</Label>
+          <Label>填充</Label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="color"
@@ -849,7 +849,7 @@ export default function App() {
 
         {/* Gradient Control */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Gradient</Label>
+          <Label>渐变</Label>
           <select
             value={currentStyle.gradientType || 'none'}
             onChange={(e) => {
@@ -926,7 +926,7 @@ export default function App() {
 
         {/* Opacity Control */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Opacity</Label>
+          <Label>不透明度</Label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="range"
@@ -950,7 +950,7 @@ export default function App() {
 
         {/* Stroke Controls */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Stroke</Label>
+          <Label>描边</Label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <input
               type="color"
@@ -1016,7 +1016,7 @@ export default function App() {
 
         {/* Shadow Controls */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Shadow</Label>
+          <Label>阴影</Label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <input
               type="color"
@@ -1084,7 +1084,7 @@ export default function App() {
 
         {/* Inner Shadow Controls */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Inner Shadow</Label>
+          <Label>内阴影</Label>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => handleStyleChange({ innerShadowEnabled: true, innerShadowX: 0, innerShadowY: 2, innerShadowBlur: 4, innerShadowColor: '#00000040' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
             <button onClick={() => handleStyleChange({ innerShadowEnabled: true, innerShadowX: 0, innerShadowY: 4, innerShadowBlur: 8, innerShadowColor: '#00000060' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Deep</button>
@@ -1122,7 +1122,7 @@ export default function App() {
         {/* Filters */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Label>Filters</Label>
+            <Label>滤镜</Label>
             <button
               onClick={() => handleStyleChange({ blur: 0, brightness: 1, contrast: 1, saturate: 1, hueRotate: 0, invert: 0, grayscale: 0, sepia: 0 })}
               style={{ background: 'none', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer' }}
@@ -1233,7 +1233,7 @@ export default function App() {
 
         {/* Drop Shadow */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Blend Mode</Label>
+          <Label>混合模式</Label>
           <select
             value={currentStyle.blendMode || 'normal'}
             onChange={(e) => handleStyleChange({ blendMode: e.target.value })}
@@ -1254,7 +1254,7 @@ export default function App() {
 
         {/* Backdrop Blur */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Backdrop Blur</Label>
+          <Label>背景模糊</Label>
           <input
             type="range"
             min={0}
@@ -1267,7 +1267,7 @@ export default function App() {
 
         {/* Drop Shadow */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Drop Shadow</Label>
+          <Label>投影</Label>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => handleStyleChange({ dropShadowX: 0, dropShadowY: 4, dropShadowBlur: 8, dropShadowColor: '#00000040' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
             <button onClick={() => handleStyleChange({ dropShadowX: 0, dropShadowY: 8, dropShadowBlur: 24, dropShadowColor: '#00000060' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Medium</button>
@@ -1296,7 +1296,7 @@ export default function App() {
 
         {/* Border Radius Control */}
         <div style={{ marginBottom: 20 }}>
-          <Label>Border Radius</Label>
+          <Label>圆角</Label>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             <button onClick={() => handleStyleChange({ borderRadius: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 2, color: '#888', fontSize: 10, cursor: 'pointer' }}>0</button>
             <button onClick={() => handleStyleChange({ borderRadius: 8 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>8</button>
@@ -1802,7 +1802,7 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginBottom: 8 }}>
-              <Label>Backdrop Blur</Label>
+              <Label>背景模糊</Label>
               <div style={{ display: 'flex', gap: 4 }}>
                 <button onClick={() => handleStyleChange({ backdropFilter: 'none' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
                 <button onClick={() => handleStyleChange({ backdropFilter: 'blur(8px)' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>8</button>
@@ -2421,8 +2421,8 @@ export default function App() {
                 }} 
                 onClick={undo}
                 disabled={historyIndex <= 0}
-                title="Undo (⌘Z)"
-              >↩ Undo</button>
+                title="撤销 (⌘Z)"
+              >↩ 撤销</button>
               <button 
                 style={{ 
                   border: '1px solid #333', 
@@ -2436,8 +2436,8 @@ export default function App() {
                 }} 
                 onClick={redo}
                 disabled={historyIndex >= history.length - 1}
-                title="Redo (⌘⇧Z)"
-              >Redo ↪</button>
+                title="重做 (⌘⇧Z)"
+              >重做 ↪</button>
             </div>
           </div>
 

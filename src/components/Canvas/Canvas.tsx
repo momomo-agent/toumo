@@ -6,7 +6,7 @@ import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement, type ResizeHandle } from './CanvasElement';
 import { PenTool } from './PenTool';
 import { SelectionBox } from './SelectionBox';
-import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
+import { AlignmentGuides, type AlignmentLine, type DistanceIndicator } from './AlignmentGuides';
 import { CanvasHints } from './CanvasHints';
 import { ZoomControls } from './ZoomControls';
 // ContextMenu is now integrated directly in CanvasElement
@@ -56,6 +56,7 @@ export function Canvas() {
   const isPanningRef = useRef(false);
   const panStartRef = useRef<{ pointerX: number; pointerY: number; startX: number; startY: number } | null>(null);
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLine[]>([]);
+  const [distanceIndicators, setDistanceIndicators] = useState<DistanceIndicator[]>([]);
   const handOverrideRef = useRef(false);
   const previousToolRef = useRef<ToolType>(currentTool);
 
@@ -256,7 +257,97 @@ export function Canvas() {
       }
     });
 
+    // 计算间距指示器
+    const indicators: DistanceIndicator[] = [];
+    
+    if (!isResize) {
+      // 找到最近的元素来显示间距
+      elements.forEach((element) => {
+        if (element.id === draggedId) return;
+        
+        const elRight = element.position.x + element.size.width;
+        const elBottom = element.position.y + element.size.height;
+        
+        // 检查水平方向的间距（元素在拖拽元素的左边或右边）
+        const verticalOverlap = !(draggedBottom <= element.position.y || position.y >= elBottom);
+        
+        if (verticalOverlap) {
+          // 拖拽元素在目标元素右边
+          if (position.x >= elRight) {
+            const distance = position.x - elRight;
+            if (distance > 0 && distance < 200) {
+              const overlapTop = Math.max(position.y, element.position.y);
+              const overlapBottom = Math.min(draggedBottom, elBottom);
+              const midY = (overlapTop + overlapBottom) / 2;
+              indicators.push({
+                type: 'horizontal',
+                x: elRight,
+                y: midY,
+                length: distance,
+                distance,
+              });
+            }
+          }
+          // 拖拽元素在目标元素左边
+          if (draggedRight <= element.position.x) {
+            const distance = element.position.x - draggedRight;
+            if (distance > 0 && distance < 200) {
+              const overlapTop = Math.max(position.y, element.position.y);
+              const overlapBottom = Math.min(draggedBottom, elBottom);
+              const midY = (overlapTop + overlapBottom) / 2;
+              indicators.push({
+                type: 'horizontal',
+                x: draggedRight,
+                y: midY,
+                length: distance,
+                distance,
+              });
+            }
+          }
+        }
+        
+        // 检查垂直方向的间距（元素在拖拽元素的上边或下边）
+        const horizontalOverlap = !(draggedRight <= element.position.x || position.x >= elRight);
+        
+        if (horizontalOverlap) {
+          // 拖拽元素在目标元素下边
+          if (position.y >= elBottom) {
+            const distance = position.y - elBottom;
+            if (distance > 0 && distance < 200) {
+              const overlapLeft = Math.max(position.x, element.position.x);
+              const overlapRight = Math.min(draggedRight, elRight);
+              const midX = (overlapLeft + overlapRight) / 2;
+              indicators.push({
+                type: 'vertical',
+                x: midX,
+                y: elBottom,
+                length: distance,
+                distance,
+              });
+            }
+          }
+          // 拖拽元素在目标元素上边
+          if (draggedBottom <= element.position.y) {
+            const distance = element.position.y - draggedBottom;
+            if (distance > 0 && distance < 200) {
+              const overlapLeft = Math.max(position.x, element.position.x);
+              const overlapRight = Math.min(draggedRight, elRight);
+              const midX = (overlapLeft + overlapRight) / 2;
+              indicators.push({
+                type: 'vertical',
+                x: midX,
+                y: draggedBottom,
+                length: distance,
+                distance,
+              });
+            }
+          }
+        }
+      });
+    }
+
     setAlignmentLines(lines);
+    setDistanceIndicators(indicators);
 
     if (isResize) {
       let nextX = position.x;
@@ -309,7 +400,10 @@ export function Canvas() {
   }, [elements]);
 
   useEffect(() => {
-    const clear = () => setAlignmentLines([]);
+    const clear = () => {
+      setAlignmentLines([]);
+      setDistanceIndicators([]);
+    };
     document.addEventListener('mouseup', clear);
     document.addEventListener('mouseleave', clear);
     return () => {
@@ -818,7 +912,12 @@ export function Canvas() {
 
         {activeFrameLayout && (
           <div style={{ position: 'absolute', left: activeFrameLayout.x, top: activeFrameLayout.y }}>
-            <AlignmentGuides lines={alignmentLines} canvasWidth={frameSize.width} canvasHeight={frameSize.height} />
+            <AlignmentGuides 
+              lines={alignmentLines} 
+              canvasWidth={frameSize.width} 
+              canvasHeight={frameSize.height}
+              distanceIndicators={distanceIndicators}
+            />
             {selectionBox && <SelectionBox start={selectionBox.start} end={selectionBox.end} />}
           </div>
         )}

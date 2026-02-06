@@ -54,3 +54,25 @@
   color: white;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
 }
+
+/* Alignment buttons */
+.alignment-group {
+  gap: 1px;
+}
+
+.tool-btn.align-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-btn.align-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tool-btn.align-btn.disabled:hover {
+  background: transparent;
+}

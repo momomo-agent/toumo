@@ -5,6 +5,55 @@ import { ExportModal } from '../ExportModal';
 import { ImportModal } from '../ImportModal';
 import { Tooltip } from './Tooltip';
 
+// Alignment icons (compact versions for toolbar)
+const AlignLeftIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <rect x="2" y="2" width="2" height="12" fill="currentColor" />
+    <rect x="5" y="4" width="8" height="3" fill="currentColor" opacity="0.6" />
+    <rect x="5" y="9" width="5" height="3" fill="currentColor" opacity="0.6" />
+  </svg>
+);
+
+const AlignCenterHIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <rect x="7" y="2" width="2" height="12" fill="currentColor" />
+    <rect x="3" y="4" width="10" height="3" fill="currentColor" opacity="0.6" />
+    <rect x="5" y="9" width="6" height="3" fill="currentColor" opacity="0.6" />
+  </svg>
+);
+
+const AlignRightIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <rect x="12" y="2" width="2" height="12" fill="currentColor" />
+    <rect x="3" y="4" width="8" height="3" fill="currentColor" opacity="0.6" />
+    <rect x="6" y="9" width="5" height="3" fill="currentColor" opacity="0.6" />
+  </svg>
+);
+
+const AlignTopIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <rect x="2" y="2" width="12" height="2" fill="currentColor" />
+    <rect x="4" y="5" width="3" height="8" fill="currentColor" opacity="0.6" />
+    <rect x="9" y="5" width="3" height="5" fill="currentColor" opacity="0.6" />
+  </svg>
+);
+
+const AlignCenterVIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <rect x="2" y="7" width="12" height="2" fill="currentColor" />
+    <rect x="4" y="3" width="3" height="10" fill="currentColor" opacity="0.6" />
+    <rect x="9" y="5" width="3" height="6" fill="currentColor" opacity="0.6" />
+  </svg>
+);
+
+const AlignBottomIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <rect x="2" y="12" width="12" height="2" fill="currentColor" />
+    <rect x="4" y="3" width="3" height="8" fill="currentColor" opacity="0.6" />
+    <rect x="9" y="6" width="3" height="5" fill="currentColor" opacity="0.6" />
+  </svg>
+);
+
 interface ToolConfig {
   id: ToolType;
   icon: string;
@@ -51,7 +100,15 @@ function ToolDivider() {
 }
 
 export function Toolbar() {
-  const { currentTool, setCurrentTool, addImageElement } = useEditorStore();
+  const { 
+    currentTool, 
+    setCurrentTool, 
+    addImageElement,
+    selectedElementIds,
+    alignElements,
+  } = useEditorStore();
+  
+  const hasMultipleSelected = selectedElementIds.length >= 2;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -111,6 +168,84 @@ export function Toolbar() {
           {groupIndex < toolGroups.length - 1 && <ToolDivider />}
         </div>
       ))}
+      
+      <ToolDivider />
+      
+      {/* Alignment buttons - always visible */}
+      <div className="toolbar-group alignment-group">
+        <Tooltip 
+          label={hasMultipleSelected ? "Align Left" : "Align Left (select 2+ elements)"} 
+          shortcut=""
+        >
+          <button
+            className={`tool-btn align-btn ${!hasMultipleSelected ? 'disabled' : ''}`}
+            onClick={() => hasMultipleSelected && alignElements('left')}
+            disabled={!hasMultipleSelected}
+          >
+            <AlignLeftIcon />
+          </button>
+        </Tooltip>
+        <Tooltip 
+          label={hasMultipleSelected ? "Align Center" : "Align Center (select 2+ elements)"} 
+          shortcut=""
+        >
+          <button
+            className={`tool-btn align-btn ${!hasMultipleSelected ? 'disabled' : ''}`}
+            onClick={() => hasMultipleSelected && alignElements('center')}
+            disabled={!hasMultipleSelected}
+          >
+            <AlignCenterHIcon />
+          </button>
+        </Tooltip>
+        <Tooltip 
+          label={hasMultipleSelected ? "Align Right" : "Align Right (select 2+ elements)"} 
+          shortcut=""
+        >
+          <button
+            className={`tool-btn align-btn ${!hasMultipleSelected ? 'disabled' : ''}`}
+            onClick={() => hasMultipleSelected && alignElements('right')}
+            disabled={!hasMultipleSelected}
+          >
+            <AlignRightIcon />
+          </button>
+        </Tooltip>
+        <Tooltip 
+          label={hasMultipleSelected ? "Align Top" : "Align Top (select 2+ elements)"} 
+          shortcut=""
+        >
+          <button
+            className={`tool-btn align-btn ${!hasMultipleSelected ? 'disabled' : ''}`}
+            onClick={() => hasMultipleSelected && alignElements('top')}
+            disabled={!hasMultipleSelected}
+          >
+            <AlignTopIcon />
+          </button>
+        </Tooltip>
+        <Tooltip 
+          label={hasMultipleSelected ? "Align Middle" : "Align Middle (select 2+ elements)"} 
+          shortcut=""
+        >
+          <button
+            className={`tool-btn align-btn ${!hasMultipleSelected ? 'disabled' : ''}`}
+            onClick={() => hasMultipleSelected && alignElements('middle')}
+            disabled={!hasMultipleSelected}
+          >
+            <AlignCenterVIcon />
+          </button>
+        </Tooltip>
+        <Tooltip 
+          label={hasMultipleSelected ? "Align Bottom" : "Align Bottom (select 2+ elements)"} 
+          shortcut=""
+        >
+          <button
+            className={`tool-btn align-btn ${!hasMultipleSelected ? 'disabled' : ''}`}
+            onClick={() => hasMultipleSelected && alignElements('bottom')}
+            disabled={!hasMultipleSelected}
+          >
+            <AlignBottomIcon />
+          </button>
+        </Tooltip>
+      </div>
       
       <ToolDivider />
       

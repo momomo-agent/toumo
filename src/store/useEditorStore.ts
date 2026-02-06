@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
+import { DEFAULT_AUTO_LAYOUT } from '../types';
 
 interface HistoryEntry {
   keyframes: Keyframe[];
@@ -268,6 +269,17 @@ interface EditorActions {
   copiedStyle: ShapeStyle | null;
   copyStyle: () => void;
   pasteStyle: () => void;
+  // Auto Layout actions
+  toggleAutoLayout: (elementId?: string) => void;
+  setAutoLayoutDirection: (direction: AutoLayoutDirection) => void;
+  setAutoLayoutGap: (gap: number) => void;
+  setAutoLayoutPadding: (top: number, right: number, bottom: number, left: number) => void;
+  setAutoLayoutAlign: (align: AutoLayoutAlign) => void;
+  setAutoLayoutJustify: (justify: AutoLayoutJustify) => void;
+  setAutoLayoutWrap: (wrap: boolean) => void;
+  updateAutoLayout: (config: Partial<AutoLayoutConfig>) => void;
+  setChildSizingMode: (elementId: string, widthMode: SizingMode, heightMode: SizingMode) => void;
+  applyAutoLayout: (parentId: string) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -3053,5 +3065,278 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       ),
     };
   }),
+
+  // Auto Layout actions
+  toggleAutoLayout: (elementId?: string) => {
+    const state = get();
+    const targetId = elementId || state.selectedElementId;
+    if (!targetId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === targetId);
+    if (!element) return;
+    
+    const isEnabled = element.autoLayout?.enabled ?? false;
+    const newAutoLayout: AutoLayoutConfig = isEnabled 
+      ? { ...DEFAULT_AUTO_LAYOUT, enabled: false }
+      : { ...DEFAULT_AUTO_LAYOUT, enabled: true };
+    
+    get().updateElement(targetId, { autoLayout: newAutoLayout });
+    
+    // Apply auto layout if enabling
+    if (!isEnabled) {
+      get().applyAutoLayout(targetId);
+    }
+  },
+
+  setAutoLayoutDirection: (direction: AutoLayoutDirection) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout?.enabled) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { ...element.autoLayout, direction }
+    });
+    get().applyAutoLayout(state.selectedElementId);
+  },
+
+  setAutoLayoutGap: (gap: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout?.enabled) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { ...element.autoLayout, gap }
+    });
+    get().applyAutoLayout(state.selectedElementId);
+  },
+
+  setAutoLayoutPadding: (top: number, right: number, bottom: number, left: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout?.enabled) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { 
+        ...element.autoLayout, 
+        paddingTop: top,
+        paddingRight: right,
+        paddingBottom: bottom,
+        paddingLeft: left
+      }
+    });
+    get().applyAutoLayout(state.selectedElementId);
+  },
+
+  setAutoLayoutAlign: (align: AutoLayoutAlign) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout?.enabled) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { ...element.autoLayout, alignItems: align }
+    });
+    get().applyAutoLayout(state.selectedElementId);
+  },
+
+  setAutoLayoutJustify: (justify: AutoLayoutJustify) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout?.enabled) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { ...element.autoLayout, justifyContent: justify }
+    });
+    get().applyAutoLayout(state.selectedElementId);
+  },
+
+  setAutoLayoutWrap: (wrap: boolean) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout?.enabled) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { ...element.autoLayout, wrap }
+    });
+    get().applyAutoLayout(state.selectedElementId);
+  },
+
+  updateAutoLayout: (config: Partial<AutoLayoutConfig>) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    
+    get().pushHistory();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    if (!element?.autoLayout) return;
+    
+    get().updateElement(state.selectedElementId, {
+      autoLayout: { ...element.autoLayout, ...config }
+    });
+    if (element.autoLayout.enabled) {
+      get().applyAutoLayout(state.selectedElementId);
+    }
+  },
+
+  setChildSizingMode: (elementId: string, widthMode: SizingMode, heightMode: SizingMode) => {
+    const state = get();
+    get().pushHistory();
+    
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    const element = currentKeyframe?.keyElements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    const layoutChild: ChildLayoutConfig = {
+      widthMode,
+      heightMode,
+    };
+    
+    get().updateElement(elementId, { layoutChild });
+    
+    // Re-apply parent's auto layout if element has a parent
+    if (element.parentId) {
+      get().applyAutoLayout(element.parentId);
+    }
+  },
+
+  applyAutoLayout: (parentId: string) => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    
+    const parent = currentKeyframe.keyElements.find(el => el.id === parentId);
+    if (!parent?.autoLayout?.enabled) return;
+    
+    const { direction, gap, paddingTop, paddingRight, paddingBottom, paddingLeft, alignItems, justifyContent } = parent.autoLayout;
+    
+    // Find children
+    const children = currentKeyframe.keyElements.filter(el => el.parentId === parentId);
+    if (children.length === 0) return;
+    
+    const isHorizontal = direction === 'horizontal';
+    const contentWidth = parent.size.width - paddingLeft - paddingRight;
+    const contentHeight = parent.size.height - paddingTop - paddingBottom;
+    
+    // Calculate total children size
+    const totalChildrenMainSize = children.reduce((sum, child) => {
+      return sum + (isHorizontal ? child.size.width : child.size.height);
+    }, 0);
+    const totalGaps = (children.length - 1) * gap;
+    
+    // Calculate starting position based on justifyContent
+    let mainAxisOffset = isHorizontal ? paddingLeft : paddingTop;
+    const availableSpace = (isHorizontal ? contentWidth : contentHeight) - totalChildrenMainSize - totalGaps;
+    
+    if (justifyContent === 'center') {
+      mainAxisOffset += availableSpace / 2;
+    } else if (justifyContent === 'end') {
+      mainAxisOffset += availableSpace;
+    } else if (justifyContent === 'space-between' && children.length > 1) {
+      // gap will be recalculated
+    }
+    
+    const spaceBetweenGap = justifyContent === 'space-between' && children.length > 1
+      ? availableSpace / (children.length - 1)
+      : 0;
+    
+    // Position each child
+    children.forEach((child) => {
+      const childLayoutConfig = child.layoutChild || { widthMode: 'fixed', heightMode: 'fixed' };
+      
+      // Calculate child size based on sizing mode
+      let childWidth = child.size.width;
+      let childHeight = child.size.height;
+      
+      if (childLayoutConfig.widthMode === 'fill') {
+        childWidth = isHorizontal 
+          ? (contentWidth - totalGaps) / children.length 
+          : contentWidth;
+      }
+      if (childLayoutConfig.heightMode === 'fill') {
+        childHeight = isHorizontal 
+          ? contentHeight 
+          : (contentHeight - totalGaps) / children.length;
+      }
+      
+      // Calculate cross-axis position based on alignItems
+      let crossAxisOffset: number;
+      const crossAxisSize = isHorizontal ? contentHeight : contentWidth;
+      const childCrossSize = isHorizontal ? childHeight : childWidth;
+      
+      switch (alignItems) {
+        case 'center':
+          crossAxisOffset = (crossAxisSize - childCrossSize) / 2;
+          break;
+        case 'end':
+          crossAxisOffset = crossAxisSize - childCrossSize;
+          break;
+        case 'stretch':
+          crossAxisOffset = 0;
+          if (isHorizontal) {
+            childHeight = contentHeight;
+          } else {
+            childWidth = contentWidth;
+          }
+          break;
+        default: // 'start'
+          crossAxisOffset = 0;
+      }
+      
+      // Calculate position
+      const x = isHorizontal 
+        ? mainAxisOffset 
+        : paddingLeft + crossAxisOffset;
+      const y = isHorizontal 
+        ? paddingTop + crossAxisOffset 
+        : mainAxisOffset;
+      
+      // Update child
+      set((state) => ({
+        keyframes: state.keyframes.map(kf => {
+          if (kf.id !== state.selectedKeyframeId) return kf;
+          return {
+            ...kf,
+            keyElements: kf.keyElements.map(el => {
+              if (el.id !== child.id) return el;
+              return {
+                ...el,
+                position: { x, y },
+                size: { width: childWidth, height: childHeight },
+              };
+            }),
+          };
+        }),
+      }));
+      
+      // Update main axis offset for next child
+      const actualGap = justifyContent === 'space-between' ? spaceBetweenGap : gap;
+      mainAxisOffset += (isHorizontal ? childWidth : childHeight) + actualGap;
+    });
+  },
 
 }));
