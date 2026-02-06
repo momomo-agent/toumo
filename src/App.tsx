@@ -1834,6 +1834,14 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ writingMode: 'vertical-rl' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>V</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Text Indent</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ textIndent: 0 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>0</button>
+                <button onClick={() => handleStyleChange({ textIndent: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
+                <button onClick={() => handleStyleChange({ textIndent: 32 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>32</button>
+              </div>
+            </div>
           </>
         )}
       </>
