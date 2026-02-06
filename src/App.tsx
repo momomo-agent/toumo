@@ -1405,6 +1405,7 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ fontSize: 16 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16</button>
                 <button onClick={() => handleStyleChange({ fontSize: 24 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>24</button>
                 <button onClick={() => handleStyleChange({ fontSize: 48 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>48</button>
+                <button onClick={() => handleStyleChange({ fontSize: 72 })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>72</button>
               </div>
               <input
                 type="number"
