@@ -17,7 +17,21 @@
 
 .toolbar {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 6px;
 }
 
 .tool-btn {
@@ -38,4 +52,5 @@
 .tool-btn.active {
   background: var(--accent);
   color: white;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
 }
