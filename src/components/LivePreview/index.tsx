@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
-import type { Transition, KeyElement, TriggerType } from '../../types';
+import type { Transition, KeyElement, TriggerType, PrototypeTransitionType } from '../../types';
+import { useSmartAnimate } from '../../hooks/useSmartAnimate';
+import { SpringPresets } from '../../engine/SpringAnimation';
 
 const DEVICE_FRAMES = [
   { id: 'none', label: 'No Frame', width: 0, height: 0, radius: 0 },
@@ -38,6 +40,21 @@ function getTransitionEasing(transition: Transition): string {
   return easingFunctions[transition.curve] || transition.curve || 'ease-out';
 }
 
+// Get spring config from curve name
+function getSpringConfigFromCurve(curve: string): { damping: number; response: number; useSpring: boolean } {
+  switch (curve) {
+    case 'spring-bouncy':
+      return { ...SpringPresets.bouncy, useSpring: true };
+    case 'spring-stiff':
+      return { ...SpringPresets.stiff, useSpring: true };
+    case 'spring-gentle':
+      return { ...SpringPresets.gentle, useSpring: true };
+    case 'spring':
+    default:
+      return { ...SpringPresets.default, useSpring: true };
+  }
+}
+
 export function LivePreview() {
   const { keyframes, transitions, selectedKeyframeId, frameSize } = useEditorStore();
   
@@ -51,18 +68,36 @@ export function LivePreview() {
   const [transitionDuration, setTransitionDuration] = useState(300);
   const [transitionCurve, setTransitionCurve] = useState('ease-out');
   
+  // Smart Animate state
+  const [useSmartAnimateMode, setUseSmartAnimateMode] = useState(true);
+  const [smartAnimateState, smartAnimateActions] = useSmartAnimate([], {
+    springConfig: { ...SpringPresets.default, duration: 0.4, useSpring: true },
+    enabled: true,
+  });
+  
   // Timer refs for timer triggers
   const timerRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   
   // Sync with editor selection when not in preview mode
   useEffect(() => {
-    if (!isTransitioning) {
+    if (!isTransitioning && !smartAnimateState.isAnimating) {
       setCurrentKeyframeId(selectedKeyframeId);
     }
-  }, [selectedKeyframeId, isTransitioning]);
+  }, [selectedKeyframeId, isTransitioning, smartAnimateState.isAnimating]);
+
+  // Initialize smart animate elements when keyframe changes (non-animated)
+  useEffect(() => {
+    const kf = keyframes.find(k => k.id === currentKeyframeId);
+    if (kf && !smartAnimateState.isAnimating) {
+      smartAnimateActions.setElements(kf.keyElements);
+    }
+  }, [currentKeyframeId, keyframes]);
 
   const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
-  const elements = currentKeyframe?.keyElements || [];
+  // Use smart animate elements when animating, otherwise use current keyframe elements
+  const elements = smartAnimateState.isAnimating 
+    ? smartAnimateState.elements 
+    : (currentKeyframe?.keyElements || []);
   const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
 
   // Find available transitions from current state
@@ -70,22 +105,57 @@ export function LivePreview() {
 
   // Execute a transition
   const executeTransition = useCallback((transition: Transition) => {
-    if (isTransitioning) return;
+    if (isTransitioning || smartAnimateState.isAnimating) return;
     
-    setIsTransitioning(true);
-    setTransitionDuration(transition.duration);
-    setTransitionCurve(getTransitionEasing(transition));
+    const targetKeyframe = keyframes.find(kf => kf.id === transition.to);
+    if (!targetKeyframe) return;
     
-    // Apply delay if specified
-    setTimeout(() => {
-      setCurrentKeyframeId(transition.to);
+    // Check if this transition should use Smart Animate
+    const shouldUseSmartAnimate = useSmartAnimateMode && 
+      (transition.curve === 'spring' || 
+       transition.curve === 'spring-gentle' || 
+       transition.curve === 'spring-bouncy' ||
+       transition.curve === 'spring-stiff');
+    
+    if (shouldUseSmartAnimate) {
+      // Use Smart Animate with spring physics
+      const springConfig = getSpringConfigFromCurve(transition.curve);
       
-      // Reset transitioning state after animation completes
+      setIsTransitioning(true);
+      
+      // Apply delay if specified
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, transition.duration);
-    }, transition.delay || 0);
-  }, [isTransitioning]);
+        smartAnimateActions.animateTo(targetKeyframe.keyElements, {
+          springConfig: {
+            ...springConfig,
+            duration: transition.duration / 1000,
+          },
+        });
+        
+        setCurrentKeyframeId(transition.to);
+        
+        // Reset transitioning state after animation completes
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, transition.duration);
+      }, transition.delay || 0);
+    } else {
+      // Use CSS transitions (original behavior)
+      setIsTransitioning(true);
+      setTransitionDuration(transition.duration);
+      setTransitionCurve(getTransitionEasing(transition));
+      
+      // Apply delay if specified
+      setTimeout(() => {
+        setCurrentKeyframeId(transition.to);
+        
+        // Reset transitioning state after animation completes
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, transition.duration);
+      }, transition.delay || 0);
+    }
+  }, [isTransitioning, smartAnimateState.isAnimating, keyframes, useSmartAnimateMode, smartAnimateActions]);
 
   // Find and execute transition by trigger type
   const handleTrigger = useCallback((triggerType: TriggerType, _elementId?: string) => {
@@ -191,8 +261,8 @@ export function LivePreview() {
       {/* Header */}
       <div style={headerStyle}>
         <span>Live Preview</span>
-        <span style={{ fontSize: 10, color: isTransitioning ? '#22c55e' : '#666' }}>
-          {isTransitioning ? '⚡ Transitioning...' : currentKeyframe?.name}
+        <span style={{ fontSize: 10, color: (isTransitioning || smartAnimateState.isAnimating) ? '#22c55e' : '#666' }}>
+          {smartAnimateState.isAnimating ? '🎬 Smart Animate...' : isTransitioning ? '⚡ Transitioning...' : currentKeyframe?.name}
         </span>
       </div>
 
@@ -209,6 +279,19 @@ export function LivePreview() {
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Smart Animate Toggle */}
+      <div style={smartAnimateToggleStyle}>
+        <label style={toggleLabelStyle}>
+          <input
+            type="checkbox"
+            checked={useSmartAnimateMode}
+            onChange={(e) => setUseSmartAnimateMode(e.target.checked)}
+            style={checkboxStyle}
+          />
+          <span>🎬 Smart Animate</span>
+        </label>
       </div>
 
       {/* Trigger Hints */}
@@ -669,5 +752,29 @@ const resetButtonStyle: React.CSSProperties = {
   borderRadius: 6,
   color: '#666',
   fontSize: 10,
+  cursor: 'pointer',
+};
+
+// Smart Animate toggle styles
+const smartAnimateToggleStyle: React.CSSProperties = {
+  padding: '6px 16px',
+  borderBottom: '1px solid #2a2a2a',
+  display: 'flex',
+  alignItems: 'center',
+};
+
+const toggleLabelStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  fontSize: 10,
+  color: '#888',
+  cursor: 'pointer',
+};
+
+const checkboxStyle: React.CSSProperties = {
+  width: 14,
+  height: 14,
+  accentColor: '#22c55e',
   cursor: 'pointer',
 };

@@ -3,6 +3,7 @@ import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Compon
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
+import { performBooleanOperation, canPerformBooleanOperation, type BooleanOperationType } from '../utils/booleanOperations';
 
 interface HistoryEntry {
   keyframes: Keyframe[];
@@ -281,6 +282,11 @@ interface EditorActions {
   updateAutoLayout: (config: Partial<AutoLayoutConfig>) => void;
   setChildSizingMode: (elementId: string, widthMode: SizingMode, heightMode: SizingMode) => void;
   applyAutoLayout: (parentId: string) => void;
+  // Boolean operations
+  booleanUnion: () => void;
+  booleanSubtract: () => void;
+  booleanIntersect: () => void;
+  booleanExclude: () => void;
 }
 
 export type EditorStore = EditorState & EditorActions;

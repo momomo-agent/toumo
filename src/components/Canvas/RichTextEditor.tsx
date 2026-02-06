@@ -2,6 +2,41 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyElement } from '../../types';
 import { useEditorStore } from '../../store';
 
+// Available fonts for the editor
+const FONT_OPTIONS = [
+  { value: 'Inter, sans-serif', label: 'Inter' },
+  { value: 'Arial, sans-serif', label: 'Arial' },
+  { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Times New Roman, serif', label: 'Times' },
+  { value: 'Courier New, monospace', label: 'Courier' },
+  { value: 'Verdana, sans-serif', label: 'Verdana' },
+  { value: 'system-ui, sans-serif', label: 'System' },
+];
+
+// Font size options
+const FONT_SIZE_OPTIONS = [
+  { value: '10px', label: '10' },
+  { value: '12px', label: '12' },
+  { value: '14px', label: '14' },
+  { value: '16px', label: '16' },
+  { value: '18px', label: '18' },
+  { value: '20px', label: '20' },
+  { value: '24px', label: '24' },
+  { value: '28px', label: '28' },
+  { value: '32px', label: '32' },
+  { value: '36px', label: '36' },
+  { value: '48px', label: '48' },
+  { value: '64px', label: '64' },
+];
+
+// Preset colors for quick selection
+const PRESET_COLORS = [
+  '#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff',
+  '#ffff00', '#ff00ff', '#00ffff', '#ff6b6b', '#4ecdc4',
+  '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#636e72',
+];
+
 // Rich text segment with formatting
 export interface TextSegment {
   text: string;
