@@ -11,6 +11,8 @@ import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine, type DistanceIndicator } from './AlignmentGuides';
 import { CanvasHints } from './CanvasHints';
 import { ZoomControls } from './ZoomControls';
+import { GuideLines } from './GuideLines';
+import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
 import { findPresetComponent, createKeyElement } from '../ComponentLibrary';
@@ -33,7 +35,7 @@ export function Canvas() {
     currentTool, canvasOffset, canvasScale,
     selectionBox, frameSize, canvasBackground,
     snapToGrid, gridSize, editingGroupId,
-    isDragging, isResizing,
+    isDragging, isResizing, showRulers,
   } = useEditorStore(useShallow((s) => ({
     keyframes: s.keyframes,
     selectedKeyframeId: s.selectedKeyframeId,
@@ -48,6 +50,7 @@ export function Canvas() {
     gridSize: s.gridSize,
     editingGroupId: s.editingGroupId,
     isDragging: s.isDragging,
+    showRulers: s.showRulers,
     isResizing: s.isResizing,
   })));
 
@@ -79,18 +82,25 @@ export function Canvas() {
   const previousToolRef = useRef<ToolType>(currentTool);
   // Live preview while drawing shapes
   const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number; tool: string } | null>(null);
-  // Zoom percentage toast
-  const [showZoomToast, setShowZoomToast] = useState(false);
+  // Zoom percentage toast (two-phase: visible → fading → hidden)
+  const [zoomToastVisible, setZoomToastVisible] = useState(false);
+  const [zoomToastFading, setZoomToastFading] = useState(false);
   const zoomToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zoomToastFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevScaleRef = useRef(canvasScale);
 
-  // Show zoom toast when scale changes
+  // Show zoom toast when scale changes (with fade-out)
   useEffect(() => {
     if (canvasScale !== prevScaleRef.current) {
       prevScaleRef.current = canvasScale;
-      setShowZoomToast(true);
+      setZoomToastVisible(true);
+      setZoomToastFading(false);
       if (zoomToastTimerRef.current) clearTimeout(zoomToastTimerRef.current);
-      zoomToastTimerRef.current = setTimeout(() => setShowZoomToast(false), 800);
+      if (zoomToastFadeRef.current) clearTimeout(zoomToastFadeRef.current);
+      zoomToastTimerRef.current = setTimeout(() => {
+        setZoomToastFading(true);
+        zoomToastFadeRef.current = setTimeout(() => setZoomToastVisible(false), 300);
+      }, 600);
     }
   }, [canvasScale]);
 
@@ -291,6 +301,22 @@ export function Canvas() {
         considerSnap(elCenterY, draggedCenterY, 'y', { type: 'horizontal', position: elCenterY });
       }
     });
+
+    // Snap to user guides
+    const { guides, snapToGuides } = useEditorStore.getState();
+    if (snapToGuides) {
+      guides.forEach((guide) => {
+        if (guide.orientation === 'vertical') {
+          if (trackLeft) considerSnap(guide.position, position.x, 'x', { type: 'vertical', position: guide.position }, isResize && handle?.includes('w') ? 'left' : undefined);
+          if (trackRight) considerSnap(guide.position, draggedRight, 'x', { type: 'vertical', position: guide.position }, isResize && handle?.includes('e') ? 'right' : undefined);
+          if (allowCenterX) considerSnap(guide.position, draggedCenterX, 'x', { type: 'vertical', position: guide.position });
+        } else {
+          if (trackTop) considerSnap(guide.position, position.y, 'y', { type: 'horizontal', position: guide.position }, isResize && handle?.includes('n') ? 'top' : undefined);
+          if (trackBottom) considerSnap(guide.position, draggedBottom, 'y', { type: 'horizontal', position: guide.position }, isResize && handle?.includes('s') ? 'bottom' : undefined);
+          if (allowCenterY) considerSnap(guide.position, draggedCenterY, 'y', { type: 'horizontal', position: guide.position });
+        }
+      });
+    }
 
     // 计算间距指示器
     const indicators: DistanceIndicator[] = [];
@@ -1291,7 +1317,7 @@ export function Canvas() {
       </div>
       
       {/* Zoom Percentage Toast */}
-      {showZoomToast && (
+      {zoomToastVisible && (
         <div
           style={{
             position: 'absolute',
@@ -1309,12 +1335,24 @@ export function Canvas() {
             pointerEvents: 'none',
             zIndex: 200,
             letterSpacing: '-0.5px',
-            opacity: showZoomToast ? 1 : 0,
-            transition: 'opacity 0.15s ease-out',
+            opacity: zoomToastFading ? 0 : 1,
+            transition: 'opacity 0.3s ease-out',
           }}
         >
           {Math.round(canvasScale * 100)}%
         </div>
+      )}
+
+      {/* Guide Lines (rendered in canvas space) */}
+      <GuideLines stageRect={canvasRef.current?.getBoundingClientRect() ?? null} />
+
+      {/* Rulers */}
+      {showRulers && (
+        <>
+          <HorizontalRuler />
+          <VerticalRuler />
+          <RulerCorner />
+        </>
       )}
 
       {/* Zoom Controls */}
