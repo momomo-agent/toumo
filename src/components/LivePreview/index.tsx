@@ -22,7 +22,21 @@ const easingFunctions: Record<string, string> = {
   'ease-out': 'ease-out',
   'ease-in-out': 'ease-in-out',
   'spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+  'spring-gentle': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  'spring-bouncy': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  'spring-stiff': 'cubic-bezier(0.5, 1.8, 0.5, 0.8)',
 };
+
+// Get CSS easing from transition config
+function getTransitionEasing(transition: Transition): string {
+  // Custom cubic bezier takes priority
+  if (transition.cubicBezier) {
+    const [x1, y1, x2, y2] = transition.cubicBezier;
+    return `cubic-bezier(${x1}, ${y1}, ${x2}, ${y2})`;
+  }
+  // Then check named easing
+  return easingFunctions[transition.curve] || transition.curve || 'ease-out';
+}
 
 export function LivePreview() {
   const { keyframes, transitions, selectedKeyframeId, frameSize } = useEditorStore();
@@ -60,7 +74,7 @@ export function LivePreview() {
     
     setIsTransitioning(true);
     setTransitionDuration(transition.duration);
-    setTransitionCurve(transition.curve || 'ease-out');
+    setTransitionCurve(getTransitionEasing(transition));
     
     // Apply delay if specified
     setTimeout(() => {
@@ -456,7 +470,8 @@ function PreviewContent({
   };
 
   // Get CSS easing
-  const cssEasing = easingFunctions[transitionCurve] || transitionCurve;
+  // transitionCurve is already a valid CSS easing value
+  const cssEasing = transitionCurve;
 
   return (
     <div 
