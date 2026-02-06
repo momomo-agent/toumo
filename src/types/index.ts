@@ -27,6 +27,7 @@ export type ShapeStyle = {
   padding?: number;
   verticalAlign?: 'top' | 'middle' | 'bottom';
   whiteSpace?: 'nowrap' | 'normal' | 'pre-wrap';
+  overflow?: 'visible' | 'hidden' | 'scroll';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
