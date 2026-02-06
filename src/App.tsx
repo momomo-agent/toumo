@@ -101,6 +101,8 @@ export default function App() {
     snapToGrid,
     toggleSnapToGrid,
     setCanvasOffset,
+    interactions,
+    variables,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
@@ -116,6 +118,23 @@ export default function App() {
     setIsPreviewMode(false);
     setPreviewData(null);
   }, [previewData, loadProject]);
+
+  // Handle entering preview mode from editor
+  const handleEnterPreviewMode = useCallback(() => {
+    const data: ProjectData = {
+      version: '1.0',
+      keyframes,
+      transitions,
+      functionalStates,
+      components,
+      frameSize,
+      canvasBackground,
+      interactions,
+      variables,
+    };
+    setPreviewData(data);
+    setIsPreviewMode(true);
+  }, [keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables]);
 
   // If in preview mode, render PreviewMode component
   if (isPreviewMode && previewData) {
@@ -2175,6 +2194,21 @@ export default function App() {
             }}
           >
             🔗 Share
+          </button>
+          <button
+            onClick={handleEnterPreviewMode}
+            style={{
+              padding: '6px 12px',
+              background: '#8b5cf6',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            ▶️ Preview
           </button>
         </div>
       </header>
