@@ -35,6 +35,7 @@
 }
 
 .tool-btn {
+  position: relative;
   width: 32px;
   height: 32px;
   border: none;
@@ -43,7 +44,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   font-size: var(--text-lg);
-  transition: all var(--transition-fast);
+  transition: color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 100ms ease;
 }
 
 .tool-btn:hover {
@@ -51,10 +52,29 @@
   color: var(--text-primary);
 }
 
+.tool-btn:active {
+  transform: scale(0.92);
+}
+
 .tool-btn.active {
   background: var(--accent);
   color: white;
-  box-shadow: 0 0 0 2px var(--accent-subtle);
+  box-shadow: 0 0 0 2px var(--accent-muted), 0 0 12px rgba(99, 102, 241, 0.25);
+  animation: tool-activate 200ms ease-out;
+}
+
+@keyframes tool-activate {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Alignment buttons */
@@ -68,6 +88,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.tool-btn.align-btn:active:not(.disabled) {
+  transform: scale(0.88);
 }
 
 .tool-btn.align-btn.disabled {
