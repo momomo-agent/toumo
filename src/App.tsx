@@ -1598,6 +1598,14 @@ export default function App() {
                 ))}
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Vertical Align</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ verticalAlign: 'top' })} style={{ flex: 1, padding: 4, background: currentStyle.verticalAlign === 'top' ? '#2563eb20' : '#1a1a1a', border: currentStyle.verticalAlign === 'top' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Top</button>
+                <button onClick={() => handleStyleChange({ verticalAlign: 'middle' })} style={{ flex: 1, padding: 4, background: (currentStyle.verticalAlign ?? 'middle') === 'middle' ? '#2563eb20' : '#1a1a1a', border: (currentStyle.verticalAlign ?? 'middle') === 'middle' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Mid</button>
+                <button onClick={() => handleStyleChange({ verticalAlign: 'bottom' })} style={{ flex: 1, padding: 4, background: currentStyle.verticalAlign === 'bottom' ? '#2563eb20' : '#1a1a1a', border: currentStyle.verticalAlign === 'bottom' ? '1px solid #2563eb' : '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Bot</button>
+              </div>
+            </div>
           </>
         )}
       </>
