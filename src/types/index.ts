@@ -257,6 +257,60 @@ export type KeyElement = {
   layoutChild?: ChildLayoutConfig;
   // Constraints (Figma-style) - how element responds to parent resize
   constraints?: ConstraintsConfig;
+  // Prototype link - navigate to another frame on interaction
+  prototypeLink?: PrototypeLink;
+};
+
+// Prototype Link types (Figma-style)
+export type PrototypeLinkTrigger = 'tap' | 'drag' | 'hover' | 'mouseEnter' | 'mouseLeave' | 'mouseDown' | 'mouseUp';
+
+export type PrototypeTransitionType = 
+  | 'instant'      // No animation
+  | 'dissolve'     // Fade transition
+  | 'smartAnimate' // Animate matching layers
+  | 'moveIn'       // Slide in from direction
+  | 'moveOut'      // Slide out to direction
+  | 'push'         // Push current frame out
+  | 'slideIn'      // Slide in overlay
+  | 'slideOut';    // Slide out overlay
+
+export type PrototypeTransitionDirection = 'left' | 'right' | 'top' | 'bottom';
+
+export type PrototypeTransitionEasing = 
+  | 'linear'
+  | 'ease'
+  | 'easeIn'
+  | 'easeOut'
+  | 'easeInOut'
+  | 'spring';
+
+export type PrototypeLink = {
+  enabled: boolean;
+  targetFrameId: string | null;  // null = no link, 'back' = go back
+  trigger: PrototypeLinkTrigger;
+  // Transition settings
+  transition: {
+    type: PrototypeTransitionType;
+    direction?: PrototypeTransitionDirection;
+    duration: number;  // ms
+    easing: PrototypeTransitionEasing;
+  };
+  // Overlay settings (for modals/popups)
+  isOverlay?: boolean;
+  overlayPosition?: 'center' | 'topLeft' | 'topCenter' | 'topRight' | 'bottomLeft' | 'bottomCenter' | 'bottomRight';
+  overlayBackground?: 'none' | 'dim';
+  closeOnOutsideClick?: boolean;
+};
+
+export const DEFAULT_PROTOTYPE_LINK: PrototypeLink = {
+  enabled: false,
+  targetFrameId: null,
+  trigger: 'tap',
+  transition: {
+    type: 'dissolve',
+    duration: 300,
+    easing: 'easeOut',
+  },
 };
 
 export const DEFAULT_STYLE: ShapeStyle = {
