@@ -396,6 +396,7 @@ export function CanvasElement({
           element.style?.skewY ? `skewY(${element.style.skewY}deg)` : '',
         ].filter(Boolean).join(' ') || undefined,
         transformOrigin: element.style?.transformOrigin || 'center',
+        perspective: element.style?.perspective || undefined,
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         backdropFilter: element.style?.backdropBlur ? `blur(${element.style.backdropBlur}px)` : undefined,
         color: element.style?.textColor || '#fff',
