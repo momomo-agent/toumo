@@ -3269,21 +3269,75 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const parent = currentKeyframe.keyElements.find(el => el.id === parentId);
     if (!parent?.autoLayout?.enabled) return;
     
-    const { direction, gap, paddingTop, paddingRight, paddingBottom, paddingLeft, alignItems, justifyContent } = parent.autoLayout;
+    const { 
+      direction, gap, paddingTop, paddingRight, paddingBottom, paddingLeft, 
+      alignItems, justifyContent,
+      primaryAxisSizing = 'fixed',
+      counterAxisSizing = 'fixed'
+    } = parent.autoLayout;
     
     // Find children
     const children = currentKeyframe.keyElements.filter(el => el.parentId === parentId);
     if (children.length === 0) return;
     
     const isHorizontal = direction === 'horizontal';
-    const contentWidth = parent.size.width - paddingLeft - paddingRight;
-    const contentHeight = parent.size.height - paddingTop - paddingBottom;
     
-    // Calculate total children size
+    // ========== HUG CONTENTS LOGIC ==========
+    // Calculate children's total size for hug mode
     const totalChildrenMainSize = children.reduce((sum, child) => {
       return sum + (isHorizontal ? child.size.width : child.size.height);
     }, 0);
     const totalGaps = (children.length - 1) * gap;
+    
+    // Find max cross-axis size among children
+    const maxChildCrossSize = Math.max(...children.map(child => 
+      isHorizontal ? child.size.height : child.size.width
+    ));
+    
+    // Calculate new parent size based on sizing modes
+    let newParentWidth = parent.size.width;
+    let newParentHeight = parent.size.height;
+    
+    if (isHorizontal) {
+      // Horizontal layout: primary axis = width, counter axis = height
+      if (primaryAxisSizing === 'hug') {
+        newParentWidth = totalChildrenMainSize + totalGaps + paddingLeft + paddingRight;
+      }
+      if (counterAxisSizing === 'hug') {
+        newParentHeight = maxChildCrossSize + paddingTop + paddingBottom;
+      }
+    } else {
+      // Vertical layout: primary axis = height, counter axis = width
+      if (primaryAxisSizing === 'hug') {
+        newParentHeight = totalChildrenMainSize + totalGaps + paddingTop + paddingBottom;
+      }
+      if (counterAxisSizing === 'hug') {
+        newParentWidth = maxChildCrossSize + paddingLeft + paddingRight;
+      }
+    }
+    
+    // Update parent size if changed (hug mode)
+    if (newParentWidth !== parent.size.width || newParentHeight !== parent.size.height) {
+      set((state) => ({
+        keyframes: state.keyframes.map(kf => {
+          if (kf.id !== state.selectedKeyframeId) return kf;
+          return {
+            ...kf,
+            keyElements: kf.keyElements.map(el => {
+              if (el.id !== parentId) return el;
+              return {
+                ...el,
+                size: { width: newParentWidth, height: newParentHeight },
+              };
+            }),
+          };
+        }),
+      }));
+    }
+    
+    // Use the (possibly updated) parent size for content area
+    const contentWidth = newParentWidth - paddingLeft - paddingRight;
+    const contentHeight = newParentHeight - paddingTop - paddingBottom;
     
     // Calculate starting position based on justifyContent
     let mainAxisOffset = isHorizontal ? paddingLeft : paddingTop;

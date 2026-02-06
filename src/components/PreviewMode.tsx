@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import type { Transition, KeyElement, TriggerType, Size, InteractionAction } from '../types';
+import type { Transition, KeyElement, TriggerType, Size, InteractionAction, PrototypeLink, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../types';
 import { clearPreviewHash, type ProjectData } from '../utils/shareUtils';
 import { useGestureHandler } from '../hooks/useGestureHandler';
 import { useSpringAnimation, SpringPresets } from '../hooks/useSpringAnimation';
+
+// Easing functions for prototype transitions
+const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
+  linear: 'linear',
+  ease: 'ease',
+  easeIn: 'ease-in',
+  easeOut: 'ease-out',
+  easeInOut: 'ease-in-out',
+  spring: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+};
 
 interface PreviewModeProps {
   projectData: ProjectData;
@@ -46,6 +56,21 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
   });
   
   const timerRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  
+  // Prototype link transition state
+  const [prototypeTransition, setPrototypeTransition] = useState<{
+    active: boolean;
+    type: PrototypeTransitionType;
+    direction?: PrototypeTransitionDirection;
+    duration: number;
+    easing: string;
+    fromFrameId: string;
+    toFrameId: string;
+    phase: 'out' | 'in';
+  } | null>(null);
+  
+  // Navigation history for "back" functionality
+  const navigationHistory = useRef<string[]>([]);
 
   const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
@@ -76,6 +101,58 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
       return next;
     });
   }, []);
+
+  // Prototype link navigation handler
+  const handlePrototypeNavigation = useCallback((link: PrototypeLink, fromFrameId: string) => {
+    if (!link.enabled || !link.targetFrameId || isTransitioning || prototypeTransition?.active) return;
+    
+    let targetId = link.targetFrameId;
+    
+    // Handle "back" navigation
+    if (targetId === 'back') {
+      const prevFrame = navigationHistory.current.pop();
+      if (!prevFrame) return;
+      targetId = prevFrame;
+    } else {
+      // Add current frame to history
+      navigationHistory.current.push(fromFrameId);
+    }
+    
+    const targetKeyframe = keyframes.find(kf => kf.id === targetId);
+    if (!targetKeyframe) return;
+    
+    const { type, direction, duration, easing } = link.transition;
+    const easingCss = prototypeEasings[easing] || 'ease-out';
+    
+    // Instant transition
+    if (type === 'instant') {
+      setCurrentKeyframeId(targetId);
+      return;
+    }
+    
+    // Animated transition
+    setPrototypeTransition({
+      active: true,
+      type,
+      direction,
+      duration,
+      easing: easingCss,
+      fromFrameId,
+      toFrameId: targetId,
+      phase: 'out',
+    });
+    
+    // After half duration, switch frame and start "in" phase
+    setTimeout(() => {
+      setCurrentKeyframeId(targetId);
+      setPrototypeTransition(prev => prev ? { ...prev, phase: 'in' } : null);
+    }, type === 'dissolve' || type === 'smartAnimate' ? duration / 2 : duration);
+    
+    // Complete transition
+    setTimeout(() => {
+      setPrototypeTransition(null);
+    }, duration);
+  }, [keyframes, isTransitioning, prototypeTransition]);
 
   // 导航处理 (切换 keyframe)
   const handleNavigate = useCallback((frameId: string) => {
@@ -204,6 +281,9 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
         availableTriggers={triggerHints}
         elementStates={elementStates}
         hasInteractions={interactions.length > 0}
+        onPrototypeNavigation={handlePrototypeNavigation}
+        currentFrameId={currentKeyframeId}
+        prototypeTransition={prototypeTransition}
       />
       <div style={{ ...controlsStyle, opacity: showControls ? 1 : 0, pointerEvents: showControls ? 'auto' : 'none' }}>
         <div style={controlsInnerStyle}>
@@ -250,11 +330,21 @@ interface PreviewContentProps {
   availableTriggers: string[];
   elementStates: Map<string, string>;
   hasInteractions: boolean;
+  onPrototypeNavigation: (link: PrototypeLink, fromFrameId: string) => void;
+  currentFrameId: string;
+  prototypeTransition: {
+    active: boolean;
+    type: PrototypeTransitionType;
+    direction?: PrototypeTransitionDirection;
+    duration: number;
+    easing: string;
+    phase: 'out' | 'in';
+  } | null;
 }
 
 const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
   function PreviewContent(
-    { elements, frameSize, canvasBackground, onTrigger, transitionDuration, transitionCurve, availableTriggers, elementStates, hasInteractions },
+    { elements, frameSize, canvasBackground, onTrigger, transitionDuration, transitionCurve, availableTriggers, elementStates, hasInteractions, onPrototypeNavigation, currentFrameId, prototypeTransition },
     ref
   ) {
     const [hoveredElement, setHoveredElement] = useState<string | null>(null);
@@ -275,6 +365,52 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
     };
 
     const scale = Math.min((window.innerWidth * 0.9) / frameSize.width, (window.innerHeight * 0.85) / frameSize.height, 1);
+    
+    // Calculate transition animation styles
+    const getTransitionStyle = (): React.CSSProperties => {
+      if (!prototypeTransition?.active) return {};
+      
+      const { type, direction, duration, easing, phase } = prototypeTransition;
+      const isOut = phase === 'out';
+      
+      switch (type) {
+        case 'dissolve':
+          return {
+            opacity: isOut ? 0 : 1,
+            transition: `opacity ${duration / 2}ms ${easing}`,
+          };
+        case 'moveIn':
+        case 'slideIn': {
+          if (isOut) return {};
+          const offset = direction === 'left' ? '-100%' : direction === 'right' ? '100%' : direction === 'top' ? '-100%' : '100%';
+          const axis = direction === 'left' || direction === 'right' ? 'X' : 'Y';
+          return {
+            transform: `translate${axis}(0)`,
+            transition: `transform ${duration}ms ${easing}`,
+          };
+        }
+        case 'moveOut':
+        case 'slideOut': {
+          if (!isOut) return {};
+          const offset = direction === 'left' ? '-100%' : direction === 'right' ? '100%' : direction === 'top' ? '-100%' : '100%';
+          const axis = direction === 'left' || direction === 'right' ? 'X' : 'Y';
+          return {
+            transform: `translate${axis}(${offset})`,
+            transition: `transform ${duration}ms ${easing}`,
+          };
+        }
+        case 'push': {
+          const offset = direction === 'left' ? '-100%' : direction === 'right' ? '100%' : direction === 'top' ? '-100%' : '100%';
+          const axis = direction === 'left' || direction === 'right' ? 'X' : 'Y';
+          return {
+            transform: isOut ? `translate${axis}(${offset})` : `translate${axis}(0)`,
+            transition: `transform ${duration}ms ${easing}`,
+          };
+        }
+        default:
+          return {};
+      }
+    };
 
     return (
       <div 

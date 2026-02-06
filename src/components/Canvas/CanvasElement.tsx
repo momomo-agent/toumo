@@ -3,6 +3,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import type { KeyElement, Position } from '../../types';
 import { useEditorStore } from '../../store';
 import { ContextMenu } from '../ContextMenu';
+import { RichTextEditor } from './RichTextEditor';
 
 const MIN_SIZE = 16;
 
@@ -52,12 +53,10 @@ export function CanvasElement({
     setIsDragging,
     setIsResizing,
     pushHistory,
-    updateElement,
     resizeGroup,
   } = useEditorStore();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(element.text || '');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   // Don't render hidden elements
@@ -534,46 +533,31 @@ export function CanvasElement({
       )}
       {isText ? (
         isEditing ? (
-          <input
-            type="text"
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            onBlur={() => {
-              updateElement(element.id, { text: editText });
-              setIsEditing(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                updateElement(element.id, { text: editText });
-                setIsEditing(false);
-              }
-              if (e.key === 'Escape') {
-                setEditText(element.text || '');
-                setIsEditing(false);
-              }
-            }}
-            autoFocus
-            style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              color: '#fff',
-              fontSize: element.style?.fontSize || 14,
-              textAlign: element.style?.textAlign || 'center',
-              outline: 'none',
-              padding: element.style?.padding ? `${element.style.padding}px` : '0 8px',
-            }}
+          <RichTextEditor
+            element={element}
+            onClose={() => setIsEditing(false)}
           />
         ) : (
-          <span
-            onDoubleClick={() => {
-              setEditText(element.text || '');
+          <div
+            onDoubleClick={(e) => {
+              e.stopPropagation();
               setIsEditing(true);
             }}
-            style={{ padding: '0 8px', width: '100%', textAlign: element.style?.textAlign || 'center' }}
+            style={{ 
+              padding: element.style?.padding ? `${element.style.padding}px` : '0 8px',
+              width: '100%', 
+              textAlign: element.style?.textAlign || 'center',
+              cursor: 'text',
+            }}
+            // Render rich text HTML if available
+            dangerouslySetInnerHTML={
+              (element.style as any)?.richTextHtml 
+                ? { __html: (element.style as any).richTextHtml }
+                : undefined
+            }
           >
-            {element.text ?? 'Text'}
-          </span>
+            {!(element.style as any)?.richTextHtml && (element.text ?? 'Text')}
+          </div>
         )
       ) : null}
       

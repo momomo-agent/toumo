@@ -27,10 +27,9 @@ export function segmentsToPlainText(segments: TextSegment[]): string {
 interface RichTextEditorProps {
   element: KeyElement;
   onClose: () => void;
-  scale: number;
 }
 
-export function RichTextEditor({ element, onClose, scale }: RichTextEditorProps) {
+export function RichTextEditor({ element, onClose }: RichTextEditorProps) {
   const { updateElement, pushHistory } = useEditorStore();
   const editorRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
