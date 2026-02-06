@@ -152,8 +152,8 @@
 }
 
 .component-item:hover {
-  background: #1a1a1a;
-  border-color: #333;
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
   transform: translateY(-1px);
 }
 

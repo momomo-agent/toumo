@@ -1,5 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
-import { cubicBezierAt } from '../../data/curvePresets';
+import { useRef, useState, useCallback } from 'react';
 
 interface Props {
   value: [number, number, number, number];
