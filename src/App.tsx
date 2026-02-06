@@ -252,6 +252,11 @@ export default function App() {
         event.preventDefault();
         return;
       }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+        handleSaveProject();
+        event.preventDefault();
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'g') {
         if (event.shiftKey) {
           ungroupSelectedElements();
