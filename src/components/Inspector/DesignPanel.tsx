@@ -730,10 +730,10 @@ export function DesignPanel() {
       fillOpacity?: number;
       opacity?: number;
       borderRadius?: number;
-      borderTopLeftRadius?: number;
-      borderTopRightRadius?: number;
-      borderBottomLeftRadius?: number;
-      borderBottomRightRadius?: number;
+      borderRadiusTL?: number;
+      borderRadiusTR?: number;
+      borderRadiusBR?: number;
+      borderRadiusBL?: number;
       stroke?: string;
       strokeWidth?: number;
       strokeOpacity?: number;
@@ -764,18 +764,18 @@ export function DesignPanel() {
       setBlendMode(element.style.blendMode || 'normal');
       
       // Corner radius
-      const hasIndependent = element.style.borderTopLeftRadius !== undefined ||
-        element.style.borderTopRightRadius !== undefined ||
-        element.style.borderBottomLeftRadius !== undefined ||
-        element.style.borderBottomRightRadius !== undefined;
+      const hasIndependent = element.style.borderRadiusTL !== undefined ||
+        element.style.borderRadiusTR !== undefined ||
+        element.style.borderRadiusBL !== undefined ||
+        element.style.borderRadiusBR !== undefined;
       
       if (hasIndependent) {
         setIndependentCorners(true);
         setCorners({
-          tl: element.style.borderTopLeftRadius || 0,
-          tr: element.style.borderTopRightRadius || 0,
-          bl: element.style.borderBottomLeftRadius || 0,
-          br: element.style.borderBottomRightRadius || 0,
+          tl: element.style.borderRadiusTL || 0,
+          tr: element.style.borderRadiusTR || 0,
+          bl: element.style.borderRadiusBL || 0,
+          br: element.style.borderRadiusBR || 0,
         });
       } else {
         setIndependentCorners(false);
@@ -1032,18 +1032,20 @@ export function DesignPanel() {
             <input
               type="number"
               className="figma-number-input"
-              value={independentCorners ? corners.tl : cornerRadius}
+              placeholder={independentCorners && !(corners.tl === corners.tr && corners.tr === corners.br && corners.br === corners.bl) ? 'Mixed' : undefined}
+              value={independentCorners ? (corners.tl === corners.tr && corners.tr === corners.br && corners.br === corners.bl ? corners.tl : '') : cornerRadius}
               min={0}
               onChange={(e) => {
                 const val = parseInt(e.target.value) || 0;
                 if (independentCorners) {
-                  const newCorners = { ...corners, tl: val };
+                  // In independent mode, main input controls all four corners together
+                  const newCorners = { tl: val, tr: val, br: val, bl: val };
                   setCorners(newCorners);
                   updateStyle({
-                    borderTopLeftRadius: newCorners.tl,
-                    borderTopRightRadius: newCorners.tr,
-                    borderBottomLeftRadius: newCorners.bl,
-                    borderBottomRightRadius: newCorners.br,
+                    borderRadiusTL: val,
+                    borderRadiusTR: val,
+                    borderRadiusBR: val,
+                    borderRadiusBL: val,
                   });
                 } else {
                   setCornerRadius(val);
@@ -1055,7 +1057,25 @@ export function DesignPanel() {
               className={`figma-icon-btn ${independentCorners ? 'active' : ''}`}
               onClick={() => {
                 if (!independentCorners) {
+                  // Switching to independent: populate all four from current uniform value
                   setCorners({ tl: cornerRadius, tr: cornerRadius, br: cornerRadius, bl: cornerRadius });
+                  updateStyle({
+                    borderRadiusTL: cornerRadius,
+                    borderRadiusTR: cornerRadius,
+                    borderRadiusBR: cornerRadius,
+                    borderRadiusBL: cornerRadius,
+                  });
+                } else {
+                  // Switching back to linked: use TL as the uniform value, clear individual overrides
+                  const uniformVal = corners.tl;
+                  setCornerRadius(uniformVal);
+                  updateStyle({
+                    borderRadius: uniformVal,
+                    borderRadiusTL: undefined,
+                    borderRadiusTR: undefined,
+                    borderRadiusBR: undefined,
+                    borderRadiusBL: undefined,
+                  });
                 }
                 setIndependentCorners(!independentCorners);
               }}
@@ -1070,22 +1090,22 @@ export function DesignPanel() {
             <NumberInput label="TL" value={corners.tl} onChange={(v) => {
               const newCorners = { ...corners, tl: v };
               setCorners(newCorners);
-              updateStyle({ borderTopLeftRadius: v });
+              updateStyle({ borderRadiusTL: v });
             }} min={0} />
             <NumberInput label="TR" value={corners.tr} onChange={(v) => {
               const newCorners = { ...corners, tr: v };
               setCorners(newCorners);
-              updateStyle({ borderTopRightRadius: v });
+              updateStyle({ borderRadiusTR: v });
             }} min={0} />
             <NumberInput label="BL" value={corners.bl} onChange={(v) => {
               const newCorners = { ...corners, bl: v };
               setCorners(newCorners);
-              updateStyle({ borderBottomLeftRadius: v });
+              updateStyle({ borderRadiusBL: v });
             }} min={0} />
             <NumberInput label="BR" value={corners.br} onChange={(v) => {
               const newCorners = { ...corners, br: v };
               setCorners(newCorners);
-              updateStyle({ borderBottomRightRadius: v });
+              updateStyle({ borderRadiusBR: v });
             }} min={0} />
           </div>
         )}
