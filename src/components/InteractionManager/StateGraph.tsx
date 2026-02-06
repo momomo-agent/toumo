@@ -245,35 +245,43 @@ export function StateGraph() {
         }}
       >
         <defs>
+          {/* Glow filter for selected edges */}
+          <filter id="edge-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <marker
             id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
+            markerWidth="8"
+            markerHeight="6"
+            refX="7"
+            refY="3"
             orient="auto"
           >
-            <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+            <path d="M 0 0.5 L 7 3 L 0 5.5 L 1.5 3 Z" fill="#555" />
           </marker>
           <marker
             id="arrowhead-selected"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
+            markerWidth="8"
+            markerHeight="6"
+            refX="7"
+            refY="3"
             orient="auto"
           >
-            <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" />
+            <path d="M 0 0.5 L 7 3 L 0 5.5 L 1.5 3 Z" fill="#60a5fa" />
           </marker>
           <marker
             id="arrowhead-drag"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
+            markerWidth="8"
+            markerHeight="6"
+            refX="7"
+            refY="3"
             orient="auto"
           >
-            <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+            <path d="M 0 0.5 L 7 3 L 0 5.5 L 1.5 3 Z" fill="#4ade80" />
           </marker>
         </defs>
 
@@ -289,10 +297,16 @@ export function StateGraph() {
               <path
                 d={getEdgePath(fromPos, toPos)}
                 fill="none"
-                stroke={isSelected ? '#2563eb' : '#444'}
-                strokeWidth={isSelected ? 2.5 : 2}
+                stroke={isSelected ? '#3b82f6' : '#3a3a3e'}
+                strokeWidth={isSelected ? 2.5 : 1.5}
+                strokeLinecap="round"
                 markerEnd={isSelected ? 'url(#arrowhead-selected)' : 'url(#arrowhead)'}
-                style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+                filter={isSelected ? 'url(#edge-glow)' : undefined}
+                style={{
+                  pointerEvents: 'stroke',
+                  cursor: 'pointer',
+                  transition: 'stroke 0.2s, stroke-width 0.2s',
+                }}
                 onClick={(e) => handleTransitionClick(e, tr.id)}
                 onContextMenu={(e) => handleTransitionContextMenu(e, tr.id)}
               />

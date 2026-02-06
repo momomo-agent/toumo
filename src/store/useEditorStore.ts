@@ -332,6 +332,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   editingInstanceId: null,
   // Group editing mode
   editingGroupId: null as string | null,
+  hoveredElementId: null as string | null,
 
   // Actions
   setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
