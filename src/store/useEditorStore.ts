@@ -221,6 +221,7 @@ interface EditorActions {
   setFlexBasis: (basis: string) => void;
   setAlignSelf: (align: 'auto' | 'flex-start' | 'flex-end' | 'center' | 'stretch') => void;
   setOrder: (order: number) => void;
+  setGridTemplate: (columns: string, rows: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2524,6 +2525,23 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, order } 
+      });
+    }
+  },
+
+  setGridTemplate: (columns: string, rows: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style, 
+          gridTemplateColumns: columns,
+          gridTemplateRows: rows 
+        } 
       });
     }
   },
