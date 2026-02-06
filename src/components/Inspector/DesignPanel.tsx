@@ -5,6 +5,8 @@ import { GradientEditor } from './GradientEditor';
 import { AutoLayoutPanel } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
 import { PrototypeLinkPanel } from './PrototypeLinkPanel';
+import { TextPropertiesPanel } from './TextPropertiesPanel';
+import './TextPropertiesPanel.css';
 import './DesignPanel.css';
 
 // Icons as SVG components
@@ -1071,6 +1073,9 @@ export function DesignPanel() {
           </div>
         )}
       </Section>
+
+      {/* Text Properties Section (only for text elements) */}
+      <TextPropertiesPanel />
 
       {/* Fill Section */}
       <Section title="Fill" onAdd={addFill}>

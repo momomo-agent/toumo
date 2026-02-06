@@ -30,8 +30,12 @@ interface PresetComponent {
   createElements: () => PresetElementData[];
 }
 
+// 根据 ID 查找预置组件
+export const findPresetComponent = (id: string): PresetComponent | undefined =>
+  PRESET_COMPONENTS.find((c) => c.id === id);
+
 // 创建完整的 KeyElement
-const createKeyElement = (data: PresetElementData, position: { x: number; y: number }): KeyElement => ({
+export const createKeyElement = (data: PresetElementData, position: { x: number; y: number }): KeyElement => ({
   id: generateId(),
   name: data.name,
   category: 'content',
@@ -652,6 +656,278 @@ const PRESET_COMPONENTS: PresetComponent[] = [
       text: 'Toast message',
     }],
   },
+  // 基础 - 分割线
+  {
+    id: 'divider',
+    name: 'Divider',
+    category: 'basic',
+    icon: '➖',
+    description: '分割线',
+    createElements: () => [{
+      name: 'Divider',
+      shapeType: 'rectangle',
+      size: { width: 350, height: 1 },
+      style: {
+        fill: '#38383a',
+        fillOpacity: 0.65,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 1,
+        borderRadius: 0,
+      } as ShapeStyle,
+    }],
+  },
+  // 基础 - 头像
+  {
+    id: 'avatar',
+    name: 'Avatar',
+    category: 'basic',
+    icon: '👤',
+    description: '圆形头像占位',
+    createElements: () => [{
+      name: 'Avatar',
+      shapeType: 'ellipse',
+      size: { width: 48, height: 48 },
+      style: {
+        fill: '#3b82f6',
+        fillOpacity: 1,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 1,
+        borderRadius: 24,
+        color: '#ffffff',
+        fontSize: 18,
+        textAlign: 'center',
+      } as ShapeStyle,
+      text: 'A',
+    }],
+  },
+  // 基础 - 徽标
+  {
+    id: 'badge',
+    name: 'Badge',
+    category: 'basic',
+    icon: '🔴',
+    description: '数字徽标',
+    createElements: () => [{
+      name: 'Badge',
+      shapeType: 'ellipse',
+      size: { width: 22, height: 22 },
+      style: {
+        fill: '#ef4444',
+        fillOpacity: 1,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 1,
+        borderRadius: 11,
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: '600',
+        textAlign: 'center',
+      } as ShapeStyle,
+      text: '3',
+    }],
+  },
+  // 表单 - 搜索栏
+  {
+    id: 'search-bar',
+    name: 'Search Bar',
+    category: 'form',
+    icon: '🔍',
+    description: 'iOS 风格搜索栏',
+    createElements: () => [{
+      name: 'Search Bar',
+      shapeType: 'rectangle',
+      size: { width: 358, height: 36 },
+      style: {
+        fill: '#1c1c1e',
+        fillOpacity: 1,
+        stroke: '',
+        strokeWidth: 0,
+        strokeOpacity: 1,
+        borderRadius: 10,
+        color: '#8e8e93',
+        fontSize: 15,
+        textAlign: 'center',
+      } as ShapeStyle,
+      text: '🔍 Search',
+    }],
+  },
+  // 表单 - 复选框
+  {
+    id: 'checkbox',
+    name: 'Checkbox',
+    category: 'form',
+    icon: '☑️',
+    description: '复选框',
+    createElements: () => [
+      {
+        name: 'Checkbox Box',
+        shapeType: 'rectangle',
+        size: { width: 22, height: 22 },
+        position: { x: 0, y: 0 },
+        style: {
+          fill: '#3b82f6',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 6,
+        } as ShapeStyle,
+        text: '✓',
+      },
+      {
+        name: 'Checkbox Label',
+        shapeType: 'text',
+        size: { width: 100, height: 22 },
+        position: { x: 30, y: 0 },
+        text: 'Option',
+        style: {
+          fill: 'transparent',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+          color: '#ffffff',
+          fontSize: 15,
+        } as ShapeStyle,
+      },
+    ],
+  },
+  // 导航 - 列表项
+  {
+    id: 'list-item',
+    name: 'List Item',
+    category: 'navigation',
+    icon: '📋',
+    description: 'iOS 风格列表项',
+    createElements: () => [
+      {
+        name: 'List Item BG',
+        shapeType: 'rectangle',
+        size: { width: 390, height: 44 },
+        position: { x: 0, y: 0 },
+        style: {
+          fill: '#1c1c1e',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+        } as ShapeStyle,
+      },
+      {
+        name: 'List Item Label',
+        shapeType: 'text',
+        size: { width: 300, height: 44 },
+        position: { x: 16, y: 0 },
+        text: 'Settings',
+        style: {
+          fill: 'transparent',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+          color: '#ffffff',
+          fontSize: 17,
+        } as ShapeStyle,
+      },
+      {
+        name: 'List Item Arrow',
+        shapeType: 'text',
+        size: { width: 20, height: 44 },
+        position: { x: 360, y: 0 },
+        text: '›',
+        style: {
+          fill: 'transparent',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+          color: '#48484a',
+          fontSize: 22,
+          textAlign: 'center',
+        } as ShapeStyle,
+      },
+      {
+        name: 'List Item Divider',
+        shapeType: 'rectangle',
+        size: { width: 374, height: 0.5 },
+        position: { x: 16, y: 43.5 },
+        style: {
+          fill: '#38383a',
+          fillOpacity: 0.6,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+        } as ShapeStyle,
+      },
+    ],
+  },
+  // 导航 - Status Bar
+  {
+    id: 'status-bar',
+    name: 'Status Bar',
+    category: 'navigation',
+    icon: '📶',
+    description: 'iOS 状态栏',
+    createElements: () => [
+      {
+        name: 'Status Bar BG',
+        shapeType: 'rectangle',
+        size: { width: 390, height: 47 },
+        position: { x: 0, y: 0 },
+        style: {
+          fill: '#000000',
+          fillOpacity: 0,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+        } as ShapeStyle,
+      },
+      {
+        name: 'Time',
+        shapeType: 'text',
+        size: { width: 54, height: 21 },
+        position: { x: 32, y: 15 },
+        text: '9:41',
+        style: {
+          fill: 'transparent',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+          color: '#ffffff',
+          fontSize: 15,
+          fontWeight: '600',
+        } as ShapeStyle,
+      },
+      {
+        name: 'Icons',
+        shapeType: 'text',
+        size: { width: 70, height: 21 },
+        position: { x: 300, y: 15 },
+        text: '📶 🔋',
+        style: {
+          fill: 'transparent',
+          fillOpacity: 1,
+          stroke: '',
+          strokeWidth: 0,
+          strokeOpacity: 1,
+          borderRadius: 0,
+          color: '#ffffff',
+          fontSize: 12,
+          textAlign: 'right',
+        } as ShapeStyle,
+      },
+    ],
+  },
 ];
 
 export const ComponentLibrary: React.FC = () => {
@@ -803,39 +1079,52 @@ export const ComponentLibrary: React.FC = () => {
   );
 };
 
+// 构建渐变 CSS
+const buildGradientBg = (style: ShapeStyle): string | undefined => {
+  if (!style.gradientType || style.gradientType === 'none' || !style.gradientStops?.length) return undefined;
+  const stops = style.gradientStops.map((s) => `${s.color} ${s.position}%`).join(', ');
+  if (style.gradientType === 'radial') return `radial-gradient(circle, ${stops})`;
+  return `linear-gradient(${style.gradientAngle ?? 180}deg, ${stops})`;
+};
+
 // 组件缩略图预览
 const ComponentPreview: React.FC<{ component: PresetComponent }> = ({ component }) => {
   const elements = component.createElements();
-  const scale = 0.3;
 
   // 计算边界框
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   elements.forEach((el) => {
     const pos = el.position || { x: 0, y: 0 };
-    const size = el.size || { width: 100, height: 40 };
     minX = Math.min(minX, pos.x);
     minY = Math.min(minY, pos.y);
-    maxX = Math.max(maxX, pos.x + size.width);
-    maxY = Math.max(maxY, pos.y + size.height);
+    maxX = Math.max(maxX, pos.x + el.size.width);
+    maxY = Math.max(maxY, pos.y + el.size.height);
   });
 
   const width = maxX - minX;
   const height = maxY - minY;
 
+  // 自适应缩放：适配 48×36 预览区域
+  const maxW = 48;
+  const maxH = 36;
+  const scale = Math.min(maxW / width, maxH / height, 0.4);
+
   return (
     <div
       className="preview-container"
       style={{
-        width: Math.min(width * scale, 60),
-        height: Math.min(height * scale, 40),
+        width: width * scale,
+        height: height * scale,
         position: 'relative',
         overflow: 'hidden',
       }}
     >
       {elements.map((el, index) => {
         const pos = el.position || { x: 0, y: 0 };
-        const size = el.size || { width: 100, height: 40 };
-        const style = el.style || {};
+        const style = el.style || {} as ShapeStyle;
+        const gradient = buildGradientBg(style);
+        const isText = el.shapeType === 'text';
+        const isEllipse = el.shapeType === 'ellipse';
 
         return (
           <div
@@ -844,14 +1133,35 @@ const ComponentPreview: React.FC<{ component: PresetComponent }> = ({ component 
               position: 'absolute',
               left: (pos.x - minX) * scale,
               top: (pos.y - minY) * scale,
-              width: size.width * scale,
-              height: size.height * scale,
-              backgroundColor: style.fill || '#3b82f6',
+              width: el.size.width * scale,
+              height: el.size.height * scale,
+              backgroundColor: gradient ? undefined : (style.fill || '#3b82f6'),
+              background: gradient || undefined,
               opacity: style.fillOpacity ?? 1,
-              borderRadius: (style.borderRadius || 0) * scale,
-              border: style.strokeWidth ? `${Math.max(1, style.strokeWidth * scale)}px solid ${style.stroke}` : 'none',
+              borderRadius: isEllipse ? '50%' : (style.borderRadius || 0) * scale,
+              border: style.strokeWidth
+                ? `${Math.max(0.5, style.strokeWidth * scale)}px solid ${style.stroke}`
+                : 'none',
+              boxShadow: style.shadowBlur
+                ? `${(style.shadowOffsetX || 0) * scale}px ${(style.shadowOffsetY || 0) * scale}px ${style.shadowBlur * scale}px ${style.shadowColor || '#00000040'}`
+                : undefined,
+              // 文字渲染
+              ...(el.text ? {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: (style.textAlign as string) === 'center' ? 'center' : 'flex-start',
+                color: style.color || '#fff',
+                fontSize: Math.max(4, (style.fontSize || 14) * scale),
+                fontWeight: style.fontWeight as any,
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                whiteSpace: 'nowrap' as const,
+                paddingLeft: isText ? 0 : 2,
+              } : {}),
             }}
-          />
+          >
+            {el.text ? el.text.split('\n')[0] : null}
+          </div>
         );
       })}
     </div>
