@@ -240,6 +240,25 @@ export function StateGraph() {
         overflow: 'hidden',
       }}
     >
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes sg-selected-pulse {
+          0%, 100% { box-shadow: 0 0 16px rgba(59,130,246,0.2), 0 4px 16px rgba(0,0,0,0.4); }
+          50% { box-shadow: 0 0 28px rgba(59,130,246,0.35), 0 4px 16px rgba(0,0,0,0.4); }
+        }
+        @keyframes sg-edge-flow {
+          from { stroke-dashoffset: 20; }
+          to { stroke-dashoffset: 0; }
+        }
+        .sg-node:hover:not(.sg-node-dragging) {
+          border-color: #4a4a50 !important;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.35), 0 0 8px rgba(255,255,255,0.03) !important;
+        }
+        .sg-node-selected {
+          animation: sg-selected-pulse 2.5s ease-in-out infinite;
+        }
+        .sg-edge-hover:hover { stroke: #666 !important; stroke-width: 2.5 !important; }
+      `}</style>
       {/* SVG for edges */}
       <svg
         style={{
@@ -301,18 +320,32 @@ export function StateGraph() {
           
           return (
             <g key={tr.id}>
+              {/* Selected edge animated flow line (underneath) */}
+              {isSelected && (
+                <path
+                  d={getEdgePath(fromPos, toPos)}
+                  fill="none"
+                  stroke="rgba(96,165,250,0.15)"
+                  strokeWidth={8}
+                  strokeLinecap="round"
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
               <path
+                className={!isSelected ? 'sg-edge-hover' : undefined}
                 d={getEdgePath(fromPos, toPos)}
                 fill="none"
                 stroke={isSelected ? '#3b82f6' : '#3a3a3e'}
                 strokeWidth={isSelected ? 2.5 : 1.5}
                 strokeLinecap="round"
+                strokeDasharray={isSelected ? '6 4' : 'none'}
                 markerEnd={isSelected ? 'url(#arrowhead-selected)' : 'url(#arrowhead)'}
                 filter={isSelected ? 'url(#edge-glow)' : undefined}
                 style={{
                   pointerEvents: 'stroke',
                   cursor: 'pointer',
                   transition: 'stroke 0.2s, stroke-width 0.2s',
+                  animation: isSelected ? 'sg-edge-flow 0.8s linear infinite' : 'none',
                 }}
                 onClick={(e) => handleTransitionClick(e, tr.id)}
                 onContextMenu={(e) => handleTransitionContextMenu(e, tr.id)}
@@ -383,6 +416,11 @@ export function StateGraph() {
         return (
           <div
             key={kf.id}
+            className={[
+              'sg-node',
+              isSelected && !draggingNode ? 'sg-node-selected' : '',
+              draggingNode === kf.id ? 'sg-node-dragging' : '',
+            ].filter(Boolean).join(' ')}
             onMouseDown={(e) => handleNodeMouseDown(e, kf.id)}
             onClick={(e) => handleNodeClick(e, kf.id)}
             onMouseEnter={(e) => {
