@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/gif.js": "^0.2.5",
+    "gif.js": "^0.2.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.563.0",
     "lz-string": "^1.5.0",
