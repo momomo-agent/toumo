@@ -151,6 +151,7 @@ interface EditorActions {
   setStrokeWidth: (width: number) => void;
   setFillColor: (color: string) => void;
   setStrokeColor: (color: string) => void;
+  setFontSize: (size: number) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1499,6 +1500,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, stroke: color } 
+      });
+    }
+  },
+
+  setFontSize: (size: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, fontSize: size } 
       });
     }
   },
