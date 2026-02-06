@@ -695,7 +695,14 @@ export function Canvas() {
 
   // Handle component drag over
   const handleDragOver = useCallback((event: ReactDragEvent) => {
+    // Support component drag
     if (event.dataTransfer.types.includes('application/toumo-component')) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+      return;
+    }
+    // Support image file drag
+    if (event.dataTransfer.types.includes('Files')) {
       event.preventDefault();
       event.dataTransfer.dropEffect = 'copy';
     }
