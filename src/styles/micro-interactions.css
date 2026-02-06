@@ -34,3 +34,36 @@
   animation: element-fade-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
   pointer-events: none;
 }
+
+/* ── 3. 面板切换时的过渡动画 ── */
+@keyframes panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-transition-enter {
+  animation: panel-slide-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Inspector section collapse/expand */
+.section-content {
+  transition: max-height 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 150ms ease;
+}
+
+.section-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.section-content.expanded {
+  max-height: 2000px;
+  opacity: 1;
+}

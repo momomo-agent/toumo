@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useEditorStore } from '../../store';
 import { DesignPanel } from './DesignPanel';
 import { AlignmentPanel } from './AlignmentPanel';
@@ -20,39 +21,57 @@ export function Inspector() {
   );
   const selectedTransition = transitions.find(tr => tr.id === selectedTransitionId);
 
+  // Determine which panel variant is active — key changes trigger the slide-in animation
+  const panelKey = useMemo(() => {
+    if (selectedTransition) return `transition-${selectedTransition.id}`;
+    if (selectedElementIds.length >= 2) return 'multi-select';
+    if (selectedElement) return `element-${selectedElement.id}`;
+    return `keyframe-${selectedKeyframeId}`;
+  }, [selectedTransition, selectedElementIds.length >= 2, selectedElement?.id, selectedKeyframeId]);
+
   // Show transition inspector if a transition is selected
   if (selectedTransition) {
     return (
-      <section className="inspector-panel figma-style" style={{ padding: 16 }}>
-        <TransitionInspector />
-      </section>
+      <div key={panelKey} className="panel-transition-enter">
+        <section className="inspector-panel figma-style" style={{ padding: 16 }}>
+          <TransitionInspector />
+        </section>
+      </div>
     );
   }
 
   // Show alignment panel when multiple elements are selected
   if (selectedElementIds.length >= 2) {
     return (
-      <section className="inspector-panel figma-style">
-        <div className="figma-panel-header">
-          {selectedElementIds.length} Elements Selected
-        </div>
-        <AlignmentPanel />
-      </section>
+      <div key={panelKey} className="panel-transition-enter">
+        <section className="inspector-panel figma-style">
+          <div className="figma-panel-header">
+            {selectedElementIds.length} Elements Selected
+          </div>
+          <AlignmentPanel />
+        </section>
+      </div>
     );
   }
 
   // Show Figma-style design panel when single element is selected
   if (selectedElement) {
-    return <DesignPanel />;
+    return (
+      <div key={panelKey} className="panel-transition-enter">
+        <DesignPanel />
+      </div>
+    );
   }
 
   // Default: show keyframe/state info
   return (
-    <KeyframeInspector
-      keyframe={selectedKeyframe}
-      keyframes={keyframes}
-      transitions={transitions}
-    />
+    <div key={panelKey} className="panel-transition-enter">
+      <KeyframeInspector
+        keyframe={selectedKeyframe}
+        keyframes={keyframes}
+        transitions={transitions}
+      />
+    </div>
   );
 }
 
