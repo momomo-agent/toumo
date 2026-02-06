@@ -288,21 +288,54 @@ export type Variable = {
 // 交互系统 - Mobile-First Design
 // ============================================
 
+// 手势阶段 (细粒度控制)
+export type GesturePhase = 
+  | 'start'    // 按下/开始
+  | 'move'     // 移动中
+  | 'end'      // 抬起/结束
+  | 'cancel';  // 取消
+
 // 手势类型 (移动端优先)
 export type GestureType = 
-  | 'tap'           // 点击
+  | 'tap'           // 点击 (按下+抬起)
   | 'doubleTap'     // 双击
   | 'longPress'     // 长按
-  | 'swipe'         // 滑动
-  | 'pan'           // 拖拽
+  | 'press'         // 按下 (touchstart)
+  | 'release'       // 抬起 (touchend)
+  | 'swipe'         // 滑动 (快速)
+  | 'pan'           // 拖拽 (持续)
+  | 'panStart'      // 拖拽开始
+  | 'panMove'       // 拖拽移动中
+  | 'panEnd'        // 拖拽结束
   | 'pinch'         // 捏合缩放
+  | 'pinchStart'    // 捏合开始
+  | 'pinchMove'     // 捏合中
+  | 'pinchEnd'      // 捏合结束
   | 'rotate'        // 旋转手势
   | 'hover'         // 悬停 (桌面端)
+  | 'hoverEnter'    // 进入悬停
+  | 'hoverLeave'    // 离开悬停
   | 'focus'         // 聚焦
   | 'blur';         // 失焦
 
 // 滑动方向
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right' | 'any';
+
+// 拖拽区域触发条件
+export type DragZoneTrigger = {
+  // 区域类型
+  type: 'distance' | 'position' | 'element' | 'threshold';
+  // 距离触发 (拖拽超过多少像素)
+  distance?: number;
+  // 位置触发 (拖拽到某个坐标范围)
+  position?: { x?: [number, number]; y?: [number, number] };
+  // 元素触发 (拖拽到某个元素上方)
+  targetElementId?: string;
+  // 阈值触发 (拖拽百分比)
+  percentage?: number;
+  // 方向限制
+  direction?: SwipeDirection;
+};
 
 // 手势配置
 export type GestureConfig = {
@@ -313,6 +346,15 @@ export type GestureConfig = {
   duration?: number;
   // 滑动距离阈值
   threshold?: number;
+  // 拖拽过程中的区域触发
+  dragZones?: DragZoneTrigger[];
+  // 是否跟随手指位置更新变量
+  trackPosition?: boolean;
+  // 位置映射到变量
+  positionVariable?: {
+    x?: string;  // 变量名
+    y?: string;
+  };
 };
 
 // 动作类型
