@@ -673,10 +673,8 @@ export const ComponentLibrary: React.FC = () => {
   // 处理拖拽开始
   const handleDragStart = useCallback((e: React.DragEvent, component: PresetComponent) => {
     setDraggedComponent(component);
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      type: 'component-library',
-      componentId: component.id,
-    }));
+    // Use a custom MIME type that Canvas recognizes
+    e.dataTransfer.setData('application/toumo-library-component', component.id);
     e.dataTransfer.effectAllowed = 'copy';
   }, []);
 
