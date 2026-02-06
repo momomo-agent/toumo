@@ -131,6 +131,8 @@ interface EditorActions {
   nudgeElement: (dx: number, dy: number) => void;
   centerElement: () => void;
   fitToFrame: () => void;
+  matchWidth: () => void;
+  matchHeight: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1232,6 +1234,30 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     get().updateElement(state.selectedElementId, { 
       position: { x: 0, y: 0 },
       size: { width: state.frameSize.width, height: state.frameSize.height }
+    });
+  },
+
+  matchWidth: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const first = kf?.keyElements.find(e => e.id === state.selectedElementIds[0]);
+    if (!first) return;
+    state.selectedElementIds.slice(1).forEach(id => {
+      get().updateElement(id, { size: { width: first.size.width, height: kf?.keyElements.find(e => e.id === id)?.size.height || 0 } });
+    });
+  },
+
+  matchHeight: () => {
+    const state = get();
+    if (state.selectedElementIds.length < 2) return;
+    get().pushHistory();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    const first = kf?.keyElements.find(e => e.id === state.selectedElementIds[0]);
+    if (!first) return;
+    state.selectedElementIds.slice(1).forEach(id => {
+      get().updateElement(id, { size: { width: kf?.keyElements.find(e => e.id === id)?.size.width || 0, height: first.size.height } });
     });
   },
 
