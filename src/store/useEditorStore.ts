@@ -704,11 +704,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         {
           ...el,
           id: `el-${timestamp}-${index}`,
-          position: { x: el.position.x + 20, y: el.position.y + 20 },
+          position: { x: el.position.x + 10, y: el.position.y + 10 },
         },
         state.frameSize
       )
     );
+    // Update clipboard positions so next paste offsets again
+    set(() => ({ clipboard: newElements }));
     set((state) => ({
       keyframes: state.keyframes.map((kf) =>
         kf.id === state.selectedKeyframeId

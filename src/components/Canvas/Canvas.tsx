@@ -65,6 +65,10 @@ export function Canvas() {
   const setSelectionBox = useEditorStore((s) => s.setSelectionBox);
   const setIsSelecting = useEditorStore((s) => s.setIsSelecting);
   const nudgeSelectedElements = useEditorStore((s) => s.nudgeSelectedElements);
+  const copySelectedElements = useEditorStore((s) => s.copySelectedElements);
+  const cutSelectedElements = useEditorStore((s) => s.cutSelectedElements);
+  const pasteElements = useEditorStore((s) => s.pasteElements);
+  const duplicateSelectedElements = useEditorStore((s) => s.duplicateSelectedElements);
   const setCurrentTool = useEditorStore((s) => s.setCurrentTool);
   const instantiateComponent = useEditorStore((s) => s.instantiateComponent);
   const enterGroupEditMode = useEditorStore((s) => s.enterGroupEditMode);
@@ -809,6 +813,27 @@ export function Canvas() {
             setCanvasScale(nextScale);
             setCanvasOffset({ x: cx - originX * nextScale, y: cy - originY * nextScale });
           }
+          return;
+        }
+        // Copy/Paste/Cut/Duplicate shortcuts
+        if (event.key === 'c') {
+          event.preventDefault();
+          copySelectedElements();
+          return;
+        }
+        if (event.key === 'v') {
+          event.preventDefault();
+          pasteElements();
+          return;
+        }
+        if (event.key === 'x') {
+          event.preventDefault();
+          cutSelectedElements();
+          return;
+        }
+        if (event.key === 'd') {
+          event.preventDefault();
+          duplicateSelectedElements();
           return;
         }
       }
