@@ -12,6 +12,7 @@ import { PreviewMode } from './components/PreviewMode';
 import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
 import { WelcomeModal } from './components/WelcomeModal';
 import { EmptyState } from './components/EmptyState';
+import { LayerPanel } from './components/LayerPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -2351,7 +2352,7 @@ export default function App() {
 
           {/* Editor Content */}
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-            {/* Layer Manager */}
+            {/* Left Panel: Display States + Layers (Figma style) */}
             <aside
               style={{
                 width: 220,
@@ -2362,72 +2363,33 @@ export default function App() {
                 overflow: 'hidden',
               }}
             >
-              <div style={{ padding: 16, borderBottom: '1px solid #2a2a2a' }}>
-                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8 }}>Layers</h3>
+              {/* Display States (top) */}
+              <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
+                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8, letterSpacing: '0.5px' }}>Display States</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {elements.length === 0 ? (
-                    <span style={{ fontSize: 12, color: '#555' }}>No layers yet</span>
-                  ) : (
-                    elements.map((el) => (
-                      <button
-                        key={el.id}
-                        onClick={() => setSelectedElementId(el.id)}
-                        style={{
-                          padding: '6px 10px',
-                          background: selectedElementId === el.id ? '#2563eb30' : 'transparent',
-                          border: selectedElementId === el.id ? '1px solid #2563eb50' : '1px solid #2a2a2a',
-                          borderRadius: 6,
-                          color: '#fff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedElementId !== el.id) {
-                            e.currentTarget.style.background = '#1a1a1a';
-                            e.currentTarget.style.borderColor = '#333';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedElementId !== el.id) {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = '#2a2a2a';
-                          }
-                        }}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span
-                            style={{
-                              width: 12,
-                              height: 12,
-                              background: el.style?.fill || '#3b82f6',
-                              borderRadius: 2,
-                            }}
-                          />
-                          {el.name}
-                        </span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-              <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
-                <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8 }}>Display States</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {keyframes.map((kf) => (
                     <button
                       key={kf.id}
                       onClick={() => handleSelectKeyframe(kf.id)}
                       style={{
-                        padding: '10px 12px',
+                        padding: '8px 10px',
                         background: selectedKeyframeId === kf.id ? '#2563eb20' : 'transparent',
                         border: selectedKeyframeId === kf.id ? '1px solid #2563eb' : '1px solid #2a2a2a',
-                        borderRadius: 8,
+                        borderRadius: 6,
                         color: '#fff',
                         textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedKeyframeId !== kf.id) {
+                          e.currentTarget.style.background = '#1a1a1a';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedKeyframeId !== kf.id) {
+                          e.currentTarget.style.background = 'transparent';
+                        }
                       }}
                     >
                       <strong style={{ display: 'block', fontSize: 12 }}>{kf.name}</strong>
@@ -2439,16 +2401,25 @@ export default function App() {
                   <button
                     onClick={handleAddKeyframe}
                     style={{
-                      padding: '10px 12px',
+                      padding: '8px 10px',
                       border: '1px dashed #333',
-                      borderRadius: 8,
-                      color: '#999',
+                      borderRadius: 6,
+                      color: '#666',
                       background: 'transparent',
+                      cursor: 'pointer',
+                      fontSize: 11,
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#999'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#666'; }}
                   >
-                    + Add Display State
+                    + Add State
                   </button>
                 </div>
+              </div>
+              
+              {/* Layers Panel (bottom, flex: 1) */}
+              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <LayerPanel />
               </div>
             </aside>
 
