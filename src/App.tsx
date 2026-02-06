@@ -501,6 +501,21 @@ export default function App() {
               CSS
             </button>
             <button
+              onClick={() => handleStyleChange({ fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 0, borderRadius: 8, fillOpacity: 1 })}
+              style={{
+                padding: '6px 10px',
+                background: 'transparent',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: '#888',
+                fontSize: 10,
+                cursor: 'pointer',
+              }}
+              title="Reset Style"
+            >
+              ↺
+            </button>
+            <button
               onClick={() => deleteElement(selected.id)}
               style={{
                 padding: '6px 10px',
