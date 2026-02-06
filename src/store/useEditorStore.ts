@@ -139,6 +139,7 @@ interface EditorActions {
   setOpacity: (opacity: number) => void;
   setBlur: (blur: number) => void;
   setShadow: (shadow: { x: number; y: number; blur: number; color: string } | null) => void;
+  renameElement: (name: string) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1357,6 +1358,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         } 
       });
     }
+  },
+
+  renameElement: (name: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().updateElement(state.selectedElementId, { name });
   },
 
   // Import actions
