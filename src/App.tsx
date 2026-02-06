@@ -1045,6 +1045,11 @@ export default function App() {
         {/* Drop Shadow */}
         <div style={{ marginBottom: 20 }}>
           <Label>Drop Shadow</Label>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => handleStyleChange({ dropShadowX: 0, dropShadowY: 4, dropShadowBlur: 8, dropShadowColor: '#00000040' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Soft</button>
+            <button onClick={() => handleStyleChange({ dropShadowX: 0, dropShadowY: 8, dropShadowBlur: 24, dropShadowColor: '#00000060' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Medium</button>
+            <button onClick={() => handleStyleChange({ dropShadowX: 0, dropShadowY: 0, dropShadowBlur: 0, dropShadowColor: '#000000' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>None</button>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
               <span style={{ fontSize: 10, color: '#666' }}>X</span>
