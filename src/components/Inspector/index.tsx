@@ -1,5 +1,6 @@
 import { useEditorStore } from '../../store';
 import { DesignPanel } from './DesignPanel';
+import { AlignmentPanel } from './AlignmentPanel';
 import './Inspector.css';
 
 const TRIGGER_OPTIONS = ['tap', 'hover', 'drag', 'scroll', 'timer', 'variable'];

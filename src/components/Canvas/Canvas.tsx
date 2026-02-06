@@ -506,6 +506,27 @@ export function Canvas() {
         return;
       }
 
+      // Zoom shortcuts: Cmd+0 (reset), Cmd++ (zoom in), Cmd+- (zoom out)
+      if (event.metaKey || event.ctrlKey) {
+        if (event.key === '0') {
+          event.preventDefault();
+          setCanvasScale(1);
+          return;
+        }
+        if (event.key === '=' || event.key === '+') {
+          event.preventDefault();
+          const nextScale = Math.min(4, canvasScale * 1.25);
+          setCanvasScale(nextScale);
+          return;
+        }
+        if (event.key === '-') {
+          event.preventDefault();
+          const nextScale = Math.max(0.25, canvasScale * 0.8);
+          setCanvasScale(nextScale);
+          return;
+        }
+      }
+
       if (isTyping) return;
 
       const step = event.shiftKey ? 10 : 1;
@@ -546,7 +567,7 @@ export function Canvas() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [currentTool, nudgeSelectedElements, setCurrentTool]);
+  }, [currentTool, nudgeSelectedElements, setCurrentTool, canvasScale, setCanvasScale]);
 
   const handleWheel = useCallback((event: WheelEvent) => {
     if (!event.ctrlKey && !event.metaKey) return;

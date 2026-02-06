@@ -128,6 +128,15 @@ interface EditorActions {
   sendBackward: () => void;
   bringToFront: () => void;
   sendToBack: () => void;
+  // Align functions
+  alignLeft: () => void;
+  alignCenterH: () => void;
+  alignRight: () => void;
+  alignTop: () => void;
+  alignCenterV: () => void;
+  alignBottom: () => void;
+  distributeH: () => void;
+  distributeV: () => void;
   flipHorizontal: () => void;
   flipVertical: () => void;
   rotate90: () => void;
