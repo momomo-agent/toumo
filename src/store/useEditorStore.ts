@@ -140,6 +140,7 @@ interface EditorActions {
   setBlur: (blur: number) => void;
   setShadow: (shadow: { x: number; y: number; blur: number; color: string } | null) => void;
   renameElement: (name: string) => void;
+  cloneKeyframe: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1364,6 +1365,27 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().updateElement(state.selectedElementId, { name });
+  },
+
+  cloneKeyframe: () => {
+    const state = get();
+    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
+    if (!kf) return;
+    get().pushHistory();
+    const newId = `kf-${Date.now()}`;
+    const cloned: Keyframe = {
+      ...kf,
+      id: newId,
+      name: `${kf.name} copy`,
+      keyElements: kf.keyElements.map(el => ({
+        ...el,
+        id: `el-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      })),
+    };
+    set((s) => ({
+      keyframes: [...s.keyframes, cloned],
+      selectedKeyframeId: newId,
+    }));
   },
 
   // Import actions
