@@ -517,6 +517,7 @@ export const CanvasElement = memo(function CanvasElement({
 
   return (
     <div
+      data-element-id={element.id}
       onMouseDown={handlePointerDown}
       onMouseEnter={() => setHoveredElementId(element.id)}
       onMouseLeave={() => setHoveredElementId(null)}
@@ -767,6 +768,7 @@ export const CanvasElement = memo(function CanvasElement({
       {/* Context Menu */}
       {contextMenu && (
         <ContextMenu
+          mode="element"
           x={contextMenu.x}
           y={contextMenu.y}
           elementId={element.id}

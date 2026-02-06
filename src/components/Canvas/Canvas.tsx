@@ -11,7 +11,7 @@ import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine, type DistanceIndicator } from './AlignmentGuides';
 import { CanvasHints } from './CanvasHints';
 import { ZoomControls } from './ZoomControls';
-// ContextMenu is now integrated directly in CanvasElement
+import { ContextMenu } from '../ContextMenu';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -68,6 +68,7 @@ export function Canvas() {
   const panStartRef = useRef<{ pointerX: number; pointerY: number; startX: number; startY: number } | null>(null);
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLine[]>([]);
   const [distanceIndicators, setDistanceIndicators] = useState<DistanceIndicator[]>([]);
+  const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number; canvasPos: { x: number; y: number } } | null>(null);
   const handOverrideRef = useRef(false);
   const previousToolRef = useRef<ToolType>(currentTool);
 
@@ -831,6 +832,28 @@ export function Canvas() {
       onMouseUp={handleCanvasMouseUp}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onContextMenu={(e) => {
+        // Only show canvas context menu when clicking on blank area (not on elements)
+        const target = e.target as HTMLElement;
+        const isOnElement = target.closest('[data-element-id]');
+        if (!isOnElement) {
+          e.preventDefault();
+          const stagePoint = (() => {
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (!rect) return { x: 0, y: 0 };
+            return {
+              x: (e.clientX - rect.left - canvasOffset.x) / canvasScale,
+              y: (e.clientY - rect.top - canvasOffset.y) / canvasScale,
+            };
+          })();
+          const hitFrame = getFrameUnderPoint(stagePoint);
+          const layout = hitFrame && hitFrame.id === selectedKeyframeId ? hitFrame : activeFrameLayout;
+          const framePoint = layout
+            ? { x: stagePoint.x - layout.x, y: stagePoint.y - layout.y }
+            : stagePoint;
+          setCanvasContextMenu({ x: e.clientX, y: e.clientY, canvasPos: framePoint });
+        }
+      }}
       className="canvas-stage"
       style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair' }}
     >
@@ -1051,6 +1074,17 @@ export function Canvas() {
       
       {/* Zoom Controls */}
       <ZoomControls />
+
+      {/* Canvas Context Menu (right-click on blank area) */}
+      {canvasContextMenu && (
+        <ContextMenu
+          mode="canvas"
+          x={canvasContextMenu.x}
+          y={canvasContextMenu.y}
+          canvasPosition={canvasContextMenu.canvasPos}
+          onClose={() => setCanvasContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
