@@ -407,6 +407,7 @@ export function CanvasElement({
         wordBreak: element.style?.wordBreak || 'normal',
         textOverflow: element.style?.textOverflow || 'clip',
         hyphens: element.style?.hyphens || 'none',
+        writingMode: element.style?.writingMode || 'horizontal-tb',
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
