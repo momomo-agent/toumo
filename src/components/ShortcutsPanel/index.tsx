@@ -30,6 +30,8 @@ const shortcuts = [
   { key: '0', desc: 'Set opacity 100%' },
   { key: '⇧H', desc: 'Toggle visibility' },
   { key: '⇧L', desc: 'Toggle lock' },
+  { key: '⌥H', desc: 'Align center horizontal' },
+  { key: '⌥V', desc: 'Align center vertical' },
 ];
 
 export function ShortcutsPanel() {
