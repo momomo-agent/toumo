@@ -225,6 +225,7 @@ interface EditorActions {
   setGridArea: (area: string) => void;
   setPlaceItems: (place: 'start' | 'center' | 'end' | 'stretch') => void;
   setPlaceContent: (place: 'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around') => void;
+  setAlignContent: (align: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'space-between' | 'space-around') => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2584,6 +2585,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, placeContent: place } 
+      });
+    }
+  },
+
+  setAlignContent: (align: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'space-between' | 'space-around') => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, alignContent: align } 
       });
     }
   },
