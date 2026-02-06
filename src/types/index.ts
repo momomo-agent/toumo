@@ -27,6 +27,9 @@ export type AutoLayoutConfig = {
   alignItems: AutoLayoutAlign;      // Cross-axis alignment
   justifyContent: AutoLayoutJustify; // Main-axis distribution
   wrap: boolean;                     // Allow wrapping
+  // Parent sizing modes (how this container sizes itself)
+  primaryAxisSizing: SizingMode;    // Main axis: fixed | hug | fill
+  counterAxisSizing: SizingMode;    // Cross axis: fixed | hug | fill
 };
 
 export type ChildLayoutConfig = {
@@ -61,6 +64,8 @@ export const DEFAULT_AUTO_LAYOUT: AutoLayoutConfig = {
   alignItems: 'start',
   justifyContent: 'start',
   wrap: false,
+  primaryAxisSizing: 'fixed',
+  counterAxisSizing: 'fixed',
 };
 
 export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "hand" | "eyedropper" | "pen";
