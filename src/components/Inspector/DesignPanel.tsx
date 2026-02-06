@@ -566,6 +566,9 @@ export function DesignPanel() {
 
   return (
     <div className="figma-design-panel">
+      {/* Auto Layout Section */}
+      <AutoLayoutPanel />
+
       {/* Layer Section - Opacity & Blend Mode */}
       <Section title="Layer" defaultExpanded={true}>
         <div className="figma-layer-row">
