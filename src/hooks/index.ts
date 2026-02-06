@@ -7,3 +7,9 @@ export {
   type UseSpringAnimationOptions,
   type UseSpringAnimationReturn,
 } from './useSpringAnimation';
+export {
+  useSmartAnimate,
+  type SmartAnimateOptions,
+  type SmartAnimateState,
+  type SmartAnimateActions,
+} from './useSmartAnimate';
