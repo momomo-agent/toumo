@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useEditorStore } from '../../store';
 import type { ToolType } from '../../types';
 import { ExportModal } from '../ExportModal';
+import { ImportModal } from '../ImportModal';
 
 const tools: { id: ToolType; icon: string; label: string }[] = [
   { id: 'select', icon: '↖', label: 'Select (V)' },
@@ -19,6 +20,7 @@ export function Toolbar() {
   const { currentTool, setCurrentTool, addImageElement } = useEditorStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -80,9 +82,24 @@ export function Toolbar() {
         📤
       </button>
       
+      {/* Import button */}
+      <button
+        className="tool-btn"
+        onClick={() => setShowImportModal(true)}
+        title="Import Project"
+        style={{ fontSize: 14 }}
+      >
+        📥
+      </button>
+      
       {/* Export Modal */}
       {showExportModal && (
         <ExportModal onClose={() => setShowExportModal(false)} />
+      )}
+      
+      {/* Import Modal */}
+      {showImportModal && (
+        <ImportModal onClose={() => setShowImportModal(false)} />
       )}
     </div>
   );
