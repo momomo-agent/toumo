@@ -194,6 +194,7 @@ interface EditorActions {
   setHueRotate: (degrees: number) => void;
   setInvert: (amount: number) => void;
   setSepia: (amount: number) => void;
+  setBrightness: (amount: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -2138,6 +2139,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, sepia: amount } 
+      });
+    }
+  },
+
+  setBrightness: (amount: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, brightness: amount } 
       });
     }
   },
