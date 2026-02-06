@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useAutoSave } from './hooks/useAutoSave';
 import html2canvas from 'html2canvas';
 import { Canvas } from './components/Canvas';
 import { InteractionManager } from './components/InteractionManager';
@@ -56,6 +57,7 @@ type ToolButton = {
 };
 
 export default function App() {
+  useAutoSave();
   // Preview mode state
   const [isPreviewMode, setIsPreviewMode] = useState(() => isPreviewUrl());
   const [previewData, setPreviewData] = useState<ProjectData | null>(() => getProjectFromUrl());

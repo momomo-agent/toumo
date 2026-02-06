@@ -7,6 +7,7 @@ import { performBooleanOperation, canPerformBooleanOperation } from '../utils/bo
 
 interface HistoryEntry {
   keyframes: Keyframe[];
+  description: string;
 }
 
 const clampElementToFrame = (element: KeyElement, frame: Size): KeyElement => {
@@ -108,7 +109,7 @@ interface EditorActions {
   pasteElements: () => void;
   undo: () => void;
   redo: () => void;
-  pushHistory: () => void;
+  pushHistory: (description?: string) => void;
   setSelectedTransitionId: (id: string | null) => void;
   setPreviewTransitionId: (id: string | null) => void;
   updateTransition: (id: string, updates: Partial<Transition>) => void;
@@ -344,7 +345,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   frameBackground: '#1a1a1a',
-  history: [{ keyframes: initialKeyframes }],
+  history: [{ keyframes: initialKeyframes, description: '初始状态' }],
   historyIndex: 0,
   isDragging: false,
   isResizing: false,
@@ -734,10 +735,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }));
   },
 
-  pushHistory: () => set((state) => {
+  pushHistory: (description?: string) => set((state) => {
     const snapshot = JSON.parse(JSON.stringify(state.keyframes)) as Keyframe[];
     const newHistory = state.history.slice(0, state.historyIndex + 1);
-    newHistory.push({ keyframes: snapshot });
+    newHistory.push({ keyframes: snapshot, description: description || '' });
     if (newHistory.length > 50) newHistory.shift();
     return {
       history: newHistory,
@@ -1403,7 +1404,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],
-      history: [{ keyframes: data.keyframes }],
+      history: [{ keyframes: data.keyframes, description: '项目加载' }],
       historyIndex: 0,
     });
   },
