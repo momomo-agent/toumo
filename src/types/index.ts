@@ -66,6 +66,7 @@ export type ShapeStyle = {
   textShadow?: string;
   wordBreak?: 'normal' | 'break-all' | 'break-word';
   textOverflow?: 'clip' | 'ellipsis';
+  hyphens?: 'none' | 'auto';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
