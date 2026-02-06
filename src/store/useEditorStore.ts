@@ -144,6 +144,7 @@ interface EditorActions {
   renameKeyframe: (name: string) => void;
   reorderKeyframes: (fromIndex: number, toIndex: number) => void;
   clearCanvas: () => void;
+  resetProject: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1418,6 +1419,25 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementIds: [],
       selectedElementId: null,
     }));
+  },
+
+  resetProject: () => {
+    const defaultKfId = `kf-${Date.now()}`;
+    set({
+      keyframes: [{
+        id: defaultKfId,
+        name: 'Frame 1',
+        summary: '',
+        keyElements: [],
+      }],
+      selectedKeyframeId: defaultKfId,
+      selectedElementIds: [],
+      selectedElementId: null,
+      transitions: [],
+      components: [],
+      history: [],
+      historyIndex: -1,
+    });
   },
 
   // Import actions
