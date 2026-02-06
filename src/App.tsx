@@ -119,6 +119,31 @@ export default function App() {
   const selectedElement = elements.find((el) => el.id === selectedElementId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Resizable & collapsible panels
+  const { isSmall } = useResponsiveLayout();
+  const leftPanel = useResizablePanel({
+    defaultWidth: 220,
+    minWidth: 160,
+    maxWidth: 400,
+    storageKey: 'toumo-left-panel-width',
+    side: 'left',
+  });
+  const rightPanel = useResizablePanel({
+    defaultWidth: 280,
+    minWidth: 200,
+    maxWidth: 480,
+    storageKey: 'toumo-right-panel-width',
+    side: 'right',
+  });
+
+  // Auto-collapse on small screens
+  useEffect(() => {
+    if (isSmall) {
+      leftPanel.setCollapsed(true);
+      rightPanel.setCollapsed(true);
+    }
+  }, [isSmall]);
+
   // Handle entering edit mode from preview
   const handleEnterEditMode = useCallback(() => {
     if (previewData) {
@@ -2427,14 +2452,18 @@ export default function App() {
             {/* Left Panel: Variants + Layers (Figma style) */}
             <aside
               style={{
-                width: 220,
-                borderRight: '1px solid #2a2a2a',
+                width: leftPanel.collapsed ? 0 : leftPanel.width,
+                minWidth: leftPanel.collapsed ? 0 : undefined,
+                borderRight: leftPanel.collapsed ? 'none' : '1px solid #2a2a2a',
                 background: '#151515',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
+                transition: leftPanel.isDragging ? 'none' : 'width 200ms ease',
+                position: 'relative',
               }}
             >
+              <CollapseToggle collapsed={leftPanel.collapsed} onToggle={leftPanel.toggleCollapse} side="left" label="图层" />
               {/* Variants (top) */}
               <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
                 <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8, letterSpacing: '0.5px' }}>Variants</h3>
@@ -2495,6 +2524,11 @@ export default function App() {
               </div>
             </aside>
 
+            {/* Left resize handle */}
+            {!leftPanel.collapsed && (
+              <ResizeHandle onMouseDown={leftPanel.handleMouseDown} isDragging={leftPanel.isDragging} side="left" />
+            )}
+
             {/* Canvas + Interaction Manager */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* Canvas Header */}
@@ -2549,17 +2583,26 @@ export default function App() {
           </div>
         </div>
 
+        {/* Right resize handle */}
+        {!rightPanel.collapsed && (
+          <ResizeHandle onMouseDown={rightPanel.handleMouseDown} isDragging={rightPanel.isDragging} side="right" />
+        )}
+
         {/* Inspector Panel */}
         <div
           style={{
-            width: 280,
+            width: rightPanel.collapsed ? 0 : rightPanel.width,
+            minWidth: rightPanel.collapsed ? 0 : undefined,
             background: '#161617',
-            borderLeft: '1px solid #2a2a2a',
+            borderLeft: rightPanel.collapsed ? 'none' : '1px solid #2a2a2a',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
+            transition: rightPanel.isDragging ? 'none' : 'width 200ms ease',
+            position: 'relative',
           }}
         >
+          <CollapseToggle collapsed={rightPanel.collapsed} onToggle={rightPanel.toggleCollapse} side="right" label="检查器" />
           <div
             style={{
               padding: '12px 16px',

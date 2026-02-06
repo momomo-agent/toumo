@@ -12,6 +12,7 @@ import { AlignmentGuides, type AlignmentLine, type DistanceIndicator } from './A
 import { CanvasHints } from './CanvasHints';
 import { ZoomControls } from './ZoomControls';
 import { ContextMenu } from '../ContextMenu';
+import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -79,6 +80,7 @@ export function Canvas() {
 
   const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
   const elements = currentKeyframe?.keyElements || [];
+  const { ghosts: deleteGhosts } = useDeleteGhosts(elements);
 
   const frameLayouts = useMemo(() => {
     return keyframes.map((kf, index) => ({
@@ -1051,6 +1053,23 @@ export function Canvas() {
                         }}
                       />
                     ))}
+                {/* Delete fade-out ghosts */}
+                {isActive && deleteGhosts.map(({ element }) => (
+                  <div
+                    key={`ghost-${element.id}`}
+                    className="canvas-element-exit"
+                    style={{
+                      position: 'absolute',
+                      left: element.position.x,
+                      top: element.position.y,
+                      width: element.size.width,
+                      height: element.size.height,
+                      background: element.shapeType === 'text' ? 'transparent' : (element.style?.fill || '#3b82f6'),
+                      borderRadius: element.shapeType === 'ellipse' ? '50%' : (element.style?.borderRadius || 8),
+                      pointerEvents: 'none',
+                    }}
+                  />
+                ))}
                 {/* Live draw preview ghost */}
                 {isActive && drawPreview && drawPreview.width > 2 && drawPreview.height > 2 && (
                   <div
