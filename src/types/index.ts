@@ -10,9 +10,9 @@ export type Size = {
   height: number;
 };
 
-export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "hand" | "eyedropper";
+export type ToolType = "select" | "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "hand" | "eyedropper" | "pen";
 
-export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "keyframe-element";
+export type ShapeType = "rectangle" | "ellipse" | "text" | "image" | "line" | "frame" | "keyframe-element" | "path";
 
 export type ShapeStyle = {
   fill: string;
@@ -127,6 +127,10 @@ export type ShapeStyle = {
   // Line specific
   lineStartArrow?: boolean;
   lineEndArrow?: boolean;
+  // Path specific
+  pathData?: string; // SVG path d attribute
+  pathPoints?: Array<{ x: number; y: number; type: 'move' | 'line' | 'curve'; cx1?: number; cy1?: number; cx2?: number; cy2?: number }>;
+  pathClosed?: boolean;
   // Image specific
   imageSrc?: string;
   imageOriginalWidth?: number;
