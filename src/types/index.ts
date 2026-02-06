@@ -67,6 +67,7 @@ export type ShapeStyle = {
   wordBreak?: 'normal' | 'break-all' | 'break-word';
   textOverflow?: 'clip' | 'ellipsis';
   hyphens?: 'none' | 'auto';
+  writingMode?: 'horizontal-tb' | 'vertical-rl' | 'vertical-lr';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
