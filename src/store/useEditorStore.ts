@@ -37,6 +37,8 @@ interface EditorState {
   recentColors: string[];
   canvasBackground: string;
   showRulers: boolean;
+  snapToGrid: boolean;
+  gridSize: number;
   frameSize: Size;
   history: HistoryEntry[];
   historyIndex: number;
@@ -66,6 +68,8 @@ interface EditorActions {
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
   toggleRulers: () => void;
+  toggleSnapToGrid: () => void;
+  setGridSize: (size: number) => void;
   setIsDragging: (isDragging: boolean) => void;
   setIsResizing: (isResizing: boolean) => void;
   setIsSelecting: (isSelecting: boolean) => void;
@@ -133,6 +137,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   recentColors: [],
   canvasBackground: '#0d0d0e',
   showRulers: false,
+  snapToGrid: false,
+  gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   history: [{ keyframes: initialKeyframes }],
   historyIndex: 0,
@@ -323,6 +329,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   })),
   setCanvasBackground: (color: string) => set({ canvasBackground: color }),
   toggleRulers: () => set((state) => ({ showRulers: !state.showRulers })),
+  toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
+  setGridSize: (size: number) => set({ gridSize: size }),
   setIsDragging: (isDragging) => set({ isDragging }),
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
