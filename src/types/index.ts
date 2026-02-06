@@ -45,6 +45,7 @@ export type ShapeStyle = {
   backdropFilter?: string;
   transition?: string;
   willChange?: string;
+  aspectRatio?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
