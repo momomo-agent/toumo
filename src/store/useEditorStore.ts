@@ -155,6 +155,7 @@ interface EditorActions {
   setTextAlign: (align: 'left' | 'center' | 'right') => void;
   setFontWeight: (weight: string) => void;
   setTextColor: (color: string) => void;
+  setGradient: (type: 'none' | 'linear' | 'radial', stops?: { color: string; position: number }[]) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1555,6 +1556,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, color } 
+      });
+    }
+  },
+
+  setGradient: (type, stops) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { ...el.style, gradientType: type, gradientStops: stops } 
       });
     }
   },
