@@ -141,6 +141,7 @@ interface EditorActions {
   setShadow: (shadow: { x: number; y: number; blur: number; color: string } | null) => void;
   renameElement: (name: string) => void;
   cloneKeyframe: () => void;
+  renameKeyframe: (name: string) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1385,6 +1386,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set((s) => ({
       keyframes: [...s.keyframes, cloned],
       selectedKeyframeId: newId,
+    }));
+  },
+
+  renameKeyframe: (name: string) => {
+    const state = get();
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => 
+        kf.id === state.selectedKeyframeId ? { ...kf, name } : kf
+      ),
     }));
   },
 
