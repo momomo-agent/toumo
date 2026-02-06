@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../store';
+import { InteractionPanel } from '../InteractionPanel';
 import './Inspector.css';
 
 const TRIGGER_OPTIONS = ['tap', 'hover', 'drag', 'scroll', 'timer', 'variable'];
@@ -261,6 +262,11 @@ function ElementInspector({ element, keyframes, currentKeyframeId, onUpdate }: E
             </div>
           </>
         )}
+      </div>
+
+      {/* Interaction Panel */}
+      <div className="inspector-section">
+        <InteractionPanel />
       </div>
     </section>
   );
