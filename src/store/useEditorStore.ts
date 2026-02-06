@@ -162,6 +162,7 @@ interface EditorActions {
   setSkew: (skewX: number, skewY: number) => void;
   setPerspective: (perspective: number) => void;
   setBorder: (width: number, color: string, style?: string) => void;
+  setInnerShadow: (enabled: boolean, color?: string, x?: number, y?: number, blur?: number) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -1665,6 +1666,26 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           strokeWidth: width, 
           stroke: color,
           strokeStyle: (style as 'solid' | 'dashed' | 'dotted') || 'solid'
+        } 
+      });
+    }
+  },
+
+  setInnerShadow: (enabled: boolean, color?: string, x?: number, y?: number, blur?: number) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style, 
+          innerShadowEnabled: enabled,
+          ...(color && { innerShadowColor: color }),
+          ...(x !== undefined && { innerShadowX: x }),
+          ...(y !== undefined && { innerShadowY: y }),
+          ...(blur !== undefined && { innerShadowBlur: blur }),
         } 
       });
     }
