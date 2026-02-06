@@ -39,6 +39,7 @@ export type ShapeStyle = {
   scale?: number;
   skewX?: number;
   skewY?: number;
+  perspective?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
