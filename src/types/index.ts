@@ -89,6 +89,7 @@ export type ShapeStyle = {
   flipY?: boolean; // degrees
   fontSize?: number;
   fontWeight?: string;
+  color?: string;
   fontStyle?: 'normal' | 'italic';
   textDecoration?: 'none' | 'underline';
   letterSpacing?: number;
