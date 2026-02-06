@@ -71,6 +71,7 @@ interface EditorActions {
   zoomToFit: () => void;
   zoomTo100: () => void;
   duplicateSelectedElements: () => void;
+  selectAllElements: () => void;
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
   toggleRulers: () => void;
@@ -389,6 +390,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementId: newIds.length === 1 ? newIds[0] : null,
     }));
   },
+  
+  selectAllElements: () => {
+    const state = get();
+    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    if (!currentKeyframe) return;
+    const allIds = currentKeyframe.keyElements.map(el => el.id);
+    set({
+      selectedElementIds: allIds,
+      selectedElementId: allIds.length === 1 ? allIds[0] : null,
+    });
+  },
+  
   addRecentColor: (color: string) => set((state) => ({
     recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
   })),
