@@ -406,6 +406,7 @@ export function CanvasElement({
         textShadow: element.style?.textShadow || undefined,
         wordBreak: element.style?.wordBreak || 'normal',
         textOverflow: element.style?.textOverflow || 'clip',
+        hyphens: element.style?.hyphens || 'none',
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
         color: element.style?.textColor || '#fff',
         display: 'flex',
