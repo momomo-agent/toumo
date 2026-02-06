@@ -25,6 +25,7 @@ export type ShapeStyle = {
   strokeWidth: number;
   strokeDasharray?: string;
   padding?: number;
+  verticalAlign?: 'top' | 'middle' | 'bottom';
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
