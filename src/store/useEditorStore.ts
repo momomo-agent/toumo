@@ -143,6 +143,7 @@ interface EditorActions {
   cloneKeyframe: () => void;
   renameKeyframe: (name: string) => void;
   reorderKeyframes: (fromIndex: number, toIndex: number) => void;
+  clearCanvas: () => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string }) => void;
   // Style clipboard
@@ -1406,6 +1407,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       kfs.splice(toIndex, 0, moved);
       return { keyframes: kfs };
     });
+  },
+
+  clearCanvas: () => {
+    get().pushHistory();
+    set((s) => ({
+      keyframes: s.keyframes.map(kf => 
+        kf.id === s.selectedKeyframeId ? { ...kf, keyElements: [] } : kf
+      ),
+      selectedElementIds: [],
+      selectedElementId: null,
+    }));
   },
 
   // Import actions
