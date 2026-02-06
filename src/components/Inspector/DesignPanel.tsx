@@ -79,6 +79,53 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   </svg>
 );
 
+// Blend mode icon
+const BlendModeIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <circle cx="5" cy="5" r="3" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
+// Opacity icon
+const OpacityIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <path d="M1 6L11 6" stroke="currentColor" strokeWidth="1.2" />
+    <rect x="1" y="6" width="10" height="5" rx="1" fill="currentColor" opacity="0.3" />
+  </svg>
+);
+
+// Stroke cap icons
+const StrokeCapIcon = ({ type }: { type: 'none' | 'round' | 'square' }) => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    {type === 'none' && (
+      <path d="M3 8H13" stroke="currentColor" strokeWidth="3" strokeLinecap="butt" />
+    )}
+    {type === 'round' && (
+      <path d="M3 8H13" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    )}
+    {type === 'square' && (
+      <path d="M3 8H13" stroke="currentColor" strokeWidth="3" strokeLinecap="square" />
+    )}
+  </svg>
+);
+
+// Stroke join icons
+const StrokeJoinIcon = ({ type }: { type: 'miter' | 'round' | 'bevel' }) => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    {type === 'miter' && (
+      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="miter" fill="none" />
+    )}
+    {type === 'round' && (
+      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+    )}
+    {type === 'bevel' && (
+      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="bevel" fill="none" />
+    )}
+  </svg>
+);
+
 // Number input with label
 interface NumberInputProps {
   label: string;
@@ -207,6 +254,27 @@ const STROKE_POSITIONS = [
   { value: 'center', label: 'Center' },
   { value: 'inside', label: 'Inside' },
   { value: 'outside', label: 'Outside' },
+];
+
+// Blend modes
+const BLEND_MODES = [
+  { value: 'normal', label: 'Pass through' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'darken', label: 'Darken' },
+  { value: 'multiply', label: 'Multiply' },
+  { value: 'color-burn', label: 'Color Burn' },
+  { value: 'lighten', label: 'Lighten' },
+  { value: 'screen', label: 'Screen' },
+  { value: 'color-dodge', label: 'Color Dodge' },
+  { value: 'overlay', label: 'Overlay' },
+  { value: 'soft-light', label: 'Soft Light' },
+  { value: 'hard-light', label: 'Hard Light' },
+  { value: 'difference', label: 'Difference' },
+  { value: 'exclusion', label: 'Exclusion' },
+  { value: 'hue', label: 'Hue' },
+  { value: 'saturation', label: 'Saturation' },
+  { value: 'color', label: 'Color' },
+  { value: 'luminosity', label: 'Luminosity' },
 ];
 
 // Stroke item component

@@ -55,6 +55,7 @@ export function CanvasElement({
     deleteElement,
     copySelectedElements,
     pasteElements,
+    resizeGroup,
   } = useEditorStore();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -245,14 +246,22 @@ export function CanvasElement({
       nextWidth = Math.max(MIN_SIZE, nextWidth);
       nextHeight = Math.max(MIN_SIZE, nextHeight);
 
-      updateElementSize(element.id, {
-        width: Math.round(nextWidth),
-        height: Math.round(nextHeight),
-      });
-      updateElementPosition(element.id, {
-        x: Math.round(nextX),
-        y: Math.round(nextY),
-      });
+      // 如果是编组，使用 resizeGroup 来等比缩放子元素
+      if (isGroup) {
+        resizeGroup(element.id, 
+          { width: Math.round(nextWidth), height: Math.round(nextHeight) },
+          { x: Math.round(nextX), y: Math.round(nextY) }
+        );
+      } else {
+        updateElementSize(element.id, {
+          width: Math.round(nextWidth),
+          height: Math.round(nextHeight),
+        });
+        updateElementPosition(element.id, {
+          x: Math.round(nextX),
+          y: Math.round(nextY),
+        });
+      }
     };
 
     const handleUp = () => {
