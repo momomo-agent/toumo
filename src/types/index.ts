@@ -43,6 +43,7 @@ export type ShapeStyle = {
   boxSizing?: 'content-box' | 'border-box';
   outline?: string;
   backdropFilter?: string;
+  transition?: string;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeOpacity: number;
   borderRadius: number;
