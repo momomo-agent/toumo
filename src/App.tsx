@@ -1872,6 +1872,13 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ caretColor: '#3b82f6' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#3b82f6', fontSize: 9, cursor: 'pointer' }}>Blue</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Accent Color</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ accentColor: 'auto' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Auto</button>
+                <button onClick={() => handleStyleChange({ accentColor: '#3b82f6' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#3b82f6', fontSize: 9, cursor: 'pointer' }}>Blue</button>
+              </div>
+            </div>
           </>
         )}
       </>
