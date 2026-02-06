@@ -69,8 +69,8 @@ export function StateGraph() {
       const newKeyframes = keyframes.filter(kf => !existingIds.has(kf.id));
       const newPositions = newKeyframes.map((kf, i) => ({
         id: kf.id,
-        x: 80 + (kept.length + i) * 160,
-        y: 60 + ((kept.length + i) % 2) * 40,
+        x: 80 + (kept.length + i) * 200,
+        y: 60 + ((kept.length + i) % 2) * 50,
       }));
       
       return [...kept, ...newPositions];
@@ -213,8 +213,8 @@ export function StateGraph() {
   // Get midpoint for transition label
   const getEdgeMidpoint = (from: NodePosition, to: NodePosition) => {
     return {
-      x: (from.x + 120 + to.x) / 2,
-      y: (from.y + to.y) / 2 + 16,
+      x: (from.x + 140 + to.x) / 2,
+      y: (from.y + to.y) / 2 + 20,
     };
   };
 
@@ -227,7 +227,9 @@ export function StateGraph() {
         height: '100%',
         position: 'relative',
         background: '#0a0a0b',
-        borderRadius: 8,
+        backgroundImage: 'radial-gradient(circle, #1a1a1d 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+        borderRadius: 10,
         overflow: 'hidden',
       }}
     >
@@ -345,6 +347,14 @@ export function StateGraph() {
             key={kf.id}
             onMouseDown={(e) => handleNodeMouseDown(e, kf.id)}
             onClick={(e) => handleNodeClick(e, kf.id)}
+            onMouseEnter={(e) => {
+              const handle = e.currentTarget.querySelector('[data-handle]') as HTMLElement;
+              if (handle) handle.style.opacity = '1';
+            }}
+            onMouseLeave={(e) => {
+              const handle = e.currentTarget.querySelector('[data-handle]') as HTMLElement;
+              if (handle) { handle.style.opacity = '0'; handle.style.transform = 'translateY(-50%) scale(1)'; }
+            }}
             style={{
               position: 'absolute',
               left: pos.x,
@@ -393,6 +403,7 @@ export function StateGraph() {
             
             {/* Connection handle (right side) */}
             <div
+              data-handle
               onMouseDown={(e) => handleConnectionDragStart(e, kf.id)}
               style={{
                 position: 'absolute',

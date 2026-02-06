@@ -834,16 +834,17 @@ export function Canvas() {
       className="canvas-stage"
       style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair' }}
     >
+      {/* Dot-grid background — small dots + larger dots every 5 cells */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+            radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px),
+            radial-gradient(circle, rgba(255,255,255,0.06) 0.5px, transparent 0.5px)
           `,
-          backgroundSize: `${20 * canvasScale}px ${20 * canvasScale}px`,
-          backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
+          backgroundSize: `${100 * canvasScale}px ${100 * canvasScale}px, ${20 * canvasScale}px ${20 * canvasScale}px`,
+          backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px, ${canvasOffset.x}px ${canvasOffset.y}px`,
           pointerEvents: 'none',
         }}
       />
@@ -894,9 +895,11 @@ export function Canvas() {
                   width: layout.width,
                   height: layout.height,
                   position: 'relative',
-                  background: snapToGrid 
-                    ? `${canvasBackground} repeating-linear-gradient(0deg, transparent, transparent ${gridSize - 1}px, #333 ${gridSize - 1}px, #333 ${gridSize}px), repeating-linear-gradient(90deg, transparent, transparent ${gridSize - 1}px, #333 ${gridSize - 1}px, #333 ${gridSize}px)`
-                    : canvasBackground,
+                  background: canvasBackground,
+                  backgroundImage: snapToGrid
+                    ? `radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)`
+                    : undefined,
+                  backgroundSize: snapToGrid ? `${gridSize}px ${gridSize}px` : undefined,
                   borderRadius: 32,
                   border: '1px solid #2f2f2f',
                   boxShadow: '0 30px 80px rgba(0,0,0,0.45)',

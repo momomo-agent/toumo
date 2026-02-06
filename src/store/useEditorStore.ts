@@ -55,6 +55,8 @@ interface EditorState {
   editingInstanceId: string | null;
   // Group edit mode
   editingGroupId: string | null;
+  // Hover state (synced between Canvas and LayerPanel)
+  hoveredElementId: string | null;
   // Variables for state machine logic
   variables: Variable[];
   interactions: Interaction[];
@@ -66,6 +68,7 @@ interface EditorActions {
   deleteKeyframe: (id: string) => void;
   setSelectedElementId: (id: string | null) => void;
   setSelectedElementIds: (ids: string[]) => void;
+  setHoveredElementId: (id: string | null) => void;
   addElement: (element: KeyElement) => void;
   deleteElement: (id: string) => void;
   deleteSelectedElements: () => void;
