@@ -392,6 +392,8 @@ export function CanvasElement({
           element.style?.flipX ? 'scaleX(-1)' : '',
           element.style?.flipY ? 'scaleY(-1)' : '',
           element.style?.scale && element.style.scale !== 1 ? `scale(${element.style.scale})` : '',
+          element.style?.skewX ? `skewX(${element.style.skewX}deg)` : '',
+          element.style?.skewY ? `skewY(${element.style.skewY}deg)` : '',
         ].filter(Boolean).join(' ') || undefined,
         transformOrigin: element.style?.transformOrigin || 'center',
         mixBlendMode: element.style?.blendMode as React.CSSProperties['mixBlendMode'],
