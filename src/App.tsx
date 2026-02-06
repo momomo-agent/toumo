@@ -1277,7 +1277,7 @@ export default function App() {
             </button>
           </div>
           <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-            {[90, 180, 270].map(deg => (
+            {[45, 90, 180, 270, -45].map(deg => (
               <button
                 key={deg}
                 onClick={() => handleStyleChange({ rotation: deg })}
