@@ -36,6 +36,20 @@ export type ChildLayoutConfig = {
   alignSelf?: AutoLayoutAlign; // Override parent's alignItems
 };
 
+// Constraints types (Figma-style)
+export type HorizontalConstraint = 'left' | 'right' | 'left-right' | 'center' | 'scale';
+export type VerticalConstraint = 'top' | 'bottom' | 'top-bottom' | 'center' | 'scale';
+
+export type ConstraintsConfig = {
+  horizontal: HorizontalConstraint;
+  vertical: VerticalConstraint;
+};
+
+export const DEFAULT_CONSTRAINTS: ConstraintsConfig = {
+  horizontal: 'left',
+  vertical: 'top',
+};
+
 export const DEFAULT_AUTO_LAYOUT: AutoLayoutConfig = {
   enabled: false,
   direction: 'vertical',
@@ -241,6 +255,8 @@ export type KeyElement = {
   autoLayout?: AutoLayoutConfig;
   // Child layout settings (when inside auto layout parent)
   layoutChild?: ChildLayoutConfig;
+  // Constraints (Figma-style) - how element responds to parent resize
+  constraints?: ConstraintsConfig;
 };
 
 export const DEFAULT_STYLE: ShapeStyle = {
