@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useEditorStore } from '../../store';
 import type { Component, FunctionalState } from '../../types';
 
@@ -8,6 +8,10 @@ export function ComponentPanel() {
     addComponent,
     updateComponent,
     deleteComponent,
+    createComponentFromSelection,
+    selectedElementIds,
+    keyframes,
+    selectedKeyframeId,
   } = useEditorStore();
 
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
@@ -15,12 +19,23 @@ export function ComponentPanel() {
   const [showNewForm, setShowNewForm] = useState(false);
 
   const selectedComponent = components.find(c => c.id === selectedComponentId);
+  
+  // Check if selection can be converted to component
+  const currentKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
+  const selectedElements = currentKeyframe?.keyElements.filter(
+    el => selectedElementIds.includes(el.id) && !el.componentId
+  ) || [];
+  const canCreateFromSelection = selectedElements.length > 0;
 
   const handleAddComponent = () => {
     if (!newComponentName.trim()) return;
     addComponent(newComponentName.trim());
     setNewComponentName('');
     setShowNewForm(false);
+  };
+
+  const handleCreateFromSelection = () => {
+    createComponentFromSelection();
   };
 
   return (
@@ -51,6 +66,32 @@ export function ComponentPanel() {
         </button>
       </div>
 
+      {/* Create from selection button */}
+      {canCreateFromSelection && (
+        <button
+          onClick={handleCreateFromSelection}
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            marginBottom: 12,
+            background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)',
+            border: 'none',
+            borderRadius: 8,
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+        >
+          <span style={{ fontSize: 16 }}>◇</span>
+          Create Component from Selection ({selectedElements.length})
+        </button>
+      )}
+
       {/* New component form */}
       {showNewForm && (
         <NewComponentForm
@@ -70,7 +111,7 @@ export function ComponentPanel() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {components.map(comp => (
-            <ComponentRow
+            <DraggableComponentRow
               key={comp.id}
               component={comp}
               isSelected={comp.id === selectedComponentId}
@@ -105,9 +146,23 @@ function EmptyState() {
       textAlign: 'center', 
       padding: 20 
     }}>
-      <div style={{ marginBottom: 8 }}>No components yet.</div>
-      <div style={{ fontSize: 11, color: '#444' }}>
-        Components let you create reusable multi-state elements.
+      <div style={{ 
+        width: 48, 
+        height: 48, 
+        margin: '0 auto 12px',
+        background: '#1a1a1b',
+        borderRadius: 12,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 24,
+      }}>
+        ◇
+      </div>
+      <div style={{ marginBottom: 8, color: '#888' }}>No components yet</div>
+      <div style={{ fontSize: 11, color: '#555', lineHeight: 1.5 }}>
+        Select elements and click "Create Component"<br/>
+        or drag components here to reuse them.
       </div>
     </div>
   );
@@ -190,7 +245,8 @@ function NewComponentForm({
   );
 }
 
-function ComponentRow({
+// Draggable component row with drag preview
+function DraggableComponentRow({
   component,
   isSelected,
   onClick,
@@ -199,54 +255,130 @@ function ComponentRow({
   isSelected: boolean;
   onClick: () => void;
 }) {
+  const dragRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    e.dataTransfer.setData('application/toumo-component', component.id);
+    e.dataTransfer.effectAllowed = 'copy';
+    
+    // Create drag image
+    const dragImage = document.createElement('div');
+    dragImage.style.cssText = `
+      padding: 8px 12px;
+      background: #2563eb;
+      border-radius: 6px;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      position: absolute;
+      top: -1000px;
+    `;
+    dragImage.textContent = component.name;
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   const stateCount = component.functionalStates.length;
-  const transitionCount = component.transitions.length;
+  const elementCount = component.masterElements?.length || 0;
 
   return (
-    <button
+    <div
+      ref={dragRef}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       onClick={onClick}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 10,
         padding: '10px 12px',
-        background: isSelected ? '#1e3a5f' : '#1a1a1b',
-        border: `1px solid ${isSelected ? '#2563eb' : '#2a2a2a'}`,
+        background: isSelected ? '#1e3a5f' : isDragging ? '#2563eb20' : '#1a1a1b',
+        border: `1px solid ${isSelected ? '#2563eb' : isDragging ? '#2563eb' : '#2a2a2a'}`,
         borderRadius: 8,
-        cursor: 'pointer',
+        cursor: 'grab',
         textAlign: 'left',
+        opacity: isDragging ? 0.7 : 1,
+        transition: 'all 0.15s ease',
       }}
     >
-      {/* Icon */}
-      <div style={{
-        width: 28,
-        height: 28,
-        background: '#2563eb20',
-        borderRadius: 6,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 14,
-      }}>
-        ◇
-      </div>
+      {/* Component preview */}
+      <ComponentPreview component={component} />
       
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 12, color: '#fff', fontWeight: 500 }}>
           {component.name}
         </div>
         <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>
-          {stateCount} state{stateCount !== 1 ? 's' : ''} • {transitionCount} transition{transitionCount !== 1 ? 's' : ''}
+          {elementCount} element{elementCount !== 1 ? 's' : ''} • {stateCount} state{stateCount !== 1 ? 's' : ''}
         </div>
       </div>
       
-      <div style={{
-        width: 6,
-        height: 6,
-        borderRadius: '50%',
-        background: isSelected ? '#2563eb' : '#444',
-      }} />
-    </button>
+      <div style={{ fontSize: 10, color: '#555' }}>⋮⋮</div>
+    </div>
+  );
+}
+
+// Mini preview of component
+function ComponentPreview({ component }: { component: Component }) {
+  const elements = component.masterElements || [];
+  
+  // Calculate bounds
+  let maxX = 0, maxY = 0;
+  elements.forEach(el => {
+    maxX = Math.max(maxX, el.position.x + el.size.width);
+    maxY = Math.max(maxY, el.position.y + el.size.height);
+  });
+  
+  const scale = Math.min(24 / (maxX || 24), 24 / (maxY || 24), 1);
+
+  return (
+    <div style={{
+      width: 28,
+      height: 28,
+      background: '#0d0d0e',
+      borderRadius: 6,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      position: 'relative',
+    }}>
+      {elements.length === 0 ? (
+        <span style={{ fontSize: 14, color: '#2563eb' }}>◇</span>
+      ) : (
+        <div style={{ 
+          transform: `scale(${scale})`, 
+          transformOrigin: 'center',
+          position: 'relative',
+          width: maxX,
+          height: maxY,
+        }}>
+          {elements.slice(0, 5).map(el => (
+            <div
+              key={el.id}
+              style={{
+                position: 'absolute',
+                left: el.position.x,
+                top: el.position.y,
+                width: el.size.width,
+                height: el.size.height,
+                background: el.style?.fill || '#3b82f6',
+                borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 2),
+                opacity: el.style?.fillOpacity ?? 1,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -260,6 +392,7 @@ function ComponentEditor({
   onDelete: () => void;
 }) {
   const [newStateName, setNewStateName] = useState('');
+  const { syncComponentInstances } = useEditorStore();
 
   const handleAddState = () => {
     if (!newStateName.trim()) return;
@@ -293,6 +426,12 @@ function ComponentEditor({
     });
   };
 
+  const handleNameChange = (name: string) => {
+    onUpdate({ name });
+    // Sync instances after name change
+    setTimeout(() => syncComponentInstances(component.id), 0);
+  };
+
   return (
     <div style={{
       marginTop: 16,
@@ -318,9 +457,28 @@ function ComponentEditor({
         <input
           type="text"
           value={component.name}
-          onChange={(e) => onUpdate({ name: e.target.value })}
+          onChange={(e) => handleNameChange(e.target.value)}
           style={inputStyle}
         />
+      </div>
+
+      {/* Master elements info */}
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>
+          Master Elements
+        </label>
+        <div style={{ 
+          padding: '8px 10px', 
+          background: '#0d0d0e', 
+          borderRadius: 6,
+          fontSize: 11,
+          color: '#888',
+        }}>
+          {component.masterElements?.length || 0} elements
+          <span style={{ color: '#555', marginLeft: 8 }}>
+            Double-click instance to edit
+          </span>
+        </div>
       </div>
 
       {/* Functional States */}

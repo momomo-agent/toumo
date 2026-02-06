@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Keyframe, Transition, KeyElement, TriggerType, Size } from '../types';
+import type { Transition, KeyElement, TriggerType, Size } from '../types';
 import { clearPreviewHash, type ProjectData } from '../utils/shareUtils';
 
 interface PreviewModeProps {
@@ -7,7 +7,6 @@ interface PreviewModeProps {
   onEnterEditMode: () => void;
 }
 
-// Easing functions
 const easingFunctions: Record<string, string> = {
   'linear': 'linear',
   'ease': 'ease',
@@ -42,21 +41,17 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
   const elements = currentKeyframe?.keyElements || [];
   const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
 
-  // Execute transition
   const executeTransition = useCallback((transition: Transition) => {
     if (isTransitioning) return;
-    
     setIsTransitioning(true);
     setTransitionDuration(transition.duration);
     setTransitionCurve(getTransitionEasing(transition));
-    
     setTimeout(() => {
       setCurrentKeyframeId(transition.to);
       setTimeout(() => setIsTransitioning(false), transition.duration);
     }, transition.delay || 0);
   }, [isTransitioning]);
 
-  // Handle triggers
   const handleTrigger = useCallback((triggerType: TriggerType) => {
     const matchingTransition = availableTransitions.find(t => {
       if (t.triggers && t.triggers.length > 0) {
@@ -64,17 +59,12 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
       }
       return t.trigger === triggerType;
     });
-    
-    if (matchingTransition) {
-      executeTransition(matchingTransition);
-    }
+    if (matchingTransition) executeTransition(matchingTransition);
   }, [availableTransitions, executeTransition]);
 
-  // Setup timer triggers
   useEffect(() => {
     timerRefs.current.forEach(timer => clearTimeout(timer));
     timerRefs.current.clear();
-    
     availableTransitions.forEach(transition => {
       const timerTrigger = transition.triggers?.find(t => t.type === 'timer');
       if (timerTrigger && timerTrigger.timerDelay) {
@@ -82,121 +72,57 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
         timerRefs.current.set(transition.id, timer);
       }
     });
-    
-    return () => {
-      timerRefs.current.forEach(timer => clearTimeout(timer));
-    };
+    return () => { timerRefs.current.forEach(timer => clearTimeout(timer)); };
   }, [currentKeyframeId, availableTransitions, executeTransition]);
 
-  // Get trigger hints
   const getTriggerHints = () => {
     const hints: string[] = [];
     availableTransitions.forEach(t => {
-      if (t.triggers?.length) {
-        t.triggers.forEach(trigger => hints.push(trigger.type));
-      } else if (t.trigger) {
-        hints.push(t.trigger);
-      }
+      if (t.triggers?.length) t.triggers.forEach(trigger => hints.push(trigger.type));
+      else if (t.trigger) hints.push(t.trigger);
     });
     return [...new Set(hints)];
   };
-
   const triggerHints = getTriggerHints();
 
-  // Reset to initial state
-  const handleReset = useCallback(() => {
-    setCurrentKeyframeId(keyframes[0]?.id || '');
-  }, [keyframes]);
+  const handleReset = useCallback(() => setCurrentKeyframeId(keyframes[0]?.id || ''), [keyframes]);
+  const handleEdit = useCallback(() => { clearPreviewHash(); onEnterEditMode(); }, [onEnterEditMode]);
 
-  // Enter edit mode
-  const handleEdit = useCallback(() => {
-    clearPreviewHash();
-    onEnterEditMode();
-  }, [onEnterEditMode]);
-
-  // Auto-hide controls
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
-    
     const handleMouseMove = () => {
       setShowControls(true);
       clearTimeout(timeout);
       timeout = setTimeout(() => setShowControls(false), 3000);
     };
-    
     window.addEventListener('mousemove', handleMouseMove);
     timeout = setTimeout(() => setShowControls(false), 3000);
-    
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      clearTimeout(timeout);
-    };
+    return () => { window.removeEventListener('mousemove', handleMouseMove); clearTimeout(timeout); };
   }, []);
 
   return (
     <div style={containerStyle}>
-      {/* Preview Content */}
-      <PreviewContent
-        elements={elements}
-        frameSize={frameSize}
-        canvasBackground={canvasBackground || '#0d0d0e'}
-        onTrigger={handleTrigger}
-        transitionDuration={transitionDuration}
-        transitionCurve={transitionCurve}
-        availableTriggers={triggerHints}
-      />
-      
-      {/* Floating Controls */}
-      <div style={{
-        ...controlsStyle,
-        opacity: showControls ? 1 : 0,
-        pointerEvents: showControls ? 'auto' : 'none',
-      }}>
+      <PreviewContent elements={elements} frameSize={frameSize} canvasBackground={canvasBackground || '#0d0d0e'}
+        onTrigger={handleTrigger} transitionDuration={transitionDuration} transitionCurve={transitionCurve} availableTriggers={triggerHints} />
+      <div style={{ ...controlsStyle, opacity: showControls ? 1 : 0, pointerEvents: showControls ? 'auto' : 'none' }}>
         <div style={controlsInnerStyle}>
-          <span style={stateNameStyle}>
-            {currentKeyframe?.name || 'Preview'}
-          </span>
-          
-          {triggerHints.length > 0 && (
-            <div style={hintsStyle}>
-              {triggerHints.map(hint => (
-                <span key={hint} style={hintBadgeStyle}>
-                  {getTriggerIcon(hint)} {hint}
-                </span>
-              ))}
-            </div>
-          )}
-          
+          <span style={stateNameStyle}>{currentKeyframe?.name || 'Preview'}</span>
+          {triggerHints.length > 0 && <div style={hintsStyle}>{triggerHints.map(hint => <span key={hint} style={hintBadgeStyle}>{getTriggerIcon(hint)} {hint}</span>)}</div>}
           <div style={buttonsStyle}>
-            <button onClick={handleReset} style={buttonStyle}>
-              ↺ Reset
-            </button>
-            <button onClick={handleEdit} style={editButtonStyle}>
-              ✏️ Edit
-            </button>
+            <button onClick={handleReset} style={buttonStyle}>↺ Reset</button>
+            <button onClick={handleEdit} style={editButtonStyle}>✏️ Edit</button>
           </div>
         </div>
       </div>
-      
-      {/* Branding */}
-      <div style={brandingStyle}>
-        Made with <span style={{ color: '#2563eb' }}>Toumo</span>
-      </div>
+      <div style={brandingStyle}>Made with <span style={{ color: '#2563eb' }}>Toumo</span></div>
     </div>
   );
 }
 
 function getTriggerIcon(trigger: string): string {
-  switch (trigger) {
-    case 'tap': return '👆';
-    case 'hover': return '🖱️';
-    case 'drag': return '✋';
-    case 'timer': return '⏱️';
-    default: return '⚡';
-  }
+  switch (trigger) { case 'tap': return '👆'; case 'hover': return '🖱️'; case 'drag': return '✋'; case 'timer': return '⏱️'; default: return '⚡'; }
 }
 
-// Preview Content Component
 interface PreviewContentProps {
   elements: KeyElement[];
   frameSize: Size;
@@ -207,125 +133,116 @@ interface PreviewContentProps {
   availableTriggers: string[];
 }
 
-function PreviewContent({
-  elements,
-  frameSize,
-  canvasBackground,
-  onTrigger,
-  transitionDuration,
-  transitionCurve,
-  availableTriggers,
-}: PreviewContentProps) {
+function PreviewContent({ elements, frameSize, canvasBackground, onTrigger, transitionDuration, transitionCurve, availableTriggers }: PreviewContentProps) {
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (availableTriggers.includes('tap')) {
-      onTrigger('tap');
-    }
-  };
-
-  const handleMouseEnter = (elementId: string) => {
-    setHoveredElement(elementId);
-    if (availableTriggers.includes('hover')) {
-      onTrigger('hover');
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-  };
-
+  const handleClick = () => { if (availableTriggers.includes('tap')) onTrigger('tap'); };
+  const handleMouseEnter = (id: string) => { setHoveredElement(id); if (availableTriggers.includes('hover')) onTrigger('hover'); };
+  const handleMouseDown = (e: React.MouseEvent) => { dragStartRef.current = { x: e.clientX, y: e.clientY }; };
   const handleMouseUp = (e: React.MouseEvent) => {
     if (dragStartRef.current && availableTriggers.includes('drag')) {
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 20) {
-        onTrigger('drag');
-      }
+      const dx = e.clientX - dragStartRef.current.x, dy = e.clientY - dragStartRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 20) onTrigger('drag');
     }
     dragStartRef.current = null;
   };
 
-  // Calculate scale to fit viewport
-  const scale = Math.min(
-    (window.innerWidth * 0.9) / frameSize.width,
-    (window.innerHeight * 0.85) / frameSize.height,
-    1
-  );
+  const scale = Math.min((window.innerWidth * 0.9) / frameSize.width, (window.innerHeight * 0.85) / frameSize.height, 1);
 
   return (
-    <div
-      style={{
-        width: frameSize.width,
-        height: frameSize.height,
-        background: canvasBackground,
-        borderRadius: 12,
-        position: 'relative',
-        overflow: 'hidden',
-        transform: `scale(${scale})`,
-        transformOrigin: 'center center',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        cursor: availableTriggers.includes('tap') ? 'pointer' : 'default',
-      }}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-    >
-      {elements.map((el) => (
-        <div
-          key={el.id}
-          onMouseEnter={() => handleMouseEnter(el.id)}
-          onMouseLeave={() => setHoveredElement(null)}
-          style={{
-            position: 'absolute',
-            left: el.position.x,
-            top: el.position.y,
-            width: el.size.width,
-            height: el.size.height,
-            background: el.style?.fill || '#3b82f6',
-            opacity: el.style?.fillOpacity ?? 1,
-            borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8),
-            border: el.style?.stroke ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}` : 'none',
-            boxShadow: el.style?.shadowColor
-              ? `${el.style.shadowOffsetX || 0}px ${el.style.shadowOffsetY || 0}px ${el.style.shadowBlur || 0}px ${el.style.shadowColor}`
-              : undefined,
-            transition: `all ${transitionDuration}ms ${transitionCurve}`,
-            transform: hoveredElement === el.id ? 'scale(1.02)' : 'scale(1)',
-          }}
-        >
-          {el.shapeType === 'text' && el.text && (
-            <div style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: el.style?.textColor || '#fff',
-              fontSize: el.style?.fontSize || 14,
-              fontWeight: el.style?.fontWeight || 400,
-              fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
-              textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
-              padding: el.style?.padding || 0,
-            }}>
-              {el.text}
-            </div>
-          )}
-          {el.shapeType === 'image' && el.style?.imageSrc && (
-            <img
-              src={el.style.imageSrc}
-              alt=""
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: el.style?.objectFit || 'cover',
-                borderRadius: 'inherit',
-              }}
-            />
-          )}
+    <div style={{ width: frameSize.width, height: frameSize.height, background: canvasBackground, borderRadius: 12, position: 'relative', overflow: 'hidden', transform: `scale(${scale})`, transformOrigin: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', cursor: availableTriggers.includes('tap') ? 'pointer' : 'default' }}
+      onClick={handleClick} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
+      {elements.map(el => (
+        <div key={el.id} onMouseEnter={() => handleMouseEnter(el.id)} onMouseLeave={() => setHoveredElement(null)}
+          style={{ position: 'absolute', left: el.position.x, top: el.position.y, width: el.size.width, height: el.size.height, background: el.style?.fill || '#3b82f6', opacity: el.style?.fillOpacity ?? 1, borderRadius: el.shapeType === 'ellipse' ? '50%' : (el.style?.borderRadius || 8), transition: `all ${transitionDuration}ms ${transitionCurve}`, transform: hoveredElement === el.id ? 'scale(1.02)' : 'scale(1)' }}>
+          {el.shapeType === 'text' && el.text && <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: el.style?.textColor || '#fff', fontSize: el.style?.fontSize || 14 }}>{el.text}</div>}
         </div>
       ))}
     </div>
   );
 }
+
+// Styles
+const containerStyle: React.CSSProperties = {
+  width: '100vw',
+  height: '100vh',
+  background: '#0a0a0b',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  position: 'relative',
+};
+
+const controlsStyle: React.CSSProperties = {
+  position: 'fixed',
+  bottom: 24,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  transition: 'opacity 0.3s ease',
+  zIndex: 100,
+};
+
+const controlsInnerStyle: React.CSSProperties = {
+  background: 'rgba(26, 26, 27, 0.95)',
+  backdropFilter: 'blur(12px)',
+  borderRadius: 12,
+  border: '1px solid #333',
+  padding: '12px 20px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 16,
+};
+
+const stateNameStyle: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
+  color: '#fff',
+};
+
+const hintsStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 6,
+};
+
+const hintBadgeStyle: React.CSSProperties = {
+  padding: '4px 10px',
+  background: '#1e3a5f',
+  borderRadius: 6,
+  fontSize: 11,
+  color: '#60a5fa',
+};
+
+const buttonsStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+};
+
+const buttonStyle: React.CSSProperties = {
+  padding: '8px 14px',
+  background: '#2a2a2a',
+  border: '1px solid #444',
+  borderRadius: 6,
+  color: '#ccc',
+  fontSize: 12,
+  cursor: 'pointer',
+};
+
+const editButtonStyle: React.CSSProperties = {
+  padding: '8px 16px',
+  background: '#2563eb',
+  border: 'none',
+  borderRadius: 6,
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const brandingStyle: React.CSSProperties = {
+  position: 'fixed',
+  bottom: 24,
+  right: 24,
+  fontSize: 11,
+  color: '#666',
+};

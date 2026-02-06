@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { MouseEvent as ReactMouseEvent, DragEvent as ReactDragEvent } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement, type ResizeHandle } from './CanvasElement';
+import { ComponentInstanceElement } from './ComponentInstanceElement';
 import { SelectionBox } from './SelectionBox';
 import { AlignmentGuides, type AlignmentLine } from './AlignmentGuides';
 

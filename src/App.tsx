@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { Canvas } from './components/Canvas';
 import { InteractionManager } from './components/InteractionManager';
@@ -6,6 +6,9 @@ import { StateInspector } from './components/Inspector/StateInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { LivePreview } from './components/LivePreview';
 import { ShortcutsPanel } from './components/ShortcutsPanel';
+import { ShareModal } from './components/ShareModal';
+import { PreviewMode } from './components/PreviewMode';
+import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
 import { WelcomeModal } from './components/WelcomeModal';
 import { EmptyState } from './components/EmptyState';
 import { useEditorStore } from './store';
@@ -46,6 +49,11 @@ type ToolButton = {
 };
 
 export default function App() {
+  // Preview mode state
+  const [isPreviewMode, setIsPreviewMode] = useState(() => isPreviewUrl());
+  const [previewData, setPreviewData] = useState<ProjectData | null>(() => getProjectFromUrl());
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
   const {
     keyframes,
     transitions,
@@ -98,6 +106,25 @@ export default function App() {
   const elements = selectedKeyframe?.keyElements || [];
   const selectedElement = elements.find((el) => el.id === selectedElementId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle entering edit mode from preview
+  const handleEnterEditMode = useCallback(() => {
+    if (previewData) {
+      loadProject(previewData);
+    }
+    setIsPreviewMode(false);
+    setPreviewData(null);
+  }, [previewData, loadProject]);
+
+  // If in preview mode, render PreviewMode component
+  if (isPreviewMode && previewData) {
+    return (
+      <PreviewMode
+        projectData={previewData}
+        onEnterEditMode={handleEnterEditMode}
+      />
+    );
+  }
 
   // Handle image file upload
   const handleImageFile = (file: File) => {
@@ -2125,6 +2152,21 @@ export default function App() {
           >
             Export SVG
           </button>
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            style={{
+              padding: '6px 12px',
+              background: '#22c55e',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            🔗 Share
+          </button>
         </div>
       </header>
 
@@ -2171,6 +2213,19 @@ export default function App() {
                   borderRadius: 6,
                   color: currentTool === tool.id ? '#fff' : '#888',
                   cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (currentTool !== tool.id) {
+                    e.currentTarget.style.background = '#1f1f1f';
+                    e.currentTarget.style.color = '#fff';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentTool !== tool.id) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#888';
+                  }
                 }}
               >
                 {tool.icon}
@@ -2232,8 +2287,18 @@ export default function App() {
               </div>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-              <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={undo}>Undo</button>
-              <button style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#fff' }} onClick={redo}>Redo</button>
+              <button 
+                style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#888', cursor: 'pointer', transition: 'all 0.15s ease' }} 
+                onClick={undo}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
+              >Undo</button>
+              <button 
+                style={{ border: '1px solid #333', borderRadius: 6, padding: '6px 10px', background: 'transparent', color: '#888', cursor: 'pointer', transition: 'all 0.15s ease' }} 
+                onClick={redo}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
+              >Redo</button>
             </div>
           </div>
 
@@ -2263,13 +2328,27 @@ export default function App() {
                         style={{
                           padding: '6px 10px',
                           background: selectedElementId === el.id ? '#2563eb30' : 'transparent',
-                          border: '1px solid #2a2a2a',
+                          border: selectedElementId === el.id ? '1px solid #2563eb50' : '1px solid #2a2a2a',
                           borderRadius: 6,
                           color: '#fff',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           textAlign: 'left',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedElementId !== el.id) {
+                            e.currentTarget.style.background = '#1a1a1a';
+                            e.currentTarget.style.borderColor = '#333';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedElementId !== el.id) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = '#2a2a2a';
+                          }
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2425,17 +2504,59 @@ export default function App() {
         <span>{frameSize.width} × {frameSize.height}</span>
         <span>Zoom: {Math.round(canvasScale * 100)}%</span>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={() => setCanvasScale(0.5)} style={{ padding: '2px 6px', background: canvasScale === 0.5 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>50%</button>
-          <button onClick={() => setCanvasScale(1)} style={{ padding: '2px 6px', background: canvasScale === 1 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>100%</button>
-          <button onClick={() => setCanvasScale(2)} style={{ padding: '2px 6px', background: canvasScale === 2 ? '#2563eb20' : '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>200%</button>
-          <button onClick={() => setCanvasScale(Math.min(0.8, 600 / frameSize.width))} style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>Fit</button>
-          <button onClick={() => setCanvasOffset({ x: 0, y: 0 })} style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}>⊙</button>
+          {[
+            { label: '50%', scale: 0.5 },
+            { label: '100%', scale: 1 },
+            { label: '200%', scale: 2 },
+          ].map(({ label, scale }) => (
+            <button
+              key={label}
+              onClick={() => setCanvasScale(scale)}
+              style={{
+                padding: '2px 6px',
+                background: canvasScale === scale ? '#2563eb20' : '#1a1a1a',
+                border: `1px solid ${canvasScale === scale ? '#2563eb50' : '#333'}`,
+                borderRadius: 4,
+                color: canvasScale === scale ? '#3b82f6' : '#888',
+                fontSize: 10,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (canvasScale !== scale) {
+                  e.currentTarget.style.borderColor = '#555';
+                  e.currentTarget.style.color = '#fff';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (canvasScale !== scale) {
+                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.color = '#888';
+                }
+              }}
+            >
+              {label}
+            </button>
+          ))}
+          <button
+            onClick={() => setCanvasScale(Math.min(0.8, 600 / frameSize.width))}
+            style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
+          >Fit</button>
+          <button
+            onClick={() => setCanvasOffset({ x: 0, y: 0 })}
+            style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
+          >⊙</button>
         </div>
         <span>{selectedElementIds.length === 1 && selectedKeyframe?.keyElements.find(e => e.id === selectedElementIds[0]) 
           ? `X: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
       </div>
       <ShortcutsPanel />
+      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
       <WelcomeModal />
     </div>
   );
