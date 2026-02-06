@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
 import { ColorPicker } from './ColorPicker';
+import { GradientEditor } from './GradientEditor';
 import { AutoLayoutPanel } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
 import { PrototypeLinkPanel } from './PrototypeLinkPanel';
@@ -601,6 +602,11 @@ export function DesignPanel() {
       blendMode?: string;
       boxShadow?: string;
       filter?: string;
+      gradientType?: 'none' | 'linear' | 'radial';
+      gradientAngle?: number;
+      gradientStops?: { color: string; position: number }[];
+      gradientCenterX?: number;
+      gradientCenterY?: number;
     };
   };
 
@@ -956,6 +962,17 @@ export function DesignPanel() {
               }}
             />
           ))
+        )}
+        {/* Gradient Editor - always show when there's at least one fill */}
+        {fills.length > 0 && (
+          <GradientEditor
+            gradientType={element.style?.gradientType || 'none'}
+            gradientAngle={element.style?.gradientAngle ?? 180}
+            gradientStops={element.style?.gradientStops || []}
+            gradientCenterX={element.style?.gradientCenterX ?? 50}
+            gradientCenterY={element.style?.gradientCenterY ?? 50}
+            onChange={(updates) => updateStyle(updates)}
+          />
         )}
       </Section>
 

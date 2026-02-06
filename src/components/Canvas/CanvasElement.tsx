@@ -489,7 +489,9 @@ export const CanvasElement = memo(function CanvasElement({
         return `linear-gradient(${angle}deg, ${stops})`;
       }
       if (style.gradientType === 'radial') {
-        return `radial-gradient(circle, ${stops})`;
+        const cx = style.gradientCenterX ?? 50;
+        const cy = style.gradientCenterY ?? 50;
+        return `radial-gradient(circle at ${cx}% ${cy}%, ${stops})`;
       }
     }
     

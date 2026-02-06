@@ -1,0 +1,377 @@
+/* Gradient Editor */
+.gradient-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+/* Type selector row */
+.gradient-type-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gradient-type-btn {
+  flex: 1;
+  padding: 4px 8px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #aaa;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.gradient-type-btn:hover {
+  border-color: #666;
+  color: #ddd;
+}
+
+.gradient-type-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+/* Preview bar */
+.gradient-preview {
+  width: 100%;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Angle dial */
+.gradient-angle-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gradient-angle-dial {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1e1e1e;
+  border: 2px solid #444;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.gradient-angle-dial:hover {
+  border-color: #666;
+}
+
+.gradient-angle-dial:active {
+  cursor: grabbing;
+  border-color: #3b82f6;
+}
+
+.gradient-angle-line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 18px;
+  background: #3b82f6;
+  border-radius: 1px;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.gradient-angle-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.gradient-angle-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: #666;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.gradient-angle-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 11px;
+  padding: 4px 6px;
+  width: 50px;
+  height: 24px;
+  text-align: right;
+}
+
+.gradient-angle-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.gradient-angle-input::-webkit-inner-spin-button,
+.gradient-angle-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* Radial center point */
+.gradient-center-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gradient-center-pad {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background: #1e1e1e;
+  border: 2px solid #444;
+  border-radius: 6px;
+  cursor: crosshair;
+  flex-shrink: 0;
+}
+
+.gradient-center-pad:hover {
+  border-color: #666;
+}
+
+.gradient-center-pad:active {
+  border-color: #3b82f6;
+}
+
+.gradient-center-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.gradient-center-crosshair-h,
+.gradient-center-crosshair-v {
+  position: absolute;
+  background: rgba(59, 130, 246, 0.3);
+  pointer-events: none;
+}
+
+.gradient-center-crosshair-h {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.gradient-center-crosshair-v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.gradient-center-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gradient-center-input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gradient-center-label {
+  color: #888;
+  font-size: 10px;
+  width: 14px;
+}
+
+.gradient-center-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 11px;
+  padding: 4px 6px;
+  width: 44px;
+  height: 24px;
+  text-align: right;
+}
+
+.gradient-center-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.gradient-center-input::-webkit-inner-spin-button,
+.gradient-center-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* Color stops bar */
+.gradient-stops-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gradient-stops-bar {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  cursor: pointer;
+}
+
+.gradient-stops-bar-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.gradient-stop-handle {
+  position: absolute;
+  top: -3px;
+  width: 14px;
+  height: 22px;
+  transform: translateX(-50%);
+  cursor: grab;
+  z-index: 2;
+}
+
+.gradient-stop-handle:active {
+  cursor: grabbing;
+}
+
+.gradient-stop-arrow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #888;
+}
+
+.gradient-stop-handle.selected .gradient-stop-arrow {
+  border-top-color: #3b82f6;
+}
+
+.gradient-stop-swatch {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 2px solid #888;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.gradient-stop-handle.selected .gradient-stop-swatch {
+  border-color: #3b82f6;
+}
+
+/* Stop color editor row */
+.gradient-stop-editor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gradient-stop-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.gradient-stop-color-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 11px;
+  font-family: monospace;
+  padding: 4px 6px;
+  width: 70px;
+  height: 24px;
+}
+
+.gradient-stop-color-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.gradient-stop-pos-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 11px;
+  padding: 4px 6px;
+  width: 40px;
+  height: 24px;
+  text-align: right;
+}
+
+.gradient-stop-pos-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.gradient-stop-pos-input::-webkit-inner-spin-button,
+.gradient-stop-pos-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.gradient-stop-delete {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.gradient-stop-delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.gradient-stop-hint {
+  color: #666;
+  font-size: 10px;
+  text-align: center;
+}

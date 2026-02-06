@@ -80,6 +80,8 @@ export type ShapeStyle = {
   gradientType?: 'none' | 'linear' | 'radial';
   gradientAngle?: number;
   gradientStops?: { color: string; position: number }[];
+  gradientCenterX?: number; // 0-100, radial gradient center
+  gradientCenterY?: number; // 0-100, radial gradient center
   stroke: string;
   strokeWidth: number;
   strokeDasharray?: string;
