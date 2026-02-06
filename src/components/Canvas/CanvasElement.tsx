@@ -25,7 +25,7 @@ interface CanvasElementProps {
   ) => AlignmentResult | void;
   // Group-related props
   isGroup?: boolean;
-  parentOffset?: Position;
+  groupOffset?: Position; // 编组的位置偏移，用于子元素位置转换
   isInEditingGroup?: boolean;
   onDoubleClick?: () => void;
 }
@@ -37,7 +37,7 @@ export function CanvasElement({
   allElements,
   onAlignmentCheck,
   isGroup = false,
-  parentOffset: _parentOffset,
+  groupOffset,
   isInEditingGroup = false,
   onDoubleClick,
 }: CanvasElementProps) {
@@ -164,7 +164,15 @@ export function CanvasElement({
             y: Math.round(entry.position.y + snapDy),
           };
         }
-        updateElementPosition(entry.id, entry.position);
+        // 如果是编组内的子元素，需要将绝对位置转换回相对位置
+        let positionToStore = entry.position;
+        if (groupOffset) {
+          positionToStore = {
+            x: entry.position.x - groupOffset.x,
+            y: entry.position.y - groupOffset.y,
+          };
+        }
+        updateElementPosition(entry.id, positionToStore);
       });
     };
 
@@ -177,7 +185,7 @@ export function CanvasElement({
 
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [allElements, currentTool, element.id, onAlignmentCheck, scale, selectedElementIds, setIsDragging, setSelectedElementId, setSelectedElementIds, updateElementPosition, pushHistory]);
+  }, [allElements, currentTool, element.id, onAlignmentCheck, scale, selectedElementIds, setIsDragging, setSelectedElementId, setSelectedElementIds, updateElementPosition, pushHistory, groupOffset]);
 
   const handleResizeStart = useCallback((event: ReactMouseEvent, handle: ResizeHandle) => {
     if (element.locked) return;

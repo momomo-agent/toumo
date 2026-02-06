@@ -96,36 +96,6 @@ const OpacityIcon = () => (
   </svg>
 );
 
-// Stroke cap icons
-const StrokeCapIcon = ({ type }: { type: 'none' | 'round' | 'square' }) => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    {type === 'none' && (
-      <path d="M3 8H13" stroke="currentColor" strokeWidth="3" strokeLinecap="butt" />
-    )}
-    {type === 'round' && (
-      <path d="M3 8H13" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    )}
-    {type === 'square' && (
-      <path d="M3 8H13" stroke="currentColor" strokeWidth="3" strokeLinecap="square" />
-    )}
-  </svg>
-);
-
-// Stroke join icons
-const StrokeJoinIcon = ({ type }: { type: 'miter' | 'round' | 'bevel' }) => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    {type === 'miter' && (
-      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="miter" fill="none" />
-    )}
-    {type === 'round' && (
-      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
-    )}
-    {type === 'bevel' && (
-      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="bevel" fill="none" />
-    )}
-  </svg>
-);
-
 // Number input with label
 interface NumberInputProps {
   label: string;
@@ -519,9 +489,10 @@ export function DesignPanel() {
   }, [element?.id]);
 
   // Update element style helper
-  const updateStyle = useCallback((updates: Partial<typeof element.style>) => {
+  const updateStyle = useCallback((updates: Record<string, unknown>) => {
     updateElement(element.id, {
-      style: { ...element.style, ...updates }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      style: { ...element.style, ...updates } as any
     });
   }, [element?.id, element?.style, updateElement]);
 
@@ -796,6 +767,83 @@ export function DesignPanel() {
           ))
         )}
       </Section>
+
+      {/* Interactions Section */}
+      <InteractionsSection
+        keyframeId={selectedKeyframeId || ''}
+        keyframes={keyframes}
+      />
+    </div>
+  );
+}
+
+// Interactions Section Component
+function InteractionsSection({ keyframeId, keyframes }: { 
+  keyframeId: string; 
+  keyframes: { id: string; name: string }[];
+}) {
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const { transitions, addTransition, setSelectedTransitionId } = useEditorStore();
+  
+  const outgoingTransitions = transitions.filter(t => t.from === keyframeId);
+  const otherKeyframes = keyframes.filter(kf => kf.id !== keyframeId);
+
+  return (
+    <div className="figma-section interactions-section">
+      <div className="figma-section-header" style={{ marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <InteractionIcon />
+          <span className="figma-section-title">Interactions</span>
+        </div>
+        <button 
+          className="figma-icon-btn add-interaction-btn"
+          onClick={() => setShowAddMenu(!showAddMenu)}
+          title="Add interaction"
+        >
+          <PlusIcon />
+        </button>
+      </div>
+
+      {showAddMenu && otherKeyframes.length > 0 && (
+        <div className="interaction-add-menu">
+          <div className="interaction-add-label">Navigate to:</div>
+          {otherKeyframes.map(kf => (
+            <button
+              key={kf.id}
+              className="interaction-add-option"
+              onClick={() => {
+                addTransition(keyframeId, kf.id);
+                setShowAddMenu(false);
+              }}
+            >
+              → {kf.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {outgoingTransitions.length === 0 ? (
+        <div className="figma-empty-hint">
+          No interactions. Click + to add.
+        </div>
+      ) : (
+        <div className="interaction-list">
+          {outgoingTransitions.map(tr => {
+            const toKf = keyframes.find(kf => kf.id === tr.to);
+            return (
+              <button
+                key={tr.id}
+                className="interaction-item"
+                onClick={() => setSelectedTransitionId(tr.id)}
+              >
+                <span className="interaction-trigger">{tr.trigger}</span>
+                <span className="interaction-arrow">→</span>
+                <span className="interaction-target">{toKf?.name || '?'}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

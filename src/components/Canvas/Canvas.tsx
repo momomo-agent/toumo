@@ -752,6 +752,7 @@ export function Canvas() {
                                     isSelected={isEditingThisGroup && selectedElementIds.includes(child.id)}
                                     onAlignmentCheck={checkAlignment}
                                     isInEditingGroup={isEditingThisGroup}
+                                    groupOffset={element.position}
                                   />
                                 );
                               })}
