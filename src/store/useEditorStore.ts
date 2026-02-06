@@ -180,6 +180,7 @@ interface EditorActions {
   setOverflow: (overflow: 'visible' | 'hidden' | 'scroll') => void;
   setPointerEvents: (enabled: boolean) => void;
   setTransformOrigin: (origin: string) => void;
+  setDropShadow: (x: number, y: number, blur: number, color: string) => void;
   // Variable actions
   addVariable: (variable: Variable) => void;
   updateVariable: (id: string, updates: Partial<Variable>) => void;
@@ -1925,6 +1926,25 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, transformOrigin: origin } 
+      });
+    }
+  },
+
+  setDropShadow: (x: number, y: number, blur: number, color: string) => {
+    const state = get();
+    if (!state.selectedElementId) return;
+    get().pushHistory();
+    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
+      ?.keyElements.find(e => e.id === state.selectedElementId);
+    if (el && el.style) {
+      get().updateElement(state.selectedElementId, { 
+        style: { 
+          ...el.style, 
+          dropShadowX: x,
+          dropShadowY: y,
+          dropShadowBlur: blur,
+          dropShadowColor: color
+        } 
       });
     }
   },
