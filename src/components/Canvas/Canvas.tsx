@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { MouseEvent as ReactMouseEvent, DragEvent as ReactDragEvent } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
@@ -41,6 +41,8 @@ export function Canvas() {
     canvasBackground,
     snapToGrid,
     gridSize,
+    components,
+    instantiateComponent,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,15 @@ export function Canvas() {
   const stageHeight = frameSize.height + FRAME_MARGIN * 2 + 80;
 
   const toCanvasSpace = (event: ReactMouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: (event.clientX - rect.left - canvasOffset.x) / canvasScale,
+      y: (event.clientY - rect.top - canvasOffset.y) / canvasScale,
+    };
+  };
+
+  const toCanvasSpaceFromDrag = (event: ReactDragEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
     return {
@@ -556,12 +567,45 @@ export function Canvas() {
     };
   }, [handleWheel]);
 
+  // Handle component drag over
+  const handleDragOver = useCallback((event: ReactDragEvent) => {
+    if (event.dataTransfer.types.includes('application/toumo-component')) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }, []);
+
+  // Handle component drop
+  const handleDrop = useCallback((event: ReactDragEvent) => {
+    const componentId = event.dataTransfer.getData('application/toumo-component');
+    if (!componentId) return;
+    
+    event.preventDefault();
+    
+    const stagePoint = toCanvasSpaceFromDrag(event);
+    const hitFrame = getFrameUnderPoint(stagePoint);
+    
+    if (hitFrame) {
+      if (hitFrame.id !== selectedKeyframeId) {
+        setSelectedKeyframeId(hitFrame.id);
+      }
+      
+      const framePoint = translateToFrameSpace(stagePoint, hitFrame);
+      instantiateComponent(componentId, {
+        x: Math.max(0, framePoint.x - 50),
+        y: Math.max(0, framePoint.y - 50),
+      });
+    }
+  }, [getFrameUnderPoint, instantiateComponent, selectedKeyframeId, setSelectedKeyframeId]);
+
   return (
     <div
       ref={canvasRef}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
       className="canvas-stage"
       style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair' }}
     >
