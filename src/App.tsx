@@ -1710,6 +1710,14 @@ export default function App() {
                 <button onClick={() => handleStyleChange({ aspectRatio: '16/9' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>16:9</button>
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              <Label>Object Fit</Label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => handleStyleChange({ objectFit: 'cover' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Cover</button>
+                <button onClick={() => handleStyleChange({ objectFit: 'contain' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Contain</button>
+                <button onClick={() => handleStyleChange({ objectFit: 'fill' })} style={{ flex: 1, padding: 4, background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 9, cursor: 'pointer' }}>Fill</button>
+              </div>
+            </div>
           </>
         )}
       </>
