@@ -323,7 +323,14 @@ export default function App() {
           fileInputRef.current?.click();
           break;
         case 'l':
-          setCurrentTool('line');
+          if (event.shiftKey && selectedElementIds.length > 0) {
+            selectedElementIds.forEach(id => {
+              const el = elements.find(e => e.id === id);
+              if (el) updateElement(id, { locked: !el.locked });
+            });
+          } else {
+            setCurrentTool('line');
+          }
           break;
         case 'f':
           setCurrentTool('frame');
