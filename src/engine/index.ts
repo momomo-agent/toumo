@@ -15,3 +15,14 @@ export {
   SpringInterpolator,
   type EasingFunction,
 } from './Interpolator';
+export {
+  SmartAnimateController,
+  smartAnimateController,
+  analyzeStateDiff,
+  interpolateColor,
+  type SmartAnimateResult,
+  type ElementAnimation,
+  type PropertyDiff,
+  type AnimatableProperty,
+  type ColorProperty,
+} from './SmartAnimate';

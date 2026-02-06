@@ -470,17 +470,17 @@ function PreviewElement({
   useSpring = true,
   onMouseEnter,
   onMouseLeave,
-  onPrototypeClick,
+  onPrototypeClick: _onPrototypeClick,
 }: PreviewElementProps) {
   const hasPrototypeLink = el.prototypeLink?.enabled && el.prototypeLink?.targetFrameId;
   
   // Handle element click for prototype links
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const _handleClick = useCallback((e: React.MouseEvent) => {
     if (hasPrototypeLink && el.prototypeLink) {
       e.stopPropagation();
-      onPrototypeClick?.(el.prototypeLink);
+      _onPrototypeClick?.(el.prototypeLink);
     }
-  }, [hasPrototypeLink, el.prototypeLink, onPrototypeClick]);
+  }, [hasPrototypeLink, el.prototypeLink, _onPrototypeClick]);
   
   // 弹簧动画 hook
   const { values, animateTo } = useSpringAnimation({
@@ -542,7 +542,7 @@ function PreviewElement({
     <div 
       data-element-id={el.id}
       data-has-link={hasPrototypeLink ? 'true' : undefined}
-      onClick={handleClick}
+      onClick={_handleClick}
       onMouseEnter={onMouseEnter} 
       onMouseLeave={onMouseLeave}
       style={{
