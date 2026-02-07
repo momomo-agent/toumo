@@ -2289,6 +2289,21 @@ export default function App() {
             📦 Export
           </button>
           <button
+            onClick={() => setIsImportModalOpen(true)}
+            style={{
+              padding: '6px 12px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            📥 Import
+          </button>
+          <button
             onClick={handleEnterPreviewMode}
             style={{
               padding: '6px 12px',
