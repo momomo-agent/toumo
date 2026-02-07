@@ -17,6 +17,7 @@ import { initialKeyframes, initialTransitions, initialSharedElements } from './i
 import { DEFAULT_AUTO_LAYOUT, DEFAULT_CURVE_CONFIG } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
 import { performBooleanOperation, canPerformBooleanOperation } from '../utils/booleanOperations';
+import { SUGAR_PRESETS, type SugarResult } from '../engine/SugarPresets';
 
 interface HistoryEntry {
   keyframes: Keyframe[];
@@ -334,6 +335,7 @@ interface EditorActions {
   booleanIntersect: () => void;
   booleanExclude: () => void;
   // Patch editor actions
+  applySugar: (elementId: string, presetId: string) => void;
   addPatch: (patch: Patch) => void;
   removePatch: (id: string) => void;
   updatePatchPosition: (id: string, position: Position) => void;
@@ -3758,6 +3760,30 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   // Patch editor actions
+  applySugar: (elementId: string, presetId: string) => {
+    const preset = SUGAR_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    const state = get();
+    const element = state.sharedElements.find((e) => e.id === elementId);
+    if (!element) return;
+    const result: SugarResult = preset.create(elementId, element.name || 'Element');
+
+    // Add display states
+    if (result.displayStates) {
+      for (const ds of result.displayStates) {
+        state.addDisplayState(ds.name);
+      }
+    }
+
+    // Add patches + connections
+    set((s) => ({
+      patches: [...s.patches, ...result.patches],
+      patchConnections: [...s.patchConnections, ...result.connections],
+    }));
+
+    get().pushHistory(`Sugar: ${preset.name}`);
+  },
+
   addPatch: (patch) => {
     set((s) => ({ patches: [...s.patches, patch] }));
   },

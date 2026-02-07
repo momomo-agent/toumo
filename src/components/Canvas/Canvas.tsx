@@ -14,6 +14,7 @@ import { ZoomControls } from './ZoomControls';
 import { GuideLines } from './GuideLines';
 import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
+import { SUGAR_PRESETS } from '../../engine/SugarPresets';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
 import { useResolvedElements, resolveElementsForState } from '../../hooks/useResolvedElements';
 // DisplayStateBar removed — state switching via canvas keyframe clicks (PRD requirement)
@@ -94,6 +95,7 @@ export function Canvas() {
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLine[]>([]);
   const [distanceIndicators, setDistanceIndicators] = useState<DistanceIndicator[]>([]);
   const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number; canvasPos: { x: number; y: number } } | null>(null);
+  const [elementContextMenu, setElementContextMenu] = useState<{ x: number; y: number; elementId: string } | null>(null);
   const handOverrideRef = useRef(false);
   const previousToolRef = useRef<ToolType>(currentTool);
   // Live preview while drawing shapes
@@ -1165,6 +1167,7 @@ export function Canvas() {
         const isOnElement = target.closest('[data-element-id]');
         if (!isOnElement) {
           e.preventDefault();
+          setElementContextMenu(null);
           const stagePoint = (() => {
             const rect = canvasRef.current?.getBoundingClientRect();
             if (!rect) return { x: 0, y: 0 };
@@ -1179,6 +1182,11 @@ export function Canvas() {
             ? { x: stagePoint.x - layout.x, y: stagePoint.y - layout.y }
             : stagePoint;
           setCanvasContextMenu({ x: e.clientX, y: e.clientY, canvasPos: framePoint });
+        } else {
+          e.preventDefault();
+          setCanvasContextMenu(null);
+          const elId = (isOnElement as HTMLElement).getAttribute('data-element-id');
+          if (elId) setElementContextMenu({ x: e.clientX, y: e.clientY, elementId: elId });
         }
       }}
       className="canvas-stage"
@@ -1722,6 +1730,16 @@ export function Canvas() {
         />
       )}
 
+      {/* Element Context Menu — Sugar Presets */}
+      {elementContextMenu && (
+        <ElementSugarMenu
+          x={elementContextMenu.x}
+          y={elementContextMenu.y}
+          elementId={elementContextMenu.elementId}
+          onClose={() => setElementContextMenu(null)}
+        />
+      )}
+
       {/* File Drag-Over Overlay */}
       {fileDragOver && (
         <div
@@ -1757,6 +1775,43 @@ export function Canvas() {
         </div>
       )}
     </div>
+    </>
+  );
+}
+
+// ─── Element Sugar Menu (right-click on element) ─────────────────────
+function ElementSugarMenu({ x, y, elementId, onClose }: {
+  x: number; y: number; elementId: string; onClose: () => void;
+}) {
+  const applySugar = useEditorStore((s) => s.applySugar);
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={onClose} />
+      <div style={{
+        position: 'fixed', left: x, top: y, zIndex: 9999,
+        background: '#1e1e1e', border: '1px solid #333', borderRadius: 8,
+        padding: 4, minWidth: 200, boxShadow: '0 8px 24px rgba(0,0,0,.5)',
+      }}>
+        <div style={{ padding: '6px 12px', fontSize: 11, color: '#888', fontWeight: 600 }}>
+          ✨ Add Interaction
+        </div>
+        {SUGAR_PRESETS.map((p) => (
+          <div key={p.id} onClick={() => { applySugar(elementId, p.id); onClose(); }}
+            style={{
+              padding: '8px 12px', cursor: 'pointer', borderRadius: 4,
+              display: 'flex', alignItems: 'center', gap: 8, fontSize: 13,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#2a2a2a')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            <span style={{ fontSize: 16 }}>{p.icon}</span>
+            <div>
+              <div style={{ color: '#eee' }}>{p.name}</div>
+              <div style={{ color: '#777', fontSize: 11 }}>{p.description}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
