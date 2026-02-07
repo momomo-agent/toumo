@@ -303,6 +303,46 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* Condition config */}
+      {patch.type === 'condition' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Variable</label>
+          <select
+            value={patch.config?.variableId || ''}
+            onChange={e => updatePatchConfig(patch.id, { variableId: e.target.value })}
+            style={inputStyle}
+          >
+            <option value="">— Select —</option>
+            {variables.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+          <label style={{ ...labelStyle, marginTop: 8 }}>Operator</label>
+          <select
+            value={patch.config?.operator || '=='}
+            onChange={e => updatePatchConfig(patch.id, { operator: e.target.value })}
+            style={inputStyle}
+          >
+            <option value="==">== Equal</option>
+            <option value="!=">!= Not Equal</option>
+            <option value=">">&gt; Greater</option>
+            <option value=">=">&gt;= Greater or Equal</option>
+            <option value="<">&lt; Less</option>
+            <option value="<=">&lt;= Less or Equal</option>
+          </select>
+          <label style={{ ...labelStyle, marginTop: 8 }}>Value</label>
+          <input
+            value={patch.config?.value ?? ''}
+            onChange={e => updatePatchConfig(patch.id, { value: e.target.value })}
+            style={inputStyle}
+            placeholder="Expected value"
+          />
+          <div style={{ fontSize: 10, color: patch.config?._lastResult ? '#22c55e' : '#666', marginTop: 4 }}>
+            Last: {patch.config?._lastResult ? '✅ true' : '❌ false'}
+          </div>
+        </div>
+      )}
+
       {/* Timer duration */}
       {patch.type === 'timer' && (
         <div style={{ marginBottom: 12 }}>
