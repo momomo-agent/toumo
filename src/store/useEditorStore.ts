@@ -496,7 +496,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   // Shared layer tree + display states (PRD v2)
   displayStates: [
     { id: 'ds-default', name: 'Default', layerOverrides: [] },
-    { id: 'ds-active', name: 'Active', layerOverrides: [] },
+    { id: 'ds-active', name: 'Active', layerOverrides: [
+      { layerId: 'el-card', properties: { y: 20, fillColor: '#3b82f6' }, isKey: true },
+      { layerId: 'el-button', properties: { fillColor: '#22c55e', fillOpacity: 0.9 }, isKey: true },
+    ] },
   ],
   selectedDisplayStateId: 'ds-default',
   // Three-level curve override system (level 1: global)
