@@ -8,6 +8,8 @@ import { AutoLayoutPanel } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
 import { OverflowPanel } from './OverflowPanel';
 import { PrototypeLinkPanel } from './PrototypeLinkPanel';
+import { TextPropertiesPanel } from './TextPropertiesPanel';
+import { AlignmentPanel } from './AlignmentPanel';
 import { useResolvedElements } from '../../hooks/useResolvedElements';
 import './Inspector.css';
 import { TransitionCurvePanel } from './TransitionCurvePanel';
@@ -164,6 +166,8 @@ export function Inspector() {
           </section>
         )}
         <DesignPanel />
+        <TextPropertiesPanel />
+        <AlignmentPanel />
         <AutoLayoutPanel />
         <ConstraintsPanel />
         <OverflowPanel />
