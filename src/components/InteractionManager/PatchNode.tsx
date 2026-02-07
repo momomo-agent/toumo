@@ -65,6 +65,7 @@ export const PatchNode = React.memo(function PatchNode({
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    (window as any).__lastPatchClickEvent = e.nativeEvent;
     onSelect(patch.id);
     onDragStart(patch.id, e);
   }, [patch.id, onSelect, onDragStart]);

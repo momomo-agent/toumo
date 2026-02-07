@@ -532,7 +532,16 @@ export function PatchCanvas() {
           patch={patch}
           selected={selectedPatchId === patch.id || useEditorStore.getState().selectedPatchIds.includes(patch.id)}
           isActive={activePatchIds.has(patch.id)}
-          onSelect={setSelectedPatchId}
+          onSelect={(id) => {
+            // Check if shift key is held for multi-select (read from last mouse event)
+            const lastEvent = (window as any).__lastPatchClickEvent as MouseEvent | undefined;
+            if (lastEvent?.shiftKey) {
+              useEditorStore.getState().togglePatchSelection(id);
+            } else {
+              useEditorStore.setState({ selectedPatchIds: [id] });
+              setSelectedPatchId(id);
+            }
+          }}
           onDragStart={handleNodeDragStart}
           onPortDragStart={handlePortDragStart}
           getPortPosition={getPortPosition}
