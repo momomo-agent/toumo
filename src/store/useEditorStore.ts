@@ -3872,6 +3872,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   addPatchConnection: (connection) => {
+    // Type compatibility check: prevent connecting incompatible port types
+    const { patches } = get();
+    const fromPatch = patches.find(p => p.id === connection.fromPatchId);
+    const toPatch = patches.find(p => p.id === connection.toPatchId);
+    if (fromPatch && toPatch) {
+      const fromPort = fromPatch.outputs.find(p => p.id === connection.fromPortId);
+      const toPort = toPatch.inputs.find(p => p.id === connection.toPortId);
+      if (fromPort && toPort && fromPort.dataType !== 'any' && toPort.dataType !== 'any'
+          && fromPort.dataType !== toPort.dataType) {
+        console.warn(`[Patch] Type mismatch: ${fromPort.dataType} → ${toPort.dataType}`);
+        return; // Block incompatible connection
+      }
+    }
     set((s) => ({ patchConnections: [...s.patchConnections, connection] }));
   },
 
