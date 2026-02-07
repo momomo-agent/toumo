@@ -82,6 +82,8 @@ export function Canvas() {
   const exitGroupEditMode = useEditorStore((s) => s.exitGroupEditMode);
   const addImageElement = useEditorStore((s) => s.addImageElement);
   const addKeyframe = useEditorStore((s) => s.addKeyframe);
+  const removeKeyframe = useEditorStore((s) => s.removeKeyframe);
+  const renameKeyframe = useEditorStore((s) => s.renameKeyframe);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const drawStartRef = useRef<Position | null>(null);
@@ -97,6 +99,9 @@ export function Canvas() {
   const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number; tool: string } | null>(null);
   // File drag-over visual feedback
   const [fileDragOver, setFileDragOver] = useState(false);
+  // Keyframe rename editing state
+  const [renamingKeyframeId, setRenamingKeyframeId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const fileDragCounterRef = useRef(0);
   // Zoom percentage toast (two-phase: visible → fading → hidden)
   const [zoomToastVisible, setZoomToastVisible] = useState(false);
@@ -1284,10 +1289,39 @@ export function Canvas() {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>{frameName}</div>
+                  {renamingKeyframeId === frameId ? (
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onBlur={() => { if (renameValue.trim()) renameKeyframe(renameValue.trim()); setRenamingKeyframeId(null); }}
+                      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setRenamingKeyframeId(null); }}
+                      style={{ fontSize: 12, fontWeight: 600, background: '#1a1a1e', border: '1px solid #2563eb', borderRadius: 4, color: '#fff', padding: '1px 4px', width: '80%' }}
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <div
+                      style={{ fontSize: 12, fontWeight: 600 }}
+                      onDoubleClick={e => {
+                        if (!layout.componentId && keyframe) {
+                          e.stopPropagation();
+                          setRenamingKeyframeId(frameId);
+                          setRenameValue(frameName);
+                          setSelectedKeyframeId(keyframe.id);
+                        }
+                      }}
+                    >{frameName}</div>
+                  )}
                   <div style={{ fontSize: 11, color: '#7d7d7d' }}>{frameSummary}</div>
                 </div>
                 {isActive && <span style={{ fontSize: 11, color: '#8ab4ff' }}>Editing</span>}
+                {!isActive && !layout.componentId && keyframes.length > 1 && (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); if (keyframe) removeKeyframe(keyframe.id); }}
+                    style={{ fontSize: 13, color: '#666', cursor: 'pointer', padding: '0 4px' }}
+                    title="Delete state"
+                  >×</span>
+                )}
               </button>
               <div
                 data-frame-id={frameId}
