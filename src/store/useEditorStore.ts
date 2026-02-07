@@ -1112,16 +1112,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       },
     };
     
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? { ...kf, keyElements: [...kf.keyElements, newElement] }
-          : kf
-      ),
-      selectedElementId: newElement.id,
-      selectedElementIds: [newElement.id],
-      currentTool: 'select',
-    }));
+    set((state) => {
+      const newShared = [...state.sharedElements, newElement];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementId: newElement.id,
+        selectedElementIds: [newElement.id],
+        currentTool: 'select',
+      };
+    });
   },
 
   // Group selected elements
@@ -1133,10 +1133,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const groupId = `group-${Date.now()}`;
     
     // Find selected elements
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    
-    const selectedElements = currentKeyframe.keyElements.filter(
+    const selectedElements = state.sharedElements.filter(
       el => state.selectedElementIds.includes(el.id)
     );
     
@@ -1169,33 +1166,29 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       },
     };
     
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) => {
-        if (kf.id !== state.selectedKeyframeId) return kf;
-        
-        // Update children to have parentId
-        const updatedElements = kf.keyElements.map(el => {
-          if (state.selectedElementIds.includes(el.id)) {
-            return {
-              ...el,
-              parentId: groupId,
-              position: {
-                x: el.position.x - minX,
-                y: el.position.y - minY,
-              },
-            };
-          }
-          return el;
-        });
-        
-        return {
-          ...kf,
-          keyElements: [groupElement, ...updatedElements],
-        };
-      }),
-      selectedElementId: groupId,
-      selectedElementIds: [groupId],
-    }));
+    set((state) => {
+      // Update children to have parentId
+      const updatedElements = state.sharedElements.map(el => {
+        if (state.selectedElementIds.includes(el.id)) {
+          return {
+            ...el,
+            parentId: groupId,
+            position: {
+              x: el.position.x - minX,
+              y: el.position.y - minY,
+            },
+          };
+        }
+        return el;
+      });
+      const newShared = [groupElement, ...updatedElements];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementId: groupId,
+        selectedElementIds: [groupId],
+      };
+    });
   },
 
   // Ungroup selected elements
@@ -1204,44 +1197,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (state.selectedElementIds.length !== 1) return;
     
     const groupId = state.selectedElementIds[0];
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    
-    const groupElement = currentKeyframe.keyElements.find(el => el.id === groupId);
+    const groupElement = state.sharedElements.find(el => el.id === groupId);
     if (!groupElement) return;
     
     // Find children
-    const children = currentKeyframe.keyElements.filter(el => el.parentId === groupId);
+    const children = state.sharedElements.filter(el => el.parentId === groupId);
     if (children.length === 0) return;
     
     get().pushHistory();
     
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) => {
-        if (kf.id !== state.selectedKeyframeId) return kf;
-        
-        // Remove group, update children positions
-        const updatedElements = kf.keyElements
-          .filter(el => el.id !== groupId)
-          .map(el => {
-            if (el.parentId === groupId) {
-              return {
-                ...el,
-                parentId: undefined,
-                position: {
-                  x: el.position.x + groupElement.position.x,
-                  y: el.position.y + groupElement.position.y,
-                },
-              };
-            }
-            return el;
-          });
-        
-        return { ...kf, keyElements: updatedElements };
-      }),
-      selectedElementIds: children.map(c => c.id),
-      selectedElementId: children.length === 1 ? children[0].id : null,
-    }));
+    set((state) => {
+      // Remove group, update children positions
+      const newShared = state.sharedElements
+        .filter(el => el.id !== groupId)
+        .map(el => {
+          if (el.parentId === groupId) {
+            return {
+              ...el,
+              parentId: undefined,
+              position: {
+                x: el.position.x + groupElement.position.x,
+                y: el.position.y + groupElement.position.y,
+              },
+            };
+          }
+          return el;
+        });
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementIds: children.map(c => c.id),
+        selectedElementId: children.length === 1 ? children[0].id : null,
+      };
+    });
   },
 
   // Enter group edit mode (double-click on group)
@@ -1460,8 +1448,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el) {
       get().updateElement(state.selectedElementId, { zIndex: (el.zIndex ?? 0) + 1 });
     }
@@ -1472,8 +1459,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el) {
       get().updateElement(state.selectedElementId, { zIndex: (el.zIndex ?? 0) - 1 });
     }
@@ -1614,8 +1600,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flipX: !el.style.flipX } 
@@ -1627,8 +1612,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flipY: !el.style.flipY } 
@@ -1640,8 +1624,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       const currentRotation = el.style.rotation ?? 0;
       get().updateElement(state.selectedElementId, { 
@@ -1654,8 +1637,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, rotation: 0, flipX: false, flipY: false, scale: 1 } 
@@ -1667,8 +1649,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el) {
       get().updateElement(state.selectedElementId, { locked: !el.locked });
     }
@@ -1678,8 +1659,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el) {
       get().updateElement(state.selectedElementId, { visible: el.visible === false ? true : false });
     }
@@ -1688,8 +1668,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   nudgeElement: (dx: number, dy: number) => {
     const state = get();
     if (!state.selectedElementId) return;
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && !el.locked) {
       get().updateElement(state.selectedElementId, { 
         position: { x: el.position.x + dx, y: el.position.y + dy } 
@@ -1701,8 +1680,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && !el.locked) {
       const x = (state.frameSize.width - el.size.width) / 2;
       const y = (state.frameSize.height - el.size.height) / 2;
@@ -1782,8 +1760,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el) {
       get().updateElement(state.selectedElementId, { 
         size: { width: el.size.height, height: el.size.width } 
@@ -1795,8 +1772,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, opacity } 
@@ -1808,8 +1784,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, blur } 
@@ -1821,8 +1796,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -1920,8 +1894,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, borderRadius: radius } 
@@ -1933,8 +1906,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, strokeWidth: width } 
@@ -1946,8 +1918,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, fill: color } 
@@ -1959,8 +1930,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, stroke: color } 
@@ -1972,8 +1942,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, fontSize: size } 
@@ -1985,8 +1954,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, textAlign: align } 
@@ -1998,8 +1966,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, fontWeight: weight } 
@@ -2011,8 +1978,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, color } 
@@ -2024,8 +1990,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, gradientType: type, gradientStops: stops } 
@@ -2051,8 +2016,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, rotation: angle } 
@@ -2064,8 +2028,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, scale } 
@@ -2077,8 +2040,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, skewX, skewY } 
@@ -2090,8 +2052,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, perspective } 
@@ -2103,8 +2064,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2121,8 +2081,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2141,8 +2100,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, ...filter } 
@@ -2154,8 +2112,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, backdropBlur: blur } 
@@ -2167,8 +2124,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, blendMode: mode } 
@@ -2180,8 +2136,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, clipPath: path } 
@@ -2193,8 +2148,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, letterSpacing: spacing } 
@@ -2206,8 +2160,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, lineHeight: height } 
@@ -2219,8 +2172,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, fontFamily: family } 
@@ -2232,8 +2184,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, textDecoration: decoration } 
@@ -2245,8 +2196,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, fontStyle: style } 
@@ -2258,8 +2208,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, textTransform: transform } 
@@ -2271,8 +2220,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, visibility: visible ? 'visible' : 'hidden' } 
@@ -2284,8 +2232,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, cursor: cursor as 'default' | 'pointer' | 'grab' | 'text' } 
@@ -2297,8 +2244,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, zIndex } 
@@ -2310,8 +2256,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, aspectRatio: ratio || undefined } 
@@ -2323,8 +2268,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, overflow } 
@@ -2336,8 +2280,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, pointerEvents: enabled ? 'auto' : 'none' } 
@@ -2349,8 +2292,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, transformOrigin: origin } 
@@ -2362,8 +2304,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2381,8 +2322,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, textShadow: `${x}px ${y}px ${blur}px ${color}` } 
@@ -2394,8 +2334,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, objectFit: fit } 
@@ -2407,8 +2346,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2424,8 +2362,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, justifyContent: justify } 
@@ -2437,8 +2374,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, alignItems: align } 
@@ -2450,8 +2386,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       const p = typeof padding === 'number' ? padding : padding;
       get().updateElement(state.selectedElementId, { 
@@ -2464,8 +2399,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2483,8 +2417,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, strokeOpacity: opacity } 
@@ -2496,8 +2429,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, fillOpacity: opacity } 
@@ -2509,8 +2441,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, strokeDasharray: dasharray } 
@@ -2522,8 +2453,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, hueRotate: degrees } 
@@ -2535,8 +2465,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, invert: amount } 
@@ -2548,8 +2477,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, sepia: amount } 
@@ -2561,8 +2489,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, brightness: amount } 
@@ -2574,8 +2501,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, contrast: amount } 
@@ -2587,8 +2513,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, saturate: amount } 
@@ -2600,8 +2525,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, grayscale: amount } 
@@ -2613,8 +2537,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flipX, flipY } 
@@ -2626,8 +2549,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, verticalAlign: align } 
@@ -2639,8 +2561,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, whiteSpace: ws } 
@@ -2652,8 +2573,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, wordBreak: wb } 
@@ -2665,8 +2585,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, textOverflow: overflow } 
@@ -2678,8 +2597,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2695,8 +2613,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2712,8 +2629,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, boxSizing: sizing } 
@@ -2725,8 +2641,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, isolation } 
@@ -2738,8 +2653,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, backfaceVisibility: visibility } 
@@ -2751,8 +2665,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, willChange: property } 
@@ -2764,8 +2677,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, userSelect: select } 
@@ -2777,8 +2689,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, touchAction: action } 
@@ -2790,8 +2701,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, scrollBehavior: behavior } 
@@ -2803,8 +2713,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, scrollSnapType: type } 
@@ -2816,8 +2725,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, scrollSnapAlign: align } 
@@ -2829,8 +2737,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, gap } 
@@ -2842,8 +2749,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flexWrap: wrap } 
@@ -2855,8 +2761,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flexGrow: grow } 
@@ -2868,8 +2773,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flexShrink: shrink } 
@@ -2881,8 +2785,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, flexBasis: basis } 
@@ -2894,8 +2797,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, alignSelf: align } 
@@ -2907,8 +2809,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, order } 
@@ -2920,8 +2821,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -2937,8 +2837,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, gridArea: area } 
@@ -2950,8 +2849,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, placeItems: place } 
@@ -2963,8 +2861,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, placeContent: place } 
@@ -2976,8 +2873,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, alignContent: align } 
@@ -2989,8 +2885,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, position } 
@@ -3002,8 +2897,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -3021,8 +2915,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, display } 
@@ -3034,8 +2927,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, margin } 
@@ -3047,8 +2939,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -3066,8 +2957,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -3085,8 +2975,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
@@ -3103,8 +2992,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { ...el.style, outlineOffset: offset } 
@@ -3116,8 +3004,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const el = state.keyframes.find(kf => kf.id === state.selectedKeyframeId)
-      ?.keyElements.find(e => e.id === state.selectedElementId);
+    const el = state.sharedElements.find(e => e.id === state.selectedElementId);
     if (el && el.style) {
       get().updateElement(state.selectedElementId, { 
         style: { 
