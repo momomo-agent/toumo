@@ -5,7 +5,8 @@
  * Spec: https://lottiefiles.github.io/lottie-docs/
  */
 
-import type { KeyElement, Keyframe, Transition, Size } from '../types';
+import type { KeyElement, Keyframe, Size } from '../types';
+type Transition = any;
 import {
   matchElementsAcrossKeyframes,
   buildTransitionChain,

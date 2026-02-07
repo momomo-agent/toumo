@@ -1,5 +1,8 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
-import type { Keyframe, Transition, Component, Size, Interaction, Variable } from '../types';
+import type { Keyframe, Size, Variable } from '../types';
+type Transition = any;
+type Component = any;
+type Interaction = any;
 
 export interface ProjectData {
   version: string;

@@ -4,7 +4,9 @@
  * The output is a single HTML file with no external dependencies.
  */
 
-import type { Keyframe, Transition, Interaction, Variable, Size } from '../types';
+import type { Keyframe, Variable, Size } from '../types';
+type Transition = any;
+type Interaction = any;
 
 export interface ExportOptions {
   projectName?: string;

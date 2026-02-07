@@ -8,7 +8,8 @@
  * - HTML/CSS (static snapshot)
  */
 
-import type { KeyElement, Keyframe, Transition, Size } from '../types';
+import type { KeyElement, Keyframe, Size } from '../types';
+type Transition = any;
 import { useEditorStore } from '../store/useEditorStore';
 
 // ============================================
