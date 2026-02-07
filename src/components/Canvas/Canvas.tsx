@@ -81,6 +81,7 @@ export function Canvas() {
   const enterGroupEditMode = useEditorStore((s) => s.enterGroupEditMode);
   const exitGroupEditMode = useEditorStore((s) => s.exitGroupEditMode);
   const addImageElement = useEditorStore((s) => s.addImageElement);
+  const addKeyframe = useEditorStore((s) => s.addKeyframe);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const drawStartRef = useRef<Position | null>(null);
@@ -1205,9 +1206,24 @@ export function Canvas() {
               letterSpacing: '0.5px',
               textTransform: 'uppercase',
               userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
             }}
           >
             {row.label}
+            {!row.componentId && (
+              <button
+                onClick={(e) => { e.stopPropagation(); addKeyframe(); }}
+                style={{
+                  fontSize: 11, padding: '2px 8px', borderRadius: 4,
+                  background: '#1e3a5f', color: '#60a5fa', border: '1px solid #2563eb40',
+                  cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 500,
+                }}
+              >
+                + State
+              </button>
+            )}
           </div>
         ))}
 
