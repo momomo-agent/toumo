@@ -1044,11 +1044,29 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }));
     
     const componentId = `comp-${Date.now()}`;
+    const componentName = `Component ${state.components.length + 1}`;
     const newComponent: Component = {
       id: componentId,
-      name: `Component ${state.components.length + 1}`,
+      name: componentName,
       transitions: [],
       masterElements: normalizedElements,
+      createdAt: Date.now(),
+    };
+
+    // Also create a ComponentV2 so the canvas renders a keyframe row
+    const newComponentV2: ComponentV2 = {
+      id: componentId,
+      name: componentName,
+      layers: normalizedElements,
+      displayStates: [
+        {
+          id: `ds-${componentId}-default`,
+          name: 'Default',
+          layerOverrides: [],
+        },
+      ],
+      variables: [],
+      rules: [],
       createdAt: Date.now(),
     };
     
@@ -1077,6 +1095,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       ];
       return {
         components: [...state.components, newComponent],
+        componentsV2: [...state.componentsV2, newComponentV2],
         sharedElements: newShared,
         keyframes: syncToAllKeyframes(newShared, state.keyframes),
         selectedElementId: instanceId,
