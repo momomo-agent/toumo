@@ -106,7 +106,12 @@ export function executeActionPatch(
     }
     case 'toggle': {
       const currentState = actionPatch.config?._toggleState ?? false;
-      actionPatch.config = { ...actionPatch.config, _toggleState: !currentState };
+      const newState = !currentState;
+      actionPatch.config = { ...actionPatch.config, _toggleState: newState };
+      // Fire downstream connections after toggle
+      if (_context?._patches && _context?._connections) {
+        executeTrigger(actionPatch.id, _context._patches, _context._connections, handlers);
+      }
       break;
     }
     case 'counter': {
