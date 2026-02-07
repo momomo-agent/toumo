@@ -83,7 +83,67 @@ export function Inspector() {
               <span style={{ fontSize: 12, color: '#fff', fontWeight: 500 }}>{comp.name}</span>
               <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto' }}>Instance</span>
             </div>
-            <div style={{ fontSize: 10, color: '#888', lineHeight: 1.5 }}>
+            {/* State override */}
+            <div style={{ marginBottom: 8 }}>
+              <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>Current State</label>
+              <select
+                value={(selectedElement as any).currentStateId || comp.displayStates[0]?.id || ''}
+                onChange={e => {
+                  const el = selectedElement as any;
+                  useEditorStore.getState().updateElement(el.id, { currentStateId: e.target.value });
+                }}
+                style={{
+                  width: '100%', padding: '4px 6px', background: '#0d0d0e',
+                  border: '1px solid #333', borderRadius: 4, color: '#fff', fontSize: 11,
+                }}
+              >
+                {comp.displayStates.map(ds => (
+                  <option key={ds.id} value={ds.id}>{ds.name}</option>
+                ))}
+              </select>
+            </div>
+            {/* Variable overrides */}
+            {comp.variables.length > 0 && (
+              <div>
+                <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>Variables</label>
+                {comp.variables.map(v => (
+                  <div key={v.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    marginBottom: 4, padding: '3px 6px',
+                    background: '#0d0d0e', borderRadius: 4,
+                  }}>
+                    <span style={{ fontSize: 10, color: '#888', flex: 1 }}>{v.name}</span>
+                    {v.type === 'boolean' ? (
+                      <input
+                        type="checkbox"
+                        checked={((selectedElement as any).styleOverrides?.[`var_${v.id}`] ?? v.defaultValue) as boolean}
+                        onChange={e => {
+                          const el = selectedElement as any;
+                          const overrides = { ...(el.styleOverrides || {}), [`var_${v.id}`]: e.target.checked };
+                          useEditorStore.getState().updateElement(el.id, { styleOverrides: overrides });
+                        }}
+                      />
+                    ) : (
+                      <input
+                        type={v.type === 'number' ? 'number' : 'text'}
+                        value={String((selectedElement as any).styleOverrides?.[`var_${v.id}`] ?? v.defaultValue)}
+                        onChange={e => {
+                          const el = selectedElement as any;
+                          const val = v.type === 'number' ? Number(e.target.value) : e.target.value;
+                          const overrides = { ...(el.styleOverrides || {}), [`var_${v.id}`]: val };
+                          useEditorStore.getState().updateElement(el.id, { styleOverrides: overrides });
+                        }}
+                        style={{
+                          width: 60, padding: '2px 4px', background: '#1a1a1b',
+                          border: '1px solid #333', borderRadius: 3, color: '#fff', fontSize: 10,
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ fontSize: 10, color: '#888', lineHeight: 1.5, marginTop: 4 }}>
               {comp.displayStates.length} states · {comp.variables.length} variables
             </div>
           </section>
