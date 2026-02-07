@@ -79,10 +79,16 @@ export function LivePreview() {
   // Shared Patch action handlers
   const patchHandlers = useMemo(() => ({
     switchDisplayState: (targetId: string) => {
+      // Find the keyframe linked to this displayState for sync
+      const targetKf = keyframes.find(kf => kf.displayStateId === targetId);
+      if (targetKf) {
+        setCurrentKeyframeId(targetKf.id);
+      }
+      // CSS transition on PreviewElement handles the animation
       setPreviewDisplayStateId(targetId);
       setSelectedDisplayStateId(targetId);
     },
-  }), [setSelectedDisplayStateId]);
+  }), [setSelectedDisplayStateId, keyframes]);
 
   // Patch runtime: handle tap on element → switchDisplayState
   const handlePatchTap = useCallback((elementId: string) => {
