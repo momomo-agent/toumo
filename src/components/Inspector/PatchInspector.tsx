@@ -53,7 +53,7 @@ export function PatchInspector() {
           <select
             value={patch.config?.targetElementId || ''}
             onChange={e => updatePatchConfig(patch.id, {
-              config: { ...patch.config, targetElementId: e.target.value || undefined },
+              targetElementId: e.target.value || undefined,
             })}
             style={inputStyle}
           >
@@ -72,7 +72,7 @@ export function PatchInspector() {
           <select
             value={patch.config?.targetDisplayStateId || ''}
             onChange={e => updatePatchConfig(patch.id, {
-              config: { ...patch.config, targetDisplayStateId: e.target.value },
+              targetDisplayStateId: e.target.value,
             })}
             style={inputStyle}
           >
@@ -91,7 +91,7 @@ export function PatchInspector() {
           <select
             value={patch.config?.variableId || ''}
             onChange={e => updatePatchConfig(patch.id, {
-              config: { ...patch.config, variableId: e.target.value },
+              variableId: e.target.value,
             })}
             style={inputStyle}
           >
@@ -104,7 +104,7 @@ export function PatchInspector() {
           <input
             value={patch.config?.value ?? ''}
             onChange={e => updatePatchConfig(patch.id, {
-              config: { ...patch.config, value: e.target.value },
+              value: e.target.value,
             })}
             style={inputStyle}
             placeholder="Value to set"
@@ -120,7 +120,7 @@ export function PatchInspector() {
             type="number"
             value={patch.config?.duration ?? 1000}
             onChange={e => updatePatchConfig(patch.id, {
-              config: { ...patch.config, duration: Number(e.target.value) },
+              duration: Number(e.target.value),
             })}
             style={inputStyle}
           />
@@ -135,7 +135,7 @@ export function PatchInspector() {
             type="number"
             value={patch.config?.delay ?? 300}
             onChange={e => updatePatchConfig(patch.id, {
-              config: { ...patch.config, delay: Number(e.target.value) },
+              delay: Number(e.target.value),
             })}
             style={inputStyle}
           />
