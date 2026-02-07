@@ -137,6 +137,16 @@ export const PatchNode = React.memo(function PatchNode({
           🎯 {targetEl?.name || patch.config.targetElementId.slice(0, 12)}
         </div>
       )}
+      {patch.config?.targetDisplayStateId && (
+        <div style={{ padding: '2px 10px', fontSize: 9, color: '#a855f7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          📍 {patch.config.targetDisplayStateId === 'default' ? 'Default' : patch.config.targetDisplayStateId.slice(0, 12)}
+        </div>
+      )}
+      {patch.config?.duration && (
+        <div style={{ padding: '2px 10px', fontSize: 9, color: '#3b82f6' }}>
+          ⏱ {patch.config.duration}ms
+        </div>
+      )}
 
       {/* Ports */}
       <div style={{ padding: '8px 0' }}>
