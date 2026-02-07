@@ -319,15 +319,11 @@ export type KeyElement = {
   overflowScroll?: OverflowScrollConfig;
   // Constraints (Figma-style) - how element responds to parent resize
   constraints?: ConstraintsConfig;
-  // Prototype link - navigate to another frame on interaction
-  prototypeLink?: PrototypeLink;
   // Variable bindings - connect variables to element properties
   variableBindings?: VariableBinding[];
 };
 
-// Prototype Link types (Figma-style)
-export type PrototypeLinkTrigger = 'tap' | 'drag' | 'hover' | 'mouseEnter' | 'mouseLeave' | 'mouseDown' | 'mouseUp';
-
+// PrototypeTransitionType/Direction/Easing kept for LivePreview/PreviewMode animation types
 export type PrototypeTransitionType = 
   | 'instant'      // No animation
   | 'dissolve'     // Fade transition
@@ -348,35 +344,6 @@ export type PrototypeTransitionEasing =
   | 'easeInOut'
   | 'spring';
 
-export type PrototypeLink = {
-  enabled: boolean;
-  targetFrameId: string | null;  // null = no link, 'back' = go back
-  trigger: PrototypeLinkTrigger;
-  // Transition settings
-  transition: {
-    type: PrototypeTransitionType;
-    direction?: PrototypeTransitionDirection;
-    duration: number;  // ms
-    easing: PrototypeTransitionEasing;
-  };
-  // Overlay settings (for modals/popups)
-  isOverlay?: boolean;
-  overlayPosition?: 'center' | 'topLeft' | 'topCenter' | 'topRight' | 'bottomLeft' | 'bottomCenter' | 'bottomRight';
-  overlayBackground?: 'none' | 'dim';
-  closeOnOutsideClick?: boolean;
-};
-
-export const DEFAULT_PROTOTYPE_LINK: PrototypeLink = {
-  enabled: false,
-  targetFrameId: null,
-  trigger: 'tap',
-  transition: {
-    type: 'dissolve',
-    duration: 300,
-    easing: 'easeOut',
-  },
-};
-
 export const DEFAULT_STYLE: ShapeStyle = {
   fill: '#3b82f6',
   fillOpacity: 1,
@@ -390,92 +357,16 @@ export type Keyframe = {
   id: string;
   name: string;
   summary: string;
-  functionalState?: string;
   /** Links this keyframe to a DisplayState for layerOverrides */
   displayStateId?: string;
   /** @deprecated Use sharedElements from store instead */
   keyElements?: KeyElement[];
 };
 
-// Trigger types for transitions
+// Trigger types (shared by PRD v2 InteractionRuleTrigger)
 export type TriggerType = 'tap' | 'drag' | 'scroll' | 'hover' | 'timer' | 'variable';
 
-export type TriggerConfig = {
-  type: TriggerType;
-  // Drag-specific
-  direction?: 'any' | 'horizontal' | 'vertical' | 'up' | 'down' | 'left' | 'right';
-  threshold?: number;
-  // Scroll-specific
-  scrollOffset?: number;
-  scrollDirection?: 'up' | 'down';
-  // Timer-specific
-  timerDelay?: number;
-  // Variable-specific
-  variableName?: string;
-  variableCondition?: 'equals' | 'greater' | 'less' | 'changed';
-  variableValue?: string | number;
-};
-
-export type Transition = {
-  id: string;
-  from: string;
-  to: string;
-  trigger: string; // Legacy simple trigger
-  triggers?: TriggerConfig[]; // New: combo triggers
-  duration: number;
-  delay: number;
-  curve: string;
-  // Spring parameters
-  springDamping?: number;
-  springResponse?: number;
-  springMass?: number;
-  springStiffness?: number;
-  // Cubic bezier for custom curves
-  cubicBezier?: [number, number, number, number];
-  description?: string;
-};
-
-// Functional State - for logic/state machine
-export type FunctionalState = {
-  id: string;
-  name: string;
-  isInitial: boolean;
-  componentId?: string;
-};
-
-// Display State mapping
-export type DisplayStateMapping = {
-  functionalStateId: string;
-  displayStateIds: string[]; // keyframe ids
-};
-
-// Component with multi-state support
-export type Component = {
-  id: string;
-  name: string;
-  functionalStates: FunctionalState[];
-  displayStateMappings: DisplayStateMapping[];
-  transitions: Transition[];
-  // Master element data - the source of truth
-  masterElements: KeyElement[];
-  // Thumbnail for preview
-  thumbnail?: string;
-  // Creation timestamp
-  createdAt: number;
-};
-
-// Component Instance - placed on canvas
-export type ComponentInstance = {
-  id: string;
-  componentId: string;
-  // Current functional state
-  currentStateId?: string;
-  // Style overrides (per element id)
-  styleOverrides: Record<string, Partial<ShapeStyle>>;
-  // Position overrides
-  positionOverride?: Position;
-  sizeOverride?: Size;
-};
+// (Old Component/ComponentInstance removed — use ComponentV2)
 
 // Variable types for state machine logic
 export type VariableType = 'string' | 'number' | 'boolean' | 'color';
@@ -602,79 +493,7 @@ export type GestureConfig = {
   };
 };
 
-// 动作类型
-export type InteractionActionType = 
-  | 'goToState'      // 切换到指定状态
-  | 'toggleState'    // 在两个状态间切换
-  | 'setVariable'    // 设置变量
-  | 'navigate'       // 页面跳转
-  | 'openOverlay'    // 打开弹层
-  | 'closeOverlay'   // 关闭弹层
-  | 'scrollTo'       // 滚动到位置
-  | 'playSound'      // 播放声音
-  | 'haptic'         // 触觉反馈
-  | 'openUrl';       // 打开链接
-
-// 触觉反馈类型
-export type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
-
-// 动作定义
-export type InteractionAction = {
-  id: string;
-  type: InteractionActionType;
-  // goToState / toggleState
-  targetElementId?: string;
-  targetStateId?: string;
-  toggleStates?: [string, string];
-  // setVariable
-  variableId?: string;
-  variableValue?: string | number | boolean;
-  variableOperation?: 'set' | 'increment' | 'decrement' | 'toggle';
-  // navigate
-  targetFrameId?: string;
-  // overlay
-  overlayId?: string;
-  overlayPosition?: 'center' | 'top' | 'bottom' | 'left' | 'right';
-  // scrollTo
-  scrollTargetId?: string;
-  scrollOffset?: number;
-  // haptic
-  hapticType?: HapticType;
-  // openUrl
-  url?: string;
-  openInNewTab?: boolean;
-  // 动画配置
-  animation?: {
-    duration: number;
-    easing: string;
-    delay?: number;
-  };
-};
-
-// 条件判断
-export type InteractionCondition = {
-  variableId: string;
-  operator: '==' | '!=' | '>' | '<' | '>=' | '<=';
-  value: string | number | boolean;
-};
-
-// 交互定义
-export type Interaction = {
-  id: string;
-  name?: string;
-  elementId: string;        // 触发元素
-  gesture: GestureConfig;   // 手势配置
-  conditions?: InteractionCondition[];  // 触发条件
-  actions: InteractionAction[];         // 执行动作
-  enabled: boolean;
-};
-
-// 交互组 - 用于管理相关交互
-export type InteractionGroup = {
-  id: string;
-  name: string;
-  interactions: Interaction[];
-};
+// (Old Interaction/InteractionAction/InteractionGroup removed — use Patch system + InteractionRule)
 
 // ============================================
 // 新数据模型 (PRD v2) - 状态机重构

@@ -66,7 +66,6 @@ export default function App() {
   const {
     keyframes,
     transitions,
-    functionalStates,
     components,
     selectedKeyframeId,
     setSelectedKeyframeId,
@@ -161,7 +160,6 @@ export default function App() {
       version: '1.0',
       keyframes,
       transitions,
-      functionalStates,
       components,
       frameSize,
       canvasBackground,
@@ -170,7 +168,7 @@ export default function App() {
     };
     setPreviewData(data);
     setIsPreviewMode(true);
-  }, [keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables]);
+  }, [keyframes, transitions, components, frameSize, canvasBackground, interactions, variables]);
 
   // If in preview mode, render PreviewMode component
   if (isPreviewMode && previewData) {
@@ -253,7 +251,6 @@ export default function App() {
       version: '1.0',
       keyframes,
       transitions,
-      functionalStates,
       components,
       frameSize,
       canvasBackground,
@@ -266,7 +263,7 @@ export default function App() {
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
-  }, [keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables]);
+  }, [keyframes, transitions, components, frameSize, canvasBackground, interactions, variables]);
 
   // Load project from JSON
   const projectInputRef = useRef<HTMLInputElement>(null);
@@ -338,7 +335,7 @@ export default function App() {
           ],
         },
       ],
-      transitions: [], functionalStates: [], components: [],
+      transitions: [], components: [],
       frameSize: { width: 390, height: 844 }, canvasBackground: '#0a0a0a',
     };
     loadProject(exampleProject as Parameters<typeof loadProject>[0]);
@@ -2506,7 +2503,7 @@ export default function App() {
                     >
                       <strong style={{ display: 'block', fontSize: 12 }}>{kf.name}</strong>
                       <span style={{ fontSize: 10, color: '#666' }}>
-                        {kf.functionalState ? `→ ${kf.functionalState}` : 'No mapping'}
+                        {kf.displayStateId ? `→ ${kf.displayStateId}` : 'No mapping'}
                       </span>
                     </button>
                   ))}

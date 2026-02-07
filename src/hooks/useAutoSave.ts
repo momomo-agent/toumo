@@ -10,7 +10,6 @@ function getProjectSnapshot() {
   return {
     keyframes: s.keyframes,
     transitions: s.transitions,
-    functionalStates: s.functionalStates,
     components: s.components,
     frameSize: s.frameSize,
     canvasBackground: s.canvasBackground,
@@ -84,7 +83,6 @@ export function loadAutoSave(): boolean {
     store.loadProject({
       keyframes: data.keyframes,
       transitions: data.transitions || [],
-      functionalStates: data.functionalStates || [],
       components: data.components || [],
       frameSize: data.frameSize || { width: 390, height: 844 },
       canvasBackground: data.canvasBackground,

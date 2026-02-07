@@ -1,5 +1,9 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, ComponentV2, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
+import type { Keyframe, KeyElement, ToolType, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
+// Legacy types removed — using any temporarily
+type Transition = any;
+type Component = any;
+type Interaction = any;
 import { initialKeyframes, initialTransitions, initialSharedElements } from './initialData';
 import { DEFAULT_AUTO_LAYOUT, DEFAULT_CURVE_CONFIG } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
@@ -27,7 +31,6 @@ const clampElementToFrame = (element: KeyElement, frame: Size): KeyElement => {
 interface EditorState {
   keyframes: Keyframe[];
   transitions: Transition[];
-  functionalStates: FunctionalState[];
   components: Component[];
   selectedKeyframeId: string;
   selectedElementId: string | null;
@@ -129,12 +132,6 @@ interface EditorActions {
   updateTransition: (id: string, updates: Partial<Transition>) => void;
   addTransition: (from: string, to: string) => void;
   deleteTransition: (id: string) => void;
-  // Functional state actions
-  addFunctionalState: (name: string) => void;
-  updateFunctionalState: (id: string, updates: Partial<FunctionalState>) => void;
-  deleteFunctionalState: (id: string) => void;
-  // Keyframe functional state mapping
-  updateKeyframeFunctionalState: (keyframeId: string, functionalStateId: string | undefined) => void;
   // Component actions
   addComponent: (name: string) => void;
   updateComponent: (id: string, updates: Partial<Component>) => void;
@@ -302,7 +299,7 @@ interface EditorActions {
   addVariableBinding: (elementId: string, binding: VariableBinding) => void;
   removeVariableBinding: (elementId: string, variableId: string, property: string) => void;
   // Project actions
-  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; functionalStates: FunctionalState[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[]; conditionRules?: ConditionRule[] }) => void;
+  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[]; conditionRules?: ConditionRule[] }) => void;
   // Style clipboard
   copiedStyle: ShapeStyle | null;
   copyStyle: () => void;
@@ -455,11 +452,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   sharedElements: [...initialSharedElements],
   keyframes: initialKeyframes,
   transitions: initialTransitions,
-  functionalStates: [
-    { id: 'fs-idle', name: 'Idle', isInitial: true },
-    { id: 'fs-loading', name: 'Loading', isInitial: false },
-    { id: 'fs-success', name: 'Success', isInitial: false },
-  ],
   components: [],
   variables: [],
   interactions: [],
@@ -992,47 +984,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   })),
 
   // Functional state actions
-  addFunctionalState: (name) => set((state) => {
-    const newId = `fs-${Date.now()}`;
-    const newState: FunctionalState = {
-      id: newId,
-      name,
-      isInitial: state.functionalStates.length === 0,
-    };
-    return {
-      functionalStates: [...state.functionalStates, newState],
-    };
-  }),
-
-  updateFunctionalState: (id, updates) => set((state) => ({
-    functionalStates: state.functionalStates.map((fs) =>
-      fs.id === id ? { ...fs, ...updates } : fs
-    ),
-  })),
-
-  deleteFunctionalState: (id) => set((state) => ({
-    functionalStates: state.functionalStates.filter((fs) => fs.id !== id),
-    // Also clear references in keyframes
-    keyframes: state.keyframes.map((kf) =>
-      kf.functionalState === id ? { ...kf, functionalState: undefined } : kf
-    ),
-  })),
-
-  // Keyframe functional state mapping
-  updateKeyframeFunctionalState: (keyframeId, functionalStateId) => set((state) => ({
-    keyframes: state.keyframes.map((kf) =>
-      kf.id === keyframeId ? { ...kf, functionalState: functionalStateId } : kf
-    ),
-  })),
-
   // Component actions
   addComponent: (name) => set((state) => {
     const newId = `comp-${Date.now()}`;
     const newComponent: Component = {
       id: newId,
       name,
-      functionalStates: [],
-      displayStateMappings: [],
       transitions: [],
       masterElements: [],
       createdAt: Date.now(),
@@ -1090,10 +1047,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const newComponent: Component = {
       id: componentId,
       name: `Component ${state.components.length + 1}`,
-      functionalStates: [
-        { id: `cfs-${Date.now()}`, name: 'Default', isInitial: true, componentId },
-      ],
-      displayStateMappings: [],
       transitions: [],
       masterElements: normalizedElements,
       createdAt: Date.now(),
@@ -1112,7 +1065,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       shapeType: 'rectangle',
       componentId,
       componentInstanceId: instanceId,
-      currentStateId: newComponent.functionalStates[0].id,
+      currentStateId: undefined,
       styleOverrides: {},
     };
     
@@ -1140,7 +1093,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     // Calculate size from master elements
     let maxX = 0, maxY = 0;
-    component.masterElements.forEach(el => {
+    component.masterElements.forEach((el: any) => {
       maxX = Math.max(maxX, el.position.x + el.size.width);
       maxY = Math.max(maxY, el.position.y + el.size.height);
     });
@@ -1157,7 +1110,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       shapeType: 'rectangle',
       componentId,
       componentInstanceId: instanceId,
-      currentStateId: component.functionalStates[0]?.id,
+      currentStateId: undefined,
       styleOverrides: {},
     };
     
@@ -1203,7 +1156,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     // Calculate new size from master elements
     let maxX = 0, maxY = 0;
-    component.masterElements.forEach(el => {
+    component.masterElements.forEach((el: any) => {
       maxX = Math.max(maxX, el.position.x + el.size.width);
       maxY = Math.max(maxY, el.position.y + el.size.height);
     });
@@ -1552,7 +1505,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({
       keyframes: data.keyframes,
       transitions: data.transitions,
-      functionalStates: data.functionalStates,
       components: data.components,
       frameSize: data.frameSize,
       canvasBackground: data.canvasBackground || '#0d0d0e',

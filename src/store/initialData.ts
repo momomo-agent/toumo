@@ -1,4 +1,4 @@
-import type { Keyframe, Transition, KeyElement } from '../types';
+import type { Keyframe, KeyElement } from '../types';
 
 // Shared elements — all keyframes reference the same layer tree
 const cardElement: KeyElement = {
@@ -47,7 +47,6 @@ export const initialKeyframes: Keyframe[] = [
     id: "kf-idle",
     name: "Idle",
     summary: "Default state",
-    functionalState: "idle",
     displayStateId: "ds-default",
     keyElements: initialSharedElements,
   },
@@ -55,7 +54,6 @@ export const initialKeyframes: Keyframe[] = [
     id: "kf-active",
     name: "Active", 
     summary: "Active state",
-    functionalState: "loading",
     displayStateId: "ds-active",
     keyElements: initialSharedElements,
   },
@@ -63,12 +61,11 @@ export const initialKeyframes: Keyframe[] = [
     id: "kf-complete",
     name: "Complete",
     summary: "Complete state",
-    functionalState: "success",
     keyElements: initialSharedElements,
   },
 ];
 
-export const initialTransitions: Transition[] = [
+export const initialTransitions: any[] = [
   {
     id: "tr-1",
     from: "kf-idle",
