@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useEditorStore } from '../store';
 import { generateShareUrl, compressProject } from '../utils/shareUtils';
 import type { ProjectData } from '../utils/shareUtils';
+import { exportPrototype, downloadPrototype, htmlToDataUri } from '../utils/exportPrototype';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
   const [generating, setGenerating] = useState(false);
   const [dataSize, setDataSize] = useState('');
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
+  const [exportSize, setExportSize] = useState('');
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   const buildProjectData = useCallback((): ProjectData => ({
@@ -29,6 +33,57 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
     interactions,
     variables,
   }), [keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables]);
+
+  const handleExportPrototype = useCallback(() => {
+    setExporting(true);
+    setError('');
+    setExportDone(false);
+    setTimeout(() => {
+      try {
+        const html = exportPrototype({
+          projectName: 'Toumo Prototype',
+          canvasBackground: canvasBackground || '#0d0d0e',
+          frameSize,
+          keyframes,
+          transitions,
+          interactions: interactions || [],
+          variables: variables || [],
+        });
+        const sizeKB = (new Blob([html]).size / 1024).toFixed(1);
+        setExportSize(sizeKB);
+        downloadPrototype(html);
+        setExportDone(true);
+        setExporting(false);
+        setTimeout(() => setExportDone(false), 3000);
+      } catch (err) {
+        console.error('Export failed:', err);
+        setError('导出失败，请重试');
+        setExporting(false);
+      }
+    }, 50);
+  }, [canvasBackground, frameSize, keyframes, transitions, interactions, variables]);
+
+  const handleCopyDataUri = useCallback(() => {
+    try {
+      const html = exportPrototype({
+        projectName: 'Toumo Prototype',
+        canvasBackground: canvasBackground || '#0d0d0e',
+        frameSize,
+        keyframes,
+        transitions,
+        interactions: interactions || [],
+        variables: variables || [],
+      });
+      const uri = htmlToDataUri(html);
+      navigator.clipboard.writeText(uri).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      });
+    } catch (err) {
+      console.error('Copy data URI failed:', err);
+      setError('复制失败');
+    }
+  }, [canvasBackground, frameSize, keyframes, transitions, interactions, variables]);
 
   const handleGenerateLink = useCallback(() => {
     setGenerating(true);
@@ -77,6 +132,9 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
       setCopied(false);
       setError('');
       setDataSize('');
+      setExporting(false);
+      setExportDone(false);
+      setExportSize('');
     }
   }, [isOpen]);
 
@@ -208,6 +266,29 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             </>
           )}
           
+          {/* Export Prototype section */}
+          <div style={exportSectionStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 15 }}>📄</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#ccc' }}>导出独立原型</span>
+            </div>
+            <div style={buttonGroupStyle}>
+              <button
+                onClick={handleExportPrototype}
+                disabled={exporting}
+                style={exporting ? exportBtnDisabledStyle : exportDone ? exportBtnDoneStyle : exportBtnStyle}
+              >
+                {exporting ? '⏳ 导出中...' : exportDone ? '✅ 已下载!' : '📥 下载 HTML'}
+              </button>
+              <button onClick={handleCopyDataUri} style={openButtonStyle}>
+                🔗 复制 Data URI
+              </button>
+            </div>
+            {exportSize && (
+              <span style={dataSizeStyle}>📄 HTML 文件 {exportSize} KB</span>
+            )}
+          </div>
+
           {/* Info section */}
           <div style={infoStyle}>
             <div style={infoItemStyle}>
@@ -217,6 +298,10 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             <div style={infoItemStyle}>
               <span>👁️</span>
               <span>打开链接即可全屏预览并体验交互</span>
+            </div>
+            <div style={infoItemStyle}>
+              <span>📄</span>
+              <span>导出为独立 HTML，可离线分享和演示</span>
             </div>
             <div style={infoItemStyle}>
               <span>✏️</span>
@@ -424,4 +509,35 @@ const infoItemStyle: React.CSSProperties = {
   gap: 8,
   fontSize: 12,
   color: '#666',
+};
+
+const exportSectionStyle: React.CSSProperties = {
+  padding: '14px 16px',
+  background: '#111',
+  borderRadius: 8,
+  border: '1px solid #252525',
+};
+
+const exportBtnStyle: React.CSSProperties = {
+  flex: 2,
+  padding: '10px 16px',
+  background: '#7c3aed',
+  border: 'none',
+  borderRadius: 8,
+  color: '#fff',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const exportBtnDoneStyle: React.CSSProperties = {
+  ...exportBtnStyle,
+  background: '#16a34a',
+};
+
+const exportBtnDisabledStyle: React.CSSProperties = {
+  ...exportBtnStyle,
+  background: '#444',
+  cursor: 'not-allowed',
+  opacity: 0.7,
 };
