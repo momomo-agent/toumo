@@ -181,7 +181,7 @@ export function LivePreview() {
   useEffect(() => {
     const kf = keyframes.find(k => k.id === currentKeyframeId);
     if (kf && !smartAnimateState.isAnimating) {
-      smartAnimateActions.setElements(kf.keyElements);
+      smartAnimateActions.setElements(useEditorStore.getState().sharedElements);
     }
   }, [currentKeyframeId, keyframes]);
 
@@ -190,7 +190,7 @@ export function LivePreview() {
   const baseElements = useMemo(() =>
     smartAnimateState.isAnimating
       ? smartAnimateState.elements
-      : (currentKeyframe?.keyElements || []),
+      : useEditorStore.getState().sharedElements,
     [smartAnimateState.isAnimating, smartAnimateState.elements, currentKeyframe],
   );
 
@@ -254,8 +254,8 @@ export function LivePreview() {
 
       const startPlay = () => {
         const startTime = performance.now();
-        const fromEls = fromKeyframe.keyElements;
-        const toEls = targetKeyframe.keyElements;
+        const fromEls = useEditorStore.getState().sharedElements;
+        const toEls = useEditorStore.getState().sharedElements;
 
         const tick = () => {
           const elapsed = performance.now() - startTime;
@@ -313,7 +313,7 @@ export function LivePreview() {
       const springConfig = getSpringConfigFromCurve(transition.curve);
       setIsTransitioning(true);
       setTimeout(() => {
-        smartAnimateActions.animateTo(targetKeyframe.keyElements, {
+        smartAnimateActions.animateTo(useEditorStore.getState().sharedElements, {
           springConfig: { ...springConfig, duration: transition.duration / 1000 },
         });
         setCurrentKeyframeId(transition.to);
@@ -370,7 +370,7 @@ export function LivePreview() {
     // Jump to the "from" keyframe first, then play the transition
     setCurrentKeyframeId(transition.from);
     smartAnimateActions.setElements(
-      keyframes.find(k => k.id === transition.from)?.keyElements || []
+      useEditorStore.getState().sharedElements
     );
 
     const playTimer = setTimeout(() => {

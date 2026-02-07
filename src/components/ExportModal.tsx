@@ -129,7 +129,8 @@ export function ExportModal({ onClose }: ExportModalProps) {
       ctx.fillStyle = '#050506';
       ctx.fillRect(0, 0, w, h);
 
-      for (const el of kf.keyElements) {
+      const sharedEls = useEditorStore.getState().sharedElements;
+      for (const el of sharedEls) {
         const sx = gifScale;
         const x = el.position.x * sx;
         const y = el.position.y * sx;
@@ -182,8 +183,9 @@ export function ExportModal({ onClose }: ExportModalProps) {
       ctx.fillRect(0, 0, w, h);
 
       // Match elements by id, interpolate position/size/opacity
-      for (const toEl of toKf.keyElements) {
-        const fromEl = fromKf.keyElements.find(e => e.id === toEl.id);
+      const sharedElsAnim = useEditorStore.getState().sharedElements;
+      for (const toEl of sharedElsAnim) {
+        const fromEl = sharedElsAnim.find(e => e.id === toEl.id);
         const el = fromEl ? {
           ...toEl,
           position: {

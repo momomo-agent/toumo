@@ -44,8 +44,6 @@ export function ContextMenu(props: ContextMenuProps) {
     bringToFront,
     sendToBack,
     alignElements,
-    keyframes,
-    selectedKeyframeId,
     booleanUnion,
     booleanSubtract,
     booleanIntersect,
@@ -56,10 +54,10 @@ export function ContextMenu(props: ContextMenuProps) {
     setSelectedElementId,
   } = useEditorStore();
 
-  const currentKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
+  const sharedElements = useEditorStore(s => s.sharedElements);
   const elementId = mode === 'element' ? props.elementId : null;
   const element = elementId
-    ? currentKeyframe?.keyElements.find(el => el.id === elementId)
+    ? sharedElements.find(el => el.id === elementId)
     : null;
   const isGroup = element?.id.startsWith('group-');
   const hasMultipleSelected = selectedElementIds.length > 1;
@@ -237,7 +235,7 @@ export function ContextMenu(props: ContextMenuProps) {
       {/* Boolean */}
       {hasMultipleSelected && (() => {
         const selectedElements = selectedElementIds
-          .map(id => currentKeyframe?.keyElements.find(el => el.id === id))
+          .map(id => sharedElements.find(el => el.id === id))
           .filter((el): el is NonNullable<typeof el> => el !== undefined);
         const canBoolean = canPerformBooleanOperation(selectedElements);
         return canBoolean ? (
