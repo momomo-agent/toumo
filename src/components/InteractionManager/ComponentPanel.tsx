@@ -12,8 +12,6 @@ export function ComponentPanel() {
     removeComponentDisplayState,
     createComponentFromSelection,
     selectedElementIds,
-    keyframes,
-    selectedKeyframeId,
   } = useEditorStore();
 
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
@@ -22,8 +20,8 @@ export function ComponentPanel() {
 
   const selectedComponent = componentsV2.find(c => c.id === selectedComponentId);
 
-  const currentKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElements = currentKeyframe?.keyElements.filter(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElements = sharedElements.filter(
     el => selectedElementIds.includes(el.id) && !el.componentId
   ) || [];
   const canCreateFromSelection = selectedElements.length > 0;

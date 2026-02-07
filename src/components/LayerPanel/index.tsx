@@ -132,8 +132,6 @@ type DropPosition = 'above' | 'below' | 'inside';
 // --- Main LayerPanel ---
 export const LayerPanel = memo(function LayerPanel() {
   const {
-    keyframes,
-    selectedKeyframeId,
     selectedElementId,
     selectedElementIds,
     hoveredElementId,
@@ -158,8 +156,7 @@ export const LayerPanel = memo(function LayerPanel() {
   const draggedIdRef = useRef<string | null>(null);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const elements = selectedKeyframe?.keyElements || [];
+  const elements = useEditorStore(s => s.sharedElements);
 
   // Current display state for key-element marking
   const currentDisplayState = displayStates.find(ds => ds.id === selectedDisplayStateId);

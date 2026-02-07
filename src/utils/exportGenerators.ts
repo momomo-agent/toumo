@@ -9,6 +9,7 @@
  */
 
 import type { KeyElement, Keyframe, Transition, Size } from '../types';
+import { useEditorStore } from '../store/useEditorStore';
 
 // ============================================
 // Shared Helpers
@@ -61,8 +62,9 @@ export function matchElementsAcrossKeyframes(
   keyframes: Keyframe[]
 ): Map<string, Map<string, KeyElement>> {
   const result = new Map<string, Map<string, KeyElement>>();
+  const sharedElements = useEditorStore.getState().sharedElements;
   for (const kf of keyframes) {
-    for (const el of kf.keyElements) {
+    for (const el of sharedElements) {
       if (!result.has(el.name)) {
         result.set(el.name, new Map());
       }
@@ -433,11 +435,11 @@ export function generateFramerMotionCode(
 // ============================================
 
 export function generateSVGCode(
-  keyframe: Keyframe,
+  _keyframe: Keyframe,
   frameSize: Size,
   canvasBackground: string,
 ): string {
-  const elements = keyframe.keyElements;
+  const elements = useEditorStore.getState().sharedElements;
   const lines: string[] = [];
   const defs: string[] = [];
   let defId = 0;
@@ -583,7 +585,7 @@ export function generateStaticHTML(
   frameSize: Size,
   canvasBackground: string,
 ): string {
-  const elements = keyframe.keyElements;
+  const elements = keyframe.keyElements || [];
   const lines: string[] = [];
 
   lines.push(`<!DOCTYPE html>`);

@@ -173,7 +173,8 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
 
   if (!isOpen) return null;
 
-  const elementCount = keyframes.reduce((sum, kf) => sum + (kf.keyElements?.length || 0), 0);
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const elementCount = sharedElements.length;
   const frameCount = keyframes.length;
   const transitionCount = transitions.length;
   const interactionCount = (interactions || []).length;

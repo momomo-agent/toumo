@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Transition, KeyElement, TriggerType, Size, InteractionAction, PrototypeLink, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../types';
 import { clearPreviewHash, type ProjectData } from '../utils/shareUtils';
 import { useGestureHandler } from '../hooks/useGestureHandler';
+import { useEditorStore } from '../store/useEditorStore';
 
 // ─── Device Frame Definitions ─────────────────────────────────────────
 type DeviceCategory = 'none' | 'iphone' | 'android' | 'ipad' | 'desktop';
@@ -120,7 +121,8 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
   const navigationHistory = useRef<string[]>([]);
 
   const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
-  const elements = currentKeyframe?.keyElements || [];
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const elements = sharedElements;
   const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
   const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
 

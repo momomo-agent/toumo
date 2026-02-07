@@ -4,8 +4,6 @@ import type { KeyElement } from '../../types';
 
 export function LayerManager() {
   const { 
-    keyframes, 
-    selectedKeyframeId, 
     selectedElementId,
     selectedElementIds,
     setSelectedElementId,
@@ -20,8 +18,7 @@ export function LayerManager() {
   const [editName, setEditName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null);
   
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const elements = selectedKeyframe?.keyElements || [];
+  const elements = useEditorStore(s => s.sharedElements);
 
   const filteredElements = searchQuery 
     ? elements.filter(el => el.name.toLowerCase().includes(searchQuery.toLowerCase()))
