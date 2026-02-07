@@ -147,6 +147,16 @@ export function Inspector() {
             <div style={{ fontSize: 10, color: '#888', lineHeight: 1.5, marginTop: 4 }}>
               {comp.displayStates.length} states · {comp.variables.length} variables
             </div>
+            <button
+              onClick={() => useEditorStore.setState({ editingComponentId: comp.id })}
+              style={{
+                width: '100%', marginTop: 8, padding: '6px 0', background: '#1e1e3a',
+                border: '1px solid #3b3b6b', borderRadius: 6, color: '#a78bfa',
+                fontSize: 11, cursor: 'pointer', fontWeight: 500,
+              }}
+            >
+              Edit Patches ({comp.patches?.length || 0})
+            </button>
           </section>
         )}
         <DesignPanel />
