@@ -3,6 +3,15 @@ import type { Keyframe, KeyElement, ToolType, Position, Size, ComponentV2, Shape
 // Legacy types removed — using any temporarily
 type Transition = any;
 type Component = any;
+
+// Device presets (PRD §6)
+export const DEVICE_PRESETS = [
+  { name: 'iPhone 14 Pro', width: 393, height: 852 },
+  { name: 'iPhone 14', width: 390, height: 844 },
+  { name: 'iPhone SE', width: 375, height: 667 },
+  { name: 'Android', width: 360, height: 800 },
+  { name: 'iPad', width: 820, height: 1180 },
+] as const;
 type Interaction = any;
 import { initialKeyframes, initialTransitions, initialSharedElements } from './initialData';
 import { DEFAULT_AUTO_LAYOUT, DEFAULT_CURVE_CONFIG } from '../types';
