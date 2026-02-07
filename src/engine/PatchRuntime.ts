@@ -196,7 +196,7 @@ export function handleElementHover(
   const triggers = findHoverTriggersForElement(elementId, patches);
   if (triggers.length === 0) return false;
 
-  const portName = phase === 'in' ? 'onHoverIn' : 'onHoverOut';
+  const portName = phase === 'in' ? 'onOver' : 'onOut';
 
   for (const trigger of triggers) {
     // Only follow connections from the matching output port
