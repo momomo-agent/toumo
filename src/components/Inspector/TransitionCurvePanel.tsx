@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useEditorStore } from '../../store';
 import type { CurveConfig, CurveType } from '../../types';
 import { DEFAULT_CURVE_CONFIG } from '../../types';
+import { DraggableBezierEditor } from '../CurveEditor';
 
 const CURVE_OPTIONS: { value: CurveType; label: string }[] = [
   { value: 'linear', label: 'Linear' },
@@ -88,6 +89,22 @@ function CurveSelector({
       {effective.type === 'spring' && (
         <SpringParams curve={effective} onChange={onChange} />
       )}
+      {effective.type === 'bezier' && (
+        <BezierEditor curve={effective} onChange={onChange} />
+      )}
+    </div>
+  );
+}
+
+function BezierEditor({ curve, onChange }: { curve: CurveConfig; onChange: (c: CurveConfig) => void }) {
+  const cp = curve.controlPoints || [0.25, 0.1, 0.25, 1.0];
+  return (
+    <div style={{ marginTop: 4, display: 'flex', justifyContent: 'center' }}>
+      <DraggableBezierEditor
+        value={cp}
+        onChange={(v) => onChange({ ...curve, controlPoints: v })}
+        size={120}
+      />
     </div>
   );
 }
