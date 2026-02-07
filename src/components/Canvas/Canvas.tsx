@@ -15,8 +15,6 @@ import { GuideLines } from './GuideLines';
 import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
-import { findPresetComponent, createKeyElement } from '../ComponentLibrary';
-import { PrototypeLinkOverlay } from './PrototypeLinkOverlay';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -986,12 +984,6 @@ export function Canvas() {
       event.dataTransfer.dropEffect = 'copy';
       return;
     }
-    // Support library component drag
-    if (event.dataTransfer.types.includes('application/toumo-library-component')) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-      return;
-    }
     // Support image file drag
     if (event.dataTransfer.types.includes('Files')) {
       event.preventDefault();
@@ -1027,50 +1019,6 @@ export function Canvas() {
       return;
     }
 
-    // Handle library preset component drop
-    const libraryComponentId = event.dataTransfer.getData('application/toumo-library-component');
-    if (libraryComponentId) {
-      event.preventDefault();
-      const preset = findPresetComponent(libraryComponentId);
-      if (!preset) return;
-
-      const stagePoint = toCanvasSpaceFromDrag(event);
-      const hitFrame = getFrameUnderPoint(stagePoint);
-
-      if (hitFrame) {
-        if (hitFrame.id !== selectedKeyframeId) {
-          setSelectedKeyframeId(hitFrame.id);
-        }
-
-        const framePoint = translateToFrameSpace(stagePoint, hitFrame);
-        const elementsData = preset.createElements();
-
-        // Calculate bounding box to center on drop point
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        elementsData.forEach((el) => {
-          const pos = el.position || { x: 0, y: 0 };
-          minX = Math.min(minX, pos.x);
-          minY = Math.min(minY, pos.y);
-          maxX = Math.max(maxX, pos.x + el.size.width);
-          maxY = Math.max(maxY, pos.y + el.size.height);
-        });
-        const totalW = maxX - minX;
-        const totalH = maxY - minY;
-
-        elementsData.forEach((elData) => {
-          const basePos = elData.position || { x: 0, y: 0 };
-          const offsetX = framePoint.x - totalW / 2 + (basePos.x - minX);
-          const offsetY = framePoint.y - totalH / 2 + (basePos.y - minY);
-          const keyElement = createKeyElement(elData, {
-            x: Math.max(0, offsetX),
-            y: Math.max(0, offsetY),
-          });
-          addElement(keyElement);
-        });
-      }
-      return;
-    }
-    
     // Handle image file drop
     const files = event.dataTransfer.files;
     if (files.length > 0) {
@@ -1452,14 +1400,6 @@ export function Canvas() {
           </div>
         )}
         
-        {/* Prototype Link Arrows */}
-        <PrototypeLinkOverlay
-          keyframes={keyframes}
-          frameLayouts={frameLayouts}
-          selectedKeyframeId={selectedKeyframeId}
-          selectedElementIds={selectedElementIds}
-        />
-
         {/* Pen Tool */}
         {/* Multi-select bounding box */}
         {currentTool === 'select' && selectedElementIds.length >= 2 && (() => {

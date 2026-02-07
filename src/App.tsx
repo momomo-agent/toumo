@@ -6,14 +6,12 @@ import { InteractionManager } from './components/InteractionManager';
 import { StateInspector } from './components/Inspector/StateInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { LivePreview } from './components/LivePreview';
-import { ComponentLibrary } from './components/ComponentLibrary';
 import { ShortcutsPanel } from './components/ShortcutsPanel';
 import { ShareModal } from './components/ShareModal';
 import { PreviewMode } from './components/PreviewMode';
 import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
 import { WelcomeModal } from './components/WelcomeModal/index';
 import { EmptyState } from './components/EmptyState';
-import { Timeline } from './components/Timeline';
 import { LayerPanel } from './components/LayerPanel';
 import { ExportPanel } from './components/ExportPanel';
 import { useEditorStore } from './store';
@@ -2295,8 +2293,6 @@ export default function App() {
       </header>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Component Library Panel */}
-        <ComponentLibrary />
 
         {/* Live Preview Panel */}
         <div
@@ -2583,16 +2579,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Timeline Editor */}
-              <div
-                style={{
-                  height: 180,
-                  borderTop: '1px solid #2a2a2a',
-                  background: '#111',
-                }}
-              >
-                <Timeline />
-              </div>
 
               {/* Interaction Manager */}
               <div
