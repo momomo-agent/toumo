@@ -10,6 +10,35 @@ export type Size = {
   height: number;
 };
 
+// === Three-level Curve Override System ===
+// Priority: Property Curve > Element Curve > Global Curve
+
+export type CurveType = 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear' | 'spring' | 'bezier';
+
+export interface CurveConfig {
+  type: CurveType;
+  duration: number;      // ms
+  delay: number;         // ms
+  // spring params
+  stiffness?: number;
+  damping?: number;
+  mass?: number;
+  // bezier params
+  controlPoints?: [number, number, number, number];
+}
+
+export interface ElementCurveOverride {
+  elementId: string;
+  curve: CurveConfig;                          // 元素级覆盖
+  propertyOverrides?: Record<string, CurveConfig>; // 属性级覆盖（key=属性名）
+}
+
+export const DEFAULT_CURVE_CONFIG: CurveConfig = {
+  type: 'ease',
+  duration: 300,
+  delay: 0,
+};
+
 // Auto Layout types (Figma-style)
 export type AutoLayoutDirection = 'horizontal' | 'vertical';
 export type AutoLayoutAlign = 'start' | 'center' | 'end' | 'stretch';
@@ -654,6 +683,9 @@ export type LayerOverride = {
   properties: Partial<LayerProperties>;  // 位置、大小、颜色、透明度等
   isKey: boolean;                         // 是否为关键属性（参与动画）
   keyProperties?: string[];              // 被标记为「关键」的属性名列表
+  // Three-level curve override (level 2 & 3)
+  curveOverride?: CurveConfig;                    // 元素级曲线覆盖
+  propertyCurveOverrides?: Record<string, CurveConfig>; // 属性级曲线覆盖
 };
 
 // 图层可动画属性集合

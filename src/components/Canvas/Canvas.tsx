@@ -1362,21 +1362,43 @@ export function Canvas() {
                         );
                       });
                     })()
-                  : frameElements.map((element) => (
-                      <div
-                        key={element.id}
-                        style={{
-                          position: 'absolute',
-                          left: element.position.x,
-                          top: element.position.y,
-                          width: element.size.width,
-                          height: element.size.height,
-                          background: element.style?.fill || '#3b82f6',
-                          borderRadius: element.shapeType === 'ellipse' ? '50%' : element.style?.borderRadius || 8,
-                          opacity: 0.7,
-                        }}
-                      />
-                    ))}
+                  : (() => {
+                      const topLevelElements = frameElements.filter(el => !el.parentId);
+                      const getChildren = (parentId: string) =>
+                        frameElements.filter(el => el.parentId === parentId);
+
+                      return topLevelElements.map((element) => {
+                        const children = getChildren(element.id);
+                        return (
+                          <div key={element.id} style={{ pointerEvents: 'none' }}>
+                            <CanvasElement
+                              element={element}
+                              allElements={frameElements}
+                              scale={canvasScale}
+                              isSelected={false}
+                              onAlignmentCheck={() => ({ snappedPosition: null, snappedSize: null })}
+                              isGroup={children.length > 0}
+                            />
+                            {children.map((child) => (
+                              <CanvasElement
+                                key={child.id}
+                                element={{
+                                  ...child,
+                                  position: {
+                                    x: child.position.x + element.position.x,
+                                    y: child.position.y + element.position.y,
+                                  },
+                                }}
+                                allElements={frameElements}
+                                scale={canvasScale}
+                                isSelected={false}
+                                onAlignmentCheck={() => ({ snappedPosition: null, snappedSize: null })}
+                              />
+                            ))}
+                          </div>
+                        );
+                      });
+                    })()}
                 {/* Delete fade-out ghosts */}
                 {isActive && deleteGhosts.map(({ element }) => (
                   <div

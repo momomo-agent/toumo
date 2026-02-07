@@ -26,3 +26,9 @@ export {
   type AnimatableProperty,
   type ColorProperty,
 } from './SmartAnimate';
+export {
+  executeTrigger,
+  findTapTriggersForElement,
+  handleElementTap,
+  type PatchActionHandler,
+} from './PatchRuntime';

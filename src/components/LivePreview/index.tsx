@@ -4,6 +4,7 @@ import type { Transition, KeyElement, TriggerType, PrototypeLink, PrototypeTrans
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
 import { solveSpringRK4 } from '../../data/curvePresets';
+import { handleElementTap } from '../../engine/PatchRuntime';
 
 // ─── Prototype easing map ─────────────────────────────────────────────
 const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
@@ -61,7 +62,12 @@ function getSpringConfigFromCurve(curve: string) {
 // Main LivePreview Component
 // ═══════════════════════════════════════════════════════════════════════
 export function LivePreview() {
-  const { keyframes, transitions, selectedKeyframeId, frameSize, previewTransitionId, setPreviewTransitionId } = useEditorStore();
+  const {
+    keyframes, transitions, selectedKeyframeId, frameSize,
+    previewTransitionId, setPreviewTransitionId,
+    patches, patchConnections, displayStates, selectedDisplayStateId,
+    setSelectedDisplayStateId,
+  } = useEditorStore();
 
   const [deviceFrame, setDeviceFrame] = useState('iphone15pro');
   const [zoom, setZoom] = useState(100);
@@ -72,6 +78,26 @@ export function LivePreview() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDuration, setTransitionDuration] = useState(300);
   const [transitionCurve, setTransitionCurve] = useState('ease-out');
+
+  // DisplayState tracking for Patch-driven preview
+  const [previewDisplayStateId, setPreviewDisplayStateId] = useState<string | null>(
+    selectedDisplayStateId,
+  );
+
+  // Sync preview display state when editor selection changes
+  useEffect(() => {
+    setPreviewDisplayStateId(selectedDisplayStateId);
+  }, [selectedDisplayStateId]);
+
+  // Patch runtime: handle tap on element → switchDisplayState
+  const handlePatchTap = useCallback((elementId: string) => {
+    return handleElementTap(elementId, patches, patchConnections, {
+      switchDisplayState: (targetId: string) => {
+        setPreviewDisplayStateId(targetId);
+        setSelectedDisplayStateId(targetId);
+      },
+    });
+  }, [patches, patchConnections, setSelectedDisplayStateId]);
 
   // Smart Animate
   const [useSmartAnimateMode, setUseSmartAnimateMode] = useState(true);
@@ -147,9 +173,43 @@ export function LivePreview() {
 
   // ─── Derived state ────────────────────────────────────────────────
   const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
-  const elements = smartAnimateState.isAnimating
+  const baseElements = smartAnimateState.isAnimating
     ? smartAnimateState.elements
     : (currentKeyframe?.keyElements || []);
+
+  // Apply DisplayState layer overrides to elements
+  const currentDisplayState = displayStates.find(ds => ds.id === previewDisplayStateId);
+  const elements = useMemo(() => {
+    if (!currentDisplayState || currentDisplayState.layerOverrides.length === 0) {
+      return baseElements;
+    }
+    return baseElements.map(el => {
+      const override = currentDisplayState.layerOverrides.find(o => o.layerId === el.id);
+      if (!override) return el;
+      const props = override.properties;
+      return {
+        ...el,
+        position: {
+          x: props.x ?? el.position.x,
+          y: props.y ?? el.position.y,
+        },
+        size: {
+          width: props.width ?? el.size.width,
+          height: props.height ?? el.size.height,
+        },
+        style: {
+          ...el.style,
+          opacity: props.opacity ?? el.style?.opacity,
+          rotation: props.rotation ?? el.style?.rotation,
+          scale: props.scale ?? el.style?.scale,
+          fill: props.fill ?? el.style?.fill,
+          borderRadius: props.borderRadius ?? el.style?.borderRadius,
+          visibility: props.visible === false ? 'hidden' as const : el.style?.visibility,
+        },
+      } as KeyElement;
+    });
+  }, [baseElements, currentDisplayState]);
+
   const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
   const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
 
@@ -348,9 +408,11 @@ export function LivePreview() {
 
   // ─── Status indicator ─────────────────────────────────────────────
   const isAnimating = isTransitioning || smartAnimateState.isAnimating;
+  const displayStateName = currentDisplayState?.name;
   const statusText = smartAnimateState.isAnimating
     ? '🎬 Animating...'
-    : isTransitioning ? '⚡ Transitioning...' : currentKeyframe?.name || '—';
+    : isTransitioning ? '⚡ Transitioning...'
+    : displayStateName ? `◆ ${displayStateName}` : currentKeyframe?.name || '—';
   const statusColor = isAnimating ? '#22c55e' : '#71717a';
 
   // ═════════════════════════════════════════════════════════════════════
@@ -429,6 +491,8 @@ export function LivePreview() {
                 onPrototypeNavigation={handlePrototypeNavigation}
                 currentFrameId={currentKeyframeId}
                 prototypeTransition={prototypeTransition}
+                onPatchTap={handlePatchTap}
+                displayStateId={previewDisplayStateId}
               />
             </DeviceFrameShell>
           ) : (
@@ -451,6 +515,8 @@ export function LivePreview() {
                 onPrototypeNavigation={handlePrototypeNavigation}
                 currentFrameId={currentKeyframeId}
                 prototypeTransition={prototypeTransition}
+                onPatchTap={handlePatchTap}
+                displayStateId={previewDisplayStateId}
               />
             </div>
           )}
@@ -563,6 +629,8 @@ function PreviewContent({
   onPrototypeNavigation,
   currentFrameId,
   prototypeTransition,
+  onPatchTap,
+  displayStateId: _displayStateId,
 }: {
   elements: KeyElement[];
   onTrigger: (type: TriggerType, elementId?: string) => void;
@@ -579,6 +647,8 @@ function PreviewContent({
     easing: string;
     phase: 'out' | 'in';
   } | null;
+  onPatchTap?: (elementId: string) => boolean;
+  displayStateId?: string | null;
 }) {
   const dragStartRef = useRef<{ x: number; y: number; elementId?: string } | null>(null);
   const isDraggingRef = useRef(false);
@@ -598,12 +668,17 @@ function PreviewContent({
       }
     }
     // Only fire tap if it wasn't a drag
-    if (!isDraggingRef.current && availableTriggers.includes('tap')) {
-      onTrigger('tap', elementId);
+    if (!isDraggingRef.current) {
+      // Try Patch-driven tap first
+      const patchHandled = elementId && onPatchTap ? onPatchTap(elementId) : false;
+      // Fall back to legacy transition triggers
+      if (!patchHandled && availableTriggers.includes('tap')) {
+        onTrigger('tap', elementId);
+      }
     }
     dragStartRef.current = null;
     isDraggingRef.current = false;
-  }, [availableTriggers, onTrigger]);
+  }, [availableTriggers, onTrigger, onPatchTap]);
 
   const handleMouseEnter = useCallback((elementId: string) => {
     if (availableTriggers.includes('hover')) onTrigger('hover', elementId);
