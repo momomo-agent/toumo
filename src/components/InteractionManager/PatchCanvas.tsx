@@ -176,6 +176,8 @@ export function PatchCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [dragLine, setDragLine] = useState<{ fromX: number; fromY: number; toX: number; toY: number } | null>(null);
+  // Tick counter to force connection re-render during node drag
+  const [, setRenderTick] = useState(0);
 
   // Get port position in canvas coordinates
   const getPortPosition = useCallback((patchId: string, portId: string, isOutput: boolean): { x: number; y: number } | null => {
@@ -236,6 +238,8 @@ export function PatchCanvas() {
           x: Math.max(0, drag.origX + dx),
           y: Math.max(0, drag.origY + dy),
         });
+        // Force connection lines to re-render while dragging nodes
+        setRenderTick(t => t + 1);
       } else if (drag.type === 'port' && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
         setDragLine({
@@ -360,6 +364,7 @@ export function PatchCanvas() {
               dataType={dataType}
               selected={selectedConnectionId === conn.id}
               onSelect={setSelectedConnectionId}
+              onDelete={removePatchConnection}
             />
           ))}
           {dragLine && (

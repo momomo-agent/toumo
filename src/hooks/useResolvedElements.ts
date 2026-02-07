@@ -50,6 +50,7 @@ export function resolveElementsForState(
         contrast: props.contrast ?? el.style?.contrast,
         saturate: props.saturate ?? el.style?.saturate,
         rotation: props.rotation ?? el.style?.rotation,
+        scale: props.scale ?? el.style?.scale,
         visibility: props.visible === false ? 'hidden' : (props.visible === true ? 'visible' : el.style?.visibility),
       },
     } as KeyElement;

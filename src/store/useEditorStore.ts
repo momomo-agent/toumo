@@ -406,6 +406,7 @@ const updatesToLayerProperties = (updates: Partial<KeyElement>): Partial<LayerPr
     if (s.contrast !== undefined) props.contrast = s.contrast;
     if (s.saturate !== undefined) props.saturate = s.saturate;
     if (s.rotation !== undefined) props.rotation = s.rotation;
+    if (s.scale !== undefined) props.scale = s.scale;
     if (s.visibility !== undefined) props.visible = s.visibility !== 'hidden';
   }
   return props;

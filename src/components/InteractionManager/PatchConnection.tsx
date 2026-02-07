@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const PORT_TYPE_COLORS: Record<string, string> = {
   pulse: '#ffffff',
@@ -18,6 +18,7 @@ interface PatchConnectionProps {
   dataType?: string;
   selected?: boolean;
   onSelect?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export const PatchConnection = React.memo(function PatchConnection({
@@ -29,7 +30,9 @@ export const PatchConnection = React.memo(function PatchConnection({
   dataType = 'any',
   selected = false,
   onSelect,
+  onDelete,
 }: PatchConnectionProps) {
+  const [hovered, setHovered] = useState(false);
   const color = PORT_TYPE_COLORS[dataType] || '#888';
   const dx = Math.abs(toX - fromX) * 0.5;
   const cpx1 = fromX + Math.max(dx, 40);
@@ -39,6 +42,17 @@ export const PatchConnection = React.memo(function PatchConnection({
 
   const path = `M ${fromX} ${fromY} C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${toX} ${toY}`;
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selected) {
+      onDelete?.(id);
+    } else {
+      onSelect?.(id);
+    }
+  };
+
+  const isHighlighted = selected || hovered;
+
   return (
     <g>
       {/* Invisible wider path for easier clicking */}
@@ -46,20 +60,20 @@ export const PatchConnection = React.memo(function PatchConnection({
         d={path}
         fill="none"
         stroke="transparent"
-        strokeWidth={12}
+        strokeWidth={14}
         style={{ cursor: 'pointer' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect?.(id);
-        }}
+        onClick={handleClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       />
       {/* Visible path */}
       <path
         d={path}
         fill="none"
-        stroke={selected ? '#fff' : color}
-        strokeWidth={selected ? 2.5 : 2}
-        strokeOpacity={selected ? 1 : 0.6}
+        stroke={selected ? '#ff4444' : hovered ? '#fff' : color}
+        strokeWidth={isHighlighted ? 2.5 : 2}
+        strokeOpacity={isHighlighted ? 1 : 0.6}
+        style={{ pointerEvents: 'none' }}
       />
     </g>
   );

@@ -10,6 +10,7 @@ import { SpringPresets } from '../../engine/SpringAnimation';
 import { solveSpringRK4 } from '../../data/curvePresets';
 import { handleElementTap, handleElementHover, handleElementDrag, startAllTimerTriggers } from '../../engine/PatchRuntime';
 import type { DragPhase } from '../../engine/PatchRuntime';
+import { resolveElementsForState } from '../../hooks/useResolvedElements';
 
 // ─── Prototype easing map ─────────────────────────────────────────────
 const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
@@ -179,37 +180,11 @@ export function LivePreview() {
     [smartAnimateState.isAnimating, smartAnimateState.elements, currentKeyframe],
   );
 
-  // Apply DisplayState layer overrides to elements
+  // Apply DisplayState layer overrides to elements using the shared resolver
+  // (respects isKey flag, consistent with Canvas and Inspector)
   const currentDisplayState = displayStates.find(ds => ds.id === previewDisplayStateId);
   const elements = useMemo(() => {
-    if (!currentDisplayState || currentDisplayState.layerOverrides.length === 0) {
-      return baseElements;
-    }
-    return baseElements.map(el => {
-      const override = currentDisplayState.layerOverrides.find(o => o.layerId === el.id);
-      if (!override) return el;
-      const props = override.properties;
-      return {
-        ...el,
-        position: {
-          x: props.x ?? el.position.x,
-          y: props.y ?? el.position.y,
-        },
-        size: {
-          width: props.width ?? el.size.width,
-          height: props.height ?? el.size.height,
-        },
-        style: {
-          ...el.style,
-          opacity: props.opacity ?? el.style?.opacity,
-          rotation: props.rotation ?? el.style?.rotation,
-          scale: props.scale ?? el.style?.scale,
-          fill: props.fill ?? el.style?.fill,
-          borderRadius: props.borderRadius ?? el.style?.borderRadius,
-          visibility: props.visible === false ? 'hidden' as const : el.style?.visibility,
-        },
-      } as KeyElement;
-    });
+    return resolveElementsForState(baseElements, currentDisplayState);
   }, [baseElements, currentDisplayState]);
 
   const availableTransitions = useMemo(() => transitions.filter(t => t.from === currentKeyframeId), [transitions, currentKeyframeId]);
