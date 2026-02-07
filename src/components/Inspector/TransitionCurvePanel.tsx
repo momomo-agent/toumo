@@ -139,6 +139,46 @@ function SpringParams({
   );
 }
 
+// Generate SVG path for curve preview
+function getCurveSVGPath(curve: CurveConfig): string {
+  const w = 100, h = 36, y0 = 38, y1 = 2;
+  const steps = 50;
+
+  if (curve.type === 'linear') {
+    return `M 0 ${y0} L ${w} ${y1}`;
+  }
+
+  // Bezier control points for common easing types
+  let cp: [number, number, number, number];
+  switch (curve.type) {
+    case 'ease': cp = [0.25, 0.1, 0.25, 1.0]; break;
+    case 'ease-in': cp = [0.42, 0, 1.0, 1.0]; break;
+    case 'ease-out': cp = [0, 0, 0.58, 1.0]; break;
+    case 'ease-in-out': cp = [0.42, 0, 0.58, 1.0]; break;
+    case 'bezier':
+      cp = curve.controlPoints || [0.25, 0.1, 0.25, 1.0];
+      break;
+    case 'spring':
+      // Approximate spring with overshoot
+      cp = [0.2, 1.2, 0.4, 1.0];
+      break;
+    default:
+      cp = [0.25, 0.1, 0.25, 1.0];
+  }
+
+  // Sample cubic bezier
+  const pts: string[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const u = 1 - t;
+    const y = 3 * u * u * t * cp[1] + 3 * u * t * t * cp[3] + t * t * t;
+    const px = (t * w).toFixed(1);
+    const py = (y0 - y * h).toFixed(1);
+    pts.push(`${i === 0 ? 'M' : 'L'} ${px} ${py}`);
+  }
+  return pts.join(' ');
+}
+
 export function TransitionCurvePanel() {
   const {
     globalCurve,
@@ -330,11 +370,21 @@ function EffectiveCurveSummary({
   const effective = elementCurve || globalCurve;
   const source = elementCurve ? 'Element' : 'Global';
 
+  // Generate SVG curve path
+  const curvePath = getCurveSVGPath(effective);
+
   return (
     <div style={{
       marginTop: 6, padding: '6px 8px', background: '#1a1a2e',
       borderRadius: 4, fontSize: 10, color: '#888',
     }}>
+      {/* Curve preview */}
+      <svg width="100%" height="40" viewBox="0 0 100 40" style={{ marginBottom: 4 }}>
+        <rect x="0" y="0" width="100" height="40" fill="none" />
+        <line x1="0" y1="38" x2="100" y2="38" stroke="#333" strokeWidth="0.5" />
+        <line x1="0" y1="2" x2="100" y2="2" stroke="#333" strokeWidth="0.5" strokeDasharray="2,2" />
+        <path d={curvePath} fill="none" stroke="#3b82f6" strokeWidth="1.5" />
+      </svg>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span>Effective: <strong style={{ color: '#ccc' }}>{effective.type}</strong></span>
         <span>{effective.duration}ms{effective.delay > 0 ? ` +${effective.delay}ms` : ''}</span>
