@@ -4,7 +4,8 @@ import type { Transition, KeyElement, TriggerType, PrototypeLink, PrototypeTrans
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
 import { solveSpringRK4 } from '../../data/curvePresets';
-import { handleElementTap } from '../../engine/PatchRuntime';
+import { handleElementTap, handleElementHover, handleElementDrag, startAllTimerTriggers } from '../../engine/PatchRuntime';
+import type { DragPhase } from '../../engine/PatchRuntime';
 
 // ─── Prototype easing map ─────────────────────────────────────────────
 const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
@@ -89,15 +90,28 @@ export function LivePreview() {
     setPreviewDisplayStateId(selectedDisplayStateId);
   }, [selectedDisplayStateId]);
 
+  // Shared Patch action handlers
+  const patchHandlers = useMemo(() => ({
+    switchDisplayState: (targetId: string) => {
+      setPreviewDisplayStateId(targetId);
+      setSelectedDisplayStateId(targetId);
+    },
+  }), [setSelectedDisplayStateId]);
+
   // Patch runtime: handle tap on element → switchDisplayState
   const handlePatchTap = useCallback((elementId: string) => {
-    return handleElementTap(elementId, patches, patchConnections, {
-      switchDisplayState: (targetId: string) => {
-        setPreviewDisplayStateId(targetId);
-        setSelectedDisplayStateId(targetId);
-      },
-    });
-  }, [patches, patchConnections, setSelectedDisplayStateId]);
+    return handleElementTap(elementId, patches, patchConnections, patchHandlers);
+  }, [patches, patchConnections, patchHandlers]);
+
+  // Patch runtime: handle hover on element → onHoverIn / onHoverOut
+  const handlePatchHover = useCallback((elementId: string, phase: 'in' | 'out') => {
+    return handleElementHover(elementId, phase, patches, patchConnections, patchHandlers);
+  }, [patches, patchConnections, patchHandlers]);
+
+  // Patch runtime: handle drag on element → onDragStart / onDragMove / onDragEnd
+  const handlePatchDrag = useCallback((elementId: string, phase: DragPhase, delta: { dx: number; dy: number }) => {
+    return handleElementDrag(elementId, phase, delta, patches, patchConnections, patchHandlers);
+  }, [patches, patchConnections, patchHandlers]);
 
   // Smart Animate
   const [useSmartAnimateMode, setUseSmartAnimateMode] = useState(true);
@@ -337,6 +351,13 @@ export function LivePreview() {
     return () => { timerRefs.current.forEach(t => clearTimeout(t)); };
   }, [currentKeyframeId, availableTransitions, executeTransition]);
 
+  // ─── Patch-based timer triggers ───────────────────────────────────
+  useEffect(() => {
+    if (patches.length === 0) return;
+    const cleanup = startAllTimerTriggers(patches, patchConnections, patchHandlers);
+    return cleanup;
+  }, [patches, patchConnections, patchHandlers]);
+
   // ─── Preview transition (triggered from TransitionInspector) ──────
   useEffect(() => {
     if (!previewTransitionId) return;
@@ -492,6 +513,8 @@ export function LivePreview() {
                 currentFrameId={currentKeyframeId}
                 prototypeTransition={prototypeTransition}
                 onPatchTap={handlePatchTap}
+                onPatchHover={handlePatchHover}
+                onPatchDrag={handlePatchDrag}
                 displayStateId={previewDisplayStateId}
               />
             </DeviceFrameShell>
@@ -516,6 +539,8 @@ export function LivePreview() {
                 currentFrameId={currentKeyframeId}
                 prototypeTransition={prototypeTransition}
                 onPatchTap={handlePatchTap}
+                onPatchHover={handlePatchHover}
+                onPatchDrag={handlePatchDrag}
                 displayStateId={previewDisplayStateId}
               />
             </div>
@@ -719,6 +744,8 @@ function PreviewContent({
   currentFrameId,
   prototypeTransition,
   onPatchTap,
+  onPatchHover,
+  onPatchDrag,
   displayStateId: _displayStateId,
 }: {
   elements: KeyElement[];
@@ -737,6 +764,8 @@ function PreviewContent({
     phase: 'out' | 'in';
   } | null;
   onPatchTap?: (elementId: string) => boolean;
+  onPatchHover?: (elementId: string, phase: 'in' | 'out') => boolean;
+  onPatchDrag?: (elementId: string, phase: 'start' | 'move' | 'end', delta: { dx: number; dy: number }) => boolean;
   displayStateId?: string | null;
 }) {
   const dragStartRef = useRef<{ x: number; y: number; elementId?: string } | null>(null);
@@ -745,15 +774,27 @@ function PreviewContent({
   const handleMouseDown = useCallback((e: React.MouseEvent, elementId?: string) => {
     dragStartRef.current = { x: e.clientX, y: e.clientY, elementId };
     isDraggingRef.current = false;
-  }, []);
+    // Fire Patch drag start
+    if (elementId && onPatchDrag) {
+      onPatchDrag(elementId, 'start', { dx: 0, dy: 0 });
+    }
+  }, [onPatchDrag]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent, elementId?: string) => {
-    if (dragStartRef.current && availableTriggers.includes('drag')) {
+    if (dragStartRef.current) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 20) {
-        onTrigger('drag', elementId);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 20) {
         isDraggingRef.current = true;
+        // Legacy drag trigger
+        if (availableTriggers.includes('drag')) {
+          onTrigger('drag', elementId);
+        }
+        // Patch drag end
+        if (elementId && onPatchDrag) {
+          onPatchDrag(elementId, 'end', { dx, dy });
+        }
       }
     }
     // Only fire tap if it wasn't a drag
@@ -767,11 +808,19 @@ function PreviewContent({
     }
     dragStartRef.current = null;
     isDraggingRef.current = false;
-  }, [availableTriggers, onTrigger, onPatchTap]);
+  }, [availableTriggers, onTrigger, onPatchTap, onPatchDrag]);
 
   const handleMouseEnter = useCallback((elementId: string) => {
+    // Patch hover in
+    if (onPatchHover) onPatchHover(elementId, 'in');
+    // Legacy hover trigger
     if (availableTriggers.includes('hover')) onTrigger('hover', elementId);
-  }, [availableTriggers, onTrigger]);
+  }, [availableTriggers, onTrigger, onPatchHover]);
+
+  const handleMouseLeave = useCallback((elementId: string) => {
+    // Patch hover out
+    if (onPatchHover) onPatchHover(elementId, 'out');
+  }, [onPatchHover]);
 
   // Scroll trigger (debounced)
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -833,6 +882,16 @@ function PreviewContent({
             onMouseDown={(e) => handleMouseDown(e, el.id)}
             onMouseUp={(e) => handleMouseUp(e, el.id)}
             onMouseEnter={() => handleMouseEnter(el.id)}
+            onMouseLeave={() => handleMouseLeave(el.id)}
+            onMouseMove={(e) => {
+              if (dragStartRef.current && dragStartRef.current.elementId === el.id) {
+                const dx = e.clientX - dragStartRef.current.x;
+                const dy = e.clientY - dragStartRef.current.y;
+                if (Math.sqrt(dx * dx + dy * dy) > 10 && onPatchDrag) {
+                  onPatchDrag(el.id, 'move', { dx, dy });
+                }
+              }
+            }}
             onClick={handleElClick}
             style={{
               position: 'absolute',

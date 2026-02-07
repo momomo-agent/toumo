@@ -41,6 +41,7 @@ export function executeTrigger(
 export function executeActionPatch(
   actionPatch: Patch,
   handlers: PatchActionHandler,
+  _context?: { delta?: { dx: number; dy: number } },
 ): void {
   switch (actionPatch.type) {
     case 'switchDisplayState': {
@@ -203,4 +204,97 @@ export function handleElementDrag(
     }
   }
   return true;
+}
+
+// ─── Timer Trigger ────────────────────────────────────────────────────
+
+/**
+ * Find all timer-trigger patches.
+ */
+export function findTimerTriggers(patches: Patch[]): Patch[] {
+  return patches.filter(p => p.type === 'timer');
+}
+
+/**
+ * Handle a timer trigger firing.
+ * Reads config.delay (ms) and schedules execution after that delay.
+ * Returns a cleanup function to cancel pending timers.
+ */
+export function handleTimerTrigger(
+  patchId: string,
+  patches: Patch[],
+  connections: PatchConnection[],
+  handlers: PatchActionHandler,
+): (() => void) | null {
+  const timerPatch = patches.find(p => p.id === patchId && p.type === 'timer');
+  if (!timerPatch) return null;
+
+  const delay = timerPatch.config?.delay ?? 1000;
+
+  const timerId = setTimeout(() => {
+    executeTrigger(timerPatch.id, patches, connections, handlers);
+  }, delay);
+
+  return () => clearTimeout(timerId);
+}
+
+// ─── Variable Change Trigger ──────────────────────────────────────────
+
+/**
+ * Find all variableChange-trigger patches that watch a specific variable.
+ */
+export function findVariableChangeTriggers(
+  variableId: string,
+  patches: Patch[],
+): Patch[] {
+  return patches.filter(
+    p => p.type === 'variableChange' && p.config?.variableId === variableId,
+  );
+}
+
+/**
+ * Handle a variable value change.
+ * Finds matching variableChange-trigger patches and executes them.
+ */
+export function handleVariableChange(
+  variableId: string,
+  newValue: any,
+  patches: Patch[],
+  connections: PatchConnection[],
+  handlers: PatchActionHandler,
+): boolean {
+  const triggers = findVariableChangeTriggers(variableId, patches);
+  if (triggers.length === 0) return false;
+
+  for (const trigger of triggers) {
+    // Optional: check condition in config (e.g. config.expectedValue)
+    const expected = trigger.config?.expectedValue;
+    if (expected !== undefined && expected !== newValue) {
+      continue; // condition not met, skip
+    }
+    executeTrigger(trigger.id, patches, connections, handlers);
+  }
+  return true;
+}
+
+// ─── Batch: start all timer triggers ──────────────────────────────────
+
+/**
+ * Start all timer-trigger patches. Returns a cleanup function
+ * that cancels every pending timer.
+ */
+export function startAllTimerTriggers(
+  patches: Patch[],
+  connections: PatchConnection[],
+  handlers: PatchActionHandler,
+): () => void {
+  const cleanups: (() => void)[] = [];
+  const timerPatches = findTimerTriggers(patches);
+
+  for (const tp of timerPatches) {
+    const cleanup = handleTimerTrigger(tp.id, patches, connections, handlers);
+    if (cleanup) cleanups.push(cleanup);
+  }
+
+  return () => cleanups.forEach(fn => fn());
 }
