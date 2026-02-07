@@ -721,8 +721,8 @@ export function DesignPanel() {
     updateElement,
   } = useEditorStore();
 
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
 

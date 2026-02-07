@@ -16,7 +16,8 @@ export function Inspector() {
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
   const selectedTransition = transitions.find(tr => tr.id === selectedTransitionId);
@@ -79,7 +80,6 @@ interface KeyframeInspectorProps {
     name: string;
     summary: string;
     functionalState?: string;
-    keyElements: unknown[];
   };
   keyframes: { id: string; name: string }[];
   transitions: { id: string; from: string; to: string; trigger: string }[];
@@ -118,7 +118,7 @@ function KeyframeInspector({ keyframe, keyframes, transitions }: KeyframeInspect
         <div className="figma-section-label">Variant</div>
         <div className="figma-row">
           <span className="figma-label">Layers</span>
-          <span className="figma-value">{keyframe.keyElements.length}</span>
+          <span className="figma-value">{useEditorStore.getState().sharedElements.length}</span>
         </div>
       </div>
 

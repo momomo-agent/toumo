@@ -34,13 +34,11 @@ const SNAP_TYPES = [
 export function OverflowPanel() {
   const {
     selectedElementId,
-    selectedKeyframeId,
-    keyframes,
     updateElement,
   } = useEditorStore();
 
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
 
