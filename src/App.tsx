@@ -13,6 +13,7 @@ import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/share
 import { WelcomeModal } from './components/WelcomeModal/index';
 import { EmptyState } from './components/EmptyState';
 import { LayerPanel } from './components/LayerPanel';
+import { FilesPanel } from './components/FilesPanel';
 import { ExportPanel } from './components/ExportPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
@@ -2472,6 +2473,12 @@ export default function App() {
               }}
             >
               <CollapseToggle collapsed={leftPanel.collapsed} onToggle={leftPanel.toggleCollapse} side="left" label="图层" />
+              
+              {/* Files Panel (top) */}
+              <div style={{ height: 200, borderBottom: '1px solid #2a2a2a', overflow: 'hidden' }}>
+                <FilesPanel />
+              </div>
+
               {/* Variants (top) */}
               <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
                 <h3 style={{ fontSize: 11, textTransform: 'uppercase', color: '#666', margin: 0, marginBottom: 8, letterSpacing: '0.5px' }}>Variants</h3>
