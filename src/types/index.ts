@@ -604,9 +604,22 @@ export type ComponentV2 = {
   displayStates: DisplayState[];   // 组件的多个关键帧
   variables: Variable[];           // 组件的功能状态（变量 flag）
   rules: InteractionRule[];        // 组件的命令式交互规则
+  patches?: Patch[];               // 组件的 Patch 节点
+  connections?: PatchConnection[]; // 组件的 Patch 连线
   // 元数据
   thumbnail?: string;
   createdAt?: number;
+};
+
+// 组件实例（支持状态继承/覆写）
+export type ComponentInstance = {
+  id: string;
+  componentId: string;             // 引用的组件 ID
+  position: Position;              // 在画布上的位置
+  overrides?: {
+    displayStates?: Record<string, Partial<DisplayState>>;
+    variables?: Record<string, any>;
+  };
 };
 
 // 新版项目结构（PRD v2）
