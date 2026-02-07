@@ -257,6 +257,52 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* Toggle state display */}
+      {patch.type === 'toggle' && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: '#888' }}>
+            State: {patch.config?._toggleState ? '✅ ON' : '⬜ OFF'}
+          </div>
+        </div>
+      )}
+
+      {/* Counter config */}
+      {patch.type === 'counter' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Step</label>
+          <input
+            type="number"
+            value={patch.config?.step ?? 1}
+            onChange={e => updatePatchConfig(patch.id, { step: Number(e.target.value) })}
+            style={inputStyle}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Min</label>
+              <input
+                type="number"
+                value={patch.config?.min ?? 0}
+                onChange={e => updatePatchConfig(patch.id, { min: Number(e.target.value) })}
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Max</label>
+              <input
+                type="number"
+                value={patch.config?.max ?? ''}
+                onChange={e => updatePatchConfig(patch.id, { max: e.target.value ? Number(e.target.value) : undefined })}
+                style={inputStyle}
+                placeholder="∞"
+              />
+            </div>
+          </div>
+          <div style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
+            Count: {patch.config?._count ?? 0}
+          </div>
+        </div>
+      )}
+
       {/* Timer duration */}
       {patch.type === 'timer' && (
         <div style={{ marginBottom: 12 }}>
