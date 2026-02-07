@@ -643,3 +643,121 @@ export type InteractionGroup = {
   name: string;
   interactions: Interaction[];
 };
+
+// ============================================
+// 新数据模型 (PRD v2) - 状态机重构
+// ============================================
+
+// 图层属性覆盖 - 某个图层在某个显示状态下的属性差异
+export type LayerOverride = {
+  layerId: string;
+  properties: Partial<LayerProperties>;  // 位置、大小、颜色、透明度等
+  isKey: boolean;                         // 是否为关键属性（参与动画）
+};
+
+// 图层可动画属性集合
+export type LayerProperties = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  rotation: number;
+  scale: number;
+  fill: string;
+  fillOpacity: number;
+  stroke: string;
+  strokeWidth: number;
+  borderRadius: number;
+  // 文本属性
+  fontSize: number;
+  fontWeight: string;
+  color: string;
+  letterSpacing: number;
+  lineHeight: number;
+  // 阴影
+  shadowColor: string;
+  shadowX: number;
+  shadowY: number;
+  shadowBlur: number;
+  // 滤镜
+  blur: number;
+  brightness: number;
+  contrast: number;
+  saturate: number;
+  // 可见性
+  visible: boolean;
+};
+
+// 显示状态 = 关键帧（所有关键帧共享同一套图层树）
+export type DisplayState = {
+  id: string;
+  name: string;
+  layerOverrides: LayerOverride[];  // 每个图层在此关键帧中的属性覆盖
+};
+
+// 命令式动作：switchDisplayState / setVariable
+export type Action = {
+  type: 'switchDisplayState' | 'setVariable';
+  // switchDisplayState 参数
+  targetElementId?: string;
+  targetDisplayStateId?: string;
+  transition?: TransitionConfig;
+  // setVariable 参数
+  variableId?: string;
+  value?: string | number | boolean;
+};
+
+// 过渡动画配置
+export type TransitionConfig = {
+  duration: number;   // ms
+  delay: number;      // ms
+  curve: string;      // 支持三级覆盖：全局 → 元素 → 属性
+  // 弹簧参数（可选）
+  springDamping?: number;
+  springResponse?: number;
+  springMass?: number;
+  springStiffness?: number;
+  // 自定义贝塞尔（可选）
+  cubicBezier?: [number, number, number, number];
+};
+
+// 命令式交互规则：当[元素]被[交互]时 → [动作列表]
+export type InteractionRule = {
+  id: string;
+  name: string;
+  trigger: InteractionRuleTrigger;
+  actions: Action[];              // 一个触发可执行多个动作
+};
+
+// 交互规则的触发器
+export type InteractionRuleTrigger = {
+  elementId: string;              // 触发元素
+  type: TriggerType;              // tap/drag/hover/scroll/timer/variable
+  condition?: string;             // 可选条件表达式
+};
+
+// 新版组件（PRD v2）：拥有自己的图层树、显示状态、变量、交互规则
+export type ComponentV2 = {
+  id: string;
+  name: string;
+  layers: KeyElement[];            // 组件自己的图层树
+  displayStates: DisplayState[];   // 组件的多个关键帧
+  variables: Variable[];           // 组件的功能状态（变量 flag）
+  rules: InteractionRule[];        // 组件的命令式交互规则
+  // 元数据
+  thumbnail?: string;
+  createdAt?: number;
+};
+
+// 新版项目结构（PRD v2）
+export type ProjectV2 = {
+  id: string;
+  name: string;
+  layers: KeyElement[];            // 单一图层树（所有关键帧共享）
+  displayStates: DisplayState[];   // 画布级显示状态（关键帧）
+  variables: Variable[];           // 功能状态 = 变量 flag
+  rules: InteractionRule[];        // 命令式交互规则
+  components: ComponentV2[];       // 组件列表
+  globalCurve: string;             // 全局默认曲线
+};
