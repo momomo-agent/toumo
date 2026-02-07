@@ -81,7 +81,6 @@ export function LivePreview() {
     switchDisplayState: (targetId: string) => {
       const targetKf = keyframes.find(kf => kf.displayStateId === targetId);
       if (targetKf) {
-        // Animate transition using smartAnimate
         const targetDs = displayStates.find(ds => ds.id === targetId);
         const toElements = resolveElementsForState(
           useEditorStore.getState().sharedElements, targetDs || null
@@ -92,7 +91,18 @@ export function LivePreview() {
       setPreviewDisplayStateId(targetId);
       setSelectedDisplayStateId(targetId);
     },
+    setVariable: (variableId: string, value: any) => {
+      // Update variable in store
+      const { setVariableValue } = useEditorStore.getState();
+      setVariableValue(variableId, value);
+      // Fire variableChange triggers
+      const { handleVariableChange } = require('../../engine/PatchRuntime');
+      const state = useEditorStore.getState();
+      handleVariableChange(variableId, value, state.patches, state.patchConnections, patchHandlersRef.current);
+    },
   }), [setSelectedDisplayStateId, keyframes, displayStates]);
+  const patchHandlersRef = useRef(patchHandlers);
+  patchHandlersRef.current = patchHandlers;
 
   // Patch runtime: handle tap on element → switchDisplayState
   const handlePatchTap = useCallback((elementId: string) => {
