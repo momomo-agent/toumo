@@ -761,3 +761,36 @@ export type ProjectV2 = {
   components: ComponentV2[];       // 组件列表
   globalCurve: string;             // 全局默认曲线
 };
+
+// === Patch 连线模型 (Origami 风格) ===
+
+export type PatchPortDataType = 'pulse' | 'boolean' | 'number' | 'string' | 'displayState' | 'any';
+
+export interface PatchPort {
+  id: string;
+  name: string;
+  dataType: PatchPortDataType;
+}
+
+export type TriggerPatchType = 'tap' | 'drag' | 'hover' | 'scroll' | 'timer' | 'variableChange';
+export type ActionPatchType = 'switchDisplayState' | 'setVariable' | 'animateProperty';
+export type LogicPatchType = 'condition' | 'delay' | 'toggle' | 'counter';
+export type PatchType = TriggerPatchType | ActionPatchType | LogicPatchType;
+
+export interface Patch {
+  id: string;
+  type: PatchType;
+  name: string;
+  position: Position;  // 在 Patch 编辑器中的位置
+  config: Record<string, any>;  // Patch 特有配置（如 target elementId, variableId 等）
+  inputs: PatchPort[];
+  outputs: PatchPort[];
+}
+
+export interface PatchConnection {
+  id: string;
+  fromPatchId: string;
+  fromPortId: string;
+  toPatchId: string;
+  toPortId: string;
+}
