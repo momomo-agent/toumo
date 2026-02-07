@@ -48,6 +48,7 @@ export const initialKeyframes: Keyframe[] = [
     name: "Idle",
     summary: "Default state",
     functionalState: "idle",
+    displayStateId: "ds-default",
     keyElements: initialSharedElements,
   },
   {
@@ -55,6 +56,7 @@ export const initialKeyframes: Keyframe[] = [
     name: "Active", 
     summary: "Active state",
     functionalState: "loading",
+    displayStateId: "ds-active",
     keyElements: initialSharedElements,
   },
   {

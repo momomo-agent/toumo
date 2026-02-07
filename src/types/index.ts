@@ -391,6 +391,8 @@ export type Keyframe = {
   name: string;
   summary: string;
   functionalState?: string;
+  /** Links this keyframe to a DisplayState for layerOverrides */
+  displayStateId?: string;
   /** @deprecated Use sharedElements from store instead */
   keyElements?: KeyElement[];
 };

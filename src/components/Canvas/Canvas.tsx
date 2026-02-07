@@ -1228,9 +1228,10 @@ export function Canvas() {
             if (isThisActive) {
               frameElements = elements;
             } else {
-              // Find matching displayState for this keyframe
-              const dsIndex = keyframes.findIndex(k => k.id === layout.id);
-              const matchingDs = displayStates[dsIndex] || null;
+              // Find matching displayState via explicit displayStateId link
+              const matchingDs = keyframe?.displayStateId
+                ? displayStates.find(ds => ds.id === keyframe!.displayStateId)
+                : null;
               frameElements = resolveElementsForState(sharedEls, matchingDs);
             }
             frameName = keyframe?.name || '';

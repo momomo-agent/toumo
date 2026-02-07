@@ -511,19 +511,34 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   hoveredElementId: null as string | null,
 
   // Actions
-  setSelectedKeyframeId: (id) => set({ selectedKeyframeId: id }),
+  setSelectedKeyframeId: (id) => set((state) => {
+    const kf = state.keyframes.find(k => k.id === id);
+    return {
+      selectedKeyframeId: id,
+      selectedDisplayStateId: kf?.displayStateId || state.selectedDisplayStateId,
+    };
+  }),
   
   addKeyframe: () => set((state) => {
-    const newId = `kf-${Date.now()}`;
+    const newKfId = `kf-${Date.now()}`;
+    const newDsId = `ds-${Date.now()}`;
     const newKeyframe: Keyframe = {
-      id: newId,
+      id: newKfId,
       name: `State ${state.keyframes.length + 1}`,
       summary: 'New state',
+      displayStateId: newDsId,
       keyElements: state.sharedElements,
+    };
+    const newDisplayState: DisplayState = {
+      id: newDsId,
+      name: `State ${state.keyframes.length + 1}`,
+      layerOverrides: [],
     };
     return {
       keyframes: [...state.keyframes, newKeyframe],
-      selectedKeyframeId: newId,
+      displayStates: [...state.displayStates, newDisplayState],
+      selectedKeyframeId: newKfId,
+      selectedDisplayStateId: newDsId,
     };
   }),
 
