@@ -44,12 +44,49 @@ const PRESETS: { name: string; description: string; create: () => any }[] = [
 function createButtonPreset() {
   return {
     keyframes: [
-      { id: 'kf-default', name: 'Default', displayStateId: 'ds-default', summary: 'Button idle' },
-      { id: 'kf-hover', name: 'Hover', displayStateId: 'ds-hover', summary: 'Button hovered' },
+      { id: 'kf-default', name: 'Default', displayStateId: 'ds-default', summary: 'Button idle', keyElements: [] },
+      { id: 'kf-hover', name: 'Hover', displayStateId: 'ds-hover', summary: 'Button hovered', keyElements: [] },
     ],
     transitions: [],
     components: [],
     frameSize: { width: 390, height: 844 },
+    sharedElements: [
+      {
+        id: 'el-btn', name: 'Button', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 120, y: 380 }, size: { width: 150, height: 50 },
+        shapeType: 'rectangle', style: { backgroundColor: '#3b82f6', borderRadius: 12 },
+      },
+      {
+        id: 'el-btn-text', name: 'Tap Me', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 145, y: 393 }, size: { width: 100, height: 24 },
+        shapeType: 'rectangle', style: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+        textContent: 'Tap Me',
+      },
+    ],
+    displayStates: [
+      { id: 'ds-default', name: 'Default', layerOverrides: [] },
+      { id: 'ds-hover', name: 'Hover', layerOverrides: [
+        { layerId: 'el-btn', properties: { style: { backgroundColor: '#2563eb', transform: 'scale(1.05)' } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      {
+        id: 'p-tap', type: 'tap', name: 'Tap Button',
+        position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-btn' },
+        inputs: [], outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-switch', type: 'switchDisplayState', name: 'Switch → Hover',
+        position: { x: 300, y: 50 },
+        config: { targetDisplayStateId: 'ds-hover', autoReverse: true, reverseDelay: 300 },
+        inputs: [{ id: 'p-switch-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch-out', name: 'done', dataType: 'pulse' }],
+      },
+    ],
+    patchConnections: [
+      { id: 'conn-1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-switch', toPortId: 'p-switch-in' },
+    ],
   };
 }
 
