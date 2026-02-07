@@ -75,6 +75,18 @@ export const PatchConnection = React.memo(function PatchConnection({
         strokeOpacity={isHighlighted ? 1 : 0.6}
         style={{ pointerEvents: 'none' }}
       />
+      {/* Flow animation dots */}
+      {isHighlighted && (
+        <path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          strokeDasharray="4 8"
+          strokeOpacity={0.8}
+          style={{ pointerEvents: 'none', animation: 'flowDash 0.6s linear infinite' }}
+        />
+      )}
     </g>
   );
 });
