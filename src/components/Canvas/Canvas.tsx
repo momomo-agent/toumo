@@ -1303,7 +1303,12 @@ export function Canvas() {
           return (
             <div key={frameId} style={{ position: 'absolute', left: layout.x, top: layout.y - 48, width: layout.width }}>
               <button
-                onClick={() => { if (!layout.componentId && keyframe) setSelectedKeyframeId(keyframe.id); }}
+                onClick={() => {
+                  if (!layout.componentId && keyframe) setSelectedKeyframeId(keyframe.id);
+                  if (layout.componentId) {
+                    useEditorStore.setState({ editingComponentId: layout.componentId });
+                  }
+                }}
                 style={{
                   width: '100%',
                   border: 'none',
