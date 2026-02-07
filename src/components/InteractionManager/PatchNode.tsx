@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { Patch, PatchPort, PatchType } from '../../types';
 
 // Color scheme by patch category
@@ -18,10 +18,10 @@ function getCategory(type: PatchType): 'trigger' | 'action' | 'logic' {
 }
 
 const PORT_TYPE_COLORS: Record<string, string> = {
-  pulse: '#f59e0b',
-  boolean: '#ef4444',
+  pulse: '#ffffff',
+  boolean: '#22c55e',
   number: '#3b82f6',
-  string: '#22c55e',
+  string: '#eab308',
   displayState: '#a855f7',
   any: '#888',
 };
@@ -131,6 +131,7 @@ function PortRow({
   onPortDragStart: (patchId: string, portId: string, isOutput: boolean, e: React.MouseEvent) => void;
 }) {
   const color = PORT_TYPE_COLORS[port.dataType] || '#888';
+  const [hovered, setHovered] = useState(false);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -152,19 +153,23 @@ function PortRow({
         data-port-output={isOutput ? 'true' : 'false'}
         data-patch-id={patchId}
         onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
-          width: 10,
-          height: 10,
+          width: hovered ? 12 : 10,
+          height: hovered ? 12 : 10,
           borderRadius: '50%',
           background: color,
-          border: '2px solid #111',
+          border: `2px solid ${hovered ? color : '#111'}`,
+          boxShadow: hovered ? `0 0 6px ${color}88` : 'none',
           cursor: 'crosshair',
           flexShrink: 0,
-          marginLeft: isOutput ? 0 : -14,
-          marginRight: isOutput ? -14 : 0,
+          marginLeft: isOutput ? 0 : (hovered ? -15 : -14),
+          marginRight: isOutput ? (hovered ? -15 : -14) : 0,
+          transition: 'all 0.15s ease',
         }}
       />
-      <span style={{ fontSize: 10, color: '#aaa' }}>
+      <span style={{ fontSize: 10, color: hovered ? '#fff' : '#aaa', transition: 'color 0.15s ease' }}>
         {port.name}
       </span>
     </div>

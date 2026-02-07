@@ -1,10 +1,10 @@
 import React from 'react';
 
 const PORT_TYPE_COLORS: Record<string, string> = {
-  pulse: '#f59e0b',
-  boolean: '#ef4444',
+  pulse: '#ffffff',
+  boolean: '#22c55e',
   number: '#3b82f6',
-  string: '#22c55e',
+  string: '#eab308',
   displayState: '#a855f7',
   any: '#888',
 };
