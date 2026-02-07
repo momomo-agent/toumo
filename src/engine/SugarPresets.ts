@@ -305,10 +305,89 @@ export function createDragToDismiss(elementId: string, elementName: string): Sug
   };
 }
 
+// ─── Hover Color ─────────────────────────────────────────────────────
+export function createHoverColor(elementId: string, elementName: string): SugarResult {
+  const hoverId = uid('hover');
+  const switchToHoverId = uid('switch-hover');
+  const switchToDefaultId = uid('switch-default');
+  const dsHoverId = uid('ds-hovercolor');
+
+  const patches: Patch[] = [
+    {
+      id: hoverId, type: 'hover', name: `Hover ${elementName}`,
+      config: { targetElementId: elementId },
+      position: { x: 100, y: 100 }, inputs: [],
+      outputs: [
+        { id: `${hoverId}-onOver`, name: 'onOver', dataType: 'pulse' },
+        { id: `${hoverId}-onOut`, name: 'onOut', dataType: 'pulse' },
+      ],
+    },
+    {
+      id: switchToHoverId, type: 'switchDisplayState', name: 'Switch → Hover Color',
+      config: { targetStateId: dsHoverId },
+      position: { x: 400, y: 80 },
+      inputs: [{ id: `${switchToHoverId}-trigger`, name: 'trigger', dataType: 'pulse' }],
+      outputs: [{ id: `${switchToHoverId}-done`, name: 'done', dataType: 'pulse' }],
+    },
+    {
+      id: switchToDefaultId, type: 'switchDisplayState', name: 'Switch → Default',
+      config: { targetStateId: '__default__' },
+      position: { x: 400, y: 200 },
+      inputs: [{ id: `${switchToDefaultId}-trigger`, name: 'trigger', dataType: 'pulse' }],
+      outputs: [{ id: `${switchToDefaultId}-done`, name: 'done', dataType: 'pulse' }],
+    },
+  ];
+
+  const connections: PatchConnection[] = [
+    { id: uid('conn'), fromPatchId: hoverId, fromPortId: `${hoverId}-onOver`, toPatchId: switchToHoverId, toPortId: `${switchToHoverId}-trigger` },
+    { id: uid('conn'), fromPatchId: hoverId, fromPortId: `${hoverId}-onOut`, toPatchId: switchToDefaultId, toPortId: `${switchToDefaultId}-trigger` },
+  ];
+
+  return {
+    patches, connections,
+    displayStates: [{ id: dsHoverId, name: 'Hover Color', layerOverrides: [] }],
+    overrides: { [dsHoverId]: { [elementId]: { fill: '#3b82f6', fillOpacity: 1 } } },
+  };
+}
+
+// ─── Tap Navigate ────────────────────────────────────────────────────
+export function createTapNavigate(elementId: string, elementName: string): SugarResult {
+  const tapId = uid('tap');
+  const switchId = uid('switch-nav');
+  const dsNavId = uid('ds-nav');
+
+  const patches: Patch[] = [
+    {
+      id: tapId, type: 'tap', name: `Tap ${elementName}`,
+      config: { targetElementId: elementId },
+      position: { x: 100, y: 100 }, inputs: [],
+      outputs: [{ id: `${tapId}-onTap`, name: 'onTap', dataType: 'pulse' }],
+    },
+    {
+      id: switchId, type: 'switchDisplayState', name: 'Navigate →',
+      config: { targetStateId: dsNavId },
+      position: { x: 400, y: 100 },
+      inputs: [{ id: `${switchId}-trigger`, name: 'trigger', dataType: 'pulse' }],
+      outputs: [{ id: `${switchId}-done`, name: 'done', dataType: 'pulse' }],
+    },
+  ];
+
+  const connections: PatchConnection[] = [
+    { id: uid('conn'), fromPatchId: tapId, fromPortId: `${tapId}-onTap`, toPatchId: switchId, toPortId: `${switchId}-trigger` },
+  ];
+
+  return {
+    patches, connections,
+    displayStates: [{ id: dsNavId, name: 'Screen 2', layerOverrides: [] }],
+  };
+}
+
 /** All available sugar presets */
 export const SUGAR_PRESETS = [
   { id: 'hover-scale', name: 'Hover Scale', icon: '🖱️', description: 'Hover → 放大 + 透明度变化', create: createHoverScale },
   { id: 'tap-toggle', name: 'Tap Toggle', icon: '👆', description: 'Tap → 切换两个状态', create: createTapToggle },
   { id: 'press-release', name: 'Press & Release', icon: '✋', description: 'Tap → 按下缩小 → 自动恢复', create: createPressRelease },
   { id: 'drag-dismiss', name: 'Drag to Dismiss', icon: '👋', description: '拖拽 → 滑出屏幕', create: createDragToDismiss },
+  { id: 'hover-color', name: 'Hover Color', icon: '🎨', description: 'Hover → 颜色变化', create: createHoverColor },
+  { id: 'tap-navigate', name: 'Tap Navigate', icon: '➡️', description: 'Tap → 切换到指定状态', create: createTapNavigate },
 ] as const;
