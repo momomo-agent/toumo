@@ -104,9 +104,18 @@ export function executeActionPatch(
       break;
     }
     case 'toggle': {
-      // Toggle maintains internal state; flip and fire appropriate port
       const currentState = actionPatch.config?._toggleState ?? false;
       actionPatch.config = { ...actionPatch.config, _toggleState: !currentState };
+      break;
+    }
+    case 'counter': {
+      const current = actionPatch.config?._count ?? 0;
+      const step = actionPatch.config?.step ?? 1;
+      const max = actionPatch.config?.max;
+      const min = actionPatch.config?.min ?? 0;
+      let next = current + step;
+      if (max !== undefined && next > max) next = min; // wrap around
+      actionPatch.config = { ...actionPatch.config, _count: next };
       break;
     }
     default:
