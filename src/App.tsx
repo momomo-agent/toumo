@@ -19,6 +19,8 @@ import { ExportPanel } from './components/ExportPanel';
 import { ImportModal } from './components/ImportModal';
 import { ContextMenu } from './components/ContextMenu';
 import type { ContextMenuProps } from './components/ContextMenu';
+import { TutorialPage } from './components/TutorialPage';
+import { HistoryPanel } from './components/HistoryPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -70,6 +72,8 @@ export default function App() {
   const [isExportPanelOpen, setIsExportPanelOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [contextMenu, _setContextMenu] = useState<ContextMenuProps | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const {
     keyframes,
@@ -2307,6 +2311,28 @@ export default function App() {
             📥 Import
           </button>
           <button
+            onClick={() => setShowHistory(!showHistory)}
+            style={{
+              padding: '6px 12px',
+              background: showHistory ? '#f59e0b' : 'transparent',
+              border: '1px solid #f59e0b44',
+              borderRadius: 6, color: '#f59e0b', fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            📜 History
+          </button>
+          <button
+            onClick={() => setShowTutorial(!showTutorial)}
+            style={{
+              padding: '6px 12px',
+              background: showTutorial ? '#06b6d4' : 'transparent',
+              border: '1px solid #06b6d444',
+              borderRadius: 6, color: '#06b6d4', fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            📖 Tutorial
+          </button>
+          <button
             onClick={handleEnterPreviewMode}
             style={{
               padding: '6px 12px',
@@ -2760,6 +2786,8 @@ export default function App() {
       <ExportPanel isOpen={isExportPanelOpen} onClose={() => setIsExportPanelOpen(false)} />
       {isImportModalOpen && <ImportModal onClose={() => setIsImportModalOpen(false)} />}
       {contextMenu && <ContextMenu {...contextMenu} />}
+      {showTutorial && <TutorialPage />}
+      {showHistory && <HistoryPanel />}
       <WelcomeModal onLoadExample={handleLoadExampleProject} />
     </div>
   );
