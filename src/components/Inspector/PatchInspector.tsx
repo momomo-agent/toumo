@@ -136,14 +136,18 @@ export function PatchInspector() {
       {patch.type === 'animateProperty' && (
         <div style={{ marginBottom: 12 }}>
           <label style={labelStyle}>Target Element</label>
-          <input
+          <select
             value={patch.config?.targetElementId || ''}
             onChange={e => updatePatchConfig(patch.id, {
               targetElementId: e.target.value,
             })}
             style={inputStyle}
-            placeholder="Element ID"
-          />
+          >
+            <option value="">— Select —</option>
+            {sharedElements.map(el => (
+              <option key={el.id} value={el.id}>{el.name || el.id}</option>
+            ))}
+          </select>
           <label style={{ ...labelStyle, marginTop: 8 }}>Property</label>
           <select
             value={patch.config?.property || ''}
@@ -179,12 +183,16 @@ export function PatchInspector() {
       {patch.type === 'dragBinding' && (
         <div style={{ marginBottom: 12 }}>
           <label style={labelStyle}>Target Element</label>
-          <input
+          <select
             value={patch.config?.targetElementId || ''}
             onChange={e => updatePatchConfig(patch.id, { targetElementId: e.target.value })}
             style={inputStyle}
-            placeholder="Element ID"
-          />
+          >
+            <option value="">— Select —</option>
+            {sharedElements.map(el => (
+              <option key={el.id} value={el.id}>{el.name || el.id}</option>
+            ))}
+          </select>
           <label style={{ ...labelStyle, marginTop: 8 }}>Property</label>
           <select
             value={patch.config?.property || 'y'}
