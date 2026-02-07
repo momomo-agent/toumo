@@ -88,6 +88,7 @@ interface EditorActions {
   setSelectedKeyframeId: (id: string) => void;
   addKeyframe: () => void;
   deleteKeyframe: (id: string) => void;
+  removeKeyframe: (id: string) => void;
   setSelectedElementId: (id: string | null) => void;
   setSelectedElementIds: (ids: string[]) => void;
   setHoveredElementId: (id: string | null) => void;
@@ -577,6 +578,29 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedKeyframeId: state.selectedKeyframeId === id 
         ? newKeyframes[0].id 
         : state.selectedKeyframeId,
+    };
+  }),
+
+  removeKeyframe: (id) => set((state) => {
+    if (state.keyframes.length <= 1) return state;
+    const kfToRemove = state.keyframes.find(kf => kf.id === id);
+    if (!kfToRemove) return state;
+    const newKeyframes = state.keyframes.filter(kf => kf.id !== id);
+    // Also remove the linked displayState
+    const newDisplayStates = kfToRemove.displayStateId
+      ? state.displayStates.filter(ds => ds.id !== kfToRemove.displayStateId)
+      : state.displayStates;
+    // If we're deleting the currently selected keyframe, switch to the first one
+    const needSwitch = state.selectedKeyframeId === id;
+    const nextKfId = needSwitch ? newKeyframes[0].id : state.selectedKeyframeId;
+    const nextDsId = needSwitch
+      ? newKeyframes[0].displayStateId || newDisplayStates[0]?.id || null
+      : state.selectedDisplayStateId;
+    return {
+      keyframes: newKeyframes,
+      displayStates: newDisplayStates,
+      selectedKeyframeId: nextKfId,
+      selectedDisplayStateId: nextDsId,
     };
   }),
 
