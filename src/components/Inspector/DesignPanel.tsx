@@ -6,6 +6,7 @@ import { AutoLayoutPanel, ChildLayoutSection } from './AutoLayoutPanel';
 import { ConstraintsPanel } from './ConstraintsPanel';
 import { OverflowPanel } from './OverflowPanel';
 import { PrototypeLinkPanel } from './PrototypeLinkPanel';
+import { TransitionCurvePanel } from './TransitionCurvePanel';
 import { TextPropertiesPanel } from './TextPropertiesPanel';
 import './TextPropertiesPanel.css';
 import './DesignPanel.css';
@@ -1402,6 +1403,9 @@ export function DesignPanel() {
           ))
         )}
       </Section>
+
+      {/* Transition Curve Section (Three-level override) */}
+      <TransitionCurvePanel />
 
       {/* Prototype Link Section */}
       <PrototypeLinkPanel />

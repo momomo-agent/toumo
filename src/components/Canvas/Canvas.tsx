@@ -15,6 +15,7 @@ import { GuideLines } from './GuideLines';
 import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import { DisplayStateBar } from './DisplayStateBar';
 
 const CANVAS_SIZE = 2400;
@@ -116,8 +117,8 @@ export function Canvas() {
     }
   }, [canvasScale]);
 
-  const currentKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
-  const elements = currentKeyframe?.keyElements || [];
+  // Use resolved elements: base keyElements + displayState layerOverrides
+  const elements = useResolvedElements();
   const { ghosts: deleteGhosts } = useDeleteGhosts(elements);
 
   // --- Multi-row keyframe layout ---
