@@ -13,7 +13,7 @@
 - Single layer tree shared across all keyframes + keyframe-driven display states + independent functional logic
 - Components support multi-state reuse; motion curves follow global → element → attribute overrides
 - Keyframes explicitly mark key elements/attributes; non-key parts stay untouched
-- **命令式交互逻辑**：「xx元素 在xx交互/时机下 让xx元素 变成xx显示状态 / xx元素变成xx功能状态」
+- **Patch 连线交互逻辑**：Origami 风格的可视化 Patch 编辑器，触发器→动作用连线连接
 
 ### 核心理念
 
@@ -23,7 +23,7 @@
 
 - **功能状态 = 变量 flag**（如 isOpen=true），纯逻辑，不直接对应视觉
 - **显示状态 = 关键帧**（Keyframe），具体的画面快照
-- **交互规则 = 命令式指令**：当[元素A]被[tap/drag/hover...]时，让[元素B]切换到[显示状态X]，让[变量C]变为[值Y]
+- **交互逻辑 = Patch 连线**：触发器 Patch（Tap/Drag/Hover...）通过连线连接到动作 Patch（切换显示状态/设置变量），数据从左到右流动
 
 ---
 
@@ -41,7 +41,7 @@
 - 不做实时协作（后续版本）
 - **不做时间轴编辑器**（状态机驱动，非时间线驱动）
 - **不做组件库/模板库**（组件由用户自己创建）
-- **不做画布连线**（交互逻辑在 Interaction Manager 中配置，画布保持干净）
+- **画布上不显示连线**（连线在 Patch 编辑器中，画布保持干净）
 
 ---
 
@@ -68,11 +68,14 @@
 ### 显示状态 (Display State / Keyframe)
 具体的画面快照（关键帧），代表某个时刻的视觉外观。**所有关键帧共享同一套图层树**，每个关键帧记录各图层的属性覆盖（位置、大小、颜色、透明度等）。未被标记为关键属性的部分保持原状。
 
-### 交互规则 (Interaction Rule) — 命令式
-核心交互模型采用**命令式**而非声明式（区别于 Origami 的声明式 Patch）：
-- **格式**：当 [触发元素] 被 [交互类型] 时 → 让 [目标元素] 变成 [显示状态X] / 让 [变量] 变为 [值]
-- **示例**：当 [按钮A] 被 [tap] 时 → 让 [卡片B] 变成 [展开状态] + 让 [isOpen] 变为 [true]
-- 一条规则可以同时触发多个动作（改变多个元素的显示状态 + 修改多个变量）
+### Patch 连线 (Patch Wiring) — Origami 风格
+核心交互模型采用 **Origami 风格的 Patch 连线**（参考 Folme/MouseAction 的设计哲学）：
+- **Patch** = 可视化节点，有输入端口和输出端口
+- **触发器 Patch**（左侧）：Tap、Drag、Hover、Scroll、Timer、Variable Change 等，参考 MouseAction 的手势识别
+- **动作 Patch**（右侧）：Switch Display State、Set Variable、Animate Property（folme.to 式）
+- **连线** = 数据流，从触发器输出端口连到动作输入端口
+- **示例**：[Tap Patch (target:按钮A)] → 输出 onTap → 连线 → [Switch State Patch (target:卡片B, state:展开)]
+- 一个触发器可以连线到多个动作 Patch
 
 ### 过渡 (Transition)
 显示状态之间切换时的动画效果，包含动画曲线、持续时间、延迟。
@@ -85,27 +88,33 @@
 
 ---
 
-## 5. State Machine Model
+## 5. Patch 连线模型
 
 ```
-交互规则（命令式）：
+Patch 编辑器（Origami 风格）：
 
-当 [按钮] 被 tap 时：
-  → 让 [面板] 切换到 [展开] 显示状态
-  → 让 isOpen = true
+┌──────────────┐     ┌─────────────────────┐
+│  Tap Patch   │     │ Switch State Patch  │
+│  target:按钮  ├────►│ target:面板          │
+│              │     │ state:展开           │
+└──────────────┘     └─────────────────────┘
+        │
+        │            ┌─────────────────────┐
+        └───────────►│ Set Variable Patch  │
+                     │ var:isOpen = true    │
+                     └─────────────────────┘
 
-当 [关闭按钮] 被 tap 时：
-  → 让 [面板] 切换到 [收起] 显示状态  
-  → 让 isOpen = false
-
-当 isOpen 变为 true 时：
-  → 让 [遮罩] 切换到 [可见] 显示状态
+┌──────────────┐     ┌─────────────────────┐
+│ Var Change   │     │ Switch State Patch  │
+│ isOpen→true  ├────►│ target:遮罩          │
+│              │     │ state:可见           │
+└──────────────┘     └─────────────────────┘
 ```
 
-- 功能状态是变量 flag，不是节点
-- 交互规则是命令式指令，不是有向边
-- 支持一个触发同时执行多个动作
-- 支持变量变化作为触发条件（响应式）
+- 触发器 Patch 在左，动作 Patch 在右，连线表示数据流
+- 一个触发器可连线到多个动作 Patch
+- 支持变量变化作为触发器（响应式）
+- 参考 Folme 的 Sugar 模式：预设常用交互模板（mouseDown→缩小, mouseUp→恢复）
 
 ---
 
@@ -124,8 +133,8 @@
 │                  │  │ 所有KF  │  ┌─────┐  ┌─────┐   │          │  │
 │                  │  │ 共用    │  │CmpA1│  │CmpA2│   │          │  │
 │                  │  │         ├─────────────────────┤          │  │
-│                  │  │         │ Interaction Manager │          │  │
-│                  │  │         │ (交互规则列表)      │          │  │
+│                  │  │         │ Patch Editor        │          │  │
+│                  │  │         │ (Origami风格连线)   │          │  │
 └──────────────────┴──┴─────────┴─────────────────────┴──────────┴──┘
 ```
 
@@ -148,15 +157,24 @@
 - 支持 Figma 风格的完整操作：选择/矩形/椭圆/文本/手型工具，拖拽、智能吸附、快捷键
 - 元素操作：拖拽移动、缩放、Delete、Cmd+C/V、方向键微调
 
-### 4. Interaction Manager (编辑区中下)
+### 4. Interaction Manager — Patch 编辑器 (编辑区中下)
 - 紧贴画布下方
-- **命令式交互规则列表**（不是状态图/连线图）
-- 每条规则格式：当 [元素] 被 [交互] 时 → [动作1] + [动作2] + ...
-- 动作类型：
-  - 让 [元素] 切换到 [显示状态]（带过渡动画）
-  - 让 [变量] 变为 [值]
-- 支持添加/编辑/删除规则
-- 点击规则可在 Inspector 中编辑详细参数（曲线、时长、延迟）
+- **Origami 风格的 Patch 连线编辑器**
+- 左侧放置触发器 Patch，右侧放置动作 Patch，用连线连接
+- **触发器 Patch 类型**（参考 MouseAction）：
+  - Tap — 点击（自动判断 click vs longClick vs drag）
+  - Drag — 拖拽（输出 startMove/move/endMove + speed/direction）
+  - Hover — 鼠标悬停（输出 mouseOver/mouseOut）
+  - Scroll — 滚动
+  - Timer — 定时器
+  - Variable Change — 变量变化触发
+- **动作 Patch 类型**（参考 Folme.to）：
+  - Switch Display State — 切换元素的显示状态（带过渡动画）
+  - Set Variable — 设置变量值
+  - Animate Property — 直接动画某个属性（folme.to 式，弹簧/贝塞尔）
+- 每个 Patch 有输入/输出端口，连线表示数据流
+- 选中 Patch 可在 Inspector 中编辑参数（曲线、时长、延迟）
+- 支持拖拽添加新 Patch、Delete 删除、框选多个
 
 ### 画布尺寸预设
 - iPhone 14 Pro: 393×852
@@ -179,7 +197,7 @@
 
 - 组件可以拥有自己的功能状态（变量 flag）和多个显示状态（关键帧）
 - **画布上第一行是画布的多个关键帧，下面每一行是每一个组件的多个关键帧**
-- 组件内部有自己的交互规则（命令式）
+- 组件内部有自己的 Patch 连线（交互逻辑）
 - 组件实例可以覆写显示状态或继承父组件定义
 - 工程中可以引用组件并保留其交互逻辑
 
@@ -194,7 +212,8 @@ interface Project {
   layers: Layer[];              // 单一图层树（所有关键帧共享）
   displayStates: DisplayState[]; // 画布级显示状态（关键帧）
   variables: Variable[];         // 功能状态 = 变量 flag
-  rules: InteractionRule[];      // 命令式交互规则
+  patches: Patch[];               // Patch 节点
+  connections: PatchConnection[]; // Patch 连线
   components: Component[];
   globalCurve: Curve;
 }
@@ -221,28 +240,39 @@ interface LayerOverride {
   isKey: boolean;                        // 是否为关键属性（参与动画）
 }
 
-// 命令式交互规则
-interface InteractionRule {
+// Patch 连线模型
+interface Patch {
   id: string;
+  type: PatchType;               // trigger / action / logic
   name: string;
-  trigger: {
-    elementId: string;           // 触发元素
-    type: TriggerType;           // tap/drag/hover/scroll/timer/variableChange
-    condition?: string;          // 可选条件表达式
-  };
-  actions: Action[];             // 一个触发可执行多个动作
+  position: { x: number; y: number }; // 在 Patch 编辑器中的位置
+  config: Record<string, any>;   // Patch 特有配置
+  inputs: PatchPort[];
+  outputs: PatchPort[];
 }
 
-interface Action {
-  type: 'switchDisplayState' | 'setVariable';
-  // switchDisplayState
-  targetElementId?: string;
-  targetDisplayStateId?: string;
-  transition?: TransitionConfig;
-  // setVariable  
-  variableId?: string;
-  value?: any;
+interface PatchPort {
+  id: string;
+  name: string;
+  dataType: 'pulse' | 'boolean' | 'number' | 'string' | 'displayState';
 }
+
+interface PatchConnection {
+  id: string;
+  fromPatchId: string;
+  fromPortId: string;
+  toPatchId: string;
+  toPortId: string;
+}
+
+// Patch 类型
+type PatchType =
+  // 触发器（参考 MouseAction）
+  | 'tap' | 'drag' | 'hover' | 'scroll' | 'timer' | 'variableChange'
+  // 动作（参考 Folme.to）
+  | 'switchDisplayState' | 'setVariable' | 'animateProperty'
+  // 逻辑
+  | 'condition' | 'delay' | 'toggle';
 
 interface TransitionConfig {
   duration: number;
@@ -256,7 +286,8 @@ interface Component {
   layers: Layer[];               // 组件自己的图层树
   displayStates: DisplayState[]; // 组件的多个关键帧
   variables: Variable[];         // 组件的功能状态（变量）
-  rules: InteractionRule[];      // 组件的交互规则
+  patches: Patch[];               // 组件的 Patch 节点
+  connections: PatchConnection[]; // 组件的 Patch 连线
 }
 ```
 
@@ -274,7 +305,7 @@ interface Component {
 - 深色主题、高对比度、线性品牌感
 - 直接操作 + 所见即所得
 - **状态机驱动，无时间轴**
-- **命令式交互规则，非声明式**
+- **Origami 风格 Patch 连线交互**
 - **画布干净无连线**
 - **共享图层树**
 - 组件化与可复用状态逻辑
@@ -286,7 +317,7 @@ interface Component {
 | 版本 | 目标 | 核心功能 |
 |------|------|----------|
 | **v0.1** | MVP 基础可用 | 画布编辑、共享图层管理、两个显示状态、Tap 触发、基础缓动 |
-| **v0.2** | 交互规则 | 命令式交互规则编辑器、变量系统（功能状态）、多动作支持 |
+| **v0.2** | Patch 编辑器 | Origami 风格 Patch 连线编辑器、变量系统（功能状态）、Tap/Hover 触发器 |
 | **v0.3** | 触发器体系 | Drag/Scroll/Hover/Timer、条件组合、变量变化触发 |
 | **v0.4** | 组件系统 | 多状态组件、组件关键帧行、状态继承/覆写 |
 | **v0.5** | 曲线系统 | 全局→元素→属性三级覆盖、弹簧物理、贝塞尔编辑 |
