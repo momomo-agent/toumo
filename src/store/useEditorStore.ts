@@ -1651,14 +1651,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return JSON.stringify({
       version: 1,
       keyframes: s.keyframes,
+      transitions: s.transitions,
+      components: s.components,
       sharedElements: s.sharedElements,
       displayStates: s.displayStates,
       patches: s.patches,
       patchConnections: s.patchConnections,
+      componentsV2: s.componentsV2,
       variables: s.variables,
       conditionRules: s.conditionRules,
       frameSize: s.frameSize,
       canvasBackground: s.canvasBackground,
+      deviceFrame: s.deviceFrame,
     }, null, 2);
   },
 
