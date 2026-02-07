@@ -181,8 +181,15 @@ interface DragState {
 }
 
 export function PatchCanvas() {
-  const patches = useEditorStore((s) => s.patches);
-  const connections = useEditorStore((s) => s.patchConnections);
+  const editingComponentId = useEditorStore((s) => s.editingComponentId);
+  const componentsV2 = useEditorStore((s) => s.componentsV2);
+  const globalPatches = useEditorStore((s) => s.patches);
+  const globalConnections = useEditorStore((s) => s.patchConnections);
+
+  // Context-aware: show component patches when editing a component
+  const editingComp = editingComponentId ? componentsV2.find(c => c.id === editingComponentId) : null;
+  const patches = editingComp ? (editingComp.patches || []) : globalPatches;
+  const connections = editingComp ? (editingComp.connections || []) : globalConnections;
   const selectedPatchId = useEditorStore((s) => s.selectedPatchId);
   const activePatchIds = useEditorStore((s) => s.activePatchIds);
   const selectedConnectionId = useEditorStore((s) => s.selectedConnectionId);
