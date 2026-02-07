@@ -52,6 +52,7 @@ export const PatchNode = React.memo(function PatchNode({
   const nodeWidth = 180;
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(patch.name);
+  const [collapsed, setCollapsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const renamePatch = useEditorStore(s => s.renamePatch);
   const displayStates = useEditorStore(s => s.displayStates);
@@ -134,6 +135,15 @@ export const PatchNode = React.memo(function PatchNode({
             />
           ) : patch.name}
         </span>
+        <button
+          onClick={(e) => { e.stopPropagation(); setCollapsed(!collapsed); }}
+          style={{
+            background: 'none', border: 'none', color: '#666',
+            cursor: 'pointer', fontSize: 10, padding: '0 2px',
+          }}
+        >
+          {collapsed ? '▶' : '▼'}
+        </button>
       </div>
 
       {/* Config summary */}
@@ -154,6 +164,7 @@ export const PatchNode = React.memo(function PatchNode({
       )}
 
       {/* Ports */}
+      {!collapsed && (
       <div style={{ padding: '8px 0' }}>
         {/* Input ports */}
         {patch.inputs.map((port) => (
@@ -176,6 +187,7 @@ export const PatchNode = React.memo(function PatchNode({
           />
         ))}
       </div>
+      )}
     </div>
   );
 });
