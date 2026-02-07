@@ -93,51 +93,207 @@ function createButtonPreset() {
 function createCardExpandPreset() {
   return {
     keyframes: [
-      { id: 'kf-collapsed', name: 'Collapsed', displayStateId: 'ds-collapsed', summary: 'Card collapsed' },
-      { id: 'kf-expanded', name: 'Expanded', displayStateId: 'ds-expanded', summary: 'Card expanded' },
+      { id: 'kf-collapsed', name: 'Collapsed', displayStateId: 'ds-collapsed', summary: 'Card collapsed', keyElements: [] },
+      { id: 'kf-expanded', name: 'Expanded', displayStateId: 'ds-expanded', summary: 'Card expanded', keyElements: [] },
     ],
     transitions: [],
     components: [],
     frameSize: { width: 390, height: 844 },
+    sharedElements: [
+      {
+        id: 'el-card', name: 'Card', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 20, y: 300 }, size: { width: 350, height: 120 },
+        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+      },
+      {
+        id: 'el-title', name: 'Title', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 40, y: 320 }, size: { width: 200, height: 24 },
+        shapeType: 'rectangle', style: { color: '#fff', fontSize: 16, fontWeight: '600' },
+        textContent: 'Card Title',
+      },
+    ],
+    displayStates: [
+      { id: 'ds-collapsed', name: 'Collapsed', layerOverrides: [] },
+      { id: 'ds-expanded', name: 'Expanded', layerOverrides: [
+        { layerId: 'el-card', properties: { size: { width: 350, height: 400 } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      {
+        id: 'p-tap', type: 'tap', name: 'Tap Card',
+        position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-card' },
+        inputs: [], outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-toggle', type: 'toggle', name: 'Toggle',
+        position: { x: 200, y: 50 },
+        config: {},
+        inputs: [{ id: 'p-toggle-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [
+          { id: 'p-toggle-on', name: 'on', dataType: 'pulse' },
+          { id: 'p-toggle-off', name: 'off', dataType: 'pulse' },
+        ],
+      },
+    ],
+    patchConnections: [
+      { id: 'conn-1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-toggle', toPortId: 'p-toggle-in' },
+    ],
   };
 }
 
 function createTabSwitchPreset() {
   return {
     keyframes: [
-      { id: 'kf-tab1', name: 'Tab 1', displayStateId: 'ds-tab1', summary: 'First tab active' },
-      { id: 'kf-tab2', name: 'Tab 2', displayStateId: 'ds-tab2', summary: 'Second tab active' },
-      { id: 'kf-tab3', name: 'Tab 3', displayStateId: 'ds-tab3', summary: 'Third tab active' },
+      { id: 'kf-tab1', name: 'Tab 1', displayStateId: 'ds-tab1', summary: 'First tab active', keyElements: [] },
+      { id: 'kf-tab2', name: 'Tab 2', displayStateId: 'ds-tab2', summary: 'Second tab active', keyElements: [] },
+      { id: 'kf-tab3', name: 'Tab 3', displayStateId: 'ds-tab3', summary: 'Third tab active', keyElements: [] },
     ],
     transitions: [],
     components: [],
     frameSize: { width: 390, height: 844 },
     variables: [{ id: 'var-tab', name: 'activeTab', type: 'number', defaultValue: 0, currentValue: 0 }],
+    sharedElements: [
+      {
+        id: 'el-tab-bar', name: 'Tab Bar', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 0, y: 780 }, size: { width: 390, height: 64 },
+        shapeType: 'rectangle', style: { backgroundColor: '#111827' },
+      },
+      {
+        id: 'el-tab1', name: 'Tab 1', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 30, y: 795 }, size: { width: 100, height: 24 },
+        shapeType: 'rectangle', style: { color: '#3b82f6', fontSize: 13 },
+        textContent: 'Home',
+      },
+      {
+        id: 'el-tab2', name: 'Tab 2', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 145, y: 795 }, size: { width: 100, height: 24 },
+        shapeType: 'rectangle', style: { color: '#6b7280', fontSize: 13 },
+        textContent: 'Search',
+      },
+      {
+        id: 'el-tab3', name: 'Tab 3', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 260, y: 795 }, size: { width: 100, height: 24 },
+        shapeType: 'rectangle', style: { color: '#6b7280', fontSize: 13 },
+        textContent: 'Profile',
+      },
+      {
+        id: 'el-indicator', name: 'Indicator', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 30, y: 824 }, size: { width: 100, height: 3 },
+        shapeType: 'rectangle', style: { backgroundColor: '#3b82f6', borderRadius: 2 },
+      },
+    ],
+    displayStates: [
+      { id: 'ds-tab1', name: 'Tab 1', layerOverrides: [] },
+      { id: 'ds-tab2', name: 'Tab 2', layerOverrides: [
+        { layerId: 'el-tab1', properties: { style: { color: '#6b7280' } }, isKey: true },
+        { layerId: 'el-tab2', properties: { style: { color: '#3b82f6' } }, isKey: true },
+        { layerId: 'el-indicator', properties: { position: { x: 145, y: 824 } }, isKey: true },
+      ]},
+      { id: 'ds-tab3', name: 'Tab 3', layerOverrides: [
+        { layerId: 'el-tab1', properties: { style: { color: '#6b7280' } }, isKey: true },
+        { layerId: 'el-tab3', properties: { style: { color: '#3b82f6' } }, isKey: true },
+        { layerId: 'el-indicator', properties: { position: { x: 260, y: 824 } }, isKey: true },
+      ]},
+    ],
+    patches: [],
+    patchConnections: [],
   };
 }
 
 function createTogglePreset() {
   return {
     keyframes: [
-      { id: 'kf-off', name: 'Off', displayStateId: 'ds-off', summary: 'Toggle off' },
-      { id: 'kf-on', name: 'On', displayStateId: 'ds-on', summary: 'Toggle on' },
+      { id: 'kf-off', name: 'Off', displayStateId: 'ds-off', summary: 'Toggle off', keyElements: [] },
+      { id: 'kf-on', name: 'On', displayStateId: 'ds-on', summary: 'Toggle on', keyElements: [] },
     ],
     transitions: [],
     components: [],
     frameSize: { width: 390, height: 844 },
     variables: [{ id: 'var-toggle', name: 'isOn', type: 'boolean', defaultValue: false, currentValue: false }],
+    sharedElements: [
+      {
+        id: 'el-track', name: 'Track', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 155, y: 410 }, size: { width: 80, height: 40 },
+        shapeType: 'rectangle', style: { backgroundColor: '#374151', borderRadius: 20 },
+      },
+      {
+        id: 'el-thumb', name: 'Thumb', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 159, y: 414 }, size: { width: 32, height: 32 },
+        shapeType: 'ellipse', style: { backgroundColor: '#ffffff' },
+      },
+    ],
+    displayStates: [
+      { id: 'ds-off', name: 'Off', layerOverrides: [] },
+      { id: 'ds-on', name: 'On', layerOverrides: [
+        { layerId: 'el-track', properties: { style: { backgroundColor: '#22c55e' } }, isKey: true },
+        { layerId: 'el-thumb', properties: { position: { x: 199, y: 414 } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      {
+        id: 'p-tap', type: 'tap', name: 'Tap Track',
+        position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-track' },
+        inputs: [],
+        outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-toggle', type: 'toggle', name: 'Toggle',
+        position: { x: 250, y: 50 },
+        config: {},
+        inputs: [{ id: 'p-toggle-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [
+          { id: 'p-toggle-on', name: 'on', dataType: 'pulse' },
+          { id: 'p-toggle-off', name: 'off', dataType: 'pulse' },
+        ],
+      },
+    ],
+    patchConnections: [
+      { id: 'conn-1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-toggle', toPortId: 'p-toggle-in' },
+    ],
   };
 }
 
 function createDragDismissPreset() {
   return {
     keyframes: [
-      { id: 'kf-visible', name: 'Visible', displayStateId: 'ds-visible', summary: 'Card visible' },
-      { id: 'kf-dismissed', name: 'Dismissed', displayStateId: 'ds-dismissed', summary: 'Card dismissed' },
+      { id: 'kf-visible', name: 'Visible', displayStateId: 'ds-visible', summary: 'Card visible', keyElements: [] },
+      { id: 'kf-dismissed', name: 'Dismissed', displayStateId: 'ds-dismissed', summary: 'Card dismissed', keyElements: [] },
     ],
     transitions: [],
     components: [],
     frameSize: { width: 390, height: 844 },
+    sharedElements: [
+      {
+        id: 'el-card', name: 'Card', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 20, y: 200 }, size: { width: 350, height: 200 },
+        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+      },
+      {
+        id: 'el-card-text', name: 'Swipe down', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 120, y: 280 }, size: { width: 150, height: 24 },
+        shapeType: 'rectangle', style: { color: '#94a3b8', fontSize: 14 },
+        textContent: 'Swipe down to dismiss',
+      },
+    ],
+    displayStates: [
+      { id: 'ds-visible', name: 'Visible', layerOverrides: [] },
+      { id: 'ds-dismissed', name: 'Dismissed', layerOverrides: [
+        { layerId: 'el-card', properties: { position: { x: 20, y: 900 }, style: { opacity: 0 } }, isKey: true },
+        { layerId: 'el-card-text', properties: { style: { opacity: 0 } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      {
+        id: 'p-drag', type: 'drag', name: 'Drag Card',
+        position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-card' },
+        inputs: [],
+        outputs: [{ id: 'p-drag-end', name: 'endMove', dataType: 'pulse' }],
+      },
+    ],
+    patchConnections: [],
   };
 }
 
