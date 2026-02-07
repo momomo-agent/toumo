@@ -63,7 +63,16 @@ export function executeActionPatch(
     case 'switchDisplayState': {
       const targetId = actionPatch.config?.targetDisplayStateId;
       if (targetId) {
+        const prevStateId = actionPatch.config?._prevStateId;
         handlers.switchDisplayState(targetId);
+        // Auto-reverse: switch back after delay
+        const autoReverse = actionPatch.config?.autoReverse;
+        const reverseDelay = actionPatch.config?.reverseDelay ?? 200;
+        if (autoReverse && prevStateId) {
+          setTimeout(() => {
+            handlers.switchDisplayState(prevStateId);
+          }, reverseDelay);
+        }
       }
       break;
     }
