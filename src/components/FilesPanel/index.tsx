@@ -38,6 +38,21 @@ const PRESETS: { name: string; description: string; create: () => any }[] = [
     description: 'Drag card down to dismiss',
     create: () => createDragDismissPreset(),
   },
+  {
+    name: 'Bottom Sheet',
+    description: 'Tap to open/close bottom sheet',
+    create: () => createBottomSheetPreset(),
+  },
+  {
+    name: 'Loading Spinner',
+    description: 'Timer-driven loading states',
+    create: () => createLoadingPreset(),
+  },
+  {
+    name: 'Hover Card',
+    description: 'Hover to reveal details',
+    create: () => createHoverCardPreset(),
+  },
 ];
 
 // ─── Preset data generators ──────────────────────────────────────────
@@ -294,6 +309,176 @@ function createDragDismissPreset() {
       },
     ],
     patchConnections: [],
+  };
+}
+
+function createBottomSheetPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-closed', name: 'Closed', displayStateId: 'ds-closed', summary: 'Sheet hidden', keyElements: [] },
+      { id: 'kf-open', name: 'Open', displayStateId: 'ds-open', summary: 'Sheet visible', keyElements: [] },
+    ],
+    transitions: [], components: [],
+    frameSize: { width: 390, height: 844 },
+    sharedElements: [
+      {
+        id: 'el-overlay', name: 'Overlay', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 844 },
+        shapeType: 'rectangle', style: { backgroundColor: 'rgba(0,0,0,0)', opacity: 0 },
+      },
+      {
+        id: 'el-sheet', name: 'Sheet', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 0, y: 844 }, size: { width: 390, height: 400 },
+        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 20 },
+      },
+      {
+        id: 'el-handle', name: 'Handle', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 170, y: 852 }, size: { width: 50, height: 4 },
+        shapeType: 'rectangle', style: { backgroundColor: '#475569', borderRadius: 2 },
+      },
+      {
+        id: 'el-btn', name: 'Open Button', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 120, y: 750 }, size: { width: 150, height: 44 },
+        shapeType: 'rectangle', style: { backgroundColor: '#3b82f6', borderRadius: 12 },
+      },
+    ],
+    displayStates: [
+      { id: 'ds-closed', name: 'Closed', layerOverrides: [] },
+      { id: 'ds-open', name: 'Open', layerOverrides: [
+        { layerId: 'el-overlay', properties: { style: { backgroundColor: 'rgba(0,0,0,0.5)', opacity: 1 } }, isKey: true },
+        { layerId: 'el-sheet', properties: { position: { x: 0, y: 444 } }, isKey: true },
+        { layerId: 'el-handle', properties: { position: { x: 170, y: 452 } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      { id: 'p-tap', type: 'tap', name: 'Tap Open', position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-btn' },
+        inputs: [], outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }] },
+      { id: 'p-switch', type: 'switchDisplayState', name: 'Open Sheet', position: { x: 300, y: 50 },
+        config: { targetDisplayStateId: 'ds-open' },
+        inputs: [{ id: 'p-sw-in', name: 'trigger', dataType: 'pulse' }], outputs: [] },
+    ],
+    patchConnections: [
+      { id: 'conn-1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-switch', toPortId: 'p-sw-in' },
+    ],
+  };
+}
+
+function createLoadingPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-idle', name: 'Idle', displayStateId: 'ds-idle', summary: 'Ready', keyElements: [] },
+      { id: 'kf-loading', name: 'Loading', displayStateId: 'ds-loading', summary: 'Spinner visible', keyElements: [] },
+      { id: 'kf-done', name: 'Done', displayStateId: 'ds-done', summary: 'Success', keyElements: [] },
+    ],
+    transitions: [], components: [],
+    frameSize: { width: 390, height: 844 },
+    sharedElements: [
+      {
+        id: 'el-btn', name: 'Submit', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 120, y: 400 }, size: { width: 150, height: 44 },
+        shapeType: 'rectangle', style: { backgroundColor: '#3b82f6', borderRadius: 12 },
+      },
+      {
+        id: 'el-label', name: 'Label', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 155, y: 412 }, size: { width: 80, height: 20 },
+        shapeType: 'rectangle', style: { color: '#fff', fontSize: 14, fontWeight: '600' },
+        textContent: 'Submit',
+      },
+      {
+        id: 'el-spinner', name: 'Spinner', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 183, y: 410 }, size: { width: 24, height: 24 },
+        shapeType: 'ellipse', style: { backgroundColor: 'transparent', stroke: '#fff', strokeWidth: 2, opacity: 0 },
+      },
+    ],
+    displayStates: [
+      { id: 'ds-idle', name: 'Idle', layerOverrides: [] },
+      { id: 'ds-loading', name: 'Loading', layerOverrides: [
+        { layerId: 'el-label', properties: { style: { opacity: 0 } }, isKey: true },
+        { layerId: 'el-spinner', properties: { style: { opacity: 1 } }, isKey: true },
+        { layerId: 'el-btn', properties: { style: { backgroundColor: '#1d4ed8' } }, isKey: true },
+      ]},
+      { id: 'ds-done', name: 'Done', layerOverrides: [
+        { layerId: 'el-btn', properties: { style: { backgroundColor: '#16a34a' } }, isKey: true },
+        { layerId: 'el-label', properties: { style: { color: '#fff' } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      { id: 'p-tap', type: 'tap', name: 'Tap Submit', position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-btn' },
+        inputs: [], outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }] },
+      { id: 'p-loading', type: 'switchDisplayState', name: '→ Loading', position: { x: 250, y: 30 },
+        config: { targetDisplayStateId: 'ds-loading' },
+        inputs: [{ id: 'p-l-in', name: 'trigger', dataType: 'pulse' }], outputs: [] },
+      { id: 'p-timer', type: 'timer', name: '2s Timer', position: { x: 50, y: 150 },
+        config: { duration: 2000, autoStart: false },
+        inputs: [{ id: 'p-t-in', name: 'start', dataType: 'pulse' }],
+        outputs: [{ id: 'p-t-out', name: 'done', dataType: 'pulse' }] },
+      { id: 'p-done', type: 'switchDisplayState', name: '→ Done', position: { x: 250, y: 150 },
+        config: { targetDisplayStateId: 'ds-done' },
+        inputs: [{ id: 'p-d-in', name: 'trigger', dataType: 'pulse' }], outputs: [] },
+    ],
+    patchConnections: [
+      { id: 'c1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-loading', toPortId: 'p-l-in' },
+      { id: 'c2', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-timer', toPortId: 'p-t-in' },
+      { id: 'c3', fromPatchId: 'p-timer', fromPortId: 'p-t-out', toPatchId: 'p-done', toPortId: 'p-d-in' },
+    ],
+  };
+}
+
+function createHoverCardPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-normal', name: 'Normal', displayStateId: 'ds-normal', summary: 'Card default', keyElements: [] },
+      { id: 'kf-hovered', name: 'Hovered', displayStateId: 'ds-hovered', summary: 'Card hovered', keyElements: [] },
+    ],
+    transitions: [], components: [],
+    frameSize: { width: 390, height: 844 },
+    sharedElements: [
+      {
+        id: 'el-card', name: 'Card', category: 'shape' as const, isKeyElement: true,
+        attributes: [], position: { x: 45, y: 300 }, size: { width: 300, height: 180 },
+        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+      },
+      {
+        id: 'el-title', name: 'Title', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 65, y: 320 }, size: { width: 200, height: 24 },
+        shapeType: 'rectangle', style: { color: '#fff', fontSize: 16, fontWeight: '600' },
+        textContent: 'Hover me',
+      },
+      {
+        id: 'el-desc', name: 'Description', category: 'text' as const, isKeyElement: true,
+        attributes: [], position: { x: 65, y: 350 }, size: { width: 260, height: 40 },
+        shapeType: 'rectangle', style: { color: '#94a3b8', fontSize: 12, opacity: 0 },
+        textContent: 'More details appear on hover',
+      },
+    ],
+    displayStates: [
+      { id: 'ds-normal', name: 'Normal', layerOverrides: [] },
+      { id: 'ds-hovered', name: 'Hovered', layerOverrides: [
+        { layerId: 'el-card', properties: { style: { backgroundColor: '#334155' } }, isKey: true },
+        { layerId: 'el-desc', properties: { style: { opacity: 1 } }, isKey: true },
+      ]},
+    ],
+    patches: [
+      { id: 'p-hover', type: 'hover', name: 'Hover Card', position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-card' },
+        inputs: [],
+        outputs: [
+          { id: 'p-h-over', name: 'mouseOver', dataType: 'pulse' },
+          { id: 'p-h-out', name: 'mouseOut', dataType: 'pulse' },
+        ] },
+      { id: 'p-show', type: 'switchDisplayState', name: '→ Hovered', position: { x: 300, y: 30 },
+        config: { targetDisplayStateId: 'ds-hovered' },
+        inputs: [{ id: 'p-s-in', name: 'trigger', dataType: 'pulse' }], outputs: [] },
+      { id: 'p-hide', type: 'switchDisplayState', name: '→ Normal', position: { x: 300, y: 100 },
+        config: { targetDisplayStateId: 'ds-normal' },
+        inputs: [{ id: 'p-h-in', name: 'trigger', dataType: 'pulse' }], outputs: [] },
+    ],
+    patchConnections: [
+      { id: 'c1', fromPatchId: 'p-hover', fromPortId: 'p-h-over', toPatchId: 'p-show', toPortId: 'p-s-in' },
+      { id: 'c2', fromPatchId: 'p-hover', fromPortId: 'p-h-out', toPatchId: 'p-hide', toPortId: 'p-h-in' },
+    ],
   };
 }
 
