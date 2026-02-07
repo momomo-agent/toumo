@@ -52,6 +52,7 @@ export function PatchToolbar() {
   const sharedElements = useEditorStore((s) => s.sharedElements);
   const nextPositionRef = useRef({ x: 40, y: 40 });
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [elementMenuOpen, setElementMenuOpen] = useState(false);
 
   const advancePosition = () => {
@@ -97,6 +98,17 @@ export function PatchToolbar() {
       <span style={{ fontSize: 11, color: '#555', marginRight: 8 }}>
         + Add Patch
       </span>
+
+      {/* Quick Search */}
+      <input
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search patches..."
+        style={{
+          background: '#1a1a1a', border: '1px solid #333', borderRadius: 4,
+          padding: '3px 8px', color: '#ccc', fontSize: 11, width: 120, marginRight: 4,
+        }}
+      />
 
       {/* Element List dropdown */}
       <div style={{ position: 'relative', marginRight: 4 }}>
