@@ -995,21 +995,24 @@ export function DesignPanel() {
               ))}
             </select>
           </div>
-          <div className="figma-input-group with-icon opacity-group">
-            <OpacityIcon />
-            <input
-              type="number"
-              className="figma-number-input"
-              value={layerOpacity}
-              min={0}
-              max={100}
-              onChange={(e) => {
-                const val = parseInt(e.target.value) || 0;
-                setLayerOpacity(val);
-                updateStyle({ opacity: val / 100 });
-              }}
-            />
-            <span className="figma-input-unit">%</span>
+          <div className="figma-input-group-with-key">
+            <KeyPropertyButton propertyName="opacity" isKey={useIsKeyProperty('opacity')} />
+            <div className="figma-input-group with-icon opacity-group">
+              <OpacityIcon />
+              <input
+                type="number"
+                className="figma-number-input"
+                value={layerOpacity}
+                min={0}
+                max={100}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  setLayerOpacity(val);
+                  updateStyle({ opacity: val / 100 });
+                }}
+              />
+              <span className="figma-input-unit">%</span>
+            </div>
           </div>
         </div>
       </Section>
@@ -1062,21 +1065,26 @@ export function DesignPanel() {
           </div>
         </div>
         <div className="figma-transform-row">
-          <div className="figma-input-group with-icon">
-            <RotateIcon />
-            <input
-              type="number"
-              className="figma-number-input"
-              value={rotation}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value) || 0;
-                setRotation(val);
-                updateStyle({ rotation: val });
-              }}
-            />
-            <span className="figma-input-unit">°</span>
+          <div className="figma-input-group-with-key">
+            <KeyPropertyButton propertyName="rotation" isKey={useIsKeyProperty('rotation')} />
+            <div className="figma-input-group with-icon">
+              <RotateIcon />
+              <input
+                type="number"
+                className="figma-number-input"
+                value={rotation}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  setRotation(val);
+                  updateStyle({ rotation: val });
+                }}
+              />
+              <span className="figma-input-unit">°</span>
+            </div>
           </div>
-          <div className="figma-input-group with-icon">
+          <div className="figma-input-group-with-key">
+            <KeyPropertyButton propertyName="borderRadius" isKey={useIsKeyProperty('borderRadius')} />
+            <div className="figma-input-group with-icon">
             <CornerRadiusIcon />
             <input
               type="number"
@@ -1132,6 +1140,7 @@ export function DesignPanel() {
             >
               <IndependentCornersIcon active={independentCorners} />
             </button>
+            </div>
           </div>
         </div>
         {independentCorners && (
