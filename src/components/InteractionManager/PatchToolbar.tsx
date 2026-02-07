@@ -232,7 +232,7 @@ export function PatchToolbar() {
                 boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
               }}
             >
-              {cat.items.map((item) => (
+              {cat.items.filter((item) => !searchQuery || item.label.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
                 <button
                   key={item.type}
                   onClick={() => {
