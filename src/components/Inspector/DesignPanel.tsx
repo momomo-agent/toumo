@@ -883,10 +883,12 @@ export function DesignPanel() {
   // Update element style helper
   const updateStyle = useCallback((updates: Record<string, unknown>) => {
     updateElement(element.id, {
+      // Only pass the changed properties so non-default display states
+      // write minimal layerOverrides (store merges style shallowly).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      style: { ...element.style, ...updates } as any
+      style: updates as any
     });
-  }, [element?.id, element?.style, updateElement]);
+  }, [element?.id, updateElement]);
 
   const handlePositionChange = (axis: 'x' | 'y', value: number) => {
     updateElement(element.id, {

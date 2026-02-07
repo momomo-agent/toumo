@@ -623,6 +623,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           ...updates,
           position: updates.position ?? el.position,
           size: updates.size ?? el.size,
+          // Merge style shallowly so callers can pass only changed props
+          style: updates.style ? { ...el.style, ...updates.style } : el.style,
         } as KeyElement;
         return clampElementToFrame(nextElement, state.frameSize);
       });
