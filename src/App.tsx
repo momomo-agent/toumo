@@ -8,6 +8,7 @@ import { TransitionInspector } from './components/Inspector/TransitionInspector'
 import { LivePreview } from './components/LivePreview';
 import { ShortcutsPanel } from './components/ShortcutsPanel';
 import { ShareModal } from './components/ShareModal';
+import { HelpPanel } from './components/HelpPanel';
 import { PreviewMode } from './components/PreviewMode';
 import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
 import { WelcomeModal } from './components/WelcomeModal/index';
@@ -62,6 +63,7 @@ export default function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(() => isPreviewUrl());
   const [previewData, setPreviewData] = useState<ProjectData | null>(() => getProjectFromUrl());
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isExportPanelOpen, setIsExportPanelOpen] = useState(false);
 
   const {
@@ -2728,12 +2730,13 @@ export default function App() {
         <span>{selectedElementIds.length === 1 && sharedElements.find(e => e.id === selectedElementIds[0]) 
           ? `X: ${Math.round(sharedElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(sharedElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
-        <span style={{ color: '#555', cursor: 'default' }} title="按 ? 查看所有快捷键">
+        <span style={{ color: '#555', cursor: 'pointer' }} title="按 ? 查看所有快捷键" onClick={() => setIsHelpOpen(true)}>
           ⌨️ 按 <kbd style={{ padding: '0 4px', background: '#0d0d0e', border: '1px solid #333', borderRadius: 3, fontSize: 10, color: '#888' }}>?</kbd> 查看快捷键
         </span>
       </div>
       <ShortcutsPanel />
       <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
+      <HelpPanel isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <ExportPanel isOpen={isExportPanelOpen} onClose={() => setIsExportPanelOpen(false)} />
       <WelcomeModal onLoadExample={handleLoadExampleProject} />
     </div>
