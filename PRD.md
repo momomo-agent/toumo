@@ -333,3 +333,21 @@ interface Component {
 2. 表现力：复现 Dribbble 80% UI 动效
 3. 性能：60fps 流畅预览
 4. 分享：~~一键生成可交互原型链接~~（不做）
+
+---
+
+## 12. Files Panel（文件管理）
+
+### 位置
+最左侧面板（在 Layer Panel 左边）
+
+### 功能
+1. **预设案例** — 内置多个示例项目（按钮交互、卡片展开、Tab 切换等），点击即可加载
+2. **新建文件** — 创建空白项目，可选设备预设
+3. **删除文件** — 删除已保存的项目
+4. **重命名文件** — 双击文件名 inline 编辑
+5. **文件列表** — 显示所有已保存的项目，支持排序（最近修改/名称）
+
+### 数据存储
+- localStorage 存储项目列表和数据
+- 每个项目独立序列化（keyframes + elements + patches + connections + variables + components）
