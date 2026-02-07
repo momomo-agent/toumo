@@ -617,13 +617,7 @@ export function PatchCanvas() {
             {_contextMenu.patchId && (
               <>
                 <CtxItem label="Duplicate" onClick={() => {
-                  const p = patches.find(x => x.id === _contextMenu.patchId);
-                  if (p) {
-                    const dup = createPatch(p.type, { x: p.position.x + 30, y: p.position.y + 30 });
-                    dup.config = { ...p.config };
-                    dup.name = p.name + ' copy';
-                    addPatch(dup);
-                  }
+                  if (_contextMenu.patchId) useEditorStore.getState().duplicatePatch(_contextMenu.patchId);
                   setContextMenu(null);
                 }} />
                 <CtxItem label="Delete" danger onClick={() => {
