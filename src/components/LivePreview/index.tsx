@@ -61,12 +61,28 @@ export function LivePreview() {
     setSelectedDisplayStateId,
   } = useEditorStore();
   const deviceFrame = useEditorStore(s => s.deviceFrame);
+  const globalCurve = useEditorStore(s => s.globalCurve);
 
   // State machine
   const [currentKeyframeId, setCurrentKeyframeId] = useState<string>(selectedKeyframeId);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDuration, setTransitionDuration] = useState(300);
   const [transitionCurve, setTransitionCurve] = useState('ease-out');
+
+  // Apply globalCurve to default transition settings
+  useEffect(() => {
+    if (globalCurve) {
+      setTransitionDuration(globalCurve.duration || 300);
+      if (globalCurve.type === 'spring') {
+        setTransitionCurve('spring');
+      } else if (globalCurve.controlPoints) {
+        const [x1, y1, x2, y2] = globalCurve.controlPoints;
+        setTransitionCurve(`cubic-bezier(${x1},${y1},${x2},${y2})`);
+      } else {
+        setTransitionCurve(globalCurve.type || 'ease-out');
+      }
+    }
+  }, [globalCurve]);
 
   // DisplayState tracking for Patch-driven preview
   const [previewDisplayStateId, setPreviewDisplayStateId] = useState<string | null>(
