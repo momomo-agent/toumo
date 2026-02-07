@@ -130,6 +130,13 @@ function getDefaultPorts(type: PatchType): { inputs: PatchPort[]; outputs: Patch
           { id: 'count', name: 'count', dataType: 'number' },
         ],
       };
+    case 'optionSwitch': {
+      const n = 3; // default 3 options
+      return {
+        inputs: Array.from({ length: n }, (_, i) => ({ id: `option${i}`, name: `option${i}`, dataType: 'pulse' as const })),
+        outputs: Array.from({ length: n }, (_, i) => ({ id: `selected${i}`, name: `selected${i}`, dataType: 'pulse' as const })),
+      };
+    }
     default:
       return { inputs: [], outputs: [] };
   }
@@ -149,6 +156,7 @@ const PATCH_LABELS: Record<PatchType, string> = {
   delay: 'Delay',
   toggle: 'Toggle',
   counter: 'Counter',
+  optionSwitch: 'Option Switch',
 };
 
 interface DragState {

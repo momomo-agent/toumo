@@ -57,6 +57,7 @@ export function executeActionPatch(
   actionPatch: Patch,
   handlers: PatchActionHandler,
   _context?: { delta?: { dx: number; dy: number }; _patches?: Patch[]; _connections?: PatchConnection[] },
+  sourcePortId?: string,
 ): void {
   switch (actionPatch.type) {
     case 'switchDisplayState': {
@@ -128,6 +129,45 @@ export function executeActionPatch(
       // Fire downstream connections after count update
       if (_context?._patches && _context?._connections) {
         executeTrigger(actionPatch.id, _context._patches, _context._connections, handlers);
+      }
+      break;
+    }
+    case 'optionSwitch': {
+      // Option Switch: N inputs → 1 selected output (mutual exclusion)
+      // config.optionCount: number of options
+      // Triggered port name tells us which option was selected (option0, option1, ...)
+      const optionCount = actionPatch.config?.optionCount ?? 2;
+      const triggerPortId = sourcePortId || '';
+      // Find which option index triggered this
+      let selectedIndex = -1;
+      for (let i = 0; i < optionCount; i++) {
+        const inputPort = actionPatch.inputs?.find((p: any) => p.name === `option${i}`);
+        if (inputPort && triggerPortId === inputPort.id) {
+          selectedIndex = i;
+          break;
+        }
+      }
+      if (selectedIndex === -1) {
+        // Fallback: cycle through options
+        const prev = actionPatch.config?._selectedIndex ?? -1;
+        selectedIndex = (prev + 1) % optionCount;
+      }
+      actionPatch.config = { ...actionPatch.config, _selectedIndex: selectedIndex };
+      // Fire only the selected output port
+      if (_context?._patches && _context?._connections) {
+        const selectedPortName = `selected${selectedIndex}`;
+        const selectedPort = actionPatch.outputs?.find((p: any) => p.name === selectedPortName);
+        if (selectedPort) {
+          const downstreamConns = _context._connections.filter(
+            (c: any) => c.fromPatchId === actionPatch.id && c.fromPortId === selectedPort.id
+          );
+          for (const conn of downstreamConns) {
+            const targetPatch = _context._patches.find((p: any) => p.id === conn.toPatchId);
+            if (targetPatch) {
+              executeActionPatch(targetPatch, handlers, _context, conn.toPortId);
+            }
+          }
+        }
       }
       break;
     }

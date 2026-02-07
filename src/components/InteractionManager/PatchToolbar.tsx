@@ -40,6 +40,7 @@ const CATEGORIES: PatchCategory[] = [
       { type: 'delay', label: 'Delay', icon: '⏳' },
       { type: 'toggle', label: 'Toggle', icon: '🔁' },
       { type: 'counter', label: 'Counter', icon: '#️⃣' },
+      { type: 'optionSwitch', label: 'Option Switch', icon: '🔘' },
     ],
   },
 ];
