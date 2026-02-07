@@ -302,13 +302,24 @@ export function PatchCanvas() {
                   && c.toPatchId === targetPatchId && c.toPortId === targetPortId
               );
               if (!exists) {
-                addPatchConnection({
-                  id: `conn_${Date.now()}`,
-                  fromPatchId,
-                  fromPortId,
-                  toPatchId: targetPatchId,
-                  toPortId: targetPortId,
-                });
+                // Type compatibility check
+                const fromPatchObj = patches.find(p => p.id === fromPatchId);
+                const toPatchObj = patches.find(p => p.id === targetPatchId);
+                const fromPort = fromPatchObj?.outputs.find(p => p.id === fromPortId);
+                const toPort = toPatchObj?.inputs.find(p => p.id === targetPortId);
+                const compatible = !fromPort || !toPort
+                  || fromPort.dataType === toPort.dataType
+                  || fromPort.dataType === 'any' || toPort.dataType === 'any'
+                  || fromPort.dataType === 'pulse' || toPort.dataType === 'pulse';
+                if (compatible) {
+                  addPatchConnection({
+                    id: `conn_${Date.now()}`,
+                    fromPatchId,
+                    fromPortId,
+                    toPatchId: targetPatchId,
+                    toPortId: targetPortId,
+                  });
+                }
               }
             }
           }
