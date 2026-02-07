@@ -21,9 +21,9 @@ import { DisplayStateBar } from './DisplayStateBar';
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
 const MIN_SIZE = 16;
-const FRAME_GAP = 200;
+const FRAME_GAP = 60;
 const FRAME_MARGIN = 100;
-const ROW_GAP = 80;          // vertical gap between keyframe rows
+const ROW_GAP = 40;          // vertical gap between keyframe rows
 const ROW_LABEL_HEIGHT = 40; // height reserved for row labels
 
 type AlignmentResult = {
