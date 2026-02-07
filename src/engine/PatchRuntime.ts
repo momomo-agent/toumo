@@ -38,6 +38,19 @@ export function executeTrigger(
  * Execute a single action patch with the given handlers.
  * Shared helper used by both executeTrigger and port-specific execution.
  */
+// Helper: evaluate a condition
+function evaluateCondition(current: any, operator: string, expected: any): boolean {
+  switch (operator) {
+    case '==': return current == expected;
+    case '!=': return current != expected;
+    case '>': return current > expected;
+    case '<': return current < expected;
+    case '>=': return current >= expected;
+    case '<=': return current <= expected;
+    default: return false;
+  }
+}
+
 export function executeActionPatch(
   actionPatch: Patch,
   handlers: PatchActionHandler,
@@ -63,8 +76,22 @@ export function executeActionPatch(
       const delayMs = actionPatch.config?.delay ?? 300;
       setTimeout(() => {
         // After delay, fire connections from 'delayed' output port
-        // (handled by caller via executeTrigger)
       }, delayMs);
+      break;
+    }
+    case 'condition': {
+      // Evaluate condition: check variable value against expected
+      const varId = actionPatch.config?.variableId;
+      const operator = actionPatch.config?.operator || '==';
+      const expected = actionPatch.config?.value;
+      if (varId !== undefined && expected !== undefined) {
+        const { variables } = require('../types');
+        // Get current variable value from store (caller should pass context)
+        const currentVal = actionPatch.config?._currentValue;
+        const result = evaluateCondition(currentVal, operator, expected);
+        // Route to 'true' or 'false' output port (handled by caller)
+        actionPatch.config = { ...actionPatch.config, _lastResult: result };
+      }
       break;
     }
     case 'toggle': {

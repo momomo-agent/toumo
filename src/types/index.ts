@@ -393,6 +393,9 @@ export type ConditionRule = {
   variableId: string;
   operator: '==' | '!=' | '>' | '<' | '>=' | '<=';
   value: string | number | boolean;
+  // Condition combinator for multi-condition groups
+  combinator?: 'and' | 'or';
+  conditions?: ConditionRule[];
   // What to do when condition is true
   actions: ConditionAction[];
 };
