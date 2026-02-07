@@ -187,6 +187,7 @@ export function PatchCanvas() {
   const selectedConnectionId = useEditorStore((s) => s.selectedConnectionId);
   const updatePatchPosition = useEditorStore((s) => s.updatePatchPosition);
   const removePatch = useEditorStore((s) => s.removePatch);
+  const addPatch = useEditorStore((s) => s.addPatch);
   const addPatchConnection = useEditorStore((s) => s.addPatchConnection);
   const removePatchConnection = useEditorStore((s) => s.removePatchConnection);
   const setSelectedPatchId = useEditorStore((s) => s.setSelectedPatchId);
@@ -442,6 +443,37 @@ export function PatchCanvas() {
           </div>
         </div>
       )}
+
+      {/* Patch Context Menu */}
+      {_contextMenu && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setContextMenu(null)} />
+          <div style={{
+            position: 'fixed', left: _contextMenu.x, top: _contextMenu.y, zIndex: 999,
+            background: '#1e1e1e', border: '1px solid #333', borderRadius: 6,
+            padding: 4, minWidth: 140, boxShadow: '0 4px 16px rgba(0,0,0,.5)',
+          }}>
+            {_contextMenu.patchId && (
+              <>
+                <CtxItem label="Duplicate" onClick={() => {
+                  const p = patches.find(x => x.id === _contextMenu.patchId);
+                  if (p) {
+                    const dup = createPatch(p.type, { x: p.position.x + 30, y: p.position.y + 30 });
+                    dup.config = { ...p.config };
+                    dup.name = p.name + ' copy';
+                    addPatch(dup);
+                  }
+                  setContextMenu(null);
+                }} />
+                <CtxItem label="Delete" danger onClick={() => {
+                  if (_contextMenu.patchId) removePatch(_contextMenu.patchId);
+                  setContextMenu(null);
+                }} />
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -458,4 +490,18 @@ export function createPatch(type: PatchType, position: { x: number; y: number })
     inputs: ports.inputs,
     outputs: ports.outputs,
   };
+}
+
+function CtxItem({ label, onClick, danger }: { label: string; onClick: () => void; danger?: boolean }) {
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={(e) => (e.currentTarget.style.background = '#2a2a2a')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      style={{
+        padding: '6px 12px', cursor: 'pointer', borderRadius: 3,
+        fontSize: 12, color: danger ? '#ef4444' : '#ddd',
+      }}
+    >{label}</div>
+  );
 }
