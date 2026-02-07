@@ -59,7 +59,7 @@ export class InteractionExecutor {
     }
 
     // 执行所有动作
-    interaction.actions.forEach(action => {
+    interaction.actions.forEach((action: any) => {
       this.executeAction(action);
     });
   }

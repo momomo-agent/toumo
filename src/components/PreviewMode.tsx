@@ -172,7 +172,7 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
     const target = keyframes.find(kf => kf.id === targetId);
     if (!target) return;
     const { type, direction, duration, easing } = link.transition;
-    const easingCss = prototypeEasings[easing] || 'ease-out';
+    const easingCss = prototypeEasings[easing as PrototypeTransitionEasing] || 'ease-out';
     if (type === 'instant') { setCurrentKeyframeId(targetId); return; }
     setPrototypeTransition({ active: true, type, direction, duration, easing: easingCss, fromFrameId, toFrameId: targetId, phase: 'out' });
     setTimeout(() => {
@@ -212,7 +212,7 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
 
   const handleTrigger = useCallback((triggerType: TriggerType) => {
     const match = availableTransitions.find(t => {
-      if (t.triggers?.length) return t.triggers.some(tr => tr.type === triggerType);
+      if (t.triggers?.length) return t.triggers.some((tr: any) => tr.type === triggerType);
       return t.trigger === triggerType;
     });
     if (match) executeTransition(match);
@@ -223,7 +223,7 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
     timerRefs.current.forEach(t => clearTimeout(t));
     timerRefs.current.clear();
     availableTransitions.forEach(tr => {
-      const tt = tr.triggers?.find(t => t.type === 'timer');
+      const tt = tr.triggers?.find((t: any) => t.type === 'timer');
       if (tt?.timerDelay) {
         timerRefs.current.set(tr.id, setTimeout(() => executeTransition(tr), tt.timerDelay));
       } else if (tr.trigger === 'timer') {
@@ -237,7 +237,7 @@ export function PreviewMode({ projectData, onEnterEditMode }: PreviewModeProps) 
   const triggerHints = useMemo(() => {
     const hints: string[] = [];
     availableTransitions.forEach(t => {
-      if (t.triggers?.length) t.triggers.forEach(tr => hints.push(tr.type));
+      if (t.triggers?.length) t.triggers.forEach((tr: any) => hints.push(tr.type));
       else if (t.trigger) hints.push(t.trigger);
     });
     interactions.forEach(i => { if (i.enabled && i.gesture?.type) hints.push(i.gesture.type); });
@@ -659,9 +659,9 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
           const isText = el.shapeType === 'text' || (el.text != null && el.text !== '');
 
           const handleElClick = (e: React.MouseEvent) => {
-            if (el?.prototypeLink?.enabled) {
+            if ((el as any)?.prototypeLink?.enabled) {
               e.stopPropagation();
-              onPrototypeNavigation(el?.prototypeLink, currentFrameId);
+              onPrototypeNavigation((el as any)?.prototypeLink, currentFrameId);
             }
           };
 
