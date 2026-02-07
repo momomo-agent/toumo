@@ -530,7 +530,7 @@ export function PatchCanvas() {
         <PatchNode
           key={patch.id}
           patch={patch}
-          selected={selectedPatchId === patch.id}
+          selected={selectedPatchId === patch.id || useEditorStore.getState().selectedPatchIds.includes(patch.id)}
           isActive={activePatchIds.has(patch.id)}
           onSelect={setSelectedPatchId}
           onDragStart={handleNodeDragStart}
