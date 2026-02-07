@@ -637,6 +637,7 @@ function PreviewContent({
 }) {
   const dragStartRef = useRef<{ x: number; y: number; elementId?: string } | null>(null);
   const isDraggingRef = useRef(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseDown = useCallback((e: React.MouseEvent, elementId?: string) => {
     dragStartRef.current = { x: e.clientX, y: e.clientY, elementId };
@@ -644,6 +645,20 @@ function PreviewContent({
     // Fire Patch drag start
     if (elementId && onPatchDrag) {
       onPatchDrag(elementId, 'start', { dx: 0, dy: 0 });
+    }
+    // Long press detection
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    if (elementId) {
+      longPressTimerRef.current = setTimeout(() => {
+        if (!isDraggingRef.current && dragStartRef.current?.elementId === elementId) {
+          const store = useEditorStore.getState();
+          const lp = store.patches.filter((p: any) => p.type === 'tap' && p.config?.targetElementId === elementId);
+          lp.forEach((p: any) => {
+            const conn = store.patchConnections.find((c: any) => c.fromPatchId === p.id && c.fromPortId === 'onLongPress');
+            if (conn) store.flashPatch(p.id);
+          });
+        }
+      }, 500);
     }
   }, [onPatchDrag]);
 
