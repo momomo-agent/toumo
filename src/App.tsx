@@ -276,8 +276,19 @@ export default function App() {
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        if (data.keyframes && data.transitions) {
+        if (data.keyframes) {
           loadProject(data);
+          // Restore patches/connections/displayStates if present
+          if (data.patches || data.patchConnections || data.sharedElements || data.displayStates) {
+            useEditorStore.setState({
+              ...(data.patches ? { patches: data.patches } : {}),
+              ...(data.patchConnections ? { patchConnections: data.patchConnections } : {}),
+              ...(data.sharedElements ? { sharedElements: data.sharedElements } : {}),
+              ...(data.displayStates ? { displayStates: data.displayStates } : {}),
+            });
+          }
+        } else {
+          alert('Invalid project file');
         }
       } catch (err) {
         alert('Invalid project file');
