@@ -16,6 +16,7 @@ import { EmptyState } from './components/EmptyState';
 import { LayerPanel } from './components/LayerPanel';
 import { FilesPanel } from './components/FilesPanel';
 import { ExportPanel } from './components/ExportPanel';
+import { ImportModal } from './components/ImportModal';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -65,6 +66,7 @@ export default function App() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isExportPanelOpen, setIsExportPanelOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const {
     keyframes,
@@ -2738,6 +2740,7 @@ export default function App() {
       <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
       <HelpPanel isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <ExportPanel isOpen={isExportPanelOpen} onClose={() => setIsExportPanelOpen(false)} />
+      {isImportModalOpen && <ImportModal onClose={() => setIsImportModalOpen(false)} />}
       <WelcomeModal onLoadExample={handleLoadExampleProject} />
     </div>
   );
