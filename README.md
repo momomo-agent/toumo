@@ -1,73 +1,92 @@
-# React + TypeScript + Vite
+# Toumo — Interactive Motion Design Tool
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**State Machine Motion Design Tool**
+最直观的现代交互动画设计工具
 
-Currently, two official plugins are available:
+🔗 **Live Demo**: [momomo-agent.github.io/toumo](https://momomo-agent.github.io/toumo/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Canvas Editor
+- Figma-style drawing tools (Rectangle, Ellipse, Text)
+- Smart alignment guides & snapping
+- Multi-select with Shift+drag
+- Copy/Paste/Cut shortcuts
+- Image drag & drop import
 
-## Expanding the ESLint configuration
+### State Machine
+- **Display States** — visual keyframes sharing one layer tree
+- **Variables** — boolean/number/string logic flags
+- **Transitions** — spring physics & bezier curves
+- **3-level curve override** — Global → Element → Property
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Patch Editor (Origami-style)
+- Visual node wiring: Triggers → Actions
+- **Triggers**: Tap, Hover, Drag, Scroll, Timer, Variable Change
+- **Actions**: Switch Display State, Set Variable, Animate Property
+- **Logic**: Condition, Toggle, Counter, Delay, Option Switch, Drag Binding
+- Node execution flash feedback
+- Connection flow animation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Sugar Presets
+Right-click any element to instantly add:
+- 🖱️ Hover Scale
+- 👆 Tap Toggle
+- ✋ Press & Release
+- 👋 Drag to Dismiss
+- 🎨 Hover Color
+- ➡️ Tap Navigate
+- 🔄 Auto Play
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Export
+- JSON (full project)
+- CSS Animation
+- Framer Motion
+- SVG / HTML
+- Share URL (compressed)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🚀 Getting Started
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open [localhost:5173/toumo/](http://localhost:5173/toumo/)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🏗️ Tech Stack
+
+- React 18 + TypeScript
+- Zustand state management
+- Vite build
+- Spring physics animation engine
+
+---
+
+## 📖 Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| V | Select |
+| R | Rectangle |
+| O | Ellipse |
+| T | Text |
+| H | Hand/Pan |
+| Space | Temporary hand |
+| ⌘Z | Undo |
+| ⌘⇧Z | Redo |
+| ⌘D | Duplicate Patch |
+| ⌘0 | Zoom to fit |
+| Delete | Delete selected |
+
+---
+
+## License
+
+MIT
