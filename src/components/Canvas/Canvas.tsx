@@ -16,7 +16,7 @@ import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
 import { useResolvedElements, resolveElementsForState } from '../../hooks/useResolvedElements';
-import { DisplayStateBar } from './DisplayStateBar';
+// DisplayStateBar removed — state switching via canvas keyframe clicks (PRD requirement)
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -1131,7 +1131,7 @@ export function Canvas() {
 
   return (
     <>
-    <DisplayStateBar />
+    {/* DisplayStateBar removed — state switching is done by clicking keyframes on canvas */}
     <div
       ref={canvasRef}
       onMouseDown={handleCanvasMouseDown}
