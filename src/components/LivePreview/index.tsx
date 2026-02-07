@@ -619,6 +619,95 @@ function DeviceFrameShell({ device, children }: { device: DeviceFrameDef; childr
   );
 }
 
+// ─── Element style helpers (match CanvasElement rendering) ────────────
+function computeElementBackground(el: KeyElement): string {
+  const isText = el.shapeType === 'text';
+  const isImage = el.shapeType === 'image';
+  const isLine = el.shapeType === 'line';
+  const isPath = el.shapeType === 'path';
+  if (isText || isImage || isLine || isPath) return 'transparent';
+
+  const style = el.style;
+  if (style?.gradientType && style.gradientType !== 'none' && style.gradientStops?.length) {
+    const stops = style.gradientStops.map(s => `${s.color} ${s.position}%`).join(', ');
+    if (style.gradientType === 'linear') {
+      return `linear-gradient(${style.gradientAngle ?? 180}deg, ${stops})`;
+    }
+    if (style.gradientType === 'radial') {
+      const cx = style.gradientCenterX ?? 50;
+      const cy = style.gradientCenterY ?? 50;
+      return `radial-gradient(circle at ${cx}% ${cy}%, ${stops})`;
+    }
+  }
+  return style?.fill || '#3b82f6';
+}
+
+function computeBorderRadius(el: KeyElement): string | number {
+  if (el.shapeType === 'ellipse') return '50%';
+  const style = el.style;
+  if (style?.borderRadiusTL !== undefined || style?.borderRadiusTR !== undefined ||
+      style?.borderRadiusBR !== undefined || style?.borderRadiusBL !== undefined) {
+    const tl = style.borderRadiusTL ?? style.borderRadius ?? 0;
+    const tr = style.borderRadiusTR ?? style.borderRadius ?? 0;
+    const br = style.borderRadiusBR ?? style.borderRadius ?? 0;
+    const bl = style.borderRadiusBL ?? style.borderRadius ?? 0;
+    return `${tl}px ${tr}px ${br}px ${bl}px`;
+  }
+  return style?.borderRadius ?? 8;
+}
+
+function computeBoxShadow(el: KeyElement): string {
+  const shadows: string[] = [];
+  if (el.style?.shadowColor && el.style.shadowBlur) {
+    const x = el.style.shadowOffsetX || 0;
+    const y = el.style.shadowOffsetY || 0;
+    const blur = el.style.shadowBlur || 0;
+    const spread = el.style.shadowSpread || 0;
+    shadows.push(`${x}px ${y}px ${blur}px ${spread}px ${el.style.shadowColor}`);
+  }
+  if (el.style?.innerShadowEnabled && el.style.innerShadowColor) {
+    const x = el.style.innerShadowX || 0;
+    const y = el.style.innerShadowY || 0;
+    const blur = el.style.innerShadowBlur || 4;
+    shadows.push(`inset ${x}px ${y}px ${blur}px ${el.style.innerShadowColor}`);
+  }
+  return shadows.length > 0 ? shadows.join(', ') : 'none';
+}
+
+function computeTransform(el: KeyElement): string | undefined {
+  return [
+    el.style?.rotation ? `rotate(${el.style.rotation}deg)` : '',
+    el.style?.flipX ? 'scaleX(-1)' : '',
+    el.style?.flipY ? 'scaleY(-1)' : '',
+    el.style?.scale && el.style.scale !== 1 ? `scale(${el.style.scale})` : '',
+    el.style?.skewX ? `skewX(${el.style.skewX}deg)` : '',
+    el.style?.skewY ? `skewY(${el.style.skewY}deg)` : '',
+  ].filter(Boolean).join(' ') || undefined;
+}
+
+function computeFilter(el: KeyElement): string | undefined {
+  return [
+    el.style?.blur ? `blur(${el.style.blur}px)` : '',
+    el.style?.brightness ? `brightness(${el.style.brightness})` : '',
+    el.style?.contrast ? `contrast(${el.style.contrast})` : '',
+    el.style?.saturate ? `saturate(${el.style.saturate})` : '',
+    el.style?.hueRotate ? `hue-rotate(${el.style.hueRotate}deg)` : '',
+    el.style?.invert ? `invert(${el.style.invert})` : '',
+    el.style?.grayscale ? `grayscale(${el.style.grayscale})` : '',
+    el.style?.sepia ? `sepia(${el.style.sepia})` : '',
+    el.style?.dropShadowX !== undefined ? `drop-shadow(${el.style.dropShadowX || 0}px ${el.style.dropShadowY || 0}px ${el.style.dropShadowBlur || 0}px ${el.style.dropShadowColor || '#000'})` : '',
+  ].filter(Boolean).join(' ') || undefined;
+}
+
+function computeStroke(el: KeyElement): string | undefined {
+  if (el.shapeType === 'text') return undefined;
+  if (el.style?.strokeWidth && el.style.stroke) {
+    const style = el.style.strokeStyle || 'solid';
+    return `${el.style.strokeWidth}px ${style} ${el.style.stroke}`;
+  }
+  return undefined;
+}
+
 // ─── PreviewContent ───────────────────────────────────────────────────
 function PreviewContent({
   elements,
@@ -718,6 +807,7 @@ function PreviewContent({
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', ...contentStyle }} onWheel={handleWheel}>
       {elements.map(el => {
+        if (el.visible === false) return null;
         const hasProtoLink = el.prototypeLink?.enabled && el.prototypeLink?.targetFrameId;
         const handleElClick = (e: React.MouseEvent) => {
           if (hasProtoLink && onPrototypeNavigation && currentFrameId) {
@@ -725,6 +815,17 @@ function PreviewContent({
             onPrototypeNavigation(el.prototypeLink!, currentFrameId);
           }
         };
+
+        const isText = el.shapeType === 'text';
+        const isImage = el.shapeType === 'image';
+        const isLine = el.shapeType === 'line';
+        const isPath = el.shapeType === 'path';
+        const bg = computeElementBackground(el);
+        const br = computeBorderRadius(el);
+        const shadow = computeBoxShadow(el);
+        const transformStr = computeTransform(el);
+        const filterStr = computeFilter(el);
+        const strokeBorder = computeStroke(el);
 
         return (
           <div
@@ -739,19 +840,102 @@ function PreviewContent({
               top: el.position.y,
               width: el.size.width,
               height: el.size.height,
-              background: el.style?.fill || '#3b82f6',
-              opacity: el.style?.opacity ?? 1,
-              borderRadius: el.style?.borderRadius ?? 8,
-              border: el.style?.stroke ? `${el.style.strokeWidth || 1}px solid ${el.style.stroke}` : undefined,
+              background: bg,
+              opacity: el.style?.fillOpacity ?? 1,
+              borderRadius: br,
+              border: strokeBorder,
+              transform: transformStr,
+              transformOrigin: el.style?.transformOrigin || 'center',
+              boxShadow: shadow,
+              filter: filterStr,
+              backdropFilter: el.style?.backdropFilter || (el.style?.backdropBlur ? `blur(${el.style.backdropBlur}px)` : undefined),
+              mixBlendMode: el.style?.blendMode as React.CSSProperties['mixBlendMode'],
+              clipPath: el.style?.clipPath || undefined,
+              maskImage: el.style?.maskImage || undefined,
               transition: `all ${transitionDuration}ms ${transitionCurve}`,
               cursor: hasProtoLink ? 'pointer' : hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
+              alignItems: isText ? undefined : 'center',
+              justifyContent: isText ? undefined : 'center',
+              color: el.style?.textColor || '#fff',
+              fontSize: el.style?.fontSize || 14,
+              fontWeight: el.style?.fontWeight || 'normal',
+              fontStyle: el.style?.fontStyle || 'normal',
+              textDecoration: el.style?.textDecoration || 'none',
+              fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
+              letterSpacing: el.style?.letterSpacing ?? 0,
+              lineHeight: el.style?.lineHeight ?? 1.4,
+              overflow: el.style?.overflow || 'hidden',
+              userSelect: 'none',
             }}
           >
-            {el.text && (
+            {/* Image element */}
+            {isImage && el.style?.imageSrc && (
+              <img
+                src={el.style.imageSrc}
+                alt=""
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: el.style.objectFit || 'cover',
+                  objectPosition: el.style.objectPosition || 'center',
+                  borderRadius: br,
+                  pointerEvents: 'none',
+                }}
+                draggable={false}
+              />
+            )}
+            {/* Line element */}
+            {isLine && (
+              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                <line
+                  x1="0" y1="0"
+                  x2={el.size.width} y2={el.size.height}
+                  stroke={el.style?.stroke || '#ffffff'}
+                  strokeWidth={el.style?.strokeWidth || 2}
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+            {/* Path element */}
+            {isPath && el.style?.pathData && (
+              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                <path
+                  d={el.style.pathData}
+                  fill={el.style?.pathClosed ? (el.style?.fill || 'transparent') : 'none'}
+                  stroke={el.style?.stroke || '#ffffff'}
+                  strokeWidth={el.style?.strokeWidth || 2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+            {/* Text element */}
+            {isText && (
+              <div
+                style={{
+                  padding: el.style?.padding ? `${el.style.padding}px` : '0 8px',
+                  width: '100%',
+                  textAlign: el.style?.textAlign || 'center',
+                  display: 'flex',
+                  alignItems: el.style?.verticalAlign === 'top' ? 'flex-start' : el.style?.verticalAlign === 'bottom' ? 'flex-end' : 'center',
+                  justifyContent: el.style?.textAlign || 'center',
+                  height: '100%',
+                  whiteSpace: el.style?.whiteSpace || 'normal',
+                  textTransform: el.style?.textTransform as React.CSSProperties['textTransform'],
+                  textShadow: el.style?.textShadow || undefined,
+                }}
+                dangerouslySetInnerHTML={
+                  (el.style as any)?.richTextHtml
+                    ? { __html: (el.style as any).richTextHtml }
+                    : undefined
+                }
+              >
+                {!(el.style as any)?.richTextHtml && (el.text ?? 'Text')}
+              </div>
+            )}
+            {/* Non-text element with text content */}
+            {!isText && el.text && (
               <span style={{
                 color: el.style?.textColor || '#fff',
                 fontSize: el.style?.fontSize || 14,
