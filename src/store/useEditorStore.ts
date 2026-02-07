@@ -364,6 +364,92 @@ export type EditorStore = EditorState & EditorActions;
 const syncToAllKeyframes = (sharedElements: KeyElement[], keyframes: Keyframe[]): Keyframe[] =>
   keyframes.map(kf => ({ ...kf, keyElements: sharedElements }));
 
+/**
+ * Check if the current display state is the default (first) one.
+ * Returns true if we should write to sharedElements directly.
+ */
+const isDefaultDisplayState = (state: EditorState): boolean => {
+  const defaultDsId = state.displayStates[0]?.id;
+  return !state.selectedDisplayStateId || state.selectedDisplayStateId === defaultDsId;
+};
+
+/**
+ * Convert KeyElement updates (position/size/style/rotation) into flat LayerProperties.
+ * Used when writing to layerOverrides for non-default display states.
+ */
+const updatesToLayerProperties = (updates: Partial<KeyElement>): Partial<LayerProperties> => {
+  const props: Partial<LayerProperties> = {};
+  if (updates.position) {
+    props.x = updates.position.x;
+    props.y = updates.position.y;
+  }
+  if (updates.size) {
+    props.width = updates.size.width;
+    props.height = updates.size.height;
+  }
+  if (updates.style) {
+    const s = updates.style;
+    if (s.opacity !== undefined) props.opacity = s.opacity;
+    if (s.fill !== undefined) props.fill = s.fill;
+    if (s.fillOpacity !== undefined) props.fillOpacity = s.fillOpacity;
+    if (s.stroke !== undefined) props.stroke = s.stroke;
+    if (s.strokeWidth !== undefined) props.strokeWidth = s.strokeWidth;
+    if (s.borderRadius !== undefined) props.borderRadius = s.borderRadius;
+    if (s.fontSize !== undefined) props.fontSize = s.fontSize;
+    if (s.fontWeight !== undefined) props.fontWeight = s.fontWeight;
+    if (s.color !== undefined) props.color = s.color;
+    if (s.letterSpacing !== undefined) props.letterSpacing = s.letterSpacing;
+    if (s.lineHeight !== undefined) props.lineHeight = s.lineHeight;
+    if (s.shadowColor !== undefined) props.shadowColor = s.shadowColor;
+    if (s.shadowX !== undefined) props.shadowX = s.shadowX;
+    if (s.shadowY !== undefined) props.shadowY = s.shadowY;
+    if (s.shadowBlur !== undefined) props.shadowBlur = s.shadowBlur;
+    if (s.blur !== undefined) props.blur = s.blur;
+    if (s.brightness !== undefined) props.brightness = s.brightness;
+    if (s.contrast !== undefined) props.contrast = s.contrast;
+    if (s.saturate !== undefined) props.saturate = s.saturate;
+    if (s.rotation !== undefined) props.rotation = s.rotation;
+    if (s.visibility !== undefined) props.visible = s.visibility !== 'hidden';
+  }
+  return props;
+};
+
+/**
+ * Write properties to a display state's layerOverrides for a given layer.
+ * Merges with existing override and auto-tracks keyProperties.
+ */
+const writeToLayerOverride = (
+  displayStates: DisplayState[],
+  displayStateId: string,
+  layerId: string,
+  newProperties: Partial<LayerProperties>,
+): DisplayState[] => {
+  if (Object.keys(newProperties).length === 0) return displayStates;
+
+  return displayStates.map(ds => {
+    if (ds.id !== displayStateId) return ds;
+    const existing = ds.layerOverrides.find(o => o.layerId === layerId);
+    const mergedProps = { ...(existing?.properties || {}), ...newProperties };
+    const mergedKeys = [...new Set([
+      ...(existing?.keyProperties || []),
+      ...Object.keys(newProperties),
+    ])];
+    const newOverride: import('../types').LayerOverride = {
+      layerId,
+      isKey: true,
+      properties: mergedProps,
+      keyProperties: mergedKeys,
+    };
+    return {
+      ...ds,
+      layerOverrides: [
+        ...ds.layerOverrides.filter(o => o.layerId !== layerId),
+        newOverride,
+      ],
+    };
+  });
+};
+
 export const useEditorStore = create<EditorStore>((set, get) => ({
   // Initial state — sharedElements is the single source of truth
   sharedElements: [...initialSharedElements],
@@ -520,51 +606,87 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   updateElement: (id, updates) => set((state) => {
-    const newShared = state.sharedElements.map((el) => {
-      if (el.id !== id) return el;
-      const nextElement = {
-        ...el,
-        ...updates,
-        position: updates.position ?? el.position,
-        size: updates.size ?? el.size,
-      } as KeyElement;
-      return clampElementToFrame(nextElement, state.frameSize);
-    });
-    return {
-      sharedElements: newShared,
-      keyframes: syncToAllKeyframes(newShared, state.keyframes),
-    };
+    if (isDefaultDisplayState(state)) {
+      // Default keyframe: write directly to sharedElements (base values)
+      const newShared = state.sharedElements.map((el) => {
+        if (el.id !== id) return el;
+        const nextElement = {
+          ...el,
+          ...updates,
+          position: updates.position ?? el.position,
+          size: updates.size ?? el.size,
+        } as KeyElement;
+        return clampElementToFrame(nextElement, state.frameSize);
+      });
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+      };
+    } else {
+      // Non-default keyframe: write to layerOverrides
+      const newProperties = updatesToLayerProperties(updates);
+      return {
+        displayStates: writeToLayerOverride(
+          state.displayStates,
+          state.selectedDisplayStateId!,
+          id,
+          newProperties,
+        ),
+      };
+    }
   }),
 
   updateElementPosition: (id, position) => set((state) => {
-    const newShared = state.sharedElements.map((el) =>
-      el.id === id ? clampElementToFrame({ ...el, position }, state.frameSize) : el
-    );
-    return {
-      sharedElements: newShared,
-      keyframes: syncToAllKeyframes(newShared, state.keyframes),
-    };
+    if (isDefaultDisplayState(state)) {
+      const newShared = state.sharedElements.map((el) =>
+        el.id === id ? clampElementToFrame({ ...el, position }, state.frameSize) : el
+      );
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+      };
+    } else {
+      return {
+        displayStates: writeToLayerOverride(
+          state.displayStates,
+          state.selectedDisplayStateId!,
+          id,
+          { x: position.x, y: position.y },
+        ),
+      };
+    }
   }),
 
   updateElementSize: (id, size) => set((state) => {
-    const targetElement = state.sharedElements.find(el => el.id === id);
-    const oldSize = targetElement?.size;
+    if (isDefaultDisplayState(state)) {
+      const targetElement = state.sharedElements.find(el => el.id === id);
+      const oldSize = targetElement?.size;
 
-    const newShared = state.sharedElements.map((el) => {
-      if (el.id === id) {
-        return clampElementToFrame({ ...el, size }, state.frameSize);
-      }
-      // Apply constraints to children of the resized element
-      if (el.parentId === id && oldSize) {
-        const { position, size: newSize } = applyConstraints(el, oldSize, size);
-        return { ...el, position, size: newSize };
-      }
-      return el;
-    });
-    return {
-      sharedElements: newShared,
-      keyframes: syncToAllKeyframes(newShared, state.keyframes),
-    };
+      const newShared = state.sharedElements.map((el) => {
+        if (el.id === id) {
+          return clampElementToFrame({ ...el, size }, state.frameSize);
+        }
+        // Apply constraints to children of the resized element
+        if (el.parentId === id && oldSize) {
+          const { position, size: newSize } = applyConstraints(el, oldSize, size);
+          return { ...el, position, size: newSize };
+        }
+        return el;
+      });
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+      };
+    } else {
+      return {
+        displayStates: writeToLayerOverride(
+          state.displayStates,
+          state.selectedDisplayStateId!,
+          id,
+          { width: size.width, height: size.height },
+        ),
+      };
+    }
   }),
 
   updateElementName: (id, name) => set((state) => {
@@ -581,20 +703,46 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length === 0) return;
     get().pushHistory();
-    set((state) => {
-      const newShared = state.sharedElements.map((el) =>
-        state.selectedElementIds.includes(el.id)
-          ? clampElementToFrame(
-              { ...el, position: { x: el.position.x + dx, y: el.position.y + dy } },
-              state.frameSize
-            )
-          : el
-      );
-      return {
-        sharedElements: newShared,
-        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+    if (isDefaultDisplayState(state)) {
+      set((state) => {
+        const newShared = state.sharedElements.map((el) =>
+          state.selectedElementIds.includes(el.id)
+            ? clampElementToFrame(
+                { ...el, position: { x: el.position.x + dx, y: el.position.y + dy } },
+                state.frameSize
+              )
+            : el
+        );
+        return {
+          sharedElements: newShared,
+          keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        };
+      });
+    } else {
+      // Non-default keyframe: nudge via layerOverrides
+      // We need resolved positions to compute the new position
+      const resolvePos = (el: KeyElement) => {
+        const ds = state.displayStates.find(d => d.id === state.selectedDisplayStateId);
+        const override = ds?.layerOverrides.find(o => o.layerId === el.id);
+        return {
+          x: override?.properties.x ?? el.position.x,
+          y: override?.properties.y ?? el.position.y,
+        };
       };
-    });
+      set((s) => {
+        let dsList = s.displayStates;
+        for (const id of s.selectedElementIds) {
+          const el = s.sharedElements.find(e => e.id === id);
+          if (!el) continue;
+          const pos = resolvePos(el);
+          dsList = writeToLayerOverride(dsList, s.selectedDisplayStateId!, id, {
+            x: pos.x + dx,
+            y: pos.y + dy,
+          });
+        }
+        return { displayStates: dsList };
+      });
+    }
   },
 
   setCurrentTool: (tool) => set({ currentTool: tool }),
