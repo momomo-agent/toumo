@@ -6,8 +6,9 @@ import {
   generateSVGCode,
   generateStaticHTML,
 } from '../../utils/exportGenerators';
+import { generateLottieJSON } from '../../utils/lottieGenerator';
 
-type ExportTab = 'css-animation' | 'framer-motion' | 'svg' | 'html' | 'json';
+type ExportTab = 'css-animation' | 'framer-motion' | 'svg' | 'html' | 'json' | 'lottie' | 'gif';
 
 const TABS: { id: ExportTab; label: string; icon: string }[] = [
   { id: 'json', label: 'JSON', icon: '📋' },
@@ -15,6 +16,8 @@ const TABS: { id: ExportTab; label: string; icon: string }[] = [
   { id: 'framer-motion', label: 'Framer', icon: '⚛️' },
   { id: 'svg', label: 'SVG', icon: '🖼️' },
   { id: 'html', label: 'HTML', icon: '🌐' },
+  { id: 'lottie', label: 'Lottie', icon: '🎞️' },
+  { id: 'gif', label: 'GIF', icon: '🖼️' },
 ];
 
 interface ExportPanelProps {
@@ -38,6 +41,9 @@ export function ExportPanel({ isOpen, onClose }: ExportPanelProps) {
       case 'framer-motion': return generateFramerMotionCode(kfs, trs, fs);
       case 'svg': return generateSVGCode(kfs[0], fs, bg);
       case 'html': return generateStaticHTML(kfs[0], fs, bg);
+      case 'lottie': return JSON.stringify(generateLottieJSON(kfs, trs, fs), null, 2);
+      case 'gif': return '// GIF export — click "Export GIF" button below';
+      default: return '';
     }
   }, [tab, store.keyframes, store.transitions, store.frameSize, store.canvasBackground]);
 
