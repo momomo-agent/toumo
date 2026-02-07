@@ -81,6 +81,26 @@ export function PatchInspector() {
               <option key={ds.id} value={ds.id}>{ds.name}</option>
             ))}
           </select>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ fontSize: 11, color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input
+                type="checkbox"
+                checked={!!patch.config?.autoReverse}
+                onChange={e => updatePatchConfig(patch.id, { autoReverse: e.target.checked })}
+              />
+              Auto-Reverse
+            </label>
+            {patch.config?.autoReverse && (
+              <input
+                type="number"
+                value={patch.config?.reverseDelay ?? 200}
+                onChange={e => updatePatchConfig(patch.id, { reverseDelay: Number(e.target.value) })}
+                style={{ ...inputStyle, width: 60 }}
+                min={50}
+                step={50}
+              />
+            )}
+          </div>
         </div>
       )}
 
