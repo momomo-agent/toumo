@@ -878,6 +878,17 @@ export function Canvas() {
           }
           return;
         }
+        // Undo/Redo shortcuts
+        if (event.key === 'z' && !event.shiftKey) {
+          event.preventDefault();
+          useEditorStore.getState().undo();
+          return;
+        }
+        if ((event.key === 'z' && event.shiftKey) || event.key === 'y') {
+          event.preventDefault();
+          useEditorStore.getState().redo();
+          return;
+        }
         // Copy/Paste/Cut/Duplicate shortcuts
         if (event.key === 'c') {
           event.preventDefault();
