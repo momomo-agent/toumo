@@ -197,6 +197,8 @@ export function PatchCanvas() {
   const dragRef = useRef<DragState | null>(null);
   const [dragLine, setDragLine] = useState<{ fromX: number; fromY: number; toX: number; toY: number } | null>(null);
   const [_contextMenu, setContextMenu] = useState<{ x: number; y: number; patchId?: string; connectionId?: string } | null>(null);
+  const [marquee, setMarquee] = useState<{ startX: number; startY: number; x: number; y: number; w: number; h: number } | null>(null);
+  const marqueeRef = useRef<{ startX: number; startY: number } | null>(null);
   // Tick counter to force connection re-render during node drag
   const [, setRenderTick] = useState(0);
 
@@ -403,7 +405,47 @@ export function PatchCanvas() {
   return (
     <div
       ref={containerRef}
-      onClick={() => { setSelectedPatchId(null); setSelectedConnectionId(null); }}
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest('[data-patch-id]')) {
+          setSelectedPatchId(null); setSelectedConnectionId(null);
+        }
+      }}
+      onMouseDown={(e) => {
+        if (e.button !== 0) return;
+        if ((e.target as HTMLElement).closest('[data-patch-id]')) return;
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const sx = e.clientX - rect.left + containerRef.current.scrollLeft;
+        const sy = e.clientY - rect.top + containerRef.current.scrollTop;
+        marqueeRef.current = { startX: sx, startY: sy };
+      }}
+      onMouseMove={(e) => {
+        if (!marqueeRef.current || !containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const cx = e.clientX - rect.left + containerRef.current.scrollLeft;
+        const cy = e.clientY - rect.top + containerRef.current.scrollTop;
+        const { startX, startY } = marqueeRef.current;
+        const x = Math.min(startX, cx);
+        const y = Math.min(startY, cy);
+        const w = Math.abs(cx - startX);
+        const h = Math.abs(cy - startY);
+        if (w > 5 || h > 5) setMarquee({ startX, startY, x, y, w, h });
+      }}
+      onMouseUp={() => {
+        if (marquee && marquee.w > 5 && marquee.h > 5) {
+          const selected = patches.filter(p => {
+            const px = p.position.x;
+            const py = p.position.y;
+            return px >= marquee.x && px <= marquee.x + marquee.w
+              && py >= marquee.y && py <= marquee.y + marquee.h;
+          });
+          if (selected.length > 0) {
+            setSelectedPatchId(selected[0].id);
+          }
+        }
+        marqueeRef.current = null;
+        setMarquee(null);
+      }}
       style={{
         flex: 1,
         position: 'relative',
@@ -414,6 +456,15 @@ export function PatchCanvas() {
       }}
     >
       {/* Fit All button */}
+      {/* Marquee selection box */}
+      {marquee && marquee.w > 5 && (
+        <div style={{
+          position: 'absolute', left: marquee.x, top: marquee.y,
+          width: marquee.w, height: marquee.h,
+          border: '1px solid #3b82f6', background: 'rgba(59,130,246,0.1)',
+          pointerEvents: 'none', zIndex: 50,
+        }} />
+      )}
       <button
         onClick={(e) => { e.stopPropagation(); handleFitAll(); }}
         style={{
