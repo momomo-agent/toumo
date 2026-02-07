@@ -355,6 +355,7 @@ interface EditorActions {
   togglePatchSelection: (id: string) => void;
   removeSelectedPatches: () => void;
   moveSelectedPatches: (dx: number, dy: number) => void;
+  duplicatePatch: (id: string) => void;
   flashPatch: (id: string) => void;
   setSelectedConnectionId: (id: string | null) => void;
   // DisplayState actions (PRD v2 - shared layer tree)
@@ -3916,6 +3917,20 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         ? { ...p, position: { x: p.position.x + dx, y: p.position.y + dy } }
         : p),
     });
+  },
+
+  duplicatePatch: (id) => {
+    const { patches } = get();
+    const src = patches.find(p => p.id === id);
+    if (!src) return;
+    const newId = `patch-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const clone: typeof src = {
+      ...JSON.parse(JSON.stringify(src)),
+      id: newId,
+      name: `${src.name} copy`,
+      position: { x: src.position.x + 30, y: src.position.y + 30 },
+    };
+    set({ patches: [...patches, clone], selectedPatchId: newId });
   },
 
   flashPatch: (id) => {
