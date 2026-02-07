@@ -143,6 +143,10 @@ export function LayerPanel() {
     updateElement,
     deleteElement,
     duplicateSelectedElements,
+    displayStates,
+    selectedDisplayStateId,
+    setLayerOverride,
+    removeLayerOverride,
   } = useEditorStore();
 
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -156,6 +160,23 @@ export function LayerPanel() {
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
   const elements = selectedKeyframe?.keyElements || [];
+
+  // Current display state for key-element marking
+  const currentDisplayState = displayStates.find(ds => ds.id === selectedDisplayStateId);
+
+  const hasLayerOverride = useCallback((layerId: string): boolean => {
+    return !!currentDisplayState?.layerOverrides.some(o => o.layerId === layerId);
+  }, [currentDisplayState]);
+
+  const toggleKeyElement = useCallback((layerId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedDisplayStateId) return;
+    if (hasLayerOverride(layerId)) {
+      removeLayerOverride(selectedDisplayStateId, layerId);
+    } else {
+      setLayerOverride(selectedDisplayStateId, layerId, {}, true);
+    }
+  }, [selectedDisplayStateId, hasLayerOverride, removeLayerOverride, setLayerOverride]);
 
   const rootElements = useMemo(() =>
     elements
@@ -533,6 +554,21 @@ export function LayerPanel() {
               </span>
             )}
           </span>
+
+          {/* Key element indicator (diamond) */}
+          <button
+            onClick={(e) => toggleKeyElement(el.id, e)}
+            title={hasLayerOverride(el.id) ? 'Remove from key elements' : 'Mark as key element'}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '2px 3px', borderRadius: 3,
+              fontSize: 11, lineHeight: 1, flexShrink: 0,
+              color: hasLayerOverride(el.id) ? '#a855f7' : '#4a4a6a',
+              transition: 'color 0.15s',
+            }}
+          >
+            {hasLayerOverride(el.id) ? '◆' : '◇'}
+          </button>
 
           {/* Action icons - show on hover or when active */}
           <div style={{
