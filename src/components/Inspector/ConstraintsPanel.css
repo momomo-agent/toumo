@@ -1,5 +1,6 @@
+/* Constraints Panel */
 .constraints-panel {
-  border-top: 1px solid var(--figma-border);
+  border-top: 1px solid var(--border-default);
   padding: 12px 0;
 }
 
@@ -7,15 +8,13 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .constraints-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--figma-text);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .constraints-content {
@@ -25,25 +24,41 @@
   padding: 0 12px;
 }
 
-.constraints-preview {
+/* Cross Selector */
+.constraint-cross-selector {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--figma-bg-secondary);
-  border-radius: 4px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
   padding: 4px;
 }
 
-.constraint-visual-svg {
+.constraint-cross-svg {
   display: block;
 }
 
+.constraint-line {
+  transition: stroke 0.15s, stroke-width 0.15s;
+}
+
+.constraint-hit-area {
+  cursor: pointer;
+}
+
+.constraint-hit-area:hover + .constraint-line,
+.constraint-hit-area:hover ~ .constraint-line {
+  opacity: 0.8;
+}
+
+/* Dropdown Controls */
 .constraints-controls {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .constraint-row {
@@ -53,9 +68,9 @@
 }
 
 .constraint-label {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--figma-text-secondary);
+  color: var(--text-tertiary);
   width: 14px;
   flex-shrink: 0;
 }
@@ -64,20 +79,21 @@
   flex: 1;
   height: 28px;
   padding: 0 8px;
-  font-size: 11px;
-  color: var(--figma-text);
-  background: var(--figma-input-bg);
-  border: 1px solid var(--figma-border);
-  border-radius: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast);
 }
 
 .constraint-select:hover {
-  border-color: var(--figma-border-hover);
+  border-color: var(--border-strong);
 }
 
 .constraint-select:focus {
-  border-color: var(--figma-accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
