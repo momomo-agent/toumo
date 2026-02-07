@@ -54,7 +54,11 @@ export const PatchNode = React.memo(function PatchNode({
   const [editName, setEditName] = useState(patch.name);
   const inputRef = useRef<HTMLInputElement>(null);
   const renamePatch = useEditorStore(s => s.renamePatch);
+  const displayStates = useEditorStore(s => s.displayStates);
   const sharedElements = useEditorStore(s => s.sharedElements);
+  const targetDs = patch.config?.targetDisplayStateId
+    ? displayStates.find(ds => ds.id === patch.config?.targetDisplayStateId)
+    : null;
   const targetEl = patch.config?.targetElementId
     ? sharedElements.find(e => e.id === patch.config?.targetElementId)
     : null;
@@ -139,7 +143,7 @@ export const PatchNode = React.memo(function PatchNode({
       )}
       {patch.config?.targetDisplayStateId && (
         <div style={{ padding: '2px 10px', fontSize: 9, color: '#a855f7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          📍 {patch.config.targetDisplayStateId === 'default' ? 'Default' : patch.config.targetDisplayStateId.slice(0, 12)}
+          📍 {targetDs?.name || (patch.config.targetDisplayStateId === 'default' ? 'Default' : patch.config.targetDisplayStateId.slice(0, 12))}
         </div>
       )}
       {patch.config?.duration && (
