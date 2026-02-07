@@ -11,6 +11,7 @@ import { solveSpringRK4 } from '../../data/curvePresets';
 import { handleElementTap, handleElementHover, handleElementDrag, startAllTimerTriggers, handleVariableChange, handleScroll } from '../../engine/PatchRuntime';
 import type { DragPhase } from '../../engine/PatchRuntime';
 import { resolveElementsForState } from '../../hooks/useResolvedElements';
+import { DeviceFrame } from './DeviceFrame';
 
 // ─── Prototype easing map ─────────────────────────────────────────────
 const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
@@ -59,6 +60,7 @@ export function LivePreview() {
     patches, patchConnections, displayStates, selectedDisplayStateId,
     setSelectedDisplayStateId,
   } = useEditorStore();
+  const deviceFrame = useEditorStore(s => s.deviceFrame);
 
   // State machine
   const [currentKeyframeId, setCurrentKeyframeId] = useState<string>(selectedKeyframeId);
@@ -444,6 +446,7 @@ export function LivePreview() {
           transform: `scale(${fitScale})`,
           transformOrigin: 'center center',
         }}>
+          <DeviceFrame type={deviceFrame} width={frameSize.width} height={frameSize.height}>
           <div style={{
             width: frameSize.width,
             height: frameSize.height,
@@ -467,6 +470,7 @@ export function LivePreview() {
               displayStateId={previewDisplayStateId}
             />
           </div>
+          </DeviceFrame>
         </div>
       </div>
     </div>

@@ -57,6 +57,7 @@ interface EditorState {
   canvasScale: number;
   recentColors: string[];
   canvasBackground: string;
+  deviceFrame: 'none' | 'iphone-14-pro' | 'iphone-14' | 'iphone-se' | 'android' | 'ipad';
   showRulers: boolean;
   guides: Array<{ id: string; orientation: 'horizontal' | 'vertical'; position: number }>;
   snapToGuides: boolean;
@@ -542,6 +543,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   canvasScale: 1,
   recentColors: [],
   canvasBackground: '#0d0d0e',
+  deviceFrame: 'iphone-14-pro' as const,
   showRulers: false,
   guides: [],
   snapToGuides: true,
@@ -911,6 +913,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
   })),
   setCanvasBackground: (color: string) => set({ canvasBackground: color }),
+  setDeviceFrame: (frame: 'none' | 'iphone-14-pro' | 'iphone-14' | 'iphone-se' | 'android' | 'ipad') => set({ deviceFrame: frame }),
   toggleRulers: () => set((state) => ({ showRulers: !state.showRulers })),
   addGuide: (orientation, position) => set((state) => ({
     guides: [...state.guides, { id: `guide-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, orientation, position }],
