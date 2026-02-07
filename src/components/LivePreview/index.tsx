@@ -79,16 +79,20 @@ export function LivePreview() {
   // Shared Patch action handlers
   const patchHandlers = useMemo(() => ({
     switchDisplayState: (targetId: string) => {
-      // Find the keyframe linked to this displayState for sync
       const targetKf = keyframes.find(kf => kf.displayStateId === targetId);
       if (targetKf) {
+        // Animate transition using smartAnimate
+        const targetDs = displayStates.find(ds => ds.id === targetId);
+        const toElements = resolveElementsForState(
+          useEditorStore.getState().sharedElements, targetDs || null
+        );
+        smartAnimateRef.current.animateTo(toElements);
         setCurrentKeyframeId(targetKf.id);
       }
-      // CSS transition on PreviewElement handles the animation
       setPreviewDisplayStateId(targetId);
       setSelectedDisplayStateId(targetId);
     },
-  }), [setSelectedDisplayStateId, keyframes]);
+  }), [setSelectedDisplayStateId, keyframes, displayStates]);
 
   // Patch runtime: handle tap on element → switchDisplayState
   const handlePatchTap = useCallback((elementId: string) => {
@@ -111,6 +115,8 @@ export function LivePreview() {
     springConfig: { ...SpringPresets.default, duration: 0.4, useSpring: true },
     enabled: true,
   });
+  const smartAnimateRef = useRef(smartAnimateActions);
+  smartAnimateRef.current = smartAnimateActions;
 
   const timerRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
