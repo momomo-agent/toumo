@@ -904,10 +904,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length === 0) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    
-    const selectedElements = currentKeyframe.keyElements.filter(
+    const selectedElements = state.sharedElements.filter(
       el => state.selectedElementIds.includes(el.id)
     );
     if (selectedElements.length === 0) return;
@@ -962,22 +959,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     };
     
     get().pushHistory();
-    set((state) => ({
-      components: [...state.components, newComponent],
-      keyframes: state.keyframes.map(kf => {
-        if (kf.id !== state.selectedKeyframeId) return kf;
-        // Remove selected elements and add instance
-        const remainingElements = kf.keyElements.filter(
-          el => !state.selectedElementIds.includes(el.id)
-        );
-        return {
-          ...kf,
-          keyElements: [...remainingElements, instanceElement],
-        };
-      }),
-      selectedElementId: instanceId,
-      selectedElementIds: [instanceId],
-    }));
+    set((state) => {
+      const newShared = [
+        ...state.sharedElements.filter(el => !state.selectedElementIds.includes(el.id)),
+        instanceElement,
+      ];
+      return {
+        components: [...state.components, newComponent],
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementId: instanceId,
+        selectedElementIds: [instanceId],
+      };
+    });
   },
 
   // Instantiate component at position
@@ -1026,8 +1020,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   // Enter component edit mode
   enterComponentEditMode: (instanceId) => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const instance = currentKeyframe?.keyElements.find(el => el.id === instanceId);
+    const instance = state.sharedElements.find(el => el.id === instanceId);
     if (!instance?.componentId) return;
     
     set({
@@ -1059,20 +1052,21 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       maxY = Math.max(maxY, el.position.y + el.size.height);
     });
     
-    // Update all instances in all keyframes
-    set((state) => ({
-      keyframes: state.keyframes.map(kf => ({
-        ...kf,
-        keyElements: kf.keyElements.map(el => {
-          if (el.componentId !== componentId) return el;
-          return {
-            ...el,
-            name: component.name,
-            size: { width: maxX || el.size.width, height: maxY || el.size.height },
-          };
-        }),
-      })),
-    }));
+    // Update all instances in sharedElements
+    set((state) => {
+      const newShared = state.sharedElements.map(el => {
+        if (el.componentId !== componentId) return el;
+        return {
+          ...el,
+          name: component.name,
+          size: { width: maxX || el.size.width, height: maxY || el.size.height },
+        };
+      });
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+      };
+    });
   },
 
   // Image element
