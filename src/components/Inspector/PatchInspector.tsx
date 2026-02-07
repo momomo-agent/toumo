@@ -175,6 +175,70 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* DragBinding config */}
+      {patch.type === 'dragBinding' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Target Element</label>
+          <input
+            value={patch.config?.targetElementId || ''}
+            onChange={e => updatePatchConfig(patch.id, { targetElementId: e.target.value })}
+            style={inputStyle}
+            placeholder="Element ID"
+          />
+          <label style={{ ...labelStyle, marginTop: 8 }}>Property</label>
+          <select
+            value={patch.config?.property || 'y'}
+            onChange={e => updatePatchConfig(patch.id, { property: e.target.value })}
+            style={inputStyle}
+          >
+            <option value="x">X</option>
+            <option value="y">Y</option>
+            <option value="opacity">Opacity</option>
+            <option value="rotation">Rotation</option>
+            <option value="scale">Scale</option>
+          </select>
+          <label style={{ ...labelStyle, marginTop: 8 }}>Axis</label>
+          <select
+            value={patch.config?.axis || 'y'}
+            onChange={e => updatePatchConfig(patch.id, { axis: e.target.value })}
+            style={inputStyle}
+          >
+            <option value="x">Horizontal (X)</option>
+            <option value="y">Vertical (Y)</option>
+          </select>
+          <label style={{ ...labelStyle, marginTop: 8 }}>Multiplier</label>
+          <input
+            type="number"
+            value={patch.config?.multiplier ?? 1}
+            onChange={e => updatePatchConfig(patch.id, { multiplier: Number(e.target.value) })}
+            style={inputStyle}
+            step={0.1}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Min</label>
+              <input
+                type="number"
+                value={patch.config?.min ?? ''}
+                onChange={e => updatePatchConfig(patch.id, { min: e.target.value ? Number(e.target.value) : undefined })}
+                style={inputStyle}
+                placeholder="—"
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Max</label>
+              <input
+                type="number"
+                value={patch.config?.max ?? ''}
+                onChange={e => updatePatchConfig(patch.id, { max: e.target.value ? Number(e.target.value) : undefined })}
+                style={inputStyle}
+                placeholder="—"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Timer duration */}
       {patch.type === 'timer' && (
         <div style={{ marginBottom: 12 }}>
