@@ -17,6 +17,8 @@ import { LayerPanel } from './components/LayerPanel';
 import { FilesPanel } from './components/FilesPanel';
 import { ExportPanel } from './components/ExportPanel';
 import { ImportModal } from './components/ImportModal';
+import { ContextMenu } from './components/ContextMenu';
+import type { ContextMenuProps } from './components/ContextMenu';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { DEFAULT_STYLE as BASE_STYLE } from './types';
@@ -67,6 +69,7 @@ export default function App() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isExportPanelOpen, setIsExportPanelOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [contextMenu, _setContextMenu] = useState<ContextMenuProps | null>(null);
 
   const {
     keyframes,
@@ -2756,6 +2759,7 @@ export default function App() {
       <HelpPanel isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <ExportPanel isOpen={isExportPanelOpen} onClose={() => setIsExportPanelOpen(false)} />
       {isImportModalOpen && <ImportModal onClose={() => setIsImportModalOpen(false)} />}
+      {contextMenu && <ContextMenu {...contextMenu} />}
       <WelcomeModal onLoadExample={handleLoadExampleProject} />
     </div>
   );
