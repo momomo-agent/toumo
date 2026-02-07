@@ -25,6 +25,8 @@ function getDefaultPorts(type: PatchType): { inputs: PatchPort[]; outputs: Patch
           { id: 'onEnd', name: 'onEnd', dataType: 'pulse' },
           { id: 'dx', name: 'dx', dataType: 'number' },
           { id: 'dy', name: 'dy', dataType: 'number' },
+          { id: 'speed', name: 'speed', dataType: 'number' },
+          { id: 'direction', name: 'direction', dataType: 'string' },
         ],
       };
     case 'hover':
