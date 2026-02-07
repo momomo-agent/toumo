@@ -132,6 +132,49 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* Animate Property config */}
+      {patch.type === 'animateProperty' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Target Element</label>
+          <input
+            value={patch.config?.targetElementId || ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              targetElementId: e.target.value,
+            })}
+            style={inputStyle}
+            placeholder="Element ID"
+          />
+          <label style={{ ...labelStyle, marginTop: 8 }}>Property</label>
+          <select
+            value={patch.config?.property || ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              property: e.target.value,
+            })}
+            style={inputStyle}
+          >
+            <option value="">— Select —</option>
+            <option value="opacity">Opacity</option>
+            <option value="x">X Position</option>
+            <option value="y">Y Position</option>
+            <option value="width">Width</option>
+            <option value="height">Height</option>
+            <option value="rotation">Rotation</option>
+            <option value="scale">Scale</option>
+            <option value="borderRadius">Border Radius</option>
+            <option value="backgroundColor">Background Color</option>
+          </select>
+          <label style={{ ...labelStyle, marginTop: 8 }}>To Value</label>
+          <input
+            value={patch.config?.toValue ?? ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              toValue: e.target.value,
+            })}
+            style={inputStyle}
+            placeholder="Target value"
+          />
+        </div>
+      )}
+
       {/* Timer duration */}
       {patch.type === 'timer' && (
         <div style={{ marginBottom: 12 }}>
