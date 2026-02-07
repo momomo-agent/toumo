@@ -117,7 +117,7 @@ export function Canvas() {
     }
   }, [canvasScale]);
 
-  // Use resolved elements: base keyElements + displayState layerOverrides
+  // Use resolved elements: base sharedElements + displayState layerOverrides
   const elements = useResolvedElements();
   const { ghosts: deleteGhosts } = useDeleteGhosts(elements);
 
@@ -1220,7 +1220,7 @@ export function Canvas() {
           if (!layout.componentId) {
             // Canvas-level keyframe
             keyframe = keyframes.find(kf => kf.id === layout.id) || null;
-            frameElements = keyframe?.keyElements || [];
+            frameElements = useEditorStore.getState().sharedElements;
             frameName = keyframe?.name || '';
             frameSummary = keyframe?.summary || 'State description';
           } else {

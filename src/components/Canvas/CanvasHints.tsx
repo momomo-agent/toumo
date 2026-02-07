@@ -2,10 +2,8 @@ import { useEditorStore } from '../../store';
 import './CanvasHints.css';
 
 export function CanvasHints() {
-  const { keyframes, selectedKeyframeId } = useEditorStore();
-  
-  const currentKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const elements = currentKeyframe?.keyElements || [];
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const elements = sharedElements;
   
   // Only show hints when canvas is empty
   if (elements.length > 0) {
