@@ -31,7 +31,7 @@ export function executeTrigger(
     const actionPatch = patches.find(p => p.id === conn.toPatchId);
     if (!actionPatch) continue;
 
-    executeActionPatch(actionPatch, handlers);
+    executeActionPatch(actionPatch, handlers, { _patches: patches, _connections: connections });
   }
 }
 
@@ -55,7 +55,7 @@ function evaluateCondition(current: any, operator: string, expected: any): boole
 export function executeActionPatch(
   actionPatch: Patch,
   handlers: PatchActionHandler,
-  _context?: { delta?: { dx: number; dy: number } },
+  _context?: { delta?: { dx: number; dy: number }; _patches?: Patch[]; _connections?: PatchConnection[] },
 ): void {
   switch (actionPatch.type) {
     case 'switchDisplayState': {
@@ -85,7 +85,8 @@ export function executeActionPatch(
     case 'delay': {
       const delayMs = actionPatch.config?.delay ?? 300;
       setTimeout(() => {
-        // After delay, fire connections from 'delayed' output port
+        // Fire all outgoing connections from this delay patch
+        executeTrigger(actionPatch.id, _context?._patches || [], _context?._connections || [], handlers);
       }, delayMs);
       break;
     }
