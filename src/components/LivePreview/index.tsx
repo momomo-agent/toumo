@@ -18,21 +18,6 @@ const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
   spring: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
 };
 
-// ─── Device Definitions ───────────────────────────────────────────────
-const DEVICE_FRAMES = [
-  { id: 'none', label: 'No Frame', width: 0, height: 0, radius: 0, notch: 'none' as const },
-  { id: 'iphone15pro', label: 'iPhone 15 Pro', width: 393, height: 852, radius: 55, notch: 'island' as const },
-  { id: 'iphone14pro', label: 'iPhone 14 Pro', width: 393, height: 852, radius: 55, notch: 'island' as const },
-  { id: 'iphone14', label: 'iPhone 14', width: 390, height: 844, radius: 47, notch: 'notch' as const },
-  { id: 'iphonese', label: 'iPhone SE', width: 375, height: 667, radius: 0, notch: 'none' as const },
-  { id: 'pixel7', label: 'Pixel 7', width: 412, height: 915, radius: 28, notch: 'punch' as const },
-  { id: 'galaxys23', label: 'Galaxy S23', width: 360, height: 780, radius: 24, notch: 'punch' as const },
-  { id: 'ipadmini', label: 'iPad Mini', width: 744, height: 1133, radius: 18, notch: 'none' as const },
-  { id: 'ipadpro11', label: 'iPad Pro 11"', width: 834, height: 1194, radius: 18, notch: 'none' as const },
-] as const;
-
-type DeviceFrameDef = typeof DEVICE_FRAMES[number];
-
 // ─── Easing ───────────────────────────────────────────────────────────
 const easingFunctions: Record<string, string> = {
   'linear': 'linear',
@@ -74,10 +59,6 @@ export function LivePreview() {
     setSelectedDisplayStateId,
   } = useEditorStore();
 
-  const [deviceFrame, setDeviceFrame] = useState('none');
-  const [zoom, setZoom] = useState(100);
-  const [isZoomLocked, setIsZoomLocked] = useState(false);
-
   // State machine
   const [currentKeyframeId, setCurrentKeyframeId] = useState<string>(selectedKeyframeId);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -118,7 +99,7 @@ export function LivePreview() {
   }, [patches, patchConnections, patchHandlers]);
 
   // Smart Animate
-  const [useSmartAnimateMode, setUseSmartAnimateMode] = useState(true);
+  const [useSmartAnimateMode, _setUseSmartAnimateMode] = useState(true);
   const [smartAnimateState, smartAnimateActions] = useSmartAnimate([], {
     springConfig: { ...SpringPresets.default, duration: 0.4, useSpring: true },
     enabled: true,
@@ -231,7 +212,6 @@ export function LivePreview() {
     });
   }, [baseElements, currentDisplayState]);
 
-  const device = useMemo(() => DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0], [deviceFrame]);
   const availableTransitions = useMemo(() => transitions.filter(t => t.from === currentKeyframeId), [transitions, currentKeyframeId]);
 
   // ─── Spring RAF animation ref ──────────────────────────────────────
@@ -398,41 +378,15 @@ export function LivePreview() {
     return [...new Set(hints)];
   }, [availableTransitions]);
 
-  // ─── Scale calculation ────────────────────────────────────────────
-  const contentWidth = device.id === 'none' ? frameSize.width : device.width;
-  const contentHeight = device.id === 'none' ? frameSize.height : device.height;
-  const padding = device.id === 'none' ? 16 : 24; // extra padding for device bezel
-  const autoScale = Math.min(
-    (containerSize.width - padding * 2) / (contentWidth + (device.id !== 'none' ? 24 : 0)),
-    (containerSize.height - padding * 2) / (contentHeight + (device.id !== 'none' ? 24 : 0)),
+  // ─── Scale calculation (fit frameSize into container) ──────────────
+  const padding = 16;
+  const fitScale = Math.min(
+    (containerSize.width - padding * 2) / frameSize.width,
+    (containerSize.height - padding * 2) / frameSize.height,
     1,
   );
-  const effectiveScale = (zoom / 100) * autoScale;
 
-  // ─── Wheel zoom ───────────────────────────────────────────────────
-  const handleWheel = useCallback((e: WheelEvent) => {
-    if ((e.metaKey || e.ctrlKey) && !isZoomLocked) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -10 : 10;
-      setZoom(prev => Math.max(25, Math.min(200, prev + delta)));
-    }
-  }, [isZoomLocked]);
-
-  useEffect(() => {
-    const el = document.getElementById('live-preview-container');
-    if (el) {
-      el.addEventListener('wheel', handleWheel, { passive: false });
-      return () => el.removeEventListener('wheel', handleWheel);
-    }
-  }, [handleWheel]);
-
-  // ─── Reset ────────────────────────────────────────────────────────
-  const handleReset = useCallback(() => {
-    if (springRafRef.current) cancelAnimationFrame(springRafRef.current);
-    setIsTransitioning(false);
-    const initial = keyframes.find(kf => kf.id === 'kf-idle') || keyframes[0];
-    if (initial) setCurrentKeyframeId(initial.id);
-  }, [keyframes]);
+  void springRafRef; // used by transition logic
 
   // ─── Status indicator ─────────────────────────────────────────────
   const isAnimating = isTransitioning || smartAnimateState.isAnimating;
@@ -459,198 +413,45 @@ export function LivePreview() {
         </span>
       </div>
 
-      {/* ── Controls Row ───────────────────────────────────────────── */}
-      <div style={styles.controlsRow}>
-        <select
-          value={deviceFrame}
-          onChange={(e) => setDeviceFrame(e.target.value)}
-          style={styles.select}
-        >
-          {DEVICE_FRAMES.map(d => (
-            <option key={d.id} value={d.id}>
-              {d.label}{d.width > 0 ? ` ${d.width}×${d.height}` : ''}
-            </option>
-          ))}
-        </select>
-        <label style={styles.toggleLabel}>
-          <input
-            type="checkbox"
-            checked={useSmartAnimateMode}
-            onChange={(e) => setUseSmartAnimateMode(e.target.checked)}
-            style={styles.checkbox}
-          />
-          <span style={{ fontSize: 10, color: '#a1a1aa' }}>Smart</span>
-        </label>
-      </div>
-
-      {/* ── Trigger Hints ──────────────────────────────────────────── */}
-      {triggerHints.length > 0 && (
-        <div style={styles.triggerRow}>
-          {triggerHints.map(hint => (
-            <span key={hint} style={styles.triggerBadge}>
-              {getTriggerIcon(hint)} {hint}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* ── Preview Area ───────────────────────────────────────────── */}
+      {/* ── Preview Area (fit to container) ─────────────────────────── */}
       <div
         id="live-preview-container"
         ref={containerRef}
         style={styles.previewArea}
       >
-        {/* Subtle dot grid background */}
-        <div style={styles.dotGrid} />
-
         <div style={{
-          transform: `scale(${effectiveScale})`,
+          transform: `scale(${fitScale})`,
           transformOrigin: 'center center',
-          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }}>
-          {device.id !== 'none' ? (
-            <DeviceFrameShell device={device}>
-              <PreviewContent
-                elements={elements}
-                onTrigger={handleTrigger}
-                transitionDuration={transitionDuration}
-                transitionCurve={transitionCurve}
-                availableTriggers={triggerHints}
-                onPrototypeNavigation={handlePrototypeNavigation}
-                currentFrameId={currentKeyframeId}
-                prototypeTransition={prototypeTransition}
-                onPatchTap={handlePatchTap}
-                onPatchHover={handlePatchHover}
-                onPatchDrag={handlePatchDrag}
-                displayStateId={previewDisplayStateId}
-              />
-            </DeviceFrameShell>
-          ) : (
-            <div style={{
-              width: frameSize.width,
-              height: frameSize.height,
-              background: '#050506',
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.08)',
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            }}>
-              <PreviewContent
-                elements={elements}
-                onTrigger={handleTrigger}
-                transitionDuration={transitionDuration}
-                transitionCurve={transitionCurve}
-                availableTriggers={triggerHints}
-                onPrototypeNavigation={handlePrototypeNavigation}
-                currentFrameId={currentKeyframeId}
-                prototypeTransition={prototypeTransition}
-                onPatchTap={handlePatchTap}
-                onPatchHover={handlePatchHover}
-                onPatchDrag={handlePatchDrag}
-                displayStateId={previewDisplayStateId}
-              />
-            </div>
-          )}
+          <div style={{
+            width: frameSize.width,
+            height: frameSize.height,
+            background: '#050506',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <PreviewContent
+              elements={elements}
+              onTrigger={handleTrigger}
+              transitionDuration={transitionDuration}
+              transitionCurve={transitionCurve}
+              availableTriggers={triggerHints}
+              onPrototypeNavigation={handlePrototypeNavigation}
+              currentFrameId={currentKeyframeId}
+              prototypeTransition={prototypeTransition}
+              onPatchTap={handlePatchTap}
+              onPatchHover={handlePatchHover}
+              onPatchDrag={handlePatchDrag}
+              displayStateId={previewDisplayStateId}
+            />
+          </div>
         </div>
-      </div>
-
-      {/* ── Zoom Controls ──────────────────────────────────────────── */}
-      <div style={styles.zoomRow}>
-        <button onClick={() => setZoom(p => Math.max(25, p - 25))} style={styles.zoomBtn}>−</button>
-        <input
-          type="range" min="25" max="200" value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          style={styles.slider}
-        />
-        <button onClick={() => setZoom(p => Math.min(200, p + 25))} style={styles.zoomBtn}>+</button>
-        <span style={styles.zoomLabel}>{zoom}%</span>
-        <button
-          onClick={() => setIsZoomLocked(!isZoomLocked)}
-          style={{
-            ...styles.zoomBtn,
-            background: isZoomLocked ? 'rgba(245,158,11,0.12)' : 'transparent',
-            borderColor: isZoomLocked ? '#f59e0b' : 'rgba(255,255,255,0.10)',
-          }}
-          title={isZoomLocked ? 'Unlock zoom' : 'Lock zoom'}
-        >
-          {isZoomLocked ? '🔒' : '🔓'}
-        </button>
-      </div>
-
-      {/* ── Action Buttons ─────────────────────────────────────────── */}
-      <div style={styles.actionRow}>
-        <button onClick={handleReset} style={styles.actionBtn}>↺ Reset</button>
-        <button onClick={() => setZoom(100)} style={styles.actionBtn}>1:1</button>
       </div>
     </div>
   );
 }
 
 // ─── Trigger icon helper ──────────────────────────────────────────────
-function getTriggerIcon(trigger: string): string {
-  switch (trigger) {
-    case 'tap': return '👆';
-    case 'hover': return '🖱️';
-    case 'drag': return '✋';
-    case 'scroll': return '📜';
-    case 'timer': return '⏱️';
-    case 'variable': return '📊';
-    default: return '⚡';
-  }
-}
-
-// ─── DeviceFrameShell ─────────────────────────────────────────────────
-function DeviceFrameShell({ device, children }: { device: DeviceFrameDef; children: React.ReactNode }) {
-  const bezel = 12;
-  return (
-    <div style={{
-      width: device.width + bezel * 2,
-      height: device.height + bezel * 2,
-      borderRadius: device.radius + bezel,
-      background: '#1a1a1a',
-      border: '2px solid rgba(255,255,255,0.12)',
-      padding: bezel,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        width: device.width,
-        height: device.height,
-        borderRadius: device.radius,
-        background: '#050506',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Notch / Dynamic Island */}
-        {device.notch === 'island' && (
-          <div style={{
-            position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-            width: 120, height: 36, borderRadius: 18,
-            background: '#000', zIndex: 100,
-          }} />
-        )}
-        {device.notch === 'notch' && (
-          <div style={{
-            position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-            width: 160, height: 34, borderRadius: '0 0 20px 20px',
-            background: '#000', zIndex: 100,
-          }} />
-        )}
-        {device.notch === 'punch' && (
-          <div style={{
-            position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-            width: 12, height: 12, borderRadius: '50%',
-            background: '#000', zIndex: 100,
-          }} />
-        )}
-        {children}
-      </div>
-    </div>
-  );
-}
-
 // ─── Element style helpers (match CanvasElement rendering) ────────────
 function computeElementBackground(el: KeyElement): string {
   const isText = el.shapeType === 'text';
