@@ -22,8 +22,10 @@ import { SUGAR_PRESETS, type SugarResult } from '../engine/SugarPresets';
 interface HistoryEntry {
   keyframes: Keyframe[];
   sharedElements: KeyElement[];
+  displayStates: DisplayState[];
   patches: Patch[];
   patchConnections: PatchConnection[];
+  componentsV2: ComponentV2[];
   description: string;
 }
 
@@ -557,7 +559,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   frameBackground: '#1a1a1a',
-  history: [{ keyframes: initialKeyframes, sharedElements: initialSharedElements, patches: [], patchConnections: [], description: '初始状态' }],
+  history: [{ keyframes: initialKeyframes, sharedElements: initialSharedElements, displayStates: [], patches: [], patchConnections: [], componentsV2: [], description: '初始状态' }],
   historyIndex: 0,
   isDragging: false,
   isResizing: false,
@@ -1014,8 +1016,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const snapshot = {
       keyframes: JSON.parse(JSON.stringify(state.keyframes)) as Keyframe[],
       sharedElements: JSON.parse(JSON.stringify(state.sharedElements)) as KeyElement[],
+      displayStates: JSON.parse(JSON.stringify(state.displayStates)) as DisplayState[],
       patches: JSON.parse(JSON.stringify(state.patches)) as Patch[],
       patchConnections: JSON.parse(JSON.stringify(state.patchConnections)) as PatchConnection[],
+      componentsV2: JSON.parse(JSON.stringify(state.componentsV2)) as ComponentV2[],
       description: description || '',
     };
     const newHistory = state.history.slice(0, state.historyIndex + 1);
@@ -1034,8 +1038,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       keyframes: JSON.parse(JSON.stringify(entry.keyframes)),
       sharedElements: JSON.parse(JSON.stringify(entry.sharedElements)),
+      displayStates: JSON.parse(JSON.stringify(entry.displayStates)),
       patches: JSON.parse(JSON.stringify(entry.patches)),
       patchConnections: JSON.parse(JSON.stringify(entry.patchConnections)),
+      componentsV2: JSON.parse(JSON.stringify(entry.componentsV2)),
       historyIndex: newIndex,
     };
   }),
@@ -1047,8 +1053,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       keyframes: JSON.parse(JSON.stringify(entry.keyframes)),
       sharedElements: JSON.parse(JSON.stringify(entry.sharedElements)),
+      displayStates: JSON.parse(JSON.stringify(entry.displayStates)),
       patches: JSON.parse(JSON.stringify(entry.patches)),
       patchConnections: JSON.parse(JSON.stringify(entry.patchConnections)),
+      componentsV2: JSON.parse(JSON.stringify(entry.componentsV2)),
       historyIndex: newIndex,
     };
   }),
@@ -1645,7 +1653,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],
-      history: [{ keyframes: data.keyframes, sharedElements: data.sharedElements || get().sharedElements, patches: data.patches || get().patches, patchConnections: data.patchConnections || get().patchConnections, description: '项目加载' }],
+      history: [{ keyframes: data.keyframes, sharedElements: data.sharedElements || get().sharedElements, displayStates: data.displayStates || get().displayStates, patches: data.patches || get().patches, patchConnections: data.patchConnections || get().patchConnections, componentsV2: data.componentsV2 || get().componentsV2, description: '项目加载' }],
       historyIndex: 0,
     });
   },
