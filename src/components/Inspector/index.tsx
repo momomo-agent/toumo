@@ -68,8 +68,26 @@ export function Inspector() {
 
   // Show Figma-style design panel when single element is selected
   if (selectedElement) {
+    const isComponentInstance = !!(selectedElement as any).componentId;
+    const compId = (selectedElement as any).componentId;
+    const comp = isComponentInstance
+      ? useEditorStore.getState().componentsV2.find(c => c.id === compId)
+      : null;
+
     return (
       <div key={panelKey} className="panel-transition-enter">
+        {isComponentInstance && comp && (
+          <section className="inspector-panel figma-style" style={{ padding: 12, marginBottom: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 14, color: '#a78bfa' }}>◇</span>
+              <span style={{ fontSize: 12, color: '#fff', fontWeight: 500 }}>{comp.name}</span>
+              <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto' }}>Instance</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#888', lineHeight: 1.5 }}>
+              {comp.displayStates.length} states · {comp.variables.length} variables
+            </div>
+          </section>
+        )}
         <DesignPanel />
       </div>
     );
