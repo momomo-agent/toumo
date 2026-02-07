@@ -55,8 +55,8 @@ export function PrototypeLinkPanel() {
     pushHistory,
   } = useEditorStore();
 
-  const currentKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = currentKeyframe?.keyElements.find(el => el.id === selectedElementId);
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(el => el.id === selectedElementId);
 
   if (!selectedElement) return null;
 

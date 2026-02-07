@@ -11,7 +11,8 @@ export function StateInspector() {
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     (el) => el.id === selectedElementId
   );
 
@@ -25,7 +26,7 @@ export function StateInspector() {
 
   // Find element across all display states
   const elementStateAppearances = selectedElement ? keyframes.map((kf) => {
-    const found = kf.keyElements.find(
+    const found = sharedElements.find(
       (el) => el.name === selectedElement.name || 
               el.id.replace(/-\w+$/, '') === selectedElement.id.replace(/-\w+$/, '')
     );
@@ -56,7 +57,7 @@ export function StateInspector() {
         <div style={valueBoxStyle}>
           <span style={{ color: '#fff' }}>{selectedKeyframe.name}</span>
           <span style={{ color: '#666', fontSize: 10 }}>
-            {selectedKeyframe.keyElements.length} layers
+            {sharedElements.length} layers
           </span>
         </div>
       </div>

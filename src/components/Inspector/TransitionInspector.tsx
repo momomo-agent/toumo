@@ -106,8 +106,8 @@ export function TransitionInspector() {
       {/* Timeline Visualization */}
       {fromKeyframe && toKeyframe && (
         <TransitionTimeline
-          fromElements={fromKeyframe.keyElements}
-          toElements={toKeyframe.keyElements}
+          fromElements={useEditorStore.getState().sharedElements}
+          toElements={useEditorStore.getState().sharedElements}
           duration={transition.duration}
           delay={transition.delay}
           isPlaying={previewTransitionId === transition.id}

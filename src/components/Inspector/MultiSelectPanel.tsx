@@ -35,21 +35,18 @@ function getCommonNumericValue(
 
 export function MultiSelectPanel() {
   const {
-    keyframes,
-    selectedKeyframeId,
     selectedElementIds,
     updateElement,
     deleteSelectedElements,
     pushHistory,
   } = useEditorStore();
 
-  const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
+  const sharedElements = useEditorStore(s => s.sharedElements);
   const selectedElements = useMemo(() => {
-    if (!selectedKeyframe) return [];
-    return selectedKeyframe.keyElements.filter((el) =>
+    return sharedElements.filter((el) =>
       selectedElementIds.includes(el.id),
     );
-  }, [selectedKeyframe, selectedElementIds]);
+  }, [sharedElements, selectedElementIds]);
 
   // Compute shared properties
   const commonFill = getCommonValue(selectedElements, 'fill');
@@ -63,14 +60,14 @@ export function MultiSelectPanel() {
     (overrides: Partial<ShapeStyle>) => {
       pushHistory();
       selectedElementIds.forEach((id) => {
-        const el = selectedKeyframe?.keyElements.find((e) => e.id === id);
+        const el = sharedElements.find((e) => e.id === id);
         if (!el) return;
         updateElement(id, {
           style: { ...(el.style || {}), ...overrides } as ShapeStyle,
         });
       });
     },
-    [selectedElementIds, selectedKeyframe, updateElement, pushHistory],
+    [selectedElementIds, sharedElements, updateElement, pushHistory],
   );
 
   if (selectedElements.length < 2) return null;
