@@ -239,6 +239,24 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* OptionSwitch config */}
+      {patch.type === 'optionSwitch' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Option Count</label>
+          <input
+            type="number"
+            value={patch.config?.optionCount ?? 2}
+            onChange={e => updatePatchConfig(patch.id, { optionCount: Math.max(2, Number(e.target.value)) })}
+            style={inputStyle}
+            min={2}
+            max={10}
+          />
+          <div style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
+            Current: Option {(patch.config?._selectedIndex ?? 0)}
+          </div>
+        </div>
+      )}
+
       {/* Timer duration */}
       {patch.type === 'timer' && (
         <div style={{ marginBottom: 12 }}>
