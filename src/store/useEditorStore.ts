@@ -999,17 +999,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     };
     
     get().pushHistory();
-    set((state) => ({
-      keyframes: state.keyframes.map(kf => {
-        if (kf.id !== state.selectedKeyframeId) return kf;
-        return {
-          ...kf,
-          keyElements: [...kf.keyElements, instanceElement],
-        };
-      }),
-      selectedElementId: instanceId,
-      selectedElementIds: [instanceId],
-    }));
+    set((state) => {
+      const newShared = [...state.sharedElements, instanceElement];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementId: instanceId,
+        selectedElementIds: [instanceId],
+      };
+    });
   },
 
   // Enter component edit mode
@@ -1272,36 +1270,31 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const scaleX = newSize.width / groupElement.size.width;
     const scaleY = newSize.height / groupElement.size.height;
     
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) => {
-        if (kf.id !== state.selectedKeyframeId) return kf;
-        
-        return {
-          ...kf,
-          keyElements: kf.keyElements.map((el) => {
-            if (el.id === groupId) {
-              // Update group itself
-              return { ...el, size: newSize, position: newPosition };
-            }
-            if (el.parentId === groupId) {
-              // Scale child position and size proportionally
-              return {
-                ...el,
-                position: {
-                  x: Math.round(el.position.x * scaleX),
-                  y: Math.round(el.position.y * scaleY),
-                },
-                size: {
-                  width: Math.round(el.size.width * scaleX),
-                  height: Math.round(el.size.height * scaleY),
-                },
-              };
-            }
-            return el;
-          }),
-        };
-      }),
-    }));
+    set((state) => {
+      const newShared = state.sharedElements.map((el) => {
+        if (el.id === groupId) {
+          return { ...el, size: newSize, position: newPosition };
+        }
+        if (el.parentId === groupId) {
+          return {
+            ...el,
+            position: {
+              x: Math.round(el.position.x * scaleX),
+              y: Math.round(el.position.y * scaleY),
+            },
+            size: {
+              width: Math.round(el.size.width * scaleX),
+              height: Math.round(el.size.height * scaleY),
+            },
+          };
+        }
+        return el;
+      });
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+      };
+    });
   },
 
   // Align elements
@@ -1821,10 +1814,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       ...kf,
       id: newId,
       name: `${kf.name} copy`,
-      keyElements: kf.keyElements.map(el => ({
-        ...el,
-        id: `el-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      })),
+      keyElements: state.sharedElements,
     };
     set((s) => ({
       keyframes: [...s.keyframes, cloned],
@@ -1852,10 +1842,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   clearCanvas: () => {
     get().pushHistory();
+    const emptyElements: KeyElement[] = [];
     set((s) => ({
-      keyframes: s.keyframes.map(kf => 
-        kf.id === s.selectedKeyframeId ? { ...kf, keyElements: [] } : kf
-      ),
+      sharedElements: emptyElements,
+      keyframes: syncToAllKeyframes(emptyElements, s.keyframes),
       selectedElementIds: [],
       selectedElementId: null,
     }));
@@ -1863,12 +1853,14 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   resetProject: () => {
     const defaultKfId = `kf-${Date.now()}`;
+    const emptyElements: KeyElement[] = [];
     set({
+      sharedElements: emptyElements,
       keyframes: [{
         id: defaultKfId,
         name: 'Frame 1',
         summary: '',
-        keyElements: [],
+        keyElements: emptyElements,
       }],
       selectedKeyframeId: defaultKfId,
       selectedElementIds: [],
@@ -3079,40 +3071,34 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   })),
 
   // Variable binding actions
-  addVariableBinding: (elementId: string, binding: VariableBinding) => set((state) => ({
-    keyframes: state.keyframes.map(kf =>
-      kf.id === state.selectedKeyframeId
-        ? {
-            ...kf,
-            keyElements: kf.keyElements.map(el =>
-              el.id === elementId
-                ? { ...el, variableBindings: [...(el.variableBindings || []), binding] }
-                : el
-            ),
-          }
-        : kf
-    ),
-  })),
+  addVariableBinding: (elementId: string, binding: VariableBinding) => set((state) => {
+    const newShared = state.sharedElements.map(el =>
+      el.id === elementId
+        ? { ...el, variableBindings: [...(el.variableBindings || []), binding] }
+        : el
+    );
+    return {
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
+    };
+  }),
 
-  removeVariableBinding: (elementId: string, variableId: string, property: string) => set((state) => ({
-    keyframes: state.keyframes.map(kf =>
-      kf.id === state.selectedKeyframeId
+  removeVariableBinding: (elementId: string, variableId: string, property: string) => set((state) => {
+    const newShared = state.sharedElements.map(el =>
+      el.id === elementId
         ? {
-            ...kf,
-            keyElements: kf.keyElements.map(el =>
-              el.id === elementId
-                ? {
-                    ...el,
-                    variableBindings: (el.variableBindings || []).filter(
-                      b => !(b.variableId === variableId && b.property === property)
-                    ),
-                  }
-                : el
+            ...el,
+            variableBindings: (el.variableBindings || []).filter(
+              b => !(b.variableId === variableId && b.property === property)
             ),
           }
-        : kf
-    ),
-  })),
+        : el
+    );
+    return {
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
+    };
+  }),
 
   // Import actions
   importKeyframes: (keyframes: Keyframe[]) => set(() => ({
