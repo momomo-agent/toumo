@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useEditorStore } from '../../store';
 import type { CurveConfig, CurveType } from '../../types';
 import { DEFAULT_CURVE_CONFIG } from '../../types';
-import { DraggableBezierEditor, SpringCurveGraph } from '../CurveEditor';
+import { DraggableBezierEditor, SpringCurveGraph, BallPreview } from '../CurveEditor';
 
 const CURVE_OPTIONS: { value: CurveType; label: string }[] = [
   { value: 'linear', label: 'Linear' },
@@ -92,6 +92,17 @@ function CurveSelector({
       {effective.type === 'bezier' && (
         <BezierEditor curve={effective} onChange={onChange} />
       )}
+      <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center' }}>
+        <BallPreview
+          bezier={effective.controlPoints}
+          spring={effective.type === 'spring' ? {
+            damping: effective.damping ?? 26,
+            stiffness: effective.stiffness ?? 170,
+            mass: effective.mass ?? 1,
+          } : undefined}
+          duration={effective.duration ?? 300}
+        />
+      </div>
     </div>
   );
 }
