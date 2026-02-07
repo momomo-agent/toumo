@@ -1228,11 +1228,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   // Enter group edit mode (double-click on group)
   enterGroupEditMode: (groupId: string) => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
     // Verify it's a valid group (has children)
-    const children = currentKeyframe.keyElements.filter(el => el.parentId === groupId);
+    const children = state.sharedElements.filter(el => el.parentId === groupId);
     if (children.length === 0) return;
     
     set({
@@ -1257,13 +1256,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   // Resize group with proportional scaling of children
   resizeGroup: (groupId: string, newSize: Size, newPosition: Position) => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
-    const groupElement = currentKeyframe.keyElements.find(el => el.id === groupId);
+    const groupElement = state.sharedElements.find(el => el.id === groupId);
     if (!groupElement) return;
     
-    const children = currentKeyframe.keyElements.filter(el => el.parentId === groupId);
+    const children = state.sharedElements.filter(el => el.parentId === groupId);
     if (children.length === 0) return;
     
     // Calculate scale factors
@@ -1302,10 +1300,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
-    const selected = currentKeyframe.keyElements.filter(
+    const selected = state.sharedElements.filter(
       el => state.selectedElementIds.includes(el.id)
     );
     
@@ -1349,10 +1346,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 3) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
-    const selected = currentKeyframe.keyElements
+    const selected = state.sharedElements
       .filter(el => state.selectedElementIds.includes(el.id))
       .sort((a, b) => direction === 'horizontal' 
         ? a.position.x - b.position.x 
@@ -1413,8 +1409,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (element?.style) {
       set({ copiedStyle: { ...element.style } });
     }
@@ -1457,8 +1452,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const maxZ = Math.max(...(kf?.keyElements.map(e => e.zIndex ?? 0) || [0]));
+    const maxZ = Math.max(...(state.sharedElements.map(e => e.zIndex ?? 0) || [0]));
     get().updateElement(state.selectedElementId, { zIndex: maxZ + 1 });
   },
 
@@ -1466,8 +1460,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (!state.selectedElementId) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const minZ = Math.min(...(kf?.keyElements.map(e => e.zIndex ?? 0) || [0]));
+    const minZ = Math.min(...(state.sharedElements.map(e => e.zIndex ?? 0) || [0]));
     get().updateElement(state.selectedElementId, { zIndex: minZ - 1 });
   },
 
@@ -1477,8 +1470,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const els = state.sharedElements.filter(e => ids.includes(e.id)) || [];
     const minX = Math.min(...els.map(e => e.position.x));
     els.forEach(el => get().updateElement(el.id, { position: { ...el.position, x: minX } }));
   },
@@ -1488,8 +1480,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const els = state.sharedElements.filter(e => ids.includes(e.id)) || [];
     const centers = els.map(e => e.position.x + e.size.width / 2);
     const avgCenter = centers.reduce((a, b) => a + b, 0) / centers.length;
     els.forEach(el => get().updateElement(el.id, { 
@@ -1502,8 +1493,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const els = state.sharedElements.filter(e => ids.includes(e.id)) || [];
     const maxRight = Math.max(...els.map(e => e.position.x + e.size.width));
     els.forEach(el => get().updateElement(el.id, { 
       position: { ...el.position, x: maxRight - el.size.width } 
@@ -1515,8 +1505,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const els = state.sharedElements.filter(e => ids.includes(e.id)) || [];
     const minY = Math.min(...els.map(e => e.position.y));
     els.forEach(el => get().updateElement(el.id, { position: { ...el.position, y: minY } }));
   },
@@ -1526,8 +1515,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const els = state.sharedElements.filter(e => ids.includes(e.id)) || [];
     const centers = els.map(e => e.position.y + e.size.height / 2);
     const avgCenter = centers.reduce((a, b) => a + b, 0) / centers.length;
     els.forEach(el => get().updateElement(el.id, { 
@@ -1540,8 +1528,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = kf?.keyElements.filter(e => ids.includes(e.id)) || [];
+    const els = state.sharedElements.filter(e => ids.includes(e.id)) || [];
     const maxBottom = Math.max(...els.map(e => e.position.y + e.size.height));
     els.forEach(el => get().updateElement(el.id, { 
       position: { ...el.position, y: maxBottom - el.size.height } 
@@ -1553,8 +1540,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 3) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = (kf?.keyElements.filter(e => ids.includes(e.id)) || [])
+    const els = (state.sharedElements.filter(e => ids.includes(e.id)) || [])
       .sort((a, b) => a.position.x - b.position.x);
     const first = els[0], last = els[els.length - 1];
     const totalWidth = (last.position.x + last.size.width) - first.position.x;
@@ -1571,8 +1557,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = state.selectedElementIds;
     if (ids.length < 3) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = (kf?.keyElements.filter(e => ids.includes(e.id)) || [])
+    const els = (state.sharedElements.filter(e => ids.includes(e.id)) || [])
       .sort((a, b) => a.position.y - b.position.y);
     const first = els[0], last = els[els.length - 1];
     const totalHeight = (last.position.y + last.size.height) - first.position.y;
@@ -1690,11 +1675,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const first = kf?.keyElements.find(e => e.id === state.selectedElementIds[0]);
+    const first = state.sharedElements.find(e => e.id === state.selectedElementIds[0]);
     if (!first) return;
     state.selectedElementIds.slice(1).forEach(id => {
-      get().updateElement(id, { size: { width: first.size.width, height: kf?.keyElements.find(e => e.id === id)?.size.height || 0 } });
+      get().updateElement(id, { size: { width: first.size.width, height: state.sharedElements.find(e => e.id === id)?.size.height || 0 } });
     });
   },
 
@@ -1702,11 +1686,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const first = kf?.keyElements.find(e => e.id === state.selectedElementIds[0]);
+    const first = state.sharedElements.find(e => e.id === state.selectedElementIds[0]);
     if (!first) return;
     state.selectedElementIds.slice(1).forEach(id => {
-      get().updateElement(id, { size: { width: kf?.keyElements.find(e => e.id === id)?.size.width || 0, height: first.size.height } });
+      get().updateElement(id, { size: { width: state.sharedElements.find(e => e.id === id)?.size.width || 0, height: first.size.height } });
     });
   },
 
@@ -1714,8 +1697,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 3) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = state.selectedElementIds.map(id => kf?.keyElements.find(e => e.id === id)).filter(Boolean) as KeyElement[];
+    const els = state.selectedElementIds.map(id => state.sharedElements.find(e => e.id === id)).filter(Boolean) as KeyElement[];
     els.sort((a, b) => a.position.x - b.position.x);
     const minX = els[0].position.x;
     const maxX = els[els.length - 1].position.x;
@@ -1731,8 +1713,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 3) return;
     get().pushHistory();
-    const kf = state.keyframes.find(k => k.id === state.selectedKeyframeId);
-    const els = state.selectedElementIds.map(id => kf?.keyElements.find(e => e.id === id)).filter(Boolean) as KeyElement[];
+    const els = state.selectedElementIds.map(id => state.sharedElements.find(e => e.id === id)).filter(Boolean) as KeyElement[];
     els.sort((a, b) => a.position.y - b.position.y);
     const minY = els[0].position.y;
     const maxY = els[els.length - 1].position.y;
@@ -3127,8 +3108,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!targetId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === targetId);
+    const element = state.sharedElements.find(el => el.id === targetId);
     if (!element) return;
     
     const isEnabled = element.autoLayout?.enabled ?? false;
@@ -3149,8 +3129,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout?.enabled) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3164,8 +3143,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout?.enabled) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3179,8 +3157,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout?.enabled) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3200,8 +3177,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout?.enabled) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3215,8 +3191,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout?.enabled) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3230,8 +3205,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout?.enabled) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3245,8 +3219,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!state.selectedElementId) return;
     
     get().pushHistory();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === state.selectedElementId);
+    const element = state.sharedElements.find(el => el.id === state.selectedElementId);
     if (!element?.autoLayout) return;
     
     get().updateElement(state.selectedElementId, {
@@ -3261,8 +3234,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     get().pushHistory();
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === elementId);
+    const element = state.sharedElements.find(el => el.id === elementId);
     if (!element) return;
     
     const layoutChild: ChildLayoutConfig = {
@@ -3280,10 +3252,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   applyAutoLayout: (parentId: string) => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
-    const parent = currentKeyframe.keyElements.find(el => el.id === parentId);
+    const parent = state.sharedElements.find(el => el.id === parentId);
     if (!parent?.autoLayout?.enabled) return;
     
     const { 
@@ -3294,7 +3265,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     } = parent.autoLayout;
     
     // Find children
-    const children = currentKeyframe.keyElements.filter(el => el.parentId === parentId);
+    const children = state.sharedElements.filter(el => el.parentId === parentId);
     if (children.length === 0) return;
     
     const isHorizontal = direction === 'horizontal';
@@ -3445,11 +3416,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
     const selectedElements = state.selectedElementIds
-      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .map(id => state.sharedElements.find(el => el.id === id))
       .filter((el): el is KeyElement => el !== undefined);
     
     if (!canPerformBooleanOperation(selectedElements)) return;
@@ -3477,11 +3447,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
     const selectedElements = state.selectedElementIds
-      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .map(id => state.sharedElements.find(el => el.id === id))
       .filter((el): el is KeyElement => el !== undefined);
     
     if (!canPerformBooleanOperation(selectedElements)) return;
@@ -3509,11 +3478,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
     const selectedElements = state.selectedElementIds
-      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .map(id => state.sharedElements.find(el => el.id === id))
       .filter((el): el is KeyElement => el !== undefined);
     
     if (!canPerformBooleanOperation(selectedElements)) return;
@@ -3541,11 +3509,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length < 2) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
+    if (!state.selectedKeyframeId) return;
     
     const selectedElements = state.selectedElementIds
-      .map(id => currentKeyframe.keyElements.find(el => el.id === id))
+      .map(id => state.sharedElements.find(el => el.id === id))
       .filter((el): el is KeyElement => el !== undefined);
     
     if (!canPerformBooleanOperation(selectedElements)) return;
@@ -3847,23 +3814,12 @@ useEditorStore.subscribe((state) => {
   if (_syncing) return;
   _syncing = true;
   try {
-    const selectedKf = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    
-    // Check if any keyframe's keyElements differs from sharedElements
-    if (selectedKf && selectedKf.keyElements !== state.sharedElements) {
-      // Legacy action modified keyElements directly → sync back to sharedElements
+    // Ensure all keyframes.keyElements point to sharedElements
+    const needsSync = state.keyframes.some(kf => kf.keyElements !== state.sharedElements);
+    if (needsSync) {
       useEditorStore.setState({
-        sharedElements: selectedKf.keyElements,
-        keyframes: syncToAllKeyframes(selectedKf.keyElements, state.keyframes),
+        keyframes: syncToAllKeyframes(state.sharedElements, state.keyframes),
       });
-    } else {
-      // sharedElements changed → sync to keyframes
-      const needsSync = state.keyframes.some(kf => kf.keyElements !== state.sharedElements);
-      if (needsSync) {
-        useEditorStore.setState({
-          keyframes: syncToAllKeyframes(state.sharedElements, state.keyframes),
-        });
-      }
     }
   } finally {
     _syncing = false;
