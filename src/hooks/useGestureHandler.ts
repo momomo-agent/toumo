@@ -16,11 +16,11 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import { GestureEngine, type GestureCallbacks } from '../engine/GestureEngine';
 import { InteractionExecutor, type ExecutionContext } from '../engine/InteractionExecutor';
 import type {
-  Interaction,
   Variable,
   GestureType,
-  InteractionAction,
 } from '../types';
+type Interaction = any;
+type InteractionAction = any;
 
 export interface UseGestureHandlerOptions {
   // 交互列表

@@ -8,12 +8,12 @@
  */
 
 import type {
-  Interaction,
-  InteractionAction,
-  InteractionCondition,
   Variable,
-  HapticType,
 } from '../types';
+type Interaction = any;
+type InteractionAction = any;
+type InteractionCondition = any;
+type HapticType = any;
 
 // 执行上下文
 export interface ExecutionContext {

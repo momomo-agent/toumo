@@ -16,9 +16,9 @@ import type {
   GestureType,
   GestureConfig,
   GestureRecognition,
-  Interaction,
   SwipeDirection,
 } from '../types';
+type Interaction = any;
 
 // 默认手势识别配置
 const DEFAULT_RECOGNITION: GestureRecognition = {
