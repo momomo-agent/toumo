@@ -288,9 +288,10 @@ interface SectionProps {
   children: React.ReactNode;
   defaultExpanded?: boolean;
   onAdd?: () => void;
+  extra?: React.ReactNode;
 }
 
-function Section({ title, children, defaultExpanded = true, onAdd }: SectionProps) {
+function Section({ title, children, defaultExpanded = true, onAdd, extra }: SectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const contentRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -338,6 +339,7 @@ function Section({ title, children, defaultExpanded = true, onAdd }: SectionProp
             <PlusIcon />
           </button>
         )}
+        {extra && <span onClick={(e) => e.stopPropagation()}>{extra}</span>}
       </div>
       <div
         ref={contentRef}
@@ -1178,7 +1180,7 @@ export function DesignPanel() {
       <TextPropertiesPanel />
 
       {/* Fill Section */}
-      <Section title="Fill" onAdd={addFill}>
+      <Section title="Fill" onAdd={addFill} extra={<KeyPropertyButton propertyName="fill" isKey={useIsKeyProperty('fill')} />}>
         {fills.length === 0 ? (
           <div className="figma-empty-hint">Click + to add a fill</div>
         ) : (
@@ -1348,7 +1350,7 @@ export function DesignPanel() {
       )}
 
       {/* Stroke Section */}
-      <Section title="Stroke" onAdd={addStroke}>
+      <Section title="Stroke" onAdd={addStroke} extra={<KeyPropertyButton propertyName="stroke" isKey={useIsKeyProperty('stroke')} />}>
         {strokes.length === 0 ? (
           <div className="figma-empty-hint">Click + to add a stroke</div>
         ) : (
@@ -1384,7 +1386,7 @@ export function DesignPanel() {
       </Section>
 
       {/* Effects Section */}
-      <Section title="Effects" onAdd={addEffect}>
+      <Section title="Effects" onAdd={addEffect} extra={<KeyPropertyButton propertyName="blur" isKey={useIsKeyProperty('blur')} />}>
         {effects.length === 0 ? (
           <div className="figma-empty-hint">Click + to add an effect</div>
         ) : (
