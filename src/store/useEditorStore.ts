@@ -20,6 +20,9 @@ import { performBooleanOperation, canPerformBooleanOperation } from '../utils/bo
 
 interface HistoryEntry {
   keyframes: Keyframe[];
+  sharedElements: KeyElement[];
+  patches: Patch[];
+  patchConnections: PatchConnection[];
   description: string;
 }
 
@@ -535,7 +538,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   frameBackground: '#1a1a1a',
-  history: [{ keyframes: initialKeyframes, description: '初始状态' }],
+  history: [{ keyframes: initialKeyframes, sharedElements: initialSharedElements, patches: [], patchConnections: [], description: '初始状态' }],
   historyIndex: 0,
   isDragging: false,
   isResizing: false,
@@ -988,9 +991,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   pushHistory: (description?: string) => set((state) => {
-    const snapshot = JSON.parse(JSON.stringify(state.keyframes)) as Keyframe[];
+    const snapshot = {
+      keyframes: JSON.parse(JSON.stringify(state.keyframes)) as Keyframe[],
+      sharedElements: JSON.parse(JSON.stringify(state.sharedElements)) as KeyElement[],
+      patches: JSON.parse(JSON.stringify(state.patches)) as Patch[],
+      patchConnections: JSON.parse(JSON.stringify(state.patchConnections)) as PatchConnection[],
+      description: description || '',
+    };
     const newHistory = state.history.slice(0, state.historyIndex + 1);
-    newHistory.push({ keyframes: snapshot, description: description || '' });
+    newHistory.push(snapshot);
     if (newHistory.length > 50) newHistory.shift();
     return {
       history: newHistory,
@@ -1001,8 +1010,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   undo: () => set((state) => {
     if (state.historyIndex <= 0) return state;
     const newIndex = state.historyIndex - 1;
+    const entry = state.history[newIndex];
     return {
-      keyframes: JSON.parse(JSON.stringify(state.history[newIndex].keyframes)),
+      keyframes: JSON.parse(JSON.stringify(entry.keyframes)),
+      sharedElements: JSON.parse(JSON.stringify(entry.sharedElements)),
+      patches: JSON.parse(JSON.stringify(entry.patches)),
+      patchConnections: JSON.parse(JSON.stringify(entry.patchConnections)),
       historyIndex: newIndex,
     };
   }),
@@ -1010,8 +1023,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   redo: () => set((state) => {
     if (state.historyIndex >= state.history.length - 1) return state;
     const newIndex = state.historyIndex + 1;
+    const entry = state.history[newIndex];
     return {
-      keyframes: JSON.parse(JSON.stringify(state.history[newIndex].keyframes)),
+      keyframes: JSON.parse(JSON.stringify(entry.keyframes)),
+      sharedElements: JSON.parse(JSON.stringify(entry.sharedElements)),
+      patches: JSON.parse(JSON.stringify(entry.patches)),
+      patchConnections: JSON.parse(JSON.stringify(entry.patchConnections)),
       historyIndex: newIndex,
     };
   }),
@@ -1603,7 +1620,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],
-      history: [{ keyframes: data.keyframes, description: '项目加载' }],
+      history: [{ keyframes: data.keyframes, sharedElements: get().sharedElements, patches: get().patches, patchConnections: get().patchConnections, description: '项目加载' }],
       historyIndex: 0,
     });
   },
