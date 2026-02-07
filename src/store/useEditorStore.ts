@@ -314,7 +314,7 @@ interface EditorActions {
   addVariableBinding: (elementId: string, binding: VariableBinding) => void;
   removeVariableBinding: (elementId: string, variableId: string, property: string) => void;
   // Project actions
-  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[]; conditionRules?: ConditionRule[] }) => void;
+  loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[]; conditionRules?: ConditionRule[]; sharedElements?: KeyElement[]; displayStates?: DisplayState[]; patches?: Patch[]; patchConnections?: PatchConnection[]; componentsV2?: ComponentV2[] }) => void;
   exportProject: () => string;
   // Style clipboard
   copiedStyle: ShapeStyle | null;
@@ -1628,10 +1628,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       interactions: data.interactions || [],
       variables: data.variables || [],
       conditionRules: data.conditionRules || [],
+      sharedElements: data.sharedElements || get().sharedElements,
+      displayStates: data.displayStates || get().displayStates,
+      patches: data.patches || get().patches,
+      patchConnections: data.patchConnections || get().patchConnections,
+      componentsV2: data.componentsV2 || get().componentsV2,
       selectedKeyframeId: data.keyframes[0]?.id || '',
       selectedElementId: null,
       selectedElementIds: [],
-      history: [{ keyframes: data.keyframes, sharedElements: get().sharedElements, patches: get().patches, patchConnections: get().patchConnections, description: '项目加载' }],
+      history: [{ keyframes: data.keyframes, sharedElements: data.sharedElements || get().sharedElements, patches: data.patches || get().patches, patchConnections: data.patchConnections || get().patchConnections, description: '项目加载' }],
       historyIndex: 0,
     });
   },
