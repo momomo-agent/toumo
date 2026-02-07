@@ -630,16 +630,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length === 0) return;
     
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    
     get().pushHistory();
     
     const newIds: string[] = [];
     const duplicates: KeyElement[] = [];
     
     state.selectedElementIds.forEach(id => {
-      const el = currentKeyframe.keyElements.find(e => e.id === id);
+      const el = state.sharedElements.find(e => e.id === id);
       if (!el) return;
       const newId = `el-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       newIds.push(newId);
@@ -651,22 +648,20 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       });
     });
     
-    set((s) => ({
-      keyframes: s.keyframes.map(kf => 
-        kf.id === s.selectedKeyframeId 
-          ? { ...kf, keyElements: [...kf.keyElements, ...duplicates] }
-          : kf
-      ),
-      selectedElementIds: newIds,
-      selectedElementId: newIds.length === 1 ? newIds[0] : null,
-    }));
+    set((s) => {
+      const newShared = [...s.sharedElements, ...duplicates];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, s.keyframes),
+        selectedElementIds: newIds,
+        selectedElementId: newIds.length === 1 ? newIds[0] : null,
+      };
+    });
   },
   
   selectAllElements: () => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    const allIds = currentKeyframe.keyElements.map(el => el.id);
+    const allIds = state.sharedElements.map(el => el.id);
     set({
       selectedElementIds: allIds,
       selectedElementId: allIds.length === 1 ? allIds[0] : null,
