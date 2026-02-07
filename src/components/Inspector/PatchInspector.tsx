@@ -93,6 +93,16 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* Hover trigger config */}
+      {patch.type === 'hover' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Hover Delay (ms)</label>
+          <input type="number" value={patch.config?.hoverDelay ?? 0}
+            onChange={e => updatePatchConfig(patch.id, { hoverDelay: Number(e.target.value) })}
+            style={inputStyle} min={0} step={50} />
+        </div>
+      )}
+
       {/* Scroll trigger config */}
       {patch.type === 'scroll' && (
         <div style={{ marginBottom: 12 }}>
