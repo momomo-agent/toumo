@@ -99,6 +99,13 @@ export const PatchNode = React.memo(function PatchNode({
         </span>
       </div>
 
+      {/* Config summary */}
+      {patch.config?.targetElementId && (
+        <div style={{ padding: '2px 10px', fontSize: 9, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          🎯 {patch.config.targetElementId.slice(0, 12)}
+        </div>
+      )}
+
       {/* Ports */}
       <div style={{ padding: '8px 0' }}>
         {/* Input ports */}
