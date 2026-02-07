@@ -23,7 +23,7 @@ export interface ExportOptions {
 function stripLargeImages(keyframes: Keyframe[], maxBytes = 50000): Keyframe[] {
   return keyframes.map(kf => ({
     ...kf,
-    keyElements: kf.keyElements.map(el => {
+    keyElements: (kf.keyElements || []).map(el => {
       if (el.style?.imageSrc && el.style.imageSrc.length > maxBytes) {
         return {
           ...el,

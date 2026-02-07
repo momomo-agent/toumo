@@ -391,7 +391,8 @@ export type Keyframe = {
   name: string;
   summary: string;
   functionalState?: string;
-  keyElements: KeyElement[];
+  /** @deprecated Use sharedElements from store instead */
+  keyElements?: KeyElement[];
 };
 
 // Trigger types for transitions
