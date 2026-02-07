@@ -4,6 +4,10 @@ import { DesignPanel } from './DesignPanel';
 import { MultiSelectPanel } from './MultiSelectPanel';
 import { TransitionInspector } from './TransitionInspector';
 import { PatchInspector } from './PatchInspector';
+import { AutoLayoutPanel } from './AutoLayoutPanel';
+import { ConstraintsPanel } from './ConstraintsPanel';
+import { OverflowPanel } from './OverflowPanel';
+import { PrototypeLinkPanel } from './PrototypeLinkPanel';
 import { useResolvedElements } from '../../hooks/useResolvedElements';
 import './Inspector.css';
 import { TransitionCurvePanel } from './TransitionCurvePanel';
@@ -160,6 +164,10 @@ export function Inspector() {
           </section>
         )}
         <DesignPanel />
+        <AutoLayoutPanel />
+        <ConstraintsPanel />
+        <OverflowPanel />
+        <PrototypeLinkPanel />
       </div>
     );
   }
