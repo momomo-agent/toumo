@@ -352,7 +352,10 @@ export function PatchCanvas() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT') return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedPatchId) {
+        const selIds = useEditorStore.getState().selectedPatchIds;
+        if (selIds.length > 1) {
+          useEditorStore.getState().removeSelectedPatches();
+        } else if (selectedPatchId) {
           removePatch(selectedPatchId);
         } else if (selectedConnectionId) {
           removePatchConnection(selectedConnectionId);

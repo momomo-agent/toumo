@@ -348,6 +348,10 @@ interface EditorActions {
   addPatchConnection: (connection: PatchConnection) => void;
   removePatchConnection: (id: string) => void;
   setSelectedPatchId: (id: string | null) => void;
+  setSelectedPatchIds: (ids: string[]) => void;
+  togglePatchSelection: (id: string) => void;
+  removeSelectedPatches: () => void;
+  moveSelectedPatches: (dx: number, dy: number) => void;
   flashPatch: (id: string) => void;
   setSelectedConnectionId: (id: string | null) => void;
   // DisplayState actions (PRD v2 - shared layer tree)
@@ -3870,6 +3874,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   setSelectedPatchId: (id) => {
     set({ selectedPatchId: id });
+  },
+
+  setSelectedPatchIds: (ids) => {
+    set({ selectedPatchIds: ids, selectedPatchId: ids[ids.length - 1] || null });
+  },
+
+  togglePatchSelection: (id) => {
+    const cur = get().selectedPatchIds;
+    const next = cur.includes(id) ? cur.filter(i => i !== id) : [...cur, id];
+    set({ selectedPatchIds: next, selectedPatchId: next[next.length - 1] || null });
+  },
+
+  removeSelectedPatches: () => {
+    const { selectedPatchIds, patches, patchConnections } = get();
+    if (!selectedPatchIds.length) return;
+    const idSet = new Set(selectedPatchIds);
+    set({
+      patches: patches.filter(p => !idSet.has(p.id)),
+      patchConnections: patchConnections.filter(c => !idSet.has(c.fromPatchId) && !idSet.has(c.toPatchId)),
+      selectedPatchIds: [],
+      selectedPatchId: null,
+    });
+  },
+
+  moveSelectedPatches: (dx, dy) => {
+    const { selectedPatchIds, patches } = get();
+    if (!selectedPatchIds.length) return;
+    const idSet = new Set(selectedPatchIds);
+    set({
+      patches: patches.map(p => idSet.has(p.id)
+        ? { ...p, position: { x: p.position.x + dx, y: p.position.y + dy } }
+        : p),
+    });
   },
 
   flashPatch: (id) => {
