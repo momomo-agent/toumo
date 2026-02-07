@@ -272,7 +272,7 @@ export function handleElementDrag(
     for (const conn of outgoing) {
       const actionPatch = patches.find(p => p.id === conn.toPatchId);
       if (!actionPatch) continue;
-      executeActionPatch(actionPatch, handlers, { delta });
+      executeActionPatch(actionPatch, handlers, { delta, _patches: patches, _connections: connections });
     }
   }
   return true;
