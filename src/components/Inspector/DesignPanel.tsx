@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import { ColorPicker } from './ColorPicker';
 import { GradientEditor } from './GradientEditor';
 import { AutoLayoutPanel, ChildLayoutSection } from './AutoLayoutPanel';
@@ -721,8 +722,9 @@ export function DesignPanel() {
     updateElement,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  // Use resolved elements so Inspector shows overridden values for current display state
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
 

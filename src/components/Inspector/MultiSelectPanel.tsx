@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import { AlignmentPanel } from './AlignmentPanel';
 import type { ShapeStyle, KeyElement } from '../../types';
 
@@ -41,12 +42,12 @@ export function MultiSelectPanel() {
     pushHistory,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
+  const resolvedElements = useResolvedElements();
   const selectedElements = useMemo(() => {
-    return sharedElements.filter((el) =>
+    return resolvedElements.filter((el) =>
       selectedElementIds.includes(el.id),
     );
-  }, [sharedElements, selectedElementIds]);
+  }, [resolvedElements, selectedElementIds]);
 
   // Compute shared properties
   const commonFill = getCommonValue(selectedElements, 'fill');
@@ -60,14 +61,14 @@ export function MultiSelectPanel() {
     (overrides: Partial<ShapeStyle>) => {
       pushHistory();
       selectedElementIds.forEach((id) => {
-        const el = sharedElements.find((e) => e.id === id);
+        const el = resolvedElements.find((e) => e.id === id);
         if (!el) return;
         updateElement(id, {
           style: { ...(el.style || {}), ...overrides } as ShapeStyle,
         });
       });
     },
-    [selectedElementIds, sharedElements, updateElement, pushHistory],
+    [selectedElementIds, resolvedElements, updateElement, pushHistory],
   );
 
   if (selectedElements.length < 2) return null;

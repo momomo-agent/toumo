@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import type { 
   PrototypeLink, 
   PrototypeLinkTrigger, 
@@ -55,8 +56,8 @@ export function PrototypeLinkPanel() {
     pushHistory,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(el => el.id === selectedElementId);
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(el => el.id === selectedElementId);
 
   if (!selectedElement) return null;
 

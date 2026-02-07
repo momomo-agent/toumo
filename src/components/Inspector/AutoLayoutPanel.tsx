@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import type { AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode } from '../../types';
 import './AutoLayoutPanel.css';
 
@@ -11,15 +12,15 @@ function ChildLayoutSection() {
     setChildSizingMode,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     el => el.id === selectedElementId
   );
 
   // Only show if this element has a parent with auto layout enabled
   if (!selectedElement?.parentId) return null;
 
-  const parent = sharedElements.find(
+  const parent = resolvedElements.find(
     el => el.id === selectedElement.parentId
   );
   if (!parent?.autoLayout?.enabled) return null;
@@ -221,8 +222,8 @@ export function AutoLayoutPanel() {
   const [expanded, setExpanded] = useState(true);
   const [paddingLinked, setPaddingLinked] = useState(true);
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     el => el.id === selectedElementId
   );
 
@@ -230,7 +231,7 @@ export function AutoLayoutPanel() {
   const canHaveAutoLayout = selectedElement && 
     (selectedElement.shapeType === 'frame' || 
      selectedElement.shapeType === 'rectangle' ||
-     sharedElements.some(el => el.parentId === selectedElement.id));
+     resolvedElements.some(el => el.parentId === selectedElement.id));
 
   if (!selectedElement || !canHaveAutoLayout) {
     return null;

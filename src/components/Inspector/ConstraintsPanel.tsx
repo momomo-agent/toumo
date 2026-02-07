@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import type { HorizontalConstraint, VerticalConstraint } from '../../types';
 import { DEFAULT_CONSTRAINTS } from '../../types';
 import './ConstraintsPanel.css';
@@ -27,8 +28,8 @@ export function ConstraintsPanel() {
     updateElement,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
 

@@ -1220,7 +1220,12 @@ export function Canvas() {
           if (!layout.componentId) {
             // Canvas-level keyframe
             keyframe = keyframes.find(kf => kf.id === layout.id) || null;
-            frameElements = useEditorStore.getState().sharedElements;
+            // Active frame uses resolved elements (sharedElements + layerOverrides);
+            // inactive frames show base sharedElements (no per-frame resolve yet)
+            const isThisActive = keyframe?.id === selectedKeyframeId;
+            frameElements = isThisActive
+              ? elements
+              : useEditorStore.getState().sharedElements;
             frameName = keyframe?.name || '';
             frameSummary = keyframe?.summary || 'State description';
           } else {

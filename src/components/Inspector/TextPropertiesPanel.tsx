@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import type { KeyElement, ShapeStyle } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 
@@ -38,8 +39,8 @@ export function TextPropertiesPanel() {
     updateElement,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     (el: KeyElement) => el.id === selectedElementId
   );
 

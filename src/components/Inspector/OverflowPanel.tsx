@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useEditorStore } from '../../store';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import type { OverflowScrollConfig, OverflowScrollDirection } from '../../types';
 import { DEFAULT_OVERFLOW_SCROLL } from '../../types';
 import './OverflowPanel.css';
@@ -37,8 +38,8 @@ export function OverflowPanel() {
     updateElement,
   } = useEditorStore();
 
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
 

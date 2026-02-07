@@ -3,6 +3,7 @@ import { useEditorStore } from '../../store';
 import { DesignPanel } from './DesignPanel';
 import { MultiSelectPanel } from './MultiSelectPanel';
 import { TransitionInspector } from './TransitionInspector';
+import { useResolvedElements } from '../../hooks/useResolvedElements';
 import './Inspector.css';
 
 export function Inspector() {
@@ -16,8 +17,9 @@ export function Inspector() {
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const sharedElements = useEditorStore(s => s.sharedElements);
-  const selectedElement = sharedElements.find(
+  // Use resolved elements so Inspector shows overridden values for current display state
+  const resolvedElements = useResolvedElements();
+  const selectedElement = resolvedElements.find(
     (el: { id: string }) => el.id === selectedElementId
   );
   const selectedTransition = transitions.find(tr => tr.id === selectedTransitionId);
