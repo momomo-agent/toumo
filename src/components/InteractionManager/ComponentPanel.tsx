@@ -236,6 +236,14 @@ function ComponentV2Editor({ component, onUpdate, onDelete, onAddDisplayState, o
         </div>
       </div>
 
+      {/* Patches info */}
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 10, color: '#666', display: 'block', marginBottom: 4 }}>Patches</label>
+        <div style={{ padding: '8px 10px', background: '#0d0d0e', borderRadius: 6, fontSize: 11, color: '#888' }}>
+          {component.patches?.length || 0} patch{(component.patches?.length || 0) !== 1 ? 'es' : ''} · {component.connections?.length || 0} connection{(component.connections?.length || 0) !== 1 ? 's' : ''}
+        </div>
+      </div>
+
       {/* Delete */}
       <button onClick={onDelete} style={{
         width: '100%', padding: '6px 0', marginTop: 4,
