@@ -7,9 +7,10 @@ import {
   generateStaticHTML,
 } from '../../utils/exportGenerators';
 
-type ExportTab = 'css-animation' | 'framer-motion' | 'svg' | 'html';
+type ExportTab = 'css-animation' | 'framer-motion' | 'svg' | 'html' | 'json';
 
 const TABS: { id: ExportTab; label: string; icon: string }[] = [
+  { id: 'json', label: 'JSON', icon: '📋' },
   { id: 'css-animation', label: 'CSS', icon: '🎬' },
   { id: 'framer-motion', label: 'Framer', icon: '⚛️' },
   { id: 'svg', label: 'SVG', icon: '🖼️' },
@@ -32,6 +33,7 @@ export function ExportPanel({ isOpen, onClose }: ExportPanelProps) {
     const fs = store.frameSize;
     const bg = store.canvasBackground || '#0a0a0a';
     switch (tab) {
+      case 'json': return store.exportProject();
       case 'css-animation': return generateCSSAnimation(kfs, trs, fs);
       case 'framer-motion': return generateFramerMotionCode(kfs, trs, fs);
       case 'svg': return generateSVGCode(kfs[0], fs, bg);
