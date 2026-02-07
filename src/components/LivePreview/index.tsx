@@ -447,6 +447,21 @@ export function LivePreview() {
           <div style={styles.headerDot} />
           <span style={styles.headerTitle}>Preview</span>
         </div>
+        <select
+          value={deviceFrame}
+          onChange={e => useEditorStore.getState().setDeviceFrame(e.target.value as any)}
+          style={{
+            background: '#1a1a1a', border: '1px solid #333', borderRadius: 4,
+            color: '#ccc', fontSize: 10, padding: '2px 4px', cursor: 'pointer',
+          }}
+        >
+          <option value="none">No Frame</option>
+          <option value="iphone-14-pro">iPhone 14 Pro</option>
+          <option value="iphone-14">iPhone 14</option>
+          <option value="iphone-se">iPhone SE</option>
+          <option value="android">Android</option>
+          <option value="ipad">iPad</option>
+        </select>
         <span style={{ ...styles.headerStatus, color: statusColor }}>
           {statusText}
         </span>

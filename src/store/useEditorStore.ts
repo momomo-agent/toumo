@@ -127,6 +127,7 @@ interface EditorActions {
   selectAllElements: () => void;
   addRecentColor: (color: string) => void;
   setCanvasBackground: (color: string) => void;
+  setDeviceFrame: (frame: 'none' | 'iphone-14-pro' | 'iphone-14' | 'iphone-se' | 'android' | 'ipad') => void;
   toggleRulers: () => void;
   addGuide: (orientation: 'horizontal' | 'vertical', position: number) => void;
   updateGuide: (id: string, position: number) => void;
