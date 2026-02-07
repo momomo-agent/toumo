@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent, DragEvent as ReactDragEvent } from 'react';
 import { useEditorStore } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
-import type { KeyElement, Position, Size, ToolType } from '../../types';
+import type { KeyElement, Keyframe, Position, Size, ToolType } from '../../types';
 import { DEFAULT_STYLE } from '../../types';
 import { CanvasElement, type ResizeHandle } from './CanvasElement';
 import { PenTool } from './PenTool';
@@ -21,6 +21,8 @@ const SNAP_THRESHOLD = 6;
 const MIN_SIZE = 16;
 const FRAME_GAP = 200;
 const FRAME_MARGIN = 100;
+const ROW_GAP = 80;          // vertical gap between keyframe rows
+const ROW_LABEL_HEIGHT = 40; // height reserved for row labels
 
 type AlignmentResult = {
   snappedPosition: Position | null;
@@ -35,6 +37,7 @@ export function Canvas() {
     selectionBox, frameSize, canvasBackground,
     snapToGrid, gridSize, editingGroupId,
     isDragging, isResizing, showRulers,
+    components,
   } = useEditorStore(useShallow((s) => ({
     keyframes: s.keyframes,
     selectedKeyframeId: s.selectedKeyframeId,
@@ -51,6 +54,7 @@ export function Canvas() {
     isDragging: s.isDragging,
     showRulers: s.showRulers,
     isResizing: s.isResizing,
+    components: s.components,
   })));
 
   // Actions don't cause re-renders — grab them once via getState or stable selectors
@@ -115,18 +119,65 @@ export function Canvas() {
   const elements = currentKeyframe?.keyElements || [];
   const { ghosts: deleteGhosts } = useDeleteGhosts(elements);
 
-  const frameLayouts = useMemo(() => {
-    return keyframes.map((kf, index) => ({
-      id: kf.id,
-      x: index * (frameSize.width + FRAME_GAP) + FRAME_MARGIN,
-      y: FRAME_MARGIN,
-      width: frameSize.width,
-      height: frameSize.height,
-    }));
-  }, [frameSize.height, frameSize.width, keyframes]);
+  // --- Multi-row keyframe layout ---
+  // Row 0: canvas-level keyframes
+  // Row 1+: each component's keyframes
+  type FrameLayout = {
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rowIndex: number;       // which row this frame belongs to
+    rowLabel: string;       // label for the row
+    componentId?: string;   // undefined = canvas-level
+  };
+
+  const { frameLayouts, rowMetas } = useMemo(() => {
+    const layouts: FrameLayout[] = [];
+    const rows: { label: string; y: number; componentId?: string }[] = [];
+    let currentY = FRAME_MARGIN;
+
+    // Row 0: Canvas-level keyframes
+    rows.push({ label: 'Canvas States', y: currentY });
+    keyframes.forEach((kf, index) => {
+      layouts.push({
+        id: kf.id,
+        x: index * (frameSize.width + FRAME_GAP) + FRAME_MARGIN,
+        y: currentY + ROW_LABEL_HEIGHT,
+        width: frameSize.width,
+        height: frameSize.height,
+        rowIndex: 0,
+        rowLabel: 'Canvas States',
+      });
+    });
+    currentY += ROW_LABEL_HEIGHT + frameSize.height + ROW_GAP;
+
+    // Row 1+: Component keyframes (each component = one row)
+    components.forEach((comp, compIdx) => {
+      rows.push({ label: `Component: ${comp.name}`, y: currentY, componentId: comp.id });
+      // Each component's functional states map to keyframes
+      const compStates = comp.functionalStates;
+      compStates.forEach((fs, fsIdx) => {
+        layouts.push({
+          id: `${comp.id}::${fs.id}`,
+          x: fsIdx * (frameSize.width + FRAME_GAP) + FRAME_MARGIN,
+          y: currentY + ROW_LABEL_HEIGHT,
+          width: frameSize.width,
+          height: frameSize.height,
+          rowIndex: compIdx + 1,
+          rowLabel: `Component: ${comp.name}`,
+          componentId: comp.id,
+        });
+      });
+      currentY += ROW_LABEL_HEIGHT + frameSize.height + ROW_GAP;
+    });
+
+    return { frameLayouts: layouts, rowMetas: rows };
+  }, [frameSize.height, frameSize.width, keyframes, components]);
 
   const frameLayoutMap = useMemo(() => {
-    const map = new Map<string, { x: number; y: number; width: number; height: number }>();
+    const map = new Map<string, FrameLayout>();
     frameLayouts.forEach((layout) => map.set(layout.id, layout));
     return map;
   }, [frameLayouts]);
@@ -153,9 +204,11 @@ export function Canvas() {
   const activeFrameLayout = selectedKeyframeId ? frameLayoutMap.get(selectedKeyframeId) : undefined;
 
   const stageWidth = frameLayouts.length
-    ? frameLayouts[frameLayouts.length - 1].x + frameSize.width + FRAME_MARGIN
+    ? Math.max(...frameLayouts.map(l => l.x + l.width)) + FRAME_MARGIN
     : Math.max(CANVAS_SIZE, frameSize.width + FRAME_MARGIN * 2);
-  const stageHeight = frameSize.height + FRAME_MARGIN * 2 + 80;
+  const stageHeight = frameLayouts.length
+    ? Math.max(...frameLayouts.map(l => l.y + l.height)) + FRAME_MARGIN
+    : frameSize.height + FRAME_MARGIN * 2 + 80;
 
   const toCanvasSpace = (event: ReactMouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -1131,39 +1184,80 @@ export function Canvas() {
           transformOrigin: '0 0',
         }}
       >
-        {frameLayouts.map((layout, index) => {
-          const keyframe = keyframes[index];
-          if (!keyframe) return null;
-          const isActive = keyframe.id === selectedKeyframeId;
-          const frameElements = keyframe.keyElements || [];
+        {/* Row labels */}
+        {rowMetas.map((row, ri) => (
+          <div
+            key={`row-label-${ri}`}
+            style={{
+              position: 'absolute',
+              left: FRAME_MARGIN,
+              top: row.y,
+              fontSize: 12,
+              fontWeight: 600,
+              color: row.componentId ? '#a78bfa' : '#8ab4ff',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              userSelect: 'none',
+            }}
+          >
+            {row.label}
+          </div>
+        ))}
+
+        {frameLayouts.map((layout) => {
+          // Resolve keyframe data: canvas-level vs component
+          let keyframe: Keyframe | null = null;
+          let frameElements: KeyElement[] = [];
+          let frameId = layout.id;
+          let frameName = '';
+          let frameSummary = '';
+
+          if (!layout.componentId) {
+            // Canvas-level keyframe
+            keyframe = keyframes.find(kf => kf.id === layout.id) || null;
+            frameElements = keyframe?.keyElements || [];
+            frameName = keyframe?.name || '';
+            frameSummary = keyframe?.summary || 'State description';
+          } else {
+            // Component keyframe — show masterElements as preview
+            const comp = components.find(c => c.id === layout.componentId);
+            const fsId = layout.id.split('::')[1];
+            const fs = comp?.functionalStates.find(s => s.id === fsId);
+            frameElements = comp?.masterElements || [];
+            frameName = fs?.name || 'State';
+            frameSummary = comp?.name || '';
+          }
+
+          const isActive = !layout.componentId && keyframe?.id === selectedKeyframeId;
           return (
-            <div key={keyframe.id} style={{ position: 'absolute', left: layout.x, top: layout.y - 60, width: layout.width }}>
+            <div key={frameId} style={{ position: 'absolute', left: layout.x, top: layout.y - 48, width: layout.width }}>
               <button
-                onClick={() => setSelectedKeyframeId(keyframe.id)}
+                onClick={() => { if (!layout.componentId && keyframe) setSelectedKeyframeId(keyframe.id); }}
                 style={{
                   width: '100%',
                   border: 'none',
                   borderRadius: 12,
-                  padding: '8px 12px',
-                  marginBottom: 12,
+                  padding: '6px 12px',
+                  marginBottom: 8,
                   textAlign: 'left',
                   background: isActive ? '#2563eb30' : '#141416',
                   color: '#fff',
                   borderColor: 'transparent',
-                  cursor: 'pointer',
+                  cursor: layout.componentId ? 'default' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>{keyframe.name}</div>
-                  <div style={{ fontSize: 11, color: '#7d7d7d' }}>{keyframe.summary ?? 'State description'}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{frameName}</div>
+                  <div style={{ fontSize: 11, color: '#7d7d7d' }}>{frameSummary}</div>
                 </div>
                 {isActive && <span style={{ fontSize: 11, color: '#8ab4ff' }}>Editing</span>}
               </button>
               <div
-                data-frame-id={keyframe.id}
+                data-frame-id={frameId}
                 style={{
                   width: layout.width,
                   height: layout.height,
