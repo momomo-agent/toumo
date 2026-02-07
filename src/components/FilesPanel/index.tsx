@@ -12,13 +12,97 @@ const STORAGE_KEY = 'toumo_projects';
 const ACTIVE_KEY = 'toumo_active_project';
 
 // ─── Preset examples ─────────────────────────────────────────────────
-const PRESETS: { name: string; description: string }[] = [
-  { name: 'Button Interaction', description: 'Tap → scale + color change' },
-  { name: 'Card Expand', description: 'Tap card → expand with spring' },
-  { name: 'Tab Switch', description: 'Tab bar with slide indicator' },
-  { name: 'Toggle Switch', description: 'Boolean toggle with spring' },
-  { name: 'Drag to Dismiss', description: 'Drag card down to dismiss' },
+const PRESETS: { name: string; description: string; create: () => any }[] = [
+  {
+    name: 'Button Interaction',
+    description: 'Tap → scale + color change',
+    create: () => createButtonPreset(),
+  },
+  {
+    name: 'Card Expand',
+    description: 'Tap card → expand with spring',
+    create: () => createCardExpandPreset(),
+  },
+  {
+    name: 'Tab Switch',
+    description: 'Tab bar with slide indicator',
+    create: () => createTabSwitchPreset(),
+  },
+  {
+    name: 'Toggle Switch',
+    description: 'Boolean toggle with spring',
+    create: () => createTogglePreset(),
+  },
+  {
+    name: 'Drag to Dismiss',
+    description: 'Drag card down to dismiss',
+    create: () => createDragDismissPreset(),
+  },
 ];
+
+// ─── Preset data generators ──────────────────────────────────────────
+function createButtonPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-default', name: 'Default', displayStateId: 'ds-default', summary: 'Button idle' },
+      { id: 'kf-hover', name: 'Hover', displayStateId: 'ds-hover', summary: 'Button hovered' },
+    ],
+    transitions: [],
+    components: [],
+    frameSize: { width: 390, height: 844 },
+  };
+}
+
+function createCardExpandPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-collapsed', name: 'Collapsed', displayStateId: 'ds-collapsed', summary: 'Card collapsed' },
+      { id: 'kf-expanded', name: 'Expanded', displayStateId: 'ds-expanded', summary: 'Card expanded' },
+    ],
+    transitions: [],
+    components: [],
+    frameSize: { width: 390, height: 844 },
+  };
+}
+
+function createTabSwitchPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-tab1', name: 'Tab 1', displayStateId: 'ds-tab1', summary: 'First tab active' },
+      { id: 'kf-tab2', name: 'Tab 2', displayStateId: 'ds-tab2', summary: 'Second tab active' },
+      { id: 'kf-tab3', name: 'Tab 3', displayStateId: 'ds-tab3', summary: 'Third tab active' },
+    ],
+    transitions: [],
+    components: [],
+    frameSize: { width: 390, height: 844 },
+    variables: [{ id: 'var-tab', name: 'activeTab', type: 'number', defaultValue: 0, currentValue: 0 }],
+  };
+}
+
+function createTogglePreset() {
+  return {
+    keyframes: [
+      { id: 'kf-off', name: 'Off', displayStateId: 'ds-off', summary: 'Toggle off' },
+      { id: 'kf-on', name: 'On', displayStateId: 'ds-on', summary: 'Toggle on' },
+    ],
+    transitions: [],
+    components: [],
+    frameSize: { width: 390, height: 844 },
+    variables: [{ id: 'var-toggle', name: 'isOn', type: 'boolean', defaultValue: false, currentValue: false }],
+  };
+}
+
+function createDragDismissPreset() {
+  return {
+    keyframes: [
+      { id: 'kf-visible', name: 'Visible', displayStateId: 'ds-visible', summary: 'Card visible' },
+      { id: 'kf-dismissed', name: 'Dismissed', displayStateId: 'ds-dismissed', summary: 'Card dismissed' },
+    ],
+    transitions: [],
+    components: [],
+    frameSize: { width: 390, height: 844 },
+  };
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 function loadProjectList(): ProjectFile[] {
@@ -171,7 +255,9 @@ export function FilesPanel() {
       {tab === 'presets' && (
         <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
           {PRESETS.map((preset, i) => (
-            <PresetItem key={i} name={preset.name} desc={preset.description} />
+            <PresetItem key={i} name={preset.name} desc={preset.description} onLoad={() => {
+              loadProject(preset.create());
+            }} />
           ))}
         </div>
       )}
@@ -267,9 +353,10 @@ function FileItem({ file, isActive, isRenaming, renameValue, onRenameChange, onR
   );
 }
 
-function PresetItem({ name, desc }: { name: string; desc: string }) {
+function PresetItem({ name, desc, onLoad }: { name: string; desc: string; onLoad: () => void }) {
   return (
     <div
+      onClick={onLoad}
       style={{
         padding: '8px', marginBottom: 4, borderRadius: 4,
         background: '#1e1e1e', border: '1px solid #2a2a2a',
