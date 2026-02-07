@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import type { PatchType } from '../../types';
 import { useEditorStore } from '../../store/useEditorStore';
 import { createPatch } from './PatchCanvas';
-// zustand shallow import removed - not needed here
+import { createHoverScale, createTapToggle, createPressRelease, createDragToDismiss, createHoverColor, createTapNavigate, createAutoPlay } from '../../engine/SugarPresets';
 
 interface PatchCategory {
   label: string;
@@ -87,6 +87,36 @@ export function PatchToolbar() {
     advancePosition();
     setElementMenuOpen(false);
     setExpanded(null);
+  };
+
+  const [sugarMenuOpen, setSugarMenuOpen] = useState(false);
+  const [sugarElementId, setSugarElementId] = useState<string | null>(null);
+
+  const SUGAR_PRESETS = [
+    { label: '✨ Hover Scale', fn: createHoverScale },
+    { label: '🔄 Tap Toggle', fn: createTapToggle },
+    { label: '👇 Press Release', fn: createPressRelease },
+    { label: '↓ Drag Dismiss', fn: createDragToDismiss },
+    { label: '🎨 Hover Color', fn: createHoverColor },
+    { label: '➡️ Tap Navigate', fn: createTapNavigate },
+    { label: '⏱ Auto Play', fn: createAutoPlay },
+  ];
+
+  const applySugar = (fn: typeof createHoverScale, elementId: string, elementName: string) => {
+    const result = fn(elementId, elementName);
+    const store = useEditorStore.getState();
+    // Add patches
+    result.patches.forEach(p => store.addPatch(p));
+    // Add connections
+    result.connections.forEach(c => store.addPatchConnection(c));
+    // Add display states if any
+    if (result.displayStates) {
+      result.displayStates.forEach(ds => {
+        store.addDisplayState(ds.name);
+      });
+    }
+    setSugarMenuOpen(false);
+    setSugarElementId(null);
   };
 
   return (
@@ -194,6 +224,74 @@ export function PatchToolbar() {
                     </span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{el.name}</span>
                     <span style={{ fontSize: 9, color: '#555' }}>👆 Tap</span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Sugar Presets button */}
+      <div style={{ position: 'relative', marginRight: 4 }}>
+        <button
+          onClick={() => { setSugarMenuOpen(!sugarMenuOpen); setExpanded(null); setElementMenuOpen(false); }}
+          style={{
+            padding: '4px 10px',
+            background: sugarMenuOpen ? '#a855f722' : 'transparent',
+            border: '1px solid #a855f744',
+            borderRadius: 4, color: '#a855f7', fontSize: 11, cursor: 'pointer', fontWeight: 500,
+          }}
+        >
+          ✨ Sugar
+        </button>
+        {sugarMenuOpen && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, marginTop: 4,
+            background: '#1a1a1a', border: '1px solid #333', borderRadius: 6,
+            padding: 4, zIndex: 100, minWidth: 220, maxHeight: 320, overflowY: 'auto',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+          }}>
+            {!sugarElementId ? (
+              <>
+                <div style={{ padding: '4px 8px', fontSize: 10, color: '#666', borderBottom: '1px solid #2a2a2a', marginBottom: 2 }}>
+                  Select element for Sugar preset
+                </div>
+                {sharedElements.map(el => (
+                  <button key={el.id}
+                    onClick={() => setSugarElementId(el.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                      padding: '6px 8px', background: 'transparent', border: 'none',
+                      color: '#ccc', fontSize: 11, cursor: 'pointer', borderRadius: 3, textAlign: 'left',
+                    }}
+                    onMouseEnter={e => { (e.target as HTMLElement).style.background = '#2a2a2a'; }}
+                    onMouseLeave={e => { (e.target as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    {el.name}
+                  </button>
+                ))}
+              </>
+            ) : (
+              <>
+                <div style={{ padding: '4px 8px', fontSize: 10, color: '#666', borderBottom: '1px solid #2a2a2a', marginBottom: 2 }}>
+                  Choose preset for "{sharedElements.find(e => e.id === sugarElementId)?.name}"
+                </div>
+                {SUGAR_PRESETS.map(sp => (
+                  <button key={sp.label}
+                    onClick={() => {
+                      const el = sharedElements.find(e => e.id === sugarElementId);
+                      if (el) applySugar(sp.fn, el.id, el.name);
+                    }}
+                    style={{
+                      display: 'block', width: '100%', padding: '6px 8px',
+                      background: 'transparent', border: 'none', color: '#ccc',
+                      fontSize: 11, cursor: 'pointer', borderRadius: 3, textAlign: 'left',
+                    }}
+                    onMouseEnter={e => { (e.target as HTMLElement).style.background = '#2a2a2a'; }}
+                    onMouseLeave={e => { (e.target as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    {sp.label}
                   </button>
                 ))}
               </>
