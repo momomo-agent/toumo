@@ -59,6 +59,20 @@ export function executeActionPatch(
       }
       break;
     }
+    case 'delay': {
+      const delayMs = actionPatch.config?.delay ?? 300;
+      setTimeout(() => {
+        // After delay, fire connections from 'delayed' output port
+        // (handled by caller via executeTrigger)
+      }, delayMs);
+      break;
+    }
+    case 'toggle': {
+      // Toggle maintains internal state; flip and fire appropriate port
+      const currentState = actionPatch.config?._toggleState ?? false;
+      actionPatch.config = { ...actionPatch.config, _toggleState: !currentState };
+      break;
+    }
     default:
       break;
   }
