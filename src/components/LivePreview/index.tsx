@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useEditorStore } from '../../store';
-import type { Transition, KeyElement, TriggerType, PrototypeLink, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../../types';
+import type { KeyElement, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../../types';
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
 import { solveSpringRK4 } from '../../data/curvePresets';
@@ -860,11 +860,11 @@ function PreviewContent({
     <div style={{ width: '100%', height: '100%', position: 'relative', ...contentStyle }} onWheel={handleWheel}>
       {elements.map(el => {
         if (el.visible === false) return null;
-        const hasProtoLink = el.prototypeLink?.enabled && el.prototypeLink?.targetFrameId;
+        const hasProtoLink = el?.prototypeLink?.enabled && el?.prototypeLink?.targetFrameId;
         const handleElClick = (e: React.MouseEvent) => {
           if (hasProtoLink && onPrototypeNavigation && currentFrameId) {
             e.stopPropagation();
-            onPrototypeNavigation(el.prototypeLink!, currentFrameId);
+            onPrototypeNavigation(el?.prototypeLink!, currentFrameId);
           }
         };
 
