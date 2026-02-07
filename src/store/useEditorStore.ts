@@ -710,9 +710,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   copySelectedElements: () => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    const elementsToCopy = currentKeyframe.keyElements.filter(
+    const elementsToCopy = state.sharedElements.filter(
       el => state.selectedElementIds.includes(el.id)
     );
     set({ clipboard: elementsToCopy });
@@ -720,24 +718,22 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   cutSelectedElements: () => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    if (!currentKeyframe) return;
-    const elementsToCut = currentKeyframe.keyElements.filter(
+    const elementsToCut = state.sharedElements.filter(
       el => state.selectedElementIds.includes(el.id)
     );
     if (elementsToCut.length === 0) return;
     get().pushHistory();
     const cutIds = new Set(state.selectedElementIds);
-    set((s) => ({
-      clipboard: elementsToCut,
-      keyframes: s.keyframes.map(kf =>
-        kf.id === s.selectedKeyframeId
-          ? { ...kf, keyElements: kf.keyElements.filter(el => !cutIds.has(el.id)) }
-          : kf
-      ),
-      selectedElementIds: [],
-      selectedElementId: null,
-    }));
+    set((s) => {
+      const newShared = s.sharedElements.filter(el => !cutIds.has(el.id));
+      return {
+        clipboard: elementsToCut,
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, s.keyframes),
+        selectedElementIds: [],
+        selectedElementId: null,
+      };
+    });
   },
 
   pasteElements: () => {
@@ -757,15 +753,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     );
     // Update clipboard positions so next paste offsets again
     set(() => ({ clipboard: newElements }));
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? { ...kf, keyElements: [...kf.keyElements, ...newElements] }
-          : kf
-      ),
-      selectedElementIds: newElements.map(el => el.id),
-      selectedElementId: newElements.length === 1 ? newElements[0].id : null,
-    }));
+    set((state) => {
+      const newShared = [...state.sharedElements, ...newElements];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementIds: newElements.map(el => el.id),
+        selectedElementId: newElements.length === 1 ? newElements[0].id : null,
+      };
+    });
   },
 
   pushHistory: (description?: string) => set((state) => {
