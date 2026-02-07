@@ -447,7 +447,9 @@ export function PatchCanvas() {
               && py >= marquee.y && py <= marquee.y + marquee.h;
           });
           if (selected.length > 0) {
-            setSelectedPatchId(selected[0].id);
+            const ids = selected.map(p => p.id);
+            useEditorStore.setState({ selectedPatchIds: ids });
+            setSelectedPatchId(ids[ids.length - 1]);
           }
         }
         marqueeRef.current = null;

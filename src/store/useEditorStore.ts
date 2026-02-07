@@ -86,6 +86,7 @@ interface EditorState {
   patches: Patch[];
   patchConnections: PatchConnection[];
   selectedPatchId: string | null;
+  selectedPatchIds: string[];
   activePatchIds: Set<string>;
   selectedConnectionId: string | null;
   // Shared layer tree — single source of truth for all keyframes
@@ -516,6 +517,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     },
   ],
   selectedPatchId: null,
+  selectedPatchIds: [],
   activePatchIds: new Set<string>(),
   selectedConnectionId: null,
   // Shared layer tree + display states (PRD v2)
