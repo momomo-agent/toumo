@@ -129,6 +129,7 @@ export function FilesPanel() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [tab, setTab] = useState<'files' | 'presets'>('files');
+  const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
 
   const loadProject = useEditorStore((s) => s.loadProject);
 
@@ -229,13 +230,27 @@ export function FilesPanel() {
             <ActionBtn onClick={handleSave}>💾 Save</ActionBtn>
           </div>
 
+          {/* Sort */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => setSortBy('recent')} style={{
+              flex: 1, padding: '3px 6px', fontSize: 10, border: 'none', borderRadius: 3, cursor: 'pointer',
+              background: sortBy === 'recent' ? '#2a2a2a' : 'transparent',
+              color: sortBy === 'recent' ? '#fff' : '#666',
+            }}>Recent</button>
+            <button onClick={() => setSortBy('name')} style={{
+              flex: 1, padding: '3px 6px', fontSize: 10, border: 'none', borderRadius: 3, cursor: 'pointer',
+              background: sortBy === 'name' ? '#2a2a2a' : 'transparent',
+              color: sortBy === 'name' ? '#fff' : '#666',
+            }}>Name</button>
+          </div>
+
           {/* File list */}
           {projects.length === 0 && (
             <p style={{ color: '#555', fontSize: 11, textAlign: 'center', padding: 16 }}>
               No saved projects yet
             </p>
           )}
-          {projects.map(p => (
+          {[...projects].sort((a, b) => sortBy === 'name' ? a.name.localeCompare(b.name) : b.updatedAt - a.updatedAt).map(p => (
             <FileItem
               key={p.id}
               file={p}
