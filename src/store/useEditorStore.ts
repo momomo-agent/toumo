@@ -433,7 +433,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       id: newId,
       name: `State ${state.keyframes.length + 1}`,
       summary: 'New state',
-      keyElements: [],
+      keyElements: state.sharedElements,
     };
     return {
       keyframes: [...state.keyframes, newKeyframe],
@@ -692,19 +692,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setSelectionBox: (selectionBox) => set({ selectionBox }),
   setFrameSize: (frameSize) => set((state) => {
     const oldFrameSize = state.frameSize;
+    const newShared = state.sharedElements.map((el) => {
+      if (!el.parentId) {
+        const { position, size } = applyConstraints(el, oldFrameSize, frameSize);
+        return clampElementToFrame({ ...el, position, size }, frameSize);
+      }
+      return el;
+    });
     return {
       frameSize,
-      keyframes: state.keyframes.map((kf) => ({
-        ...kf,
-        keyElements: kf.keyElements.map((el) => {
-          // Apply constraints for top-level elements (no parentId)
-          if (!el.parentId) {
-            const { position, size } = applyConstraints(el, oldFrameSize, frameSize);
-            return clampElementToFrame({ ...el, position, size }, frameSize);
-          }
-          return el;
-        }),
-      })),
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
     };
   }),
 
@@ -888,14 +886,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   })),
 
   deleteComponent: (id) => set((state) => {
-    // Also remove all instances of this component from keyframes
-    const newKeyframes = state.keyframes.map(kf => ({
-      ...kf,
-      keyElements: kf.keyElements.filter(el => el.componentId !== id),
-    }));
+    const newShared = state.sharedElements.filter(el => el.componentId !== id);
     return {
       components: state.components.filter((c) => c.id !== id),
-      keyframes: newKeyframes,
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
     };
   }),
 
@@ -3872,3 +3867,34 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   })),
 
 }));
+
+// Bidirectional auto-sync between sharedElements and keyframes.keyElements
+// Direction 1: sharedElements changed → sync to all keyframes
+// Direction 2: keyframes.keyElements changed (legacy actions) → sync back to sharedElements
+let _syncing = false;
+useEditorStore.subscribe((state) => {
+  if (_syncing) return;
+  _syncing = true;
+  try {
+    const selectedKf = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
+    
+    // Check if any keyframe's keyElements differs from sharedElements
+    if (selectedKf && selectedKf.keyElements !== state.sharedElements) {
+      // Legacy action modified keyElements directly → sync back to sharedElements
+      useEditorStore.setState({
+        sharedElements: selectedKf.keyElements,
+        keyframes: syncToAllKeyframes(selectedKf.keyElements, state.keyframes),
+      });
+    } else {
+      // sharedElements changed → sync to keyframes
+      const needsSync = state.keyframes.some(kf => kf.keyElements !== state.sharedElements);
+      if (needsSync) {
+        useEditorStore.setState({
+          keyframes: syncToAllKeyframes(state.sharedElements, state.keyframes),
+        });
+      }
+    }
+  } finally {
+    _syncing = false;
+  }
+});
