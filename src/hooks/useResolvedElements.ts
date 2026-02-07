@@ -59,14 +59,42 @@ export function resolveElementsForState(
 
 /**
  * Hook: resolves elements for the currently selected display state.
+ * Also expands component instances into their internal layers.
  */
 export function useResolvedElements(): KeyElement[] {
   const sharedElements = useEditorStore(s => s.sharedElements);
   const displayStates = useEditorStore(s => s.displayStates);
   const selectedDisplayStateId = useEditorStore(s => s.selectedDisplayStateId);
+  const componentsV2 = useEditorStore(s => s.componentsV2);
 
   return useMemo(() => {
     const ds = displayStates.find(d => d.id === selectedDisplayStateId);
-    return resolveElementsForState(sharedElements, ds);
-  }, [sharedElements, displayStates, selectedDisplayStateId]);
+    const resolved = resolveElementsForState(sharedElements, ds);
+
+    // Expand component instances
+    const expanded: KeyElement[] = [];
+    for (const el of resolved) {
+      if (el.componentId) {
+        const comp = componentsV2.find(c => c.id === el.componentId);
+        if (comp) {
+          const stateId = el.currentStateId || comp.displayStates[0]?.id;
+          const compDs = comp.displayStates.find(s => s.id === stateId);
+          const compElements = resolveElementsForState(comp.layers, compDs);
+          // Offset component layers by instance position
+          for (const cel of compElements) {
+            expanded.push({
+              ...cel,
+              id: `${el.id}::${cel.id}`,
+              position: {
+                x: el.position.x + cel.position.x,
+                y: el.position.y + cel.position.y,
+              },
+            });
+          }
+        }
+      }
+      expanded.push(el);
+    }
+    return expanded;
+  }, [sharedElements, displayStates, selectedDisplayStateId, componentsV2]);
 }
