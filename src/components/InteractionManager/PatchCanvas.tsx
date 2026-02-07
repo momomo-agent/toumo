@@ -137,6 +137,15 @@ function getDefaultPorts(type: PatchType): { inputs: PatchPort[]; outputs: Patch
         outputs: Array.from({ length: n }, (_, i) => ({ id: `selected${i}`, name: `selected${i}`, dataType: 'pulse' as const })),
       };
     }
+    case 'dragBinding':
+      return {
+        inputs: [
+          { id: 'dragInput', name: 'dragInput', dataType: 'pulse' },
+        ],
+        outputs: [
+          { id: 'value', name: 'value', dataType: 'number' },
+        ],
+      };
     default:
       return { inputs: [], outputs: [] };
   }
@@ -157,6 +166,7 @@ const PATCH_LABELS: Record<PatchType, string> = {
   toggle: 'Toggle',
   counter: 'Counter',
   optionSwitch: 'Option Switch',
+  dragBinding: 'Drag Binding',
 };
 
 interface DragState {

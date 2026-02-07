@@ -171,6 +171,25 @@ export function executeActionPatch(
       }
       break;
     }
+    case 'dragBinding': {
+      // Drag Binding: maps drag delta to element property in real-time
+      // config: { targetElementId, property, axis, multiplier, min, max }
+      const cfg = actionPatch.config || {};
+      const dx = _context?.delta?.dx ?? 0;
+      const dy = _context?.delta?.dy ?? 0;
+      const axis = cfg.axis || 'y';
+      const raw = axis === 'x' ? dx : dy;
+      const multiplier = cfg.multiplier ?? 1;
+      let value = raw * multiplier;
+      if (cfg.min !== undefined) value = Math.max(cfg.min, value);
+      if (cfg.max !== undefined) value = Math.min(cfg.max, value);
+      const prop = cfg.property || 'y';
+      const targetId = cfg.targetElementId;
+      if (targetId && handlers.animateProperty) {
+        handlers.animateProperty(targetId, prop, value);
+      }
+      break;
+    }
     default:
       break;
   }

@@ -633,7 +633,7 @@ export interface PatchPort {
 
 export type TriggerPatchType = 'tap' | 'drag' | 'hover' | 'scroll' | 'timer' | 'variableChange';
 export type ActionPatchType = 'switchDisplayState' | 'setVariable' | 'animateProperty';
-export type LogicPatchType = 'condition' | 'delay' | 'toggle' | 'counter' | 'optionSwitch';
+export type LogicPatchType = 'condition' | 'delay' | 'toggle' | 'counter' | 'optionSwitch' | 'dragBinding';
 export type PatchType = TriggerPatchType | ActionPatchType | LogicPatchType;
 
 export interface Patch {

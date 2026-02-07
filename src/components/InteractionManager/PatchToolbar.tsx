@@ -41,6 +41,7 @@ const CATEGORIES: PatchCategory[] = [
       { type: 'toggle', label: 'Toggle', icon: '🔁' },
       { type: 'counter', label: 'Counter', icon: '#️⃣' },
       { type: 'optionSwitch', label: 'Option Switch', icon: '🔘' },
+      { type: 'dragBinding', label: 'Drag Binding', icon: '🔗' },
     ],
   },
 ];
