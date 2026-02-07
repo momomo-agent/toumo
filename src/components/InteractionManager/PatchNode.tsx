@@ -33,6 +33,7 @@ interface PatchNodeProps {
   onDragStart: (id: string, e: React.MouseEvent) => void;
   onPortDragStart: (patchId: string, portId: string, isOutput: boolean, e: React.MouseEvent) => void;
   getPortPosition: (patchId: string, portId: string, isOutput: boolean) => { x: number; y: number } | null;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 export const PatchNode = React.memo(function PatchNode({
@@ -41,6 +42,7 @@ export const PatchNode = React.memo(function PatchNode({
   onSelect,
   onDragStart,
   onPortDragStart,
+  onContextMenu,
 }: PatchNodeProps) {
   const category = getCategory(patch.type);
   const colors = PATCH_COLORS[category];
@@ -56,6 +58,7 @@ export const PatchNode = React.memo(function PatchNode({
     <div
       data-patch-id={patch.id}
       onMouseDown={handleMouseDown}
+      onContextMenu={onContextMenu}
       style={{
         position: 'absolute',
         left: patch.position.x,

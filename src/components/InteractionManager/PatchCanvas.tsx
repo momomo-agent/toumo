@@ -176,6 +176,7 @@ export function PatchCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [dragLine, setDragLine] = useState<{ fromX: number; fromY: number; toX: number; toY: number } | null>(null);
+  const [_contextMenu, setContextMenu] = useState<{ x: number; y: number; patchId?: string; connectionId?: string } | null>(null);
   // Tick counter to force connection re-render during node drag
   const [, setRenderTick] = useState(0);
 
@@ -394,6 +395,11 @@ export function PatchCanvas() {
           onDragStart={handleNodeDragStart}
           onPortDragStart={handlePortDragStart}
           getPortPosition={getPortPosition}
+          onContextMenu={(e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setContextMenu({ x: e.clientX, y: e.clientY, patchId: patch.id });
+          }}
         />
       ))}
 

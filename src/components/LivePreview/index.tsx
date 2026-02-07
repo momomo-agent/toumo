@@ -567,7 +567,7 @@ function PreviewContent({
   onPatchTap,
   onPatchHover,
   onPatchDrag,
-  onPatchScroll: _onPatchScroll,
+  onPatchScroll: onPatchScroll,
   displayStateId: _displayStateId,
 }: {
   elements: KeyElement[];
@@ -649,11 +649,14 @@ function PreviewContent({
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleWheel = useCallback((_e: React.WheelEvent) => {
     if (scrollTimerRef.current) return; // debounce
-    if (availableTriggers.includes('scroll')) {
+    // Try Patch-driven scroll first
+    const patchHandled = onPatchScroll ? onPatchScroll() : false;
+    // Fall back to legacy trigger
+    if (!patchHandled && availableTriggers.includes('scroll')) {
       onTrigger('scroll');
     }
     scrollTimerRef.current = setTimeout(() => { scrollTimerRef.current = null; }, 500);
-  }, [availableTriggers, onTrigger]);
+  }, [availableTriggers, onTrigger, onPatchScroll]);
 
   const hasDrag = availableTriggers.includes('drag');
   const hasTap = availableTriggers.includes('tap');
