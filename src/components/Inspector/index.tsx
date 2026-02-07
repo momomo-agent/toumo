@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useEditorStore } from '../../store';
+import { useEditorStore, DEVICE_PRESETS } from '../../store';
 import { DesignPanel } from './DesignPanel';
 import { MultiSelectPanel } from './MultiSelectPanel';
 import { TransitionInspector } from './TransitionInspector';
@@ -136,6 +136,8 @@ function KeyframeInspector({ keyframe, keyframes, transitions }: KeyframeInspect
         </div>
       </div>
 
+      <DevicePresetSelector />
+
       <div className="figma-section">
         <div className="figma-section-label">Transitions</div>
         {outgoing.length > 0 && (
@@ -169,5 +171,45 @@ function KeyframeInspector({ keyframe, keyframes, transitions }: KeyframeInspect
         )}
       </div>
     </section>
+  );
+}
+
+function DevicePresetSelector() {
+  const frameSize = useEditorStore((s) => s.frameSize);
+  const setFrameSize = useEditorStore((s) => s.setFrameSize);
+
+  const currentPreset = DEVICE_PRESETS.find(
+    (p: typeof DEVICE_PRESETS[number]) => p.width === frameSize.width && p.height === frameSize.height
+  );
+
+  return (
+    <div className="figma-section">
+      <div className="figma-section-label">Canvas Size</div>
+      <div className="figma-row">
+        <select
+          value={currentPreset?.name || 'custom'}
+          onChange={(e) => {
+            const preset = DEVICE_PRESETS.find(p => p.name === e.target.value);
+            if (preset) setFrameSize({ width: preset.width, height: preset.height });
+          }}
+          style={{
+            flex: 1, background: '#2a2a2a', color: '#ccc',
+            border: '1px solid #444', borderRadius: 4,
+            padding: '4px 8px', fontSize: 12,
+          }}
+        >
+          {DEVICE_PRESETS.map(p => (
+            <option key={p.name} value={p.name}>
+              {p.name} ({p.width}×{p.height})
+            </option>
+          ))}
+          {!currentPreset && (
+            <option value="custom">
+              Custom ({frameSize.width}×{frameSize.height})
+            </option>
+          )}
+        </select>
+      </div>
+    </div>
   );
 }
