@@ -3,6 +3,7 @@ import { useEditorStore } from '../../store';
 import type { Transition, KeyElement, TriggerType, PrototypeLink, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../../types';
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
+import { solveSpringRK4 } from '../../data/curvePresets';
 
 // ─── Prototype easing map ─────────────────────────────────────────────
 const prototypeEasings: Record<PrototypeTransitionEasing, string> = {
@@ -152,17 +153,86 @@ export function LivePreview() {
   const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
   const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
 
+  // ─── Spring RAF animation ref ──────────────────────────────────────
+  const springRafRef = useRef<number>(0);
+
   // ─── Execute transition ───────────────────────────────────────────
   const executeTransition = useCallback((transition: Transition) => {
     if (isTransitioning || smartAnimateState.isAnimating) return;
     const targetKeyframe = keyframes.find(kf => kf.id === transition.to);
     if (!targetKeyframe) return;
+    const fromKeyframe = keyframes.find(kf => kf.id === transition.from);
+    if (!fromKeyframe) return;
 
-    const shouldUseSmartAnimate = useSmartAnimateMode &&
-      (transition.curve === 'spring' || transition.curve === 'spring-gentle' ||
-       transition.curve === 'spring-bouncy' || transition.curve === 'spring-stiff');
+    const isSpring = transition.curve === 'spring';
 
-    if (shouldUseSmartAnimate) {
+    if (isSpring) {
+      // Real spring physics: animate each element property frame-by-frame
+      const mass = transition.springMass ?? 1;
+      const stiffness = transition.springStiffness ?? 200;
+      const damping = transition.springDamping ?? 0.8;
+      const dur = transition.duration || 800;
+
+      setIsTransitioning(true);
+
+      const startPlay = () => {
+        const startTime = performance.now();
+        const fromEls = fromKeyframe.keyElements;
+        const toEls = targetKeyframe.keyElements;
+
+        const tick = () => {
+          const elapsed = performance.now() - startTime;
+          const t = Math.min(elapsed / dur, 1);
+          const springT = solveSpringRK4(t, mass, stiffness, damping);
+
+          // Interpolate elements
+          const interpolated = fromEls.map(fromEl => {
+            const toEl = toEls.find(e => e.id === fromEl.id);
+            if (!toEl) return fromEl;
+            return {
+              ...fromEl,
+              position: {
+                x: fromEl.position.x + (toEl.position.x - fromEl.position.x) * springT,
+                y: fromEl.position.y + (toEl.position.y - fromEl.position.y) * springT,
+              },
+              size: {
+                width: fromEl.size.width + (toEl.size.width - fromEl.size.width) * springT,
+                height: fromEl.size.height + (toEl.size.height - fromEl.size.height) * springT,
+              },
+              style: {
+                ...fromEl.style,
+                opacity: ((fromEl.style?.opacity ?? 1) + ((toEl.style?.opacity ?? 1) - (fromEl.style?.opacity ?? 1)) * springT),
+                borderRadius: ((fromEl.style?.borderRadius ?? 0) + ((toEl.style?.borderRadius ?? 0) - (fromEl.style?.borderRadius ?? 0)) * springT),
+                rotation: ((fromEl.style?.rotation ?? 0) + ((toEl.style?.rotation ?? 0) - (fromEl.style?.rotation ?? 0)) * springT),
+                scale: ((fromEl.style?.scale ?? 1) + ((toEl.style?.scale ?? 1) - (fromEl.style?.scale ?? 1)) * springT),
+              },
+            } as KeyElement;
+          });
+
+          smartAnimateActions.setElements(interpolated);
+
+          if (t < 1) {
+            springRafRef.current = requestAnimationFrame(tick);
+          } else {
+            smartAnimateActions.setElements(toEls);
+            setCurrentKeyframeId(transition.to);
+            setIsTransitioning(false);
+          }
+        };
+
+        springRafRef.current = requestAnimationFrame(tick);
+      };
+
+      if (transition.delay) {
+        setTimeout(startPlay, transition.delay);
+      } else {
+        startPlay();
+      }
+    } else if (useSmartAnimateMode && (
+      transition.curve === 'spring-gentle' ||
+      transition.curve === 'spring-bouncy' ||
+      transition.curve === 'spring-stiff'
+    )) {
       const springConfig = getSpringConfigFromCurve(transition.curve);
       setIsTransitioning(true);
       setTimeout(() => {
@@ -270,6 +340,8 @@ export function LivePreview() {
 
   // ─── Reset ────────────────────────────────────────────────────────
   const handleReset = useCallback(() => {
+    if (springRafRef.current) cancelAnimationFrame(springRafRef.current);
+    setIsTransitioning(false);
     const initial = keyframes.find(kf => kf.id === 'kf-idle') || keyframes[0];
     if (initial) setCurrentKeyframeId(initial.id);
   }, [keyframes]);

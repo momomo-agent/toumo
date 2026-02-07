@@ -13,6 +13,7 @@ import { PreviewMode } from './components/PreviewMode';
 import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
 import { WelcomeModal } from './components/WelcomeModal/index';
 import { EmptyState } from './components/EmptyState';
+import { Timeline } from './components/Timeline';
 import { LayerPanel } from './components/LayerPanel';
 import { ExportPanel } from './components/ExportPanel';
 import { useEditorStore } from './store';
@@ -2580,6 +2581,17 @@ export default function App() {
                   <Canvas />
                   {elements.length === 0 && <EmptyState />}
                 </div>
+              </div>
+
+              {/* Timeline Editor */}
+              <div
+                style={{
+                  height: 180,
+                  borderTop: '1px solid #2a2a2a',
+                  background: '#111',
+                }}
+              >
+                <Timeline />
               </div>
 
               {/* Interaction Manager */}

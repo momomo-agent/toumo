@@ -105,3 +105,129 @@ export function bezierToSvgPath(
   const sy = (v: number) => padding + (1 - v) * height;
   return `M${sx(0)},${sy(0)} C${sx(x1)},${sy(y1)} ${sx(x2)},${sy(y2)} ${sx(1)},${sy(1)}`;
 }
+
+// ── Real Spring Physics Solver (RK4 integration) ──────
+/**
+ * Solve spring ODE: m*x'' + c*x' + k*(x - target) = 0
+ * Uses 4th-order Runge-Kutta for accuracy.
+ * Returns position at normalized time t ∈ [0, 1].
+ */
+export function solveSpringRK4(
+  t: number,
+  mass: number,
+  stiffness: number,
+  damping: number,
+  from = 0,
+  to = 1,
+): number {
+  if (t <= 0) return from;
+  if (t >= 1) return to;
+
+  // Simulate for ~2 seconds of physical time mapped to t ∈ [0,1]
+  const totalTime = 2.0;
+  const physTime = t * totalTime;
+  const dt = 1 / 240; // 240 Hz simulation
+  const steps = Math.ceil(physTime / dt);
+
+  let x = 0; // displacement from target (starts at -1, target = 0)
+  let v = 0; // velocity
+
+  // We model: position starts at `from`, target is `to`
+  // Normalized: x=0 means at `from`, x=1 means at `to`
+  // Spring pulls toward x=1
+
+  const accel = (pos: number, vel: number) => {
+    const springF = -stiffness * (pos - 1); // pull toward 1
+    const dampF = -damping * vel;
+    return (springF + dampF) / mass;
+  };
+
+  for (let i = 0; i < steps; i++) {
+    // RK4
+    const k1v = accel(x, v);
+    const k1x = v;
+
+    const k2v = accel(x + k1x * dt * 0.5, v + k1v * dt * 0.5);
+    const k2x = v + k1v * dt * 0.5;
+
+    const k3v = accel(x + k2x * dt * 0.5, v + k2v * dt * 0.5);
+    const k3x = v + k2v * dt * 0.5;
+
+    const k4v = accel(x + k3x * dt, v + k3v * dt);
+    const k4x = v + k3v * dt;
+
+    x += (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
+    v += (dt / 6) * (k1v + 2 * k2v + 2 * k3v + k4v);
+  }
+
+  return from + x * (to - from);
+}
+
+/**
+ * Generate an array of spring curve sample points for SVG rendering.
+ * Returns array of { t, value } where t ∈ [0,1] and value is the spring output.
+ */
+export function generateSpringCurve(
+  mass: number,
+  stiffness: number,
+  damping: number,
+  samples = 100,
+): { t: number; value: number }[] {
+  const points: { t: number; value: number }[] = [];
+  for (let i = 0; i <= samples; i++) {
+    const t = i / samples;
+    const value = solveSpringRK4(t, mass, stiffness, damping);
+    points.push({ t, value });
+  }
+  return points;
+}
+
+/**
+ * Convert spring curve points to an SVG polyline path string.
+ */
+export function springCurveToSvgPath(
+  mass: number,
+  stiffness: number,
+  damping: number,
+  width: number,
+  height: number,
+  padding = 0,
+  samples = 100,
+): string {
+  const points = generateSpringCurve(mass, stiffness, damping, samples);
+  // Find min/max for vertical scaling (spring can overshoot)
+  let minV = 0, maxV = 1;
+  for (const p of points) {
+    if (p.value < minV) minV = p.value;
+    if (p.value > maxV) maxV = p.value;
+  }
+  const range = Math.max(maxV - minV, 0.01);
+  const margin = range * 0.1;
+  const vMin = minV - margin;
+  const vMax = maxV + margin;
+
+  const sx = (t: number) => padding + t * width;
+  const sy = (v: number) => padding + (1 - (v - vMin) / (vMax - vMin)) * height;
+
+  return points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'}${sx(p.t).toFixed(1)},${sy(p.value).toFixed(1)}`)
+    .join(' ');
+}
+
+/**
+ * Estimate how long (in normalized t) a spring takes to settle within threshold.
+ */
+export function springSettleTime(
+  mass: number,
+  stiffness: number,
+  damping: number,
+  threshold = 0.001,
+): number {
+  const points = generateSpringCurve(mass, stiffness, damping, 200);
+  for (let i = points.length - 1; i >= 0; i--) {
+    if (Math.abs(points[i].value - 1) > threshold) {
+      return Math.min(1, (i + 1) / 200);
+    }
+  }
+  return 0;
+}

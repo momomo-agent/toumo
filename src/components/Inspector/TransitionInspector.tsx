@@ -3,7 +3,7 @@ import { useEditorStore } from '../../store';
 import type { TriggerConfig, TriggerType, KeyElement, ShapeStyle } from '../../types';
 import { SPRING_PRESETS as SPRING_PRESETS_DATA } from '../../data/curvePresets';
 import type { EasingPreset, SpringPreset } from '../../data/curvePresets';
-import { PresetSelector, DraggableBezierEditor, BallPreview } from '../CurveEditor';
+import { PresetSelector, DraggableBezierEditor, BallPreview, SpringCurveGraph } from '../CurveEditor';
 
 // SVG icon paths for triggers (16x16 viewBox)
 const TRIGGER_ICONS: Record<TriggerType, string> = {
@@ -583,13 +583,19 @@ function VariableOptions({ trigger, onUpdate }: { trigger: TriggerConfig; onUpda
   );
 }
 
-// Spring Editor Component (uses centralized presets)
+// Spring Editor Component (uses centralized presets + real physics visualization)
 function SpringEditor({ transition, onUpdate }: { transition: { id: string; springDamping?: number; springResponse?: number; springMass?: number; springStiffness?: number }; onUpdate: (id: string, updates: Record<string, unknown>) => void }) {
+  const [previewMode, setPreviewMode] = useState<'horizontal' | 'bounce'>('bounce');
+
+  const sDamping = transition.springDamping ?? 0.8;
+  const sStiffness = transition.springStiffness ?? 200;
+  const sMass = transition.springMass ?? 1;
+
   const currentPreset = SPRING_PRESETS_DATA.find(p =>
-    p.damping === (transition.springDamping ?? 0.8) &&
+    p.damping === sDamping &&
     p.response === (transition.springResponse ?? 0.5) &&
-    p.mass === (transition.springMass ?? 1) &&
-    p.stiffness === (transition.springStiffness ?? 200)
+    p.mass === sMass &&
+    p.stiffness === sStiffness
   );
 
   const applyPreset = (preset: typeof SPRING_PRESETS_DATA[0]) => {
@@ -601,10 +607,40 @@ function SpringEditor({ transition, onUpdate }: { transition: { id: string; spri
     });
   };
 
+  // Compute damping ratio for display
+  const dampingRatio = sDamping / (2 * Math.sqrt(sStiffness * sMass));
+  const dampingLabel = dampingRatio < 0.4 ? 'Underdamped (bouncy)'
+    : dampingRatio < 1 ? 'Underdamped'
+    : dampingRatio === 1 ? 'Critically damped'
+    : 'Overdamped';
+
   return (
     <div style={springBoxStyle}>
-      <div style={{ fontSize: 10, color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        Spring Physics
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          Spring Physics
+        </div>
+        {/* Preview mode toggle */}
+        <div style={{ display: 'flex', gap: 2 }}>
+          <button
+            onClick={() => setPreviewMode('horizontal')}
+            style={{
+              ...miniToggleStyle,
+              background: previewMode === 'horizontal' ? '#1e3a5f' : 'transparent',
+              color: previewMode === 'horizontal' ? '#60a5fa' : '#555',
+            }}
+            title="Horizontal slide"
+          >→</button>
+          <button
+            onClick={() => setPreviewMode('bounce')}
+            style={{
+              ...miniToggleStyle,
+              background: previewMode === 'bounce' ? '#1e3a5f' : 'transparent',
+              color: previewMode === 'bounce' ? '#60a5fa' : '#555',
+            }}
+            title="Bounce drop"
+          >↓</button>
+        </div>
       </div>
 
       {/* Spring Presets */}
@@ -629,65 +665,107 @@ function SpringEditor({ transition, onUpdate }: { transition: { id: string; spri
         ))}
       </div>
 
-      {/* Spring Preview Animation */}
+      {/* Spring Curve Graph (SVG visualization) */}
+      <div style={{ marginBottom: 8 }}>
+        <SpringCurveGraph
+          mass={sMass}
+          stiffness={sStiffness}
+          damping={sDamping}
+          width={220}
+          height={90}
+        />
+      </div>
+
+      {/* Ball Preview Animation (horizontal or bounce) */}
       <BallPreview
-        spring={{
-          damping: transition.springDamping ?? 0.8,
-          stiffness: transition.springStiffness ?? 200,
-          mass: transition.springMass ?? 1,
-        }}
+        spring={{ damping: sDamping, stiffness: sStiffness, mass: sMass }}
         duration={1200}
+        width={220}
+        height={previewMode === 'bounce' ? 80 : 36}
+        mode={previewMode}
       />
+
+      {/* Damping ratio indicator */}
+      <div style={{
+        marginTop: 8, padding: '4px 8px',
+        background: '#161617', borderRadius: 4,
+        border: '1px solid #2a2a2a',
+        fontSize: 9, color: '#666', textAlign: 'center',
+        fontFamily: 'monospace',
+      }}>
+        ζ = {dampingRatio.toFixed(2)} · {dampingLabel}
+      </div>
 
       {/* Parameter Sliders */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
         <SpringSlider
-          label="Damping"
-          min={0.1} max={2} step={0.1}
-          value={transition.springDamping ?? 0.8}
-          onChange={(v) => onUpdate(transition.id, { springDamping: v })}
-        />
-        <SpringSlider
-          label="Response"
-          min={0.1} max={2} step={0.1}
-          value={transition.springResponse ?? 0.5}
-          onChange={(v) => onUpdate(transition.id, { springResponse: v })}
-        />
-        <SpringSlider
           label="Mass"
+          icon="⚖️"
           min={0.1} max={5} step={0.1}
-          value={transition.springMass ?? 1}
+          value={sMass}
           onChange={(v) => onUpdate(transition.id, { springMass: v })}
+          color="#f59e0b"
         />
         <SpringSlider
           label="Stiffness"
-          min={50} max={500} step={10}
-          value={transition.springStiffness ?? 200}
+          icon="🔩"
+          min={10} max={500} step={5}
+          value={sStiffness}
           onChange={(v) => onUpdate(transition.id, { springStiffness: v })}
+          color="#3b82f6"
+        />
+        <SpringSlider
+          label="Damping"
+          icon="🛑"
+          min={0.1} max={40} step={0.1}
+          value={sDamping}
+          onChange={(v) => onUpdate(transition.id, { springDamping: v })}
+          color="#ef4444"
+        />
+        <SpringSlider
+          label="Response"
+          icon="⚡"
+          min={0.1} max={2} step={0.1}
+          value={transition.springResponse ?? 0.5}
+          onChange={(v) => onUpdate(transition.id, { springResponse: v })}
+          color="#22c55e"
         />
       </div>
     </div>
   );
 }
 
-// Spring slider with value display
-function SpringSlider({ label, min, max, step, value, onChange }: {
-  label: string; min: number; max: number; step: number; value: number;
-  onChange: (v: number) => void;
+// Spring slider with value display, color accent, and icon
+function SpringSlider({ label, icon, min, max, step, value, onChange, color }: {
+  label: string; icon?: string; min: number; max: number; step: number; value: number;
+  onChange: (v: number) => void; color?: string;
 }) {
+  const accentColor = color || '#60a5fa';
+  const pct = ((value - min) / (max - min)) * 100;
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <Label>{label}</Label>
-        <span style={{ fontSize: 10, color: '#60a5fa', fontFamily: 'monospace' }}>{value}</span>
+        <Label>{icon ? `${icon} ` : ''}{label}</Label>
+        <span style={{ fontSize: 10, color: accentColor, fontFamily: 'monospace' }}>{value}</span>
       </div>
-      <input
-        type="range"
-        min={min} max={max} step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={rangeStyle}
-      />
+      <div style={{ position: 'relative', height: 4 }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+          background: '#2a2a2a', borderRadius: 2,
+        }} />
+        <div style={{
+          position: 'absolute', top: 0, left: 0, height: 4,
+          width: `${pct}%`,
+          background: accentColor, borderRadius: 2, opacity: 0.5,
+        }} />
+        <input
+          type="range"
+          min={min} max={max} step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{ ...rangeStyle, position: 'relative', zIndex: 1 }}
+        />
+      </div>
     </div>
   );
 }
@@ -943,10 +1021,23 @@ const rangeStyle: React.CSSProperties = {
   height: 4,
   appearance: 'none',
   WebkitAppearance: 'none',
-  background: '#2a2a2a',
+  background: 'transparent',
   borderRadius: 2,
   outline: 'none',
   cursor: 'pointer',
+};
+
+const miniToggleStyle: React.CSSProperties = {
+  width: 22,
+  height: 18,
+  padding: 0,
+  border: '1px solid #333',
+  borderRadius: 4,
+  fontSize: 10,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 };
 
 const unitStyle: React.CSSProperties = {
