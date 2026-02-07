@@ -125,11 +125,17 @@ export function LivePreview() {
 
   // Patch runtime: handle hover on element → onHoverIn / onHoverOut
   const handlePatchHover = useCallback((elementId: string, phase: 'in' | 'out') => {
+    const { flashPatch } = useEditorStore.getState();
+    patches.filter(p => p.type === 'hover' && p.config?.targetElementId === elementId).forEach(p => flashPatch(p.id));
     return handleElementHover(elementId, phase, patches, patchConnections, patchHandlers);
   }, [patches, patchConnections, patchHandlers]);
 
   // Patch runtime: handle drag on element → onDragStart / onDragMove / onDragEnd
   const handlePatchDrag = useCallback((elementId: string, phase: DragPhase, delta: { dx: number; dy: number }) => {
+    if (phase === 'start') {
+      const { flashPatch } = useEditorStore.getState();
+      patches.filter(p => p.type === 'drag' && p.config?.targetElementId === elementId).forEach(p => flashPatch(p.id));
+    }
     return handleElementDrag(elementId, phase, delta, patches, patchConnections, patchHandlers);
   }, [patches, patchConnections, patchHandlers]);
 
