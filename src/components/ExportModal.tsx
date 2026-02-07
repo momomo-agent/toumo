@@ -10,7 +10,7 @@ interface ExportModalProps {
 }
 
 export function ExportModal({ onClose }: ExportModalProps) {
-  const { keyframes, transitions, components, functionalStates, frameSize } = useEditorStore();
+  const { keyframes, transitions, components, frameSize } = useEditorStore();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<ExportTab>('project');
 
@@ -42,7 +42,6 @@ export function ExportModal({ onClose }: ExportModalProps) {
     keyframes,
     transitions,
     components,
-    functionalStates,
     exportedAt: new Date().toISOString(),
   };
 

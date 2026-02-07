@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
-import type { KeyElement, Position, Component } from '../../types';
+import type { KeyElement, Position } from '../../types';
+type Component = any;
 import { useEditorStore } from '../../store';
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
@@ -223,7 +224,7 @@ export function ComponentInstanceElement({
   // Calculate scale for master elements
   const masterElements = component.masterElements || [];
   let masterWidth = 0, masterHeight = 0;
-  masterElements.forEach(el => {
+  masterElements.forEach((el: any) => {
     masterWidth = Math.max(masterWidth, el.position.x + el.size.width);
     masterHeight = Math.max(masterHeight, el.position.y + el.size.height);
   });
@@ -270,7 +271,7 @@ export function ComponentInstanceElement({
         transform: `scale(${scaleX}, ${scaleY})`,
         transformOrigin: 'top left',
       }}>
-        {masterElements.map(masterEl => {
+        {masterElements.map((masterEl: any) => {
           const overrides = element.styleOverrides?.[masterEl.id] || {};
           const style = { ...masterEl.style, ...overrides };
           
