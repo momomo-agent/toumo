@@ -10,7 +10,7 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ isOpen, onClose }: ShareModalProps) {
-  const { keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables } = useEditorStore();
+  const { keyframes, transitions, components, frameSize, canvasBackground, interactions, variables } = useEditorStore();
   
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
@@ -26,13 +26,12 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
     version: '1.0',
     keyframes,
     transitions,
-    functionalStates,
     components,
     frameSize,
     canvasBackground,
     interactions,
     variables,
-  }), [keyframes, transitions, functionalStates, components, frameSize, canvasBackground, interactions, variables]);
+  }), [keyframes, transitions, components, frameSize, canvasBackground, interactions, variables]);
 
   const handleExportPrototype = useCallback(() => {
     setExporting(true);

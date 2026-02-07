@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useEditorStore } from '../../store';
-import type { TriggerConfig, TriggerType, KeyElement, ShapeStyle } from '../../types';
+import type { KeyElement, ShapeStyle } from '../../types';
 import { SPRING_PRESETS as SPRING_PRESETS_DATA } from '../../data/curvePresets';
 import type { EasingPreset, SpringPreset } from '../../data/curvePresets';
 import { PresetSelector, DraggableBezierEditor, BallPreview, SpringCurveGraph } from '../CurveEditor';

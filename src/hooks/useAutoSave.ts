@@ -137,7 +137,6 @@ export function importProjectJSON(file: File): Promise<boolean> {
         store.loadProject({
           keyframes: data.keyframes,
           transitions: data.transitions || [],
-          functionalStates: data.functionalStates || [],
           components: data.components || [],
           frameSize: data.frameSize || { width: 390, height: 844 },
           canvasBackground: data.canvasBackground,
