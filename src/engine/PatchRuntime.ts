@@ -12,6 +12,7 @@ export type PatchActionHandler = {
   switchDisplayState: (targetDisplayStateId: string) => void;
   setVariable?: (variableId: string, value: any) => void;
   animateProperty?: (elementId: string, property: string, toValue: any) => void;
+  getVariableValue?: (variableId: string) => any;
 };
 
 /**
@@ -91,16 +92,18 @@ export function executeActionPatch(
       break;
     }
     case 'condition': {
-      // Evaluate condition: check variable value against expected
       const varId = actionPatch.config?.variableId;
       const operator = actionPatch.config?.operator || '==';
       const expected = actionPatch.config?.value;
-      if (varId !== undefined && expected !== undefined) {
-        // Get current variable value from store (caller should pass context)
-        const currentVal = actionPatch.config?._currentValue;
+      if (varId !== undefined && expected !== undefined && _context?._patches && _context?._connections) {
+        // Get current variable value from store via handler
+        const currentVal = handlers.getVariableValue?.(varId);
         const result = evaluateCondition(currentVal, operator, expected);
-        // Route to 'true' or 'false' output port (handled by caller)
         actionPatch.config = { ...actionPatch.config, _lastResult: result };
+        // Only fire downstream if condition is true
+        if (result) {
+          executeTrigger(actionPatch.id, _context._patches, _context._connections, handlers);
+        }
       }
       break;
     }
