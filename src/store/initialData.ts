@@ -1,5 +1,6 @@
 import type { Keyframe, Transition, KeyElement } from '../types';
 
+// Shared elements — all keyframes reference the same layer tree
 const cardElement: KeyElement = {
   id: "el-card",
   name: "Card",
@@ -38,51 +39,8 @@ const buttonElement: KeyElement = {
   },
 };
 
-// Active state - card expanded, button highlighted
-const cardElementActive: KeyElement = {
-  ...cardElement,
-  id: "el-card-active",
-  position: { x: 80, y: 60 },
-  size: { width: 240, height: 160 },
-  style: {
-    ...cardElement.style!,
-    fill: "#22c55e",
-  },
-};
-
-const buttonElementActive: KeyElement = {
-  ...buttonElement,
-  id: "el-button-active",
-  position: { x: 130, y: 180 },
-  size: { width: 160, height: 36 },
-  style: {
-    ...buttonElement.style!,
-    fill: "#16a34a",
-  },
-};
-
-// Complete state
-const cardElementComplete: KeyElement = {
-  ...cardElement,
-  id: "el-card-complete",
-  position: { x: 100, y: 80 },
-  size: { width: 200, height: 120 },
-  style: {
-    ...cardElement.style!,
-    fill: "#a855f7",
-  },
-};
-
-const buttonElementComplete: KeyElement = {
-  ...buttonElement,
-  id: "el-button-complete",
-  position: { x: 130, y: 160 },
-  size: { width: 140, height: 32 },
-  style: {
-    ...buttonElement.style!,
-    fill: "#7c3aed",
-  },
-};
+// Single shared elements array — all keyframes point to this
+export const initialSharedElements: KeyElement[] = [cardElement, buttonElement];
 
 export const initialKeyframes: Keyframe[] = [
   {
@@ -90,21 +48,21 @@ export const initialKeyframes: Keyframe[] = [
     name: "Idle",
     summary: "Default state",
     functionalState: "idle",
-    keyElements: [cardElement, buttonElement],
+    keyElements: initialSharedElements,
   },
   {
     id: "kf-active",
     name: "Active", 
     summary: "Active state",
     functionalState: "loading",
-    keyElements: [cardElementActive, buttonElementActive],
+    keyElements: initialSharedElements,
   },
   {
     id: "kf-complete",
     name: "Complete",
     summary: "Complete state",
     functionalState: "success",
-    keyElements: [cardElementComplete, buttonElementComplete],
+    keyElements: initialSharedElements,
   },
 ];
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, ComponentV2, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
-import { initialKeyframes, initialTransitions } from './initialData';
+import { initialKeyframes, initialTransitions, initialSharedElements } from './initialData';
 import { DEFAULT_AUTO_LAYOUT, DEFAULT_CURVE_CONFIG } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
 import { performBooleanOperation, canPerformBooleanOperation } from '../utils/booleanOperations';
@@ -70,6 +70,8 @@ interface EditorState {
   patchConnections: PatchConnection[];
   selectedPatchId: string | null;
   selectedConnectionId: string | null;
+  // Shared layer tree — single source of truth for all keyframes
+  sharedElements: KeyElement[];
   // Shared layer tree + display states (PRD v2)
   displayStates: DisplayState[];
   selectedDisplayStateId: string | null;
@@ -354,8 +356,17 @@ interface EditorActions {
 
 export type EditorStore = EditorState & EditorActions;
 
+/**
+ * Adapter layer: sync sharedElements → all keyframes.keyElements
+ * This is the core of the shared layer tree strategy.
+ * All element mutations write to sharedElements, then call this to propagate.
+ */
+const syncToAllKeyframes = (sharedElements: KeyElement[], keyframes: Keyframe[]): Keyframe[] =>
+  keyframes.map(kf => ({ ...kf, keyElements: sharedElements }));
+
 export const useEditorStore = create<EditorStore>((set, get) => ({
-  // Initial state
+  // Initial state — sharedElements is the single source of truth
+  sharedElements: [...initialSharedElements],
   keyframes: initialKeyframes,
   transitions: initialTransitions,
   functionalStates: [
@@ -457,12 +468,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     get().pushHistory();
     set((state) => {
       const nextElement = clampElementToFrame(element, state.frameSize);
+      const newShared = [...state.sharedElements, nextElement];
       return {
-        keyframes: state.keyframes.map((kf) =>
-          kf.id === state.selectedKeyframeId
-            ? { ...kf, keyElements: [...kf.keyElements, nextElement] }
-            : kf
-        ),
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
         selectedElementId: nextElement.id,
         selectedElementIds: [nextElement.id],
       };
@@ -475,20 +484,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   deleteElement: (id) => {
     const state = get();
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const element = currentKeyframe?.keyElements.find(el => el.id === id);
+    const element = state.sharedElements.find(el => el.id === id);
     const parentId = element?.parentId;
     
     get().pushHistory();
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? { ...kf, keyElements: kf.keyElements.filter((el) => el.id !== id) }
-          : kf
-      ),
-      selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
-      selectedElementIds: state.selectedElementIds.filter((eid) => eid !== id),
-    }));
+    set((state) => {
+      const newShared = state.sharedElements.filter((el) => el.id !== id);
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
+        selectedElementIds: state.selectedElementIds.filter((eid) => eid !== id),
+      };
+    });
     
     // If element had a parent with auto layout, re-apply it
     if (parentId) {
@@ -500,119 +508,93 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const state = get();
     if (state.selectedElementIds.length === 0) return;
     get().pushHistory();
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? { ...kf, keyElements: kf.keyElements.filter((el) => !state.selectedElementIds.includes(el.id)) }
-          : kf
-      ),
-      selectedElementId: null,
-      selectedElementIds: [],
-    }));
+    set((state) => {
+      const newShared = state.sharedElements.filter((el) => !state.selectedElementIds.includes(el.id));
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        selectedElementId: null,
+        selectedElementIds: [],
+      };
+    });
   },
 
-  updateElement: (id, updates) => set((state) => ({
-    keyframes: state.keyframes.map((kf) =>
-      kf.id === state.selectedKeyframeId
-        ? {
-            ...kf,
-            keyElements: kf.keyElements.map((el) => {
-              if (el.id !== id) return el;
-              const nextElement = {
-                ...el,
-                ...updates,
-                position: updates.position ?? el.position,
-                size: updates.size ?? el.size,
-              } as KeyElement;
-              return clampElementToFrame(nextElement, state.frameSize);
-            }),
-          }
-        : kf
-    ),
-  })),
-
-  updateElementPosition: (id, position) => set((state) => ({
-    keyframes: state.keyframes.map((kf) =>
-      kf.id === state.selectedKeyframeId
-        ? {
-            ...kf,
-            keyElements: kf.keyElements.map((el) =>
-              el.id === id
-                ? clampElementToFrame({ ...el, position }, state.frameSize)
-                : el
-            ),
-          }
-        : kf
-    ),
-  })),
-
-  updateElementSize: (id, size) => set((state) => {
-    const currentKeyframe = state.keyframes.find(kf => kf.id === state.selectedKeyframeId);
-    const targetElement = currentKeyframe?.keyElements.find(el => el.id === id);
-    const oldSize = targetElement?.size;
-
+  updateElement: (id, updates) => set((state) => {
+    const newShared = state.sharedElements.map((el) => {
+      if (el.id !== id) return el;
+      const nextElement = {
+        ...el,
+        ...updates,
+        position: updates.position ?? el.position,
+        size: updates.size ?? el.size,
+      } as KeyElement;
+      return clampElementToFrame(nextElement, state.frameSize);
+    });
     return {
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? {
-              ...kf,
-              keyElements: kf.keyElements.map((el) => {
-                if (el.id === id) {
-                  return clampElementToFrame({ ...el, size }, state.frameSize);
-                }
-                // Apply constraints to children of the resized element
-                if (el.parentId === id && oldSize) {
-                  const { position, size: newSize } = applyConstraints(el, oldSize, size);
-                  return { ...el, position, size: newSize };
-                }
-                return el;
-              }),
-            }
-          : kf
-      ),
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
     };
   }),
 
-  updateElementName: (id, name) => set((state) => ({
-    keyframes: state.keyframes.map((kf) =>
-      kf.id === state.selectedKeyframeId
-        ? {
-            ...kf,
-            keyElements: kf.keyElements.map((el) =>
-              el.id === id ? { ...el, name } : el
-            ),
-          }
-        : kf
-    ),
-  })),
+  updateElementPosition: (id, position) => set((state) => {
+    const newShared = state.sharedElements.map((el) =>
+      el.id === id ? clampElementToFrame({ ...el, position }, state.frameSize) : el
+    );
+    return {
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
+    };
+  }),
+
+  updateElementSize: (id, size) => set((state) => {
+    const targetElement = state.sharedElements.find(el => el.id === id);
+    const oldSize = targetElement?.size;
+
+    const newShared = state.sharedElements.map((el) => {
+      if (el.id === id) {
+        return clampElementToFrame({ ...el, size }, state.frameSize);
+      }
+      // Apply constraints to children of the resized element
+      if (el.parentId === id && oldSize) {
+        const { position, size: newSize } = applyConstraints(el, oldSize, size);
+        return { ...el, position, size: newSize };
+      }
+      return el;
+    });
+    return {
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
+    };
+  }),
+
+  updateElementName: (id, name) => set((state) => {
+    const newShared = state.sharedElements.map((el) =>
+      el.id === id ? { ...el, name } : el
+    );
+    return {
+      sharedElements: newShared,
+      keyframes: syncToAllKeyframes(newShared, state.keyframes),
+    };
+  }),
 
   nudgeSelectedElements: (dx, dy) => {
     const state = get();
     if (state.selectedElementIds.length === 0) return;
     get().pushHistory();
-    set((state) => ({
-      keyframes: state.keyframes.map((kf) =>
-        kf.id === state.selectedKeyframeId
-          ? {
-              ...kf,
-              keyElements: kf.keyElements.map((el) =>
-                state.selectedElementIds.includes(el.id)
-                  ? clampElementToFrame(
-                      {
-                        ...el,
-                        position: {
-                          x: el.position.x + dx,
-                          y: el.position.y + dy,
-                        },
-                      },
-                      state.frameSize
-                    )
-                  : el
-              ),
-            }
-          : kf
-      ),
-    }));
+    set((state) => {
+      const newShared = state.sharedElements.map((el) =>
+        state.selectedElementIds.includes(el.id)
+          ? clampElementToFrame(
+              { ...el, position: { x: el.position.x + dx, y: el.position.y + dy } },
+              state.frameSize
+            )
+          : el
+      );
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, state.keyframes),
+      };
+    });
   },
 
   setCurrentTool: (tool) => set({ currentTool: tool }),
