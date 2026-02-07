@@ -458,8 +458,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   interactions: [],
   conditionRules: [],
   // Patch editor
-  patches: [],
-  patchConnections: [],
+  patches: [
+    {
+      id: 'patch-tap-btn', type: 'tap' as const, name: 'Tap Button',
+      position: { x: 60, y: 80 },
+      config: { targetElementId: 'el-button' },
+      inputs: [],
+      outputs: [
+        { id: 'onTap', name: 'onTap', dataType: 'pulse' as const },
+        { id: 'target', name: 'target', dataType: 'any' as const },
+      ],
+    },
+    {
+      id: 'patch-switch-active', type: 'switchDisplayState' as const, name: 'Switch → Active',
+      position: { x: 380, y: 80 },
+      config: { targetDisplayStateId: 'ds-active' },
+      inputs: [
+        { id: 'trigger', name: 'trigger', dataType: 'pulse' as const },
+        { id: 'state', name: 'state', dataType: 'displayState' as const },
+      ],
+      outputs: [
+        { id: 'done', name: 'done', dataType: 'pulse' as const },
+      ],
+    },
+  ],
+  patchConnections: [
+    {
+      id: 'conn-tap-to-switch',
+      fromPatchId: 'patch-tap-btn',
+      fromPortId: 'onTap',
+      toPatchId: 'patch-switch-active',
+      toPortId: 'trigger',
+    },
+  ],
   selectedPatchId: null,
   selectedConnectionId: null,
   // Shared layer tree + display states (PRD v2)
