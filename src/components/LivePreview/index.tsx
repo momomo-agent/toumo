@@ -117,6 +117,9 @@ export function LivePreview() {
 
   // Patch runtime: handle tap on element → switchDisplayState
   const handlePatchTap = useCallback((elementId: string) => {
+    // Flash triggered patches
+    const { flashPatch } = useEditorStore.getState();
+    patches.filter(p => p.type === 'tap' && p.config?.targetElementId === elementId).forEach(p => flashPatch(p.id));
     return handleElementTap(elementId, patches, patchConnections, patchHandlers);
   }, [patches, patchConnections, patchHandlers]);
 
