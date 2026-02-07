@@ -212,7 +212,7 @@ export function handleElementHover(
     for (const conn of outgoing) {
       const actionPatch = patches.find(p => p.id === conn.toPatchId);
       if (!actionPatch) continue;
-      executeActionPatch(actionPatch, handlers);
+      executeActionPatch(actionPatch, handlers, { _patches: patches, _connections: connections });
     }
   }
   return true;
