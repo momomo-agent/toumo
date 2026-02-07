@@ -773,3 +773,46 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* Key Property Diamond Button */
+.key-property-btn {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  color: #4a4a6a;
+  flex-shrink: 0;
+  border-radius: 2px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.key-property-btn:hover {
+  color: #7c3aed;
+  background-color: rgba(168, 85, 247, 0.1);
+}
+
+.key-property-btn.is-key {
+  color: #a855f7;
+}
+
+.key-property-btn.is-key:hover {
+  color: #c084fc;
+  background-color: rgba(168, 85, 247, 0.15);
+}
+
+/* Input group with key property button */
+.figma-input-group-with-key {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.figma-input-group-with-key .figma-input-group {
+  flex: 1;
+  min-width: 0;
+}

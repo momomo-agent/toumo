@@ -15,6 +15,7 @@ import { GuideLines } from './GuideLines';
 import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
+import { DisplayStateBar } from './DisplayStateBar';
 
 const CANVAS_SIZE = 2400;
 const SNAP_THRESHOLD = 6;
@@ -1126,6 +1127,8 @@ export function Canvas() {
   }, [getFrameUnderPoint, instantiateComponent, selectedKeyframeId, setSelectedKeyframeId, addImageElement, keyframes]);
 
   return (
+    <>
+    <DisplayStateBar />
     <div
       ref={canvasRef}
       onMouseDown={handleCanvasMouseDown}
@@ -1158,7 +1161,7 @@ export function Canvas() {
         }
       }}
       className="canvas-stage"
-      style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair' }}
+      style={{ cursor: currentTool === 'hand' ? 'grab' : currentTool === 'select' ? 'default' : 'crosshair', flex: 1, minHeight: 0 }}
     >
       {/* Dot-grid background — small dots + larger dots every 5 cells */}
       <div
@@ -1635,5 +1638,6 @@ export function Canvas() {
         </div>
       )}
     </div>
+    </>
   );
 }

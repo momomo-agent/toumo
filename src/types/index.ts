@@ -653,6 +653,7 @@ export type LayerOverride = {
   layerId: string;
   properties: Partial<LayerProperties>;  // 位置、大小、颜色、透明度等
   isKey: boolean;                         // 是否为关键属性（参与动画）
+  keyProperties?: string[];              // 被标记为「关键」的属性名列表
 };
 
 // 图层可动画属性集合

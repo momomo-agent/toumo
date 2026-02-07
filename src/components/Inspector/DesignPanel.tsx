@@ -113,6 +113,45 @@ const InteractionIcon = () => (
   </svg>
 );
 
+// Key Property diamond button - marks a property as "key" in the current DisplayState
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function KeyPropertyButton({ 
+  propertyName, 
+  isKey 
+}: { 
+  propertyName: string; 
+  isKey: boolean;
+}) {
+  const { selectedDisplayStateId, selectedElementId, toggleKeyProperty } = useEditorStore();
+  
+  if (!selectedDisplayStateId || !selectedElementId) return null;
+  
+  return (
+    <button
+      className={`key-property-btn ${isKey ? 'is-key' : ''}`}
+      title={isKey ? `"${propertyName}" is a key property` : `Mark "${propertyName}" as key property`}
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleKeyProperty(selectedDisplayStateId, selectedElementId, propertyName);
+      }}
+    >
+      {isKey ? '◆' : '◇'}
+    </button>
+  );
+}
+
+// Hook to check if a property is marked as key for the current selection
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function useIsKeyProperty(propertyName: string): boolean {
+  const { selectedDisplayStateId, selectedElementId, displayStates } = useEditorStore();
+  if (!selectedDisplayStateId || !selectedElementId) return false;
+  const ds = displayStates.find(d => d.id === selectedDisplayStateId);
+  if (!ds) return false;
+  const override = ds.layerOverrides.find(o => o.layerId === selectedElementId);
+  if (!override) return false;
+  return (override.keyProperties || []).includes(propertyName);
+}
+
 // Number input with label + drag-to-adjust
 interface NumberInputProps {
   label: string;
@@ -978,22 +1017,32 @@ export function DesignPanel() {
       {/* Position & Size Section */}
       <Section title="Frame" defaultExpanded={true}>
         <div className="figma-position-grid">
-          <NumberInput 
-            label="X" 
-            value={element.position.x} 
-            onChange={(v) => handlePositionChange('x', v)} 
-          />
-          <NumberInput 
-            label="Y" 
-            value={element.position.y} 
-            onChange={(v) => handlePositionChange('y', v)} 
-          />
-          <NumberInput 
-            label="W" 
-            value={element.size.width} 
-            onChange={(v) => handleSizeChange('width', v)} 
-          />
+          <div className="figma-input-group-with-key">
+            <KeyPropertyButton propertyName="x" isKey={useIsKeyProperty('x')} />
+            <NumberInput 
+              label="X" 
+              value={element.position.x} 
+              onChange={(v) => handlePositionChange('x', v)} 
+            />
+          </div>
+          <div className="figma-input-group-with-key">
+            <KeyPropertyButton propertyName="y" isKey={useIsKeyProperty('y')} />
+            <NumberInput 
+              label="Y" 
+              value={element.position.y} 
+              onChange={(v) => handlePositionChange('y', v)} 
+            />
+          </div>
+          <div className="figma-input-group-with-key">
+            <KeyPropertyButton propertyName="width" isKey={useIsKeyProperty('width')} />
+            <NumberInput 
+              label="W" 
+              value={element.size.width} 
+              onChange={(v) => handleSizeChange('width', v)} 
+            />
+          </div>
           <div className="figma-input-with-lock">
+            <KeyPropertyButton propertyName="height" isKey={useIsKeyProperty('height')} />
             <NumberInput 
               label="H" 
               value={element.size.height} 

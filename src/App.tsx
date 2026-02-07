@@ -2572,6 +2572,8 @@ export default function App() {
                     background: '#0d0d0e',
                     position: 'relative',
                     overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                 >
                   <Canvas />

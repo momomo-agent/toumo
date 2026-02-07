@@ -3839,20 +3839,30 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   toggleKeyProperty: (displayStateId, layerId, property) => set((state) => ({
     displayStates: state.displayStates.map((ds) => {
       if (ds.id !== displayStateId) return ds;
-      const override = ds.layerOverrides.find((o) => o.layerId === layerId);
-      if (!override) return ds;
-      // Toggle: if property exists in override, remove it; otherwise it stays (isKey toggle)
+      const existingOverride = ds.layerOverrides.find((o) => o.layerId === layerId);
+      if (existingOverride) {
+        // Toggle property in keyProperties array
+        const currentKeys = existingOverride.keyProperties || [];
+        const hasKey = currentKeys.includes(property);
+        const newKeys = hasKey
+          ? currentKeys.filter((k) => k !== property)
+          : [...currentKeys, property];
+        return {
+          ...ds,
+          layerOverrides: ds.layerOverrides.map((o) =>
+            o.layerId === layerId
+              ? { ...o, keyProperties: newKeys, isKey: newKeys.length > 0 }
+              : o
+          ),
+        };
+      }
+      // No override yet — create one with this property marked as key
       return {
         ...ds,
-        layerOverrides: ds.layerOverrides.map((o) => {
-          if (o.layerId !== layerId) return o;
-          const hasProperty = property in o.properties;
-          if (hasProperty) {
-            const { [property as keyof LayerProperties]: _, ...rest } = o.properties;
-            return { ...o, properties: rest };
-          }
-          return o;
-        }),
+        layerOverrides: [
+          ...ds.layerOverrides,
+          { layerId, properties: {}, isKey: true, keyProperties: [property] },
+        ],
       };
     }),
   })),
