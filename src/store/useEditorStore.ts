@@ -314,6 +314,7 @@ interface EditorActions {
   removeVariableBinding: (elementId: string, variableId: string, property: string) => void;
   // Project actions
   loadProject: (data: { keyframes: Keyframe[]; transitions: Transition[]; components: Component[]; frameSize: Size; canvasBackground?: string; interactions?: Interaction[]; variables?: Variable[]; conditionRules?: ConditionRule[] }) => void;
+  exportProject: () => string;
   // Style clipboard
   copiedStyle: ShapeStyle | null;
   copyStyle: () => void;
@@ -1625,6 +1626,22 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       history: [{ keyframes: data.keyframes, sharedElements: get().sharedElements, patches: get().patches, patchConnections: get().patchConnections, description: '项目加载' }],
       historyIndex: 0,
     });
+  },
+
+  exportProject: () => {
+    const s = get();
+    return JSON.stringify({
+      version: 1,
+      keyframes: s.keyframes,
+      sharedElements: s.sharedElements,
+      displayStates: s.displayStates,
+      patches: s.patches,
+      patchConnections: s.patchConnections,
+      variables: s.variables,
+      conditionRules: s.conditionRules,
+      frameSize: s.frameSize,
+      canvasBackground: s.canvasBackground,
+    }, null, 2);
   },
 
   // Copy style from selected element
