@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
@@ -70,6 +70,9 @@ interface EditorState {
   patchConnections: PatchConnection[];
   selectedPatchId: string | null;
   selectedConnectionId: string | null;
+  // Shared layer tree + display states (PRD v2)
+  displayStates: DisplayState[];
+  selectedDisplayStateId: string | null;
 }
 
 interface EditorActions {
@@ -323,6 +326,14 @@ interface EditorActions {
   removePatchConnection: (id: string) => void;
   setSelectedPatchId: (id: string | null) => void;
   setSelectedConnectionId: (id: string | null) => void;
+  // DisplayState actions (PRD v2 - shared layer tree)
+  addDisplayState: (name: string) => void;
+  removeDisplayState: (id: string) => void;
+  renameDisplayState: (id: string, name: string) => void;
+  setSelectedDisplayStateId: (id: string | null) => void;
+  setLayerOverride: (displayStateId: string, layerId: string, properties: Partial<LayerProperties>, isKey: boolean) => void;
+  removeLayerOverride: (displayStateId: string, layerId: string) => void;
+  toggleKeyProperty: (displayStateId: string, layerId: string, property: string) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -345,6 +356,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   patchConnections: [],
   selectedPatchId: null,
   selectedConnectionId: null,
+  // Shared layer tree + display states (PRD v2)
+  displayStates: [
+    { id: 'ds-default', name: 'Default', layerOverrides: [] },
+    { id: 'ds-active', name: 'Active', layerOverrides: [] },
+  ],
+  selectedDisplayStateId: 'ds-default',
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -3759,5 +3776,85 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setSelectedConnectionId: (id) => {
     set({ selectedConnectionId: id });
   },
+
+  // === DisplayState actions (PRD v2 - shared layer tree) ===
+
+  addDisplayState: (name: string) => set((state) => {
+    const newId = `ds-${Date.now()}`;
+    const newDS: DisplayState = { id: newId, name, layerOverrides: [] };
+    return {
+      displayStates: [...state.displayStates, newDS],
+      selectedDisplayStateId: newId,
+    };
+  }),
+
+  removeDisplayState: (id: string) => set((state) => {
+    if (state.displayStates.length <= 1) return state;
+    const next = state.displayStates.filter((ds) => ds.id !== id);
+    return {
+      displayStates: next,
+      selectedDisplayStateId: state.selectedDisplayStateId === id
+        ? next[0].id
+        : state.selectedDisplayStateId,
+    };
+  }),
+
+  renameDisplayState: (id: string, name: string) => set((state) => ({
+    displayStates: state.displayStates.map((ds) =>
+      ds.id === id ? { ...ds, name } : ds
+    ),
+  })),
+
+  setSelectedDisplayStateId: (id: string | null) => set({ selectedDisplayStateId: id }),
+
+  setLayerOverride: (displayStateId, layerId, properties, isKey) => set((state) => ({
+    displayStates: state.displayStates.map((ds) => {
+      if (ds.id !== displayStateId) return ds;
+      const existing = ds.layerOverrides.find((o) => o.layerId === layerId);
+      if (existing) {
+        return {
+          ...ds,
+          layerOverrides: ds.layerOverrides.map((o) =>
+            o.layerId === layerId
+              ? { ...o, properties: { ...o.properties, ...properties }, isKey }
+              : o
+          ),
+        };
+      }
+      return {
+        ...ds,
+        layerOverrides: [...ds.layerOverrides, { layerId, properties, isKey }],
+      };
+    }),
+  })),
+
+  removeLayerOverride: (displayStateId, layerId) => set((state) => ({
+    displayStates: state.displayStates.map((ds) =>
+      ds.id === displayStateId
+        ? { ...ds, layerOverrides: ds.layerOverrides.filter((o) => o.layerId !== layerId) }
+        : ds
+    ),
+  })),
+
+  toggleKeyProperty: (displayStateId, layerId, property) => set((state) => ({
+    displayStates: state.displayStates.map((ds) => {
+      if (ds.id !== displayStateId) return ds;
+      const override = ds.layerOverrides.find((o) => o.layerId === layerId);
+      if (!override) return ds;
+      // Toggle: if property exists in override, remove it; otherwise it stays (isKey toggle)
+      return {
+        ...ds,
+        layerOverrides: ds.layerOverrides.map((o) => {
+          if (o.layerId !== layerId) return o;
+          const hasProperty = property in o.properties;
+          if (hasProperty) {
+            const { [property as keyof LayerProperties]: _, ...rest } = o.properties;
+            return { ...o, properties: rest };
+          }
+          return o;
+        }),
+      };
+    }),
+  })),
 
 }));
