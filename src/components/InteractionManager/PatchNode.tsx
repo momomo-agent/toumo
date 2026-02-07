@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import type { Patch, PatchPort, PatchType } from '../../types';
 
@@ -50,6 +50,10 @@ export const PatchNode = React.memo(function PatchNode({
   const category = getCategory(patch.type);
   const colors = PATCH_COLORS[category];
   const nodeWidth = 180;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(patch.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const renamePatch = useEditorStore(s => s.renamePatch);
   const sharedElements = useEditorStore(s => s.sharedElements);
   const targetEl = patch.config?.targetElementId
     ? sharedElements.find(e => e.id === patch.config?.targetElementId)
@@ -99,8 +103,31 @@ export const PatchNode = React.memo(function PatchNode({
         <span style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>
           {category}
         </span>
-        <span style={{ fontSize: 11, color: '#fff', fontWeight: 600, flex: 1 }}>
-          {patch.name}
+        <span style={{ fontSize: 11, color: '#fff', fontWeight: 600, flex: 1, cursor: 'text' }}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            setIsEditing(true);
+            setEditName(patch.name);
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }}
+        >
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              onBlur={() => { renamePatch(patch.id, editName); setIsEditing(false); }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { renamePatch(patch.id, editName); setIsEditing(false); }
+                if (e.key === 'Escape') setIsEditing(false);
+              }}
+              style={{
+                background: 'transparent', border: 'none', color: '#fff',
+                fontSize: 11, fontWeight: 600, width: '100%', outline: 'none',
+                padding: 0,
+              }}
+            />
+          ) : patch.name}
         </span>
       </div>
 

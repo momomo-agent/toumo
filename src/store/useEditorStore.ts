@@ -341,6 +341,7 @@ interface EditorActions {
   addPatch: (patch: Patch) => void;
   removePatch: (id: string) => void;
   updatePatchPosition: (id: string, position: Position) => void;
+  renamePatch: (id: string, name: string) => void;
   updatePatchConfig: (id: string, config: Record<string, any>) => void;
   addPatchConnection: (connection: PatchConnection) => void;
   removePatchConnection: (id: string) => void;
@@ -3821,6 +3822,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   updatePatchPosition: (id, position) => {
     set((s) => ({
       patches: s.patches.map((p) => (p.id === id ? { ...p, position } : p)),
+    }));
+  },
+
+  renamePatch: (id, name) => {
+    set((s) => ({
+      patches: s.patches.map((p) => (p.id === id ? { ...p, name } : p)),
     }));
   },
 
