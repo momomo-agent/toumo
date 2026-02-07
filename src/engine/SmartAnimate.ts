@@ -380,14 +380,19 @@ export class SmartAnimateController {
         }
       }
       
-      // 数值动画
+      // 数值动画（+ 同步颜色进度）
       if (Object.keys(to).length > 0) {
+        const hasColors = colorAnims.length > 0;
+        const numFrom = hasColors ? { ...from, _colorProgress: 0 } : from;
+        const numTo = hasColors ? { ...to, _colorProgress: 1 } : to;
         const animId = this.springEngine.animate(
-          from,
-          to,
+          numFrom,
+          numTo,
           config,
           (values) => {
-            this.applyValues(element, values, colorAnims, 0);
+            const colorP = values._colorProgress ?? 0;
+            const { _colorProgress, ...numValues } = values;
+            this.applyValues(element, numValues, colorAnims, colorP);
             onUpdate(Array.from(elementMap.values()));
           },
           checkComplete
@@ -395,7 +400,7 @@ export class SmartAnimateController {
         this.animationIds.push(animId);
       }
       
-      // 颜色动画（使用进度回调）
+      // 颜色动画（仅在没有数值动画时独立运行）
       if (colorAnims.length > 0 && Object.keys(to).length === 0) {
         const animId = this.springEngine.animate(
           { progress: 0 },
