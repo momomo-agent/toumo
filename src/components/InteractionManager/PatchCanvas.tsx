@@ -341,12 +341,29 @@ export function PatchCanvas() {
   // Handle delete key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT') return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (document.activeElement?.tagName === 'INPUT') return;
         if (selectedPatchId) {
           removePatch(selectedPatchId);
         } else if (selectedConnectionId) {
           removePatchConnection(selectedConnectionId);
+        }
+      }
+      // Cmd+D: duplicate selected patch
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedPatchId) {
+        e.preventDefault();
+        const src = patches.find(p => p.id === selectedPatchId);
+        if (src) {
+          const newId = `patch-dup-${Date.now()}`;
+          addPatch({
+            ...src,
+            id: newId,
+            name: src.name + ' Copy',
+            position: { x: src.position.x + 30, y: src.position.y + 30 },
+            inputs: src.inputs.map(p => ({ ...p, id: `${newId}-${p.name}` })),
+            outputs: src.outputs.map(p => ({ ...p, id: `${newId}-${p.name}` })),
+          });
+          setSelectedPatchId(newId);
         }
       }
     };
