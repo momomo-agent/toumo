@@ -483,9 +483,40 @@ function ConditionRuleItem({
 
       {/* THEN actions */}
       <div style={{ paddingLeft: 8 }}>
-        <span style={{ color: '#888', fontSize: 10 }}>
-          THEN → {rule.actions.length === 0 ? 'no actions' : `${rule.actions.length} action(s)`}
-        </span>
+        <span style={{ color: '#888', fontSize: 10, display: 'block', marginBottom: 4 }}>THEN →</span>
+        {rule.actions.map((action, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 4 }}>
+            <select
+              value={action.type}
+              onChange={(e) => {
+                const updated = [...rule.actions];
+                updated[i] = { ...updated[i], type: e.target.value as any };
+                onUpdate({ actions: updated });
+              }}
+              style={{ ...selectStyle, flex: 1 }}
+            >
+              <option value="goToState">Go to State</option>
+              <option value="setVariable">Set Variable</option>
+              <option value="setProperty">Set Property</option>
+            </select>
+            <button
+              onClick={() => {
+                const updated = rule.actions.filter((_, idx) => idx !== i);
+                onUpdate({ actions: updated });
+              }}
+              style={iconBtnStyle}
+              title="Remove action"
+            >×</button>
+          </div>
+        ))}
+        <button
+          onClick={() => {
+            onUpdate({ actions: [...rule.actions, { type: 'goToState' }] });
+          }}
+          style={{ fontSize: 10, padding: '2px 6px', background: '#1e3a5f', color: '#60a5fa', border: '1px solid #2563eb40', borderRadius: 3, cursor: 'pointer' }}
+        >
+          + Action
+        </button>
       </div>
     </div>
   );
