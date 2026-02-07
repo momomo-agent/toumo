@@ -298,3 +298,39 @@ export function startAllTimerTriggers(
 
   return () => cleanups.forEach(fn => fn());
 }
+
+// ─── Scroll Trigger ───────────────────────────────────────────────────
+
+/**
+ * Find all scroll-trigger patches (optionally targeting a specific element).
+ */
+export function findScrollTriggers(
+  patches: Patch[],
+  elementId?: string,
+): Patch[] {
+  return patches.filter(p => {
+    if (p.type !== 'scroll') return false;
+    if (elementId && p.config?.targetElementId) {
+      return p.config.targetElementId === elementId;
+    }
+    return true; // global scroll trigger
+  });
+}
+
+/**
+ * Handle a scroll event. Fires matching scroll-trigger patches.
+ */
+export function handleScroll(
+  patches: Patch[],
+  connections: PatchConnection[],
+  handlers: PatchActionHandler,
+  elementId?: string,
+): boolean {
+  const triggers = findScrollTriggers(patches, elementId);
+  if (triggers.length === 0) return false;
+
+  for (const trigger of triggers) {
+    executeTrigger(trigger.id, patches, connections, handlers);
+  }
+  return true;
+}
