@@ -179,6 +179,12 @@ export function PatchCanvas() {
   // Tick counter to force connection re-render during node drag
   const [, setRenderTick] = useState(0);
 
+  // Force a re-render after mount so connections can find port DOM elements
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setRenderTick(t => t + 1));
+    return () => cancelAnimationFrame(frame);
+  }, [patches.length, connections.length]);
+
   // Get port position in canvas coordinates
   const getPortPosition = useCallback((patchId: string, portId: string, isOutput: boolean): { x: number; y: number } | null => {
     if (!containerRef.current) return null;
