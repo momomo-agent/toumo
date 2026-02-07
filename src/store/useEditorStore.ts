@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
@@ -65,6 +65,11 @@ interface EditorState {
   variables: Variable[];
   interactions: Interaction[];
   conditionRules: ConditionRule[];
+  // Patch editor
+  patches: Patch[];
+  patchConnections: PatchConnection[];
+  selectedPatchId: string | null;
+  selectedConnectionId: string | null;
 }
 
 interface EditorActions {
@@ -309,6 +314,15 @@ interface EditorActions {
   booleanSubtract: () => void;
   booleanIntersect: () => void;
   booleanExclude: () => void;
+  // Patch editor actions
+  addPatch: (patch: Patch) => void;
+  removePatch: (id: string) => void;
+  updatePatchPosition: (id: string, position: Position) => void;
+  updatePatchConfig: (id: string, config: Record<string, any>) => void;
+  addPatchConnection: (connection: PatchConnection) => void;
+  removePatchConnection: (id: string) => void;
+  setSelectedPatchId: (id: string | null) => void;
+  setSelectedConnectionId: (id: string | null) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -326,6 +340,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   variables: [],
   interactions: [],
   conditionRules: [],
+  // Patch editor
+  patches: [],
+  patchConnections: [],
+  selectedPatchId: null,
+  selectedConnectionId: null,
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -3691,6 +3710,54 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedElementIds: [result.id],
       selectedElementId: result.id,
     }));
+  },
+
+  // Patch editor actions
+  addPatch: (patch) => {
+    set((s) => ({ patches: [...s.patches, patch] }));
+  },
+
+  removePatch: (id) => {
+    set((s) => ({
+      patches: s.patches.filter((p) => p.id !== id),
+      patchConnections: s.patchConnections.filter(
+        (c) => c.fromPatchId !== id && c.toPatchId !== id
+      ),
+      selectedPatchId: s.selectedPatchId === id ? null : s.selectedPatchId,
+    }));
+  },
+
+  updatePatchPosition: (id, position) => {
+    set((s) => ({
+      patches: s.patches.map((p) => (p.id === id ? { ...p, position } : p)),
+    }));
+  },
+
+  updatePatchConfig: (id, config) => {
+    set((s) => ({
+      patches: s.patches.map((p) =>
+        p.id === id ? { ...p, config: { ...p.config, ...config } } : p
+      ),
+    }));
+  },
+
+  addPatchConnection: (connection) => {
+    set((s) => ({ patchConnections: [...s.patchConnections, connection] }));
+  },
+
+  removePatchConnection: (id) => {
+    set((s) => ({
+      patchConnections: s.patchConnections.filter((c) => c.id !== id),
+      selectedConnectionId: s.selectedConnectionId === id ? null : s.selectedConnectionId,
+    }));
+  },
+
+  setSelectedPatchId: (id) => {
+    set({ selectedPatchId: id });
+  },
+
+  setSelectedConnectionId: (id) => {
+    set({ selectedConnectionId: id });
   },
 
 }));
