@@ -35,13 +35,11 @@ const FONT_SIZE_PRESETS = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40,
 export function TextPropertiesPanel() {
   const {
     selectedElementId,
-    selectedKeyframeId,
-    keyframes,
     updateElement,
   } = useEditorStore();
 
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     (el: KeyElement) => el.id === selectedElementId
   );
 

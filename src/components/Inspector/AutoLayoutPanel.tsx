@@ -8,20 +8,18 @@ import './AutoLayoutPanel.css';
 function ChildLayoutSection() {
   const {
     selectedElementId,
-    selectedKeyframeId,
-    keyframes,
     setChildSizingMode,
   } = useEditorStore();
 
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     el => el.id === selectedElementId
   );
 
   // Only show if this element has a parent with auto layout enabled
   if (!selectedElement?.parentId) return null;
 
-  const parent = selectedKeyframe?.keyElements.find(
+  const parent = sharedElements.find(
     el => el.id === selectedElement.parentId
   );
   if (!parent?.autoLayout?.enabled) return null;
@@ -211,8 +209,6 @@ const FillIcon = ({ active }: { active: boolean }) => (
 export function AutoLayoutPanel() {
   const {
     selectedElementId,
-    selectedKeyframeId,
-    keyframes,
     toggleAutoLayout,
     setAutoLayoutDirection,
     setAutoLayoutGap,
@@ -225,8 +221,8 @@ export function AutoLayoutPanel() {
   const [expanded, setExpanded] = useState(true);
   const [paddingLinked, setPaddingLinked] = useState(true);
 
-  const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
-  const selectedElement = selectedKeyframe?.keyElements.find(
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const selectedElement = sharedElements.find(
     el => el.id === selectedElementId
   );
 
@@ -234,7 +230,7 @@ export function AutoLayoutPanel() {
   const canHaveAutoLayout = selectedElement && 
     (selectedElement.shapeType === 'frame' || 
      selectedElement.shapeType === 'rectangle' ||
-     selectedKeyframe?.keyElements.some(el => el.parentId === selectedElement.id));
+     sharedElements.some(el => el.parentId === selectedElement.id));
 
   if (!selectedElement || !canHaveAutoLayout) {
     return null;
