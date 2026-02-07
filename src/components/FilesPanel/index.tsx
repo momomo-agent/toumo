@@ -340,6 +340,11 @@ export function FilesPanel() {
       canvasBackground: state.canvasBackground,
       variables: state.variables,
       conditionRules: state.conditionRules,
+      sharedElements: state.sharedElements,
+      displayStates: state.displayStates,
+      patches: state.patches,
+      patchConnections: state.patchConnections,
+      componentsV2: state.componentsV2,
     };
     localStorage.setItem(`toumo_proj_${id}`, JSON.stringify(data));
 
