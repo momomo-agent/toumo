@@ -106,6 +106,11 @@ export function LivePreview() {
       });
       smartAnimateRef.current.animateTo(targetEls);
     },
+    getVariableValue: (variableId: string) => {
+      const vars = useEditorStore.getState().variables;
+      const v = vars.find((v: any) => v.id === variableId);
+      return v?.currentValue ?? v?.defaultValue;
+    },
   }), [setSelectedDisplayStateId, keyframes, displayStates]);
   const patchHandlersRef = useRef(patchHandlers);
   patchHandlersRef.current = patchHandlers;
