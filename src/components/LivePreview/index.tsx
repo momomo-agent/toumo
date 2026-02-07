@@ -620,11 +620,16 @@ function PreviewContent({
   // Scroll trigger (debounced)
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleWheel = useCallback((_e: React.WheelEvent) => {
-    if (!availableTriggers.includes('scroll')) return;
     if (scrollTimerRef.current) return; // debounce
-    onTrigger('scroll');
+    // Try Patch-driven scroll first
+    const { handleScroll } = require('../../engine/PatchRuntime');
+    const patchHandled = handleScroll(patches, patchConnections, patchHandlers);
+    // Fall back to legacy trigger
+    if (!patchHandled && availableTriggers.includes('scroll')) {
+      onTrigger('scroll');
+    }
     scrollTimerRef.current = setTimeout(() => { scrollTimerRef.current = null; }, 500);
-  }, [availableTriggers, onTrigger]);
+  }, [availableTriggers, onTrigger, patches, patchConnections, patchHandlers]);
 
   const hasDrag = availableTriggers.includes('drag');
   const hasTap = availableTriggers.includes('tap');
