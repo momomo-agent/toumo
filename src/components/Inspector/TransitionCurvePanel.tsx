@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useEditorStore } from '../../store';
 import type { CurveConfig, CurveType } from '../../types';
 import { DEFAULT_CURVE_CONFIG } from '../../types';
-import { DraggableBezierEditor } from '../CurveEditor';
+import { DraggableBezierEditor, SpringCurveGraph } from '../CurveEditor';
 
 const CURVE_OPTIONS: { value: CurveType; label: string }[] = [
   { value: 'linear', label: 'Linear' },
@@ -117,6 +117,7 @@ function SpringParams({
   onChange: (c: CurveConfig) => void;
 }) {
   return (
+    <>
     <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
       <div style={{ flex: 1 }}>
         <label style={{ fontSize: 9, color: '#666' }}>Stiffness</label>
@@ -153,6 +154,14 @@ function SpringParams({
         />
       </div>
     </div>
+    <div style={{ marginTop: 4, display: 'flex', justifyContent: 'center' }}>
+      <SpringCurveGraph
+        stiffness={curve.stiffness ?? 170}
+        damping={curve.damping ?? 26}
+        mass={curve.mass ?? 1}
+      />
+    </div>
+    </>
   );
 }
 
