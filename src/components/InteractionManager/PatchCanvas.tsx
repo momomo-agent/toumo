@@ -181,6 +181,8 @@ interface DragState {
   startY: number;
   origX: number;
   origY: number;
+  lastDx?: number;
+  lastDy?: number;
 }
 
 export function PatchCanvas() {
@@ -273,11 +275,18 @@ export function PatchCanvas() {
       if (drag.type === 'node') {
         const dx = e.clientX - drag.startX;
         const dy = e.clientY - drag.startY;
-        updatePatchPosition(drag.patchId, {
-          x: Math.max(0, drag.origX + dx),
-          y: Math.max(0, drag.origY + dy),
-        });
-        // Force connection lines to re-render while dragging nodes
+        const selIds = useEditorStore.getState().selectedPatchIds;
+        if (selIds.length > 1 && selIds.includes(drag.patchId)) {
+          // Multi-select: move all selected patches
+          useEditorStore.getState().moveSelectedPatches(dx - (drag.lastDx || 0), dy - (drag.lastDy || 0));
+          drag.lastDx = dx;
+          drag.lastDy = dy;
+        } else {
+          updatePatchPosition(drag.patchId, {
+            x: Math.max(0, drag.origX + dx),
+            y: Math.max(0, drag.origY + dy),
+          });
+        }
         setRenderTick(t => t + 1);
       } else if (drag.type === 'port' && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
