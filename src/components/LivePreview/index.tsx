@@ -92,12 +92,19 @@ export function LivePreview() {
       setSelectedDisplayStateId(targetId);
     },
     setVariable: (variableId: string, value: any) => {
-      // Update variable in store
       const { setVariableValue } = useEditorStore.getState();
       setVariableValue(variableId, value);
-      // Fire variableChange triggers
       const state = useEditorStore.getState();
       handleVariableChange(variableId, value, state.patches, state.patchConnections, patchHandlersRef.current);
+    },
+    animateProperty: (elementId: string, property: string, toValue: any) => {
+      // Build target elements with the property change applied
+      const currentEls = useEditorStore.getState().sharedElements;
+      const targetEls = currentEls.map((el: any) => {
+        if (el.id !== elementId) return el;
+        return { ...el, style: { ...el.style, [property]: toValue } };
+      });
+      smartAnimateRef.current.animateTo(targetEls);
     },
   }), [setSelectedDisplayStateId, keyframes, displayStates]);
   const patchHandlersRef = useRef(patchHandlers);
