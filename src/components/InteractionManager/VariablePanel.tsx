@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useEditorStore } from '../../store';
-import type { Variable, VariableType, ConditionRule } from '../../types';
+import type { Variable, VariableType, ConditionRule, DisplayState } from '../../types';
 
 const TYPE_COLORS: Record<VariableType, string> = {
   string: '#f59e0b',
@@ -15,6 +15,7 @@ export function VariablePanel() {
   const {
     variables, addVariable, updateVariable, deleteVariable, setVariableValue,
     conditionRules, addConditionRule, updateConditionRule, deleteConditionRule,
+    displayStates,
   } = useEditorStore();
   const [tab, setTab] = useState<PanelTab>('variables');
   const [isAdding, setIsAdding] = useState(false);
@@ -112,6 +113,7 @@ export function VariablePanel() {
         <ConditionsTab
           conditionRules={conditionRules}
           variables={variables}
+          displayStates={displayStates}
           onAdd={addConditionRule}
           onUpdate={updateConditionRule}
           onDelete={deleteConditionRule}
@@ -365,10 +367,11 @@ function VariableValueEditor({
 
 /* ─── Conditions Tab ─── */
 function ConditionsTab({
-  conditionRules, variables, onAdd, onUpdate, onDelete,
+  conditionRules, variables, displayStates, onAdd, onUpdate, onDelete,
 }: {
   conditionRules: ConditionRule[];
   variables: Variable[];
+  displayStates: DisplayState[];
   onAdd: (rule: ConditionRule) => void;
   onUpdate: (id: string, updates: Partial<ConditionRule>) => void;
   onDelete: (id: string) => void;
@@ -422,6 +425,7 @@ function ConditionsTab({
             key={rule.id}
             rule={rule}
             variables={variables}
+            displayStates={displayStates}
             onUpdate={(updates) => onUpdate(rule.id, updates)}
             onDelete={() => onDelete(rule.id)}
           />
@@ -433,10 +437,11 @@ function ConditionsTab({
 
 /* ─── Condition Rule Item ─── */
 function ConditionRuleItem({
-  rule, variables, onUpdate, onDelete,
+  rule, variables, displayStates, onUpdate, onDelete,
 }: {
   rule: ConditionRule;
   variables: Variable[];
+  displayStates: DisplayState[];
   onUpdate: (updates: Partial<ConditionRule>) => void;
   onDelete: () => void;
 }) {
@@ -499,6 +504,51 @@ function ConditionRuleItem({
               <option value="setVariable">Set Variable</option>
               <option value="setProperty">Set Property</option>
             </select>
+            {/* Action-specific selectors */}
+            {action.type === 'goToState' && (
+              <select
+                value={action.stateId || ''}
+                onChange={(e) => {
+                  const updated = [...rule.actions];
+                  updated[i] = { ...updated[i], stateId: e.target.value };
+                  onUpdate({ actions: updated });
+                }}
+                style={{ ...selectStyle, flex: 1 }}
+              >
+                <option value="">— Select State —</option>
+                {displayStates.map((ds) => (
+                  <option key={ds.id} value={ds.id}>{ds.name}</option>
+                ))}
+              </select>
+            )}
+            {action.type === 'setVariable' && (
+              <>
+                <select
+                  value={action.variableId || ''}
+                  onChange={(e) => {
+                    const updated = [...rule.actions];
+                    updated[i] = { ...updated[i], variableId: e.target.value };
+                    onUpdate({ actions: updated });
+                  }}
+                  style={{ ...selectStyle, flex: 1 }}
+                >
+                  <option value="">— Variable —</option>
+                  {variables.map((v) => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+                                <input
+                  value={String(action.value ?? '')}
+                  onChange={(e) => {
+                    const updated = [...rule.actions];
+                    updated[i] = { ...updated[i], value: e.target.value };
+                    onUpdate({ actions: updated });
+                  }}
+                  placeholder="value"
+                  style={{ ...selectStyle, flex: 1, maxWidth: 60 }}
+                />
+              </>
+            )}
             <button
               onClick={() => {
                 const updated = rule.actions.filter((_, idx) => idx !== i);
