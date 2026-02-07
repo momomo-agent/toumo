@@ -15,7 +15,7 @@ import { GuideLines } from './GuideLines';
 import { HorizontalRuler, VerticalRuler, RulerCorner } from '../Ruler';
 import { ContextMenu } from '../ContextMenu';
 import { useDeleteGhosts } from '../../hooks/useDeleteGhosts';
-import { useResolvedElements } from '../../hooks/useResolvedElements';
+import { useResolvedElements, resolveElementsForState } from '../../hooks/useResolvedElements';
 import { DisplayStateBar } from './DisplayStateBar';
 
 const CANVAS_SIZE = 2400;
@@ -63,6 +63,8 @@ export function Canvas() {
   const setSelectedElementId = useEditorStore((s) => s.setSelectedElementId);
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds);
   const setSelectedKeyframeId = useEditorStore((s) => s.setSelectedKeyframeId);
+  const displayStates = useEditorStore((s) => s.displayStates);
+  const sharedEls = useEditorStore((s) => s.sharedElements);
   const setCanvasOffset = useEditorStore((s) => s.setCanvasOffset);
   const setCanvasScale = useEditorStore((s) => s.setCanvasScale);
   const zoomToFit = useEditorStore((s) => s.zoomToFit);
@@ -1221,11 +1223,16 @@ export function Canvas() {
             // Canvas-level keyframe
             keyframe = keyframes.find(kf => kf.id === layout.id) || null;
             // Active frame uses resolved elements (sharedElements + layerOverrides);
-            // inactive frames show base sharedElements (no per-frame resolve yet)
+            // Inactive frames also resolve with their matching displayState
             const isThisActive = keyframe?.id === selectedKeyframeId;
-            frameElements = isThisActive
-              ? elements
-              : useEditorStore.getState().sharedElements;
+            if (isThisActive) {
+              frameElements = elements;
+            } else {
+              // Find matching displayState for this keyframe
+              const dsIndex = keyframes.findIndex(k => k.id === layout.id);
+              const matchingDs = displayStates[dsIndex] || null;
+              frameElements = resolveElementsForState(sharedEls, matchingDs);
+            }
             frameName = keyframe?.name || '';
             frameSummary = keyframe?.summary || 'State description';
           } else {
