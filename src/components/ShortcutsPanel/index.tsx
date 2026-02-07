@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type ShortcutGroup = {
   title: string;
@@ -80,6 +80,17 @@ const shortcutGroups: ShortcutGroup[] = [
 export function ShortcutsPanel() {
   const [open, setOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState(0);
+
+  // ? key toggles shortcuts panel
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.key === '?') setOpen(prev => !prev);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   if (!open) {
     return (
