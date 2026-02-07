@@ -311,6 +311,7 @@ export type KeyElement = {
   componentInstanceId?: string; // Unique instance id
   currentStateId?: string; // Current functional state
   styleOverrides?: Record<string, Partial<ShapeStyle>>; // Per-child overrides
+  displayStateOverrides?: Record<string, import('./index').LayerOverride[]>; // Per-displayState overrides (inherit/override)
   // Auto Layout (Figma-style)
   autoLayout?: AutoLayoutConfig;
   // Child layout settings (when inside auto layout parent)
