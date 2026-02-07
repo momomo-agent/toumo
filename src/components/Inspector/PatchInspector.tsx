@@ -1,0 +1,172 @@
+import React from 'react';
+import { useEditorStore } from '../../store/useEditorStore';
+
+export function PatchInspector() {
+  const selectedPatchId = useEditorStore(s => s.selectedPatchId);
+  const patches = useEditorStore(s => s.patches);
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const displayStates = useEditorStore(s => s.displayStates);
+  const variables = useEditorStore(s => s.variables);
+  const updatePatchConfig = useEditorStore(s => s.updatePatchConfig);
+
+  const patch = patches.find(p => p.id === selectedPatchId);
+  if (!patch) return null;
+
+  const isTrigger = ['tap', 'drag', 'hover', 'scroll'].includes(patch.type);
+  const isAction = ['switchDisplayState', 'setVariable', 'animateProperty'].includes(patch.type);
+
+  return (
+    <section className="inspector-panel figma-style" style={{ padding: 16 }}>
+      <div className="figma-panel-header">Patch Config</div>
+
+      {/* Patch name */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={labelStyle}>Name</label>
+        <input
+          value={patch.name}
+          onChange={e => {
+            // Name is stored on patch directly, not in config
+            const newName = e.target.value;
+            useEditorStore.setState(s => ({
+              patches: s.patches.map(p => p.id === patch.id ? { ...p, name: newName } : p),
+            }));
+          }}
+          style={inputStyle}
+        />
+      </div>
+
+      {/* Patch type badge */}
+      <div style={{ marginBottom: 12 }}>
+        <span style={{
+          fontSize: 10, padding: '2px 8px', borderRadius: 4,
+          background: isTrigger ? '#1e3a5f' : isAction ? '#3b1f5e' : '#333',
+          color: isTrigger ? '#60a5fa' : isAction ? '#c084fc' : '#aaa',
+        }}>
+          {patch.type}
+        </span>
+      </div>
+
+      {/* Target element (for trigger patches) */}
+      {isTrigger && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Target Element</label>
+          <select
+            value={patch.config?.targetElementId || ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              config: { ...patch.config, targetElementId: e.target.value || undefined },
+            })}
+            style={inputStyle}
+          >
+            <option value="">— Any —</option>
+            {sharedElements.map(el => (
+              <option key={el.id} value={el.id}>{el.name || el.id}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Target display state (for switchDisplayState) */}
+      {patch.type === 'switchDisplayState' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Target State</label>
+          <select
+            value={patch.config?.targetDisplayStateId || ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              config: { ...patch.config, targetDisplayStateId: e.target.value },
+            })}
+            style={inputStyle}
+          >
+            <option value="">— Select —</option>
+            {displayStates.map(ds => (
+              <option key={ds.id} value={ds.id}>{ds.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Variable selector (for setVariable) */}
+      {patch.type === 'setVariable' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Variable</label>
+          <select
+            value={patch.config?.variableId || ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              config: { ...patch.config, variableId: e.target.value },
+            })}
+            style={inputStyle}
+          >
+            <option value="">— Select —</option>
+            {variables.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+          <label style={{ ...labelStyle, marginTop: 8 }}>Value</label>
+          <input
+            value={patch.config?.value ?? ''}
+            onChange={e => updatePatchConfig(patch.id, {
+              config: { ...patch.config, value: e.target.value },
+            })}
+            style={inputStyle}
+            placeholder="Value to set"
+          />
+        </div>
+      )}
+
+      {/* Timer duration */}
+      {patch.type === 'timer' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Duration (ms)</label>
+          <input
+            type="number"
+            value={patch.config?.duration ?? 1000}
+            onChange={e => updatePatchConfig(patch.id, {
+              config: { ...patch.config, duration: Number(e.target.value) },
+            })}
+            style={inputStyle}
+          />
+        </div>
+      )}
+
+      {/* Delay duration */}
+      {patch.type === 'delay' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Delay (ms)</label>
+          <input
+            type="number"
+            value={patch.config?.delay ?? 300}
+            onChange={e => updatePatchConfig(patch.id, {
+              config: { ...patch.config, delay: Number(e.target.value) },
+            })}
+            style={inputStyle}
+          />
+        </div>
+      )}
+
+      {/* Ports info */}
+      <div style={{ marginTop: 16 }}>
+        <label style={labelStyle}>Ports</label>
+        {patch.outputs.length > 0 && (
+          <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+            Out: {patch.outputs.map(p => p.name).join(', ')}
+          </div>
+        )}
+        {patch.inputs.length > 0 && (
+          <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+            In: {patch.inputs.map(p => p.name).join(', ')}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 11, color: '#888',
+  marginBottom: 4, fontWeight: 500,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '6px 8px', fontSize: 12,
+  background: '#1a1a1e', border: '1px solid #333',
+  borderRadius: 6, color: '#fff', outline: 'none',
+};

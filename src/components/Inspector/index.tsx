@@ -3,6 +3,7 @@ import { useEditorStore } from '../../store';
 import { DesignPanel } from './DesignPanel';
 import { MultiSelectPanel } from './MultiSelectPanel';
 import { TransitionInspector } from './TransitionInspector';
+import { PatchInspector } from './PatchInspector';
 import { useResolvedElements } from '../../hooks/useResolvedElements';
 import './Inspector.css';
 
@@ -14,6 +15,7 @@ export function Inspector() {
     selectedElementId,
     selectedElementIds,
     selectedTransitionId,
+    selectedPatchId,
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find(kf => kf.id === selectedKeyframeId);
@@ -26,11 +28,21 @@ export function Inspector() {
 
   // Determine which panel variant is active — key changes trigger the slide-in animation
   const panelKey = useMemo(() => {
+    if (selectedPatchId) return `patch-${selectedPatchId}`;
     if (selectedTransition) return `transition-${selectedTransition.id}`;
     if (selectedElementIds.length >= 2) return 'multi-select';
     if (selectedElement) return `element-${selectedElement.id}`;
     return `keyframe-${selectedKeyframeId}`;
   }, [selectedTransition, selectedElementIds.length >= 2, selectedElement?.id, selectedKeyframeId]);
+
+  // Show Patch inspector when a patch is selected
+  if (selectedPatchId) {
+    return (
+      <div key={panelKey} className="panel-transition-enter">
+        <PatchInspector />
+      </div>
+    );
+  }
 
   // Show transition inspector if a transition is selected
   if (selectedTransition) {
