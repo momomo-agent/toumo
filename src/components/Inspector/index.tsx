@@ -6,6 +6,7 @@ import { TransitionInspector } from './TransitionInspector';
 import { PatchInspector } from './PatchInspector';
 import { useResolvedElements } from '../../hooks/useResolvedElements';
 import './Inspector.css';
+import { TransitionCurvePanel } from './TransitionCurvePanel';
 
 export function Inspector() {
   const { 
@@ -248,6 +249,8 @@ function KeyframeInspector({ keyframe, keyframes, transitions }: KeyframeInspect
           <p className="figma-hint">No transitions defined.</p>
         )}
       </div>
+
+      <TransitionCurvePanel />
     </section>
   );
 }
