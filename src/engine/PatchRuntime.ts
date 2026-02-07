@@ -235,6 +235,34 @@ export function handleElementTap(
   return true; // at least one trigger was found
 }
 
+// ─── Long Press Trigger ───────────────────────────────────────────────
+
+export function handleElementLongPress(
+  elementId: string,
+  patches: Patch[],
+  connections: PatchConnection[],
+  handlers: PatchActionHandler,
+): boolean {
+  const triggers = findTapTriggersForElement(elementId, patches);
+  if (triggers.length === 0) return false;
+
+  let handled = false;
+  for (const trigger of triggers) {
+    // Find connections from onLongPress port
+    const lpConns = connections.filter(
+      c => c.fromPatchId === trigger.id && c.fromPortId === 'onLongPress',
+    );
+    for (const conn of lpConns) {
+      const actionPatch = patches.find(p => p.id === conn.toPatchId);
+      if (actionPatch) {
+        executeActionPatch(actionPatch, handlers, { _patches: patches, _connections: connections });
+        handled = true;
+      }
+    }
+  }
+  return handled;
+}
+
 // ─── Hover Trigger ────────────────────────────────────────────────────
 
 /**
