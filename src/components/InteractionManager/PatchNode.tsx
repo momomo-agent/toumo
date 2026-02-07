@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useEditorStore } from '../../store/useEditorStore';
 import type { Patch, PatchPort, PatchType } from '../../types';
 
 // Color scheme by patch category
@@ -49,6 +50,10 @@ export const PatchNode = React.memo(function PatchNode({
   const category = getCategory(patch.type);
   const colors = PATCH_COLORS[category];
   const nodeWidth = 180;
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const targetEl = patch.config?.targetElementId
+    ? sharedElements.find(e => e.id === patch.config?.targetElementId)
+    : null;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -102,7 +107,7 @@ export const PatchNode = React.memo(function PatchNode({
       {/* Config summary */}
       {patch.config?.targetElementId && (
         <div style={{ padding: '2px 10px', fontSize: 9, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          🎯 {patch.config.targetElementId.slice(0, 12)}
+          🎯 {targetEl?.name || patch.config.targetElementId.slice(0, 12)}
         </div>
       )}
 
