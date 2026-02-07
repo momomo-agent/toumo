@@ -122,6 +122,10 @@ export function executeActionPatch(
       let next = current + step;
       if (max !== undefined && next > max) next = min; // wrap around
       actionPatch.config = { ...actionPatch.config, _count: next };
+      // Fire downstream connections after count update
+      if (_context?._patches && _context?._connections) {
+        executeTrigger(actionPatch.id, _context._patches, _context._connections, handlers);
+      }
       break;
     }
     default:
