@@ -39,7 +39,7 @@ export function Canvas() {
     selectionBox, frameSize, canvasBackground,
     snapToGrid, gridSize, editingGroupId,
     isDragging, isResizing, showRulers,
-    components, componentsV2,
+    componentsV2,
   } = useEditorStore(useShallow((s) => ({
     keyframes: s.keyframes,
     selectedKeyframeId: s.selectedKeyframeId,
@@ -56,7 +56,7 @@ export function Canvas() {
     isDragging: s.isDragging,
     showRulers: s.showRulers,
     isResizing: s.isResizing,
-    components: s.components,
+    componentsV2: s.componentsV2,
   })));
 
   // Actions don't cause re-renders — grab them once via getState or stable selectors
@@ -155,15 +155,15 @@ export function Canvas() {
     });
     currentY += ROW_LABEL_HEIGHT + frameSize.height + ROW_GAP;
 
-    // Row 1+: Component keyframes (each component = one row)
-    components.forEach((comp, compIdx) => {
+    // Row 1+: ComponentV2 keyframes (each component = one row of displayStates)
+    componentsV2.forEach((comp, compIdx) => {
       rows.push({ label: `Component: ${comp.name}`, y: currentY, componentId: comp.id });
-      // Each component's functional states map to keyframes
-      const compStates = comp.functionalStates;
-      compStates.forEach((fs, fsIdx) => {
+      // Each component's display states = keyframes in this row
+      const compStates = comp.displayStates;
+      compStates.forEach((ds, dsIdx) => {
         layouts.push({
-          id: `${comp.id}::${fs.id}`,
-          x: fsIdx * (frameSize.width + FRAME_GAP) + FRAME_MARGIN,
+          id: `${comp.id}::${ds.id}`,
+          x: dsIdx * (frameSize.width + FRAME_GAP) + FRAME_MARGIN,
           y: currentY + ROW_LABEL_HEIGHT,
           width: frameSize.width,
           height: frameSize.height,
@@ -176,7 +176,7 @@ export function Canvas() {
     });
 
     return { frameLayouts: layouts, rowMetas: rows };
-  }, [frameSize.height, frameSize.width, keyframes, components]);
+  }, [frameSize.height, frameSize.width, keyframes, componentsV2]);
 
   const frameLayoutMap = useMemo(() => {
     const map = new Map<string, FrameLayout>();
@@ -1224,12 +1224,12 @@ export function Canvas() {
             frameName = keyframe?.name || '';
             frameSummary = keyframe?.summary || 'State description';
           } else {
-            // Component keyframe — show masterElements as preview
-            const comp = components.find(c => c.id === layout.componentId);
-            const fsId = layout.id.split('::')[1];
-            const fs = comp?.functionalStates.find(s => s.id === fsId);
-            frameElements = comp?.masterElements || [];
-            frameName = fs?.name || 'State';
+            // Component keyframe — show layers as preview (V2)
+            const comp = componentsV2.find(c => c.id === layout.componentId);
+            const dsId = layout.id.split('::')[1];
+            const ds = comp?.displayStates.find(s => s.id === dsId);
+            frameElements = comp?.layers || [];
+            frameName = ds?.name || 'State';
             frameSummary = comp?.name || '';
           }
 

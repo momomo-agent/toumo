@@ -130,7 +130,7 @@ function ContextMenuDivider() {
 type DropPosition = 'above' | 'below' | 'inside';
 
 // --- Main LayerPanel ---
-export function LayerPanel() {
+export const LayerPanel = memo(function LayerPanel() {
   const {
     keyframes,
     selectedKeyframeId,
@@ -706,4 +706,4 @@ export function LayerPanel() {
       )}
     </div>
   );
-}
+});

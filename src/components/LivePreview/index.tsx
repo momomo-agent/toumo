@@ -186,10 +186,13 @@ export function LivePreview() {
   }, [currentKeyframeId, keyframes]);
 
   // ─── Derived state ────────────────────────────────────────────────
-  const currentKeyframe = keyframes.find(kf => kf.id === currentKeyframeId);
-  const baseElements = smartAnimateState.isAnimating
-    ? smartAnimateState.elements
-    : (currentKeyframe?.keyElements || []);
+  const currentKeyframe = useMemo(() => keyframes.find(kf => kf.id === currentKeyframeId), [keyframes, currentKeyframeId]);
+  const baseElements = useMemo(() =>
+    smartAnimateState.isAnimating
+      ? smartAnimateState.elements
+      : (currentKeyframe?.keyElements || []),
+    [smartAnimateState.isAnimating, smartAnimateState.elements, currentKeyframe],
+  );
 
   // Apply DisplayState layer overrides to elements
   const currentDisplayState = displayStates.find(ds => ds.id === previewDisplayStateId);
@@ -224,8 +227,8 @@ export function LivePreview() {
     });
   }, [baseElements, currentDisplayState]);
 
-  const device = DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0];
-  const availableTransitions = transitions.filter(t => t.from === currentKeyframeId);
+  const device = useMemo(() => DEVICE_FRAMES.find(d => d.id === deviceFrame) || DEVICE_FRAMES[0], [deviceFrame]);
+  const availableTransitions = useMemo(() => transitions.filter(t => t.from === currentKeyframeId), [transitions, currentKeyframeId]);
 
   // ─── Spring RAF animation ref ──────────────────────────────────────
   const springRafRef = useRef<number>(0);
