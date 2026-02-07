@@ -84,6 +84,7 @@ export function Canvas() {
   const addKeyframe = useEditorStore((s) => s.addKeyframe);
   const removeKeyframe = useEditorStore((s) => s.removeKeyframe);
   const renameKeyframe = useEditorStore((s) => s.renameKeyframe);
+  const addComponentDisplayState = useEditorStore((s) => s.addComponentDisplayState);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const drawStartRef = useRef<Position | null>(null);
@@ -1223,6 +1224,18 @@ export function Canvas() {
                 style={{
                   fontSize: 11, padding: '2px 8px', borderRadius: 4,
                   background: '#1e3a5f', color: '#60a5fa', border: '1px solid #2563eb40',
+                  cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 500,
+                }}
+              >
+                + State
+              </button>
+            )}
+            {row.componentId && (
+              <button
+                onClick={(e) => { e.stopPropagation(); addComponentDisplayState(row.componentId!, `State ${Date.now()}`); }}
+                style={{
+                  fontSize: 11, padding: '2px 8px', borderRadius: 4,
+                  background: '#2d1b4e', color: '#a78bfa', border: '1px solid #7c3aed40',
                   cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 500,
                 }}
               >
