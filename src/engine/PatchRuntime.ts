@@ -11,6 +11,7 @@ import type { Patch, PatchConnection } from '../types';
 export type PatchActionHandler = {
   switchDisplayState: (targetDisplayStateId: string) => void;
   setVariable?: (variableId: string, value: any) => void;
+  animateProperty?: (elementId: string, property: string, toValue: any) => void;
 };
 
 /**
@@ -69,6 +70,15 @@ export function executeActionPatch(
       const value = actionPatch.config?.value;
       if (varId !== undefined && value !== undefined && handlers.setVariable) {
         handlers.setVariable(varId, value);
+      }
+      break;
+    }
+    case 'animateProperty': {
+      const elementId = actionPatch.config?.targetElementId;
+      const property = actionPatch.config?.property;
+      const toValue = actionPatch.config?.toValue;
+      if (elementId && property && toValue !== undefined && handlers.animateProperty) {
+        handlers.animateProperty(elementId, property, toValue);
       }
       break;
     }
