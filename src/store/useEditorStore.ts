@@ -3335,21 +3335,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     // Update parent size if changed (hug mode)
     if (newParentWidth !== parent.size.width || newParentHeight !== parent.size.height) {
-      set((state) => ({
-        keyframes: state.keyframes.map(kf => {
-          if (kf.id !== state.selectedKeyframeId) return kf;
-          return {
-            ...kf,
-            keyElements: kf.keyElements.map(el => {
-              if (el.id !== parentId) return el;
-              return {
-                ...el,
-                size: { width: newParentWidth, height: newParentHeight },
-              };
-            }),
-          };
-        }),
-      }));
+      set((state) => {
+        const newShared = state.sharedElements.map(el => {
+          if (el.id !== parentId) return el;
+          return { ...el, size: { width: newParentWidth, height: newParentHeight } };
+        });
+        return {
+          sharedElements: newShared,
+          keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        };
+      });
     }
     
     // Use the (possibly updated) parent size for content area
@@ -3424,22 +3419,20 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         : mainAxisOffset;
       
       // Update child
-      set((state) => ({
-        keyframes: state.keyframes.map(kf => {
-          if (kf.id !== state.selectedKeyframeId) return kf;
+      set((state) => {
+        const newShared = state.sharedElements.map(el => {
+          if (el.id !== child.id) return el;
           return {
-            ...kf,
-            keyElements: kf.keyElements.map(el => {
-              if (el.id !== child.id) return el;
-              return {
-                ...el,
-                position: { x, y },
-                size: { width: childWidth, height: childHeight },
-              };
-            }),
+            ...el,
+            position: { x, y },
+            size: { width: childWidth, height: childHeight },
           };
-        }),
-      }));
+        });
+        return {
+          sharedElements: newShared,
+          keyframes: syncToAllKeyframes(newShared, state.keyframes),
+        };
+      });
       
       // Update main axis offset for next child
       const actualGap = justifyContent === 'space-between' ? spaceBetweenGap : gap;
@@ -3466,20 +3459,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     get().pushHistory();
     
-    set((s) => ({
-      keyframes: s.keyframes.map(kf => {
-        if (kf.id !== s.selectedKeyframeId) return kf;
-        return {
-          ...kf,
-          keyElements: [
-            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
-            result,
-          ],
-        };
-      }),
-      selectedElementIds: [result.id],
-      selectedElementId: result.id,
-    }));
+    set((s) => {
+      const newShared = [
+        ...s.sharedElements.filter(el => !s.selectedElementIds.includes(el.id)),
+        result,
+      ];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, s.keyframes),
+        selectedElementIds: [result.id],
+        selectedElementId: result.id,
+      };
+    });
   },
 
   booleanSubtract: () => {
@@ -3500,20 +3491,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     get().pushHistory();
     
-    set((s) => ({
-      keyframes: s.keyframes.map(kf => {
-        if (kf.id !== s.selectedKeyframeId) return kf;
-        return {
-          ...kf,
-          keyElements: [
-            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
-            result,
-          ],
-        };
-      }),
-      selectedElementIds: [result.id],
-      selectedElementId: result.id,
-    }));
+    set((s) => {
+      const newShared = [
+        ...s.sharedElements.filter(el => !s.selectedElementIds.includes(el.id)),
+        result,
+      ];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, s.keyframes),
+        selectedElementIds: [result.id],
+        selectedElementId: result.id,
+      };
+    });
   },
 
   booleanIntersect: () => {
@@ -3534,20 +3523,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     get().pushHistory();
     
-    set((s) => ({
-      keyframes: s.keyframes.map(kf => {
-        if (kf.id !== s.selectedKeyframeId) return kf;
-        return {
-          ...kf,
-          keyElements: [
-            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
-            result,
-          ],
-        };
-      }),
-      selectedElementIds: [result.id],
-      selectedElementId: result.id,
-    }));
+    set((s) => {
+      const newShared = [
+        ...s.sharedElements.filter(el => !s.selectedElementIds.includes(el.id)),
+        result,
+      ];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, s.keyframes),
+        selectedElementIds: [result.id],
+        selectedElementId: result.id,
+      };
+    });
   },
 
   booleanExclude: () => {
@@ -3568,20 +3555,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     
     get().pushHistory();
     
-    set((s) => ({
-      keyframes: s.keyframes.map(kf => {
-        if (kf.id !== s.selectedKeyframeId) return kf;
-        return {
-          ...kf,
-          keyElements: [
-            ...kf.keyElements.filter(el => !s.selectedElementIds.includes(el.id)),
-            result,
-          ],
-        };
-      }),
-      selectedElementIds: [result.id],
-      selectedElementId: result.id,
-    }));
+    set((s) => {
+      const newShared = [
+        ...s.sharedElements.filter(el => !s.selectedElementIds.includes(el.id)),
+        result,
+      ];
+      return {
+        sharedElements: newShared,
+        keyframes: syncToAllKeyframes(newShared, s.keyframes),
+        selectedElementIds: [result.id],
+        selectedElementId: result.id,
+      };
+    });
   },
 
   // Patch editor actions
