@@ -12,6 +12,7 @@ function getDefaultPorts(type: PatchType): { inputs: PatchPort[]; outputs: Patch
         inputs: [],
         outputs: [
           { id: 'onTap', name: 'onTap', dataType: 'pulse' },
+          { id: 'onLongPress', name: 'onLongPress', dataType: 'pulse' },
           { id: 'target', name: 'target', dataType: 'any' },
         ],
       };
