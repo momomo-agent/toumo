@@ -382,6 +382,64 @@ export function createTapNavigate(elementId: string, elementName: string): Sugar
   };
 }
 
+// ─── Auto Play (Timer Loop) ──────────────────────────────────────────
+export function createAutoPlay(_elementId: string, _elementName: string): SugarResult {
+  const timerId = uid('timer');
+  const toggleId = uid('toggle');
+  const switchActiveId = uid('switch-active');
+  const switchDefaultId = uid('switch-default');
+  const dsActiveId = uid('ds-active');
+
+  const patches: Patch[] = [
+    {
+      id: timerId, type: 'timer', name: 'Auto Timer',
+      config: { duration: 1500, repeat: true },
+      position: { x: 100, y: 100 }, inputs: [],
+      outputs: [{ id: `${timerId}-onFire`, name: 'onFire', dataType: 'pulse' }],
+    },
+    {
+      id: toggleId, type: 'toggle', name: 'Toggle',
+      config: {},
+      position: { x: 350, y: 100 },
+      inputs: [{ id: `${toggleId}-trigger`, name: 'trigger', dataType: 'pulse' }],
+      outputs: [
+        { id: `${toggleId}-onTrue`, name: 'onTrue', dataType: 'pulse' },
+        { id: `${toggleId}-onFalse`, name: 'onFalse', dataType: 'pulse' },
+      ],
+    },
+    {
+      id: switchActiveId, type: 'switchDisplayState',
+      name: 'Switch → Active',
+      config: { targetDisplayStateId: dsActiveId },
+      position: { x: 600, y: 60 },
+      inputs: [{ id: `${switchActiveId}-trigger`, name: 'trigger', dataType: 'pulse' }],
+      outputs: [{ id: `${switchActiveId}-done`, name: 'done', dataType: 'pulse' }],
+    },
+    {
+      id: switchDefaultId, type: 'switchDisplayState',
+      name: 'Switch → Default',
+      config: { targetDisplayStateId: 'default' },
+      position: { x: 600, y: 180 },
+      inputs: [{ id: `${switchDefaultId}-trigger`, name: 'trigger', dataType: 'pulse' }],
+      outputs: [{ id: `${switchDefaultId}-done`, name: 'done', dataType: 'pulse' }],
+    },
+  ];
+
+  const connections: PatchConnection[] = [
+    { id: uid('c'), fromPatchId: timerId, fromPortId: `${timerId}-onFire`,
+      toPatchId: toggleId, toPortId: `${toggleId}-trigger` },
+    { id: uid('c'), fromPatchId: toggleId, fromPortId: `${toggleId}-onTrue`,
+      toPatchId: switchActiveId, toPortId: `${switchActiveId}-trigger` },
+    { id: uid('c'), fromPatchId: toggleId, fromPortId: `${toggleId}-onFalse`,
+      toPatchId: switchDefaultId, toPortId: `${switchDefaultId}-trigger` },
+  ];
+
+  return {
+    patches, connections,
+    displayStates: [{ id: dsActiveId, name: 'Active', layerOverrides: [] }],
+  };
+}
+
 /** All available sugar presets */
 export const SUGAR_PRESETS = [
   { id: 'hover-scale', name: 'Hover Scale', icon: '🖱️', description: 'Hover → 放大 + 透明度变化', create: createHoverScale },
@@ -390,4 +448,5 @@ export const SUGAR_PRESETS = [
   { id: 'drag-dismiss', name: 'Drag to Dismiss', icon: '👋', description: '拖拽 → 滑出屏幕', create: createDragToDismiss },
   { id: 'hover-color', name: 'Hover Color', icon: '🎨', description: 'Hover → 颜色变化', create: createHoverColor },
   { id: 'tap-navigate', name: 'Tap Navigate', icon: '➡️', description: 'Tap → 切换到指定状态', create: createTapNavigate },
+  { id: 'auto-play', name: 'Auto Play', icon: '🔄', description: 'Timer → 自动循环切换状态', create: createAutoPlay },
 ] as const;
