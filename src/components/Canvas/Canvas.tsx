@@ -1290,11 +1290,11 @@ export function Canvas() {
             frameName = keyframe?.name || '';
             frameSummary = keyframe?.summary || 'State description';
           } else {
-            // Component keyframe — show layers as preview (V2)
+            // Component keyframe — show layers with displayState overrides (V2)
             const comp = componentsV2.find(c => c.id === layout.componentId);
             const dsId = layout.id.split('::')[1];
             const ds = comp?.displayStates.find(s => s.id === dsId);
-            frameElements = comp?.layers || [];
+            frameElements = ds && comp ? resolveElementsForState(comp.layers, ds) : (comp?.layers || []);
             frameName = ds?.name || 'State';
             frameSummary = comp?.name || '';
           }
