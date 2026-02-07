@@ -6,23 +6,21 @@ import type { KeyElement } from '../types';
  * Resolves the final elements array for the current keyframe + display state.
  * 
  * Logic:
- * 1. Read base elements from the selected keyframe's keyElements
+ * 1. Read base elements from sharedElements (single source of truth)
  * 2. Find the selected DisplayState's layerOverrides
  * 3. For each element, if there's a matching override with isKey=true,
  *    apply the override properties on top of the base element
  * 4. Return the merged elements array
  */
 export function useResolvedElements(): KeyElement[] {
-  const keyframes = useEditorStore(s => s.keyframes);
-  const selectedKeyframeId = useEditorStore(s => s.selectedKeyframeId);
+  const sharedElements = useEditorStore(s => s.sharedElements);
   const displayStates = useEditorStore(s => s.displayStates);
   const selectedDisplayStateId = useEditorStore(s => s.selectedDisplayStateId);
 
   return useMemo(() => {
-    // 1. Get base elements from selected keyframe
-    const kf = keyframes.find(k => k.id === selectedKeyframeId);
-    if (!kf) return [];
-    const baseElements = kf.keyElements;
+    // 1. Get base elements from sharedElements (single source of truth)
+    const baseElements = sharedElements;
+    if (!baseElements.length) return [];
 
     // 2. Find selected display state
     const ds = displayStates.find(d => d.id === selectedDisplayStateId);
@@ -72,5 +70,5 @@ export function useResolvedElements(): KeyElement[] {
         },
       } as KeyElement;
     });
-  }, [keyframes, selectedKeyframeId, displayStates, selectedDisplayStateId]);
+  }, [sharedElements, displayStates, selectedDisplayStateId]);
 }

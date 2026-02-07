@@ -116,7 +116,8 @@ export default function App() {
   } = useEditorStore();
 
   const selectedKeyframe = keyframes.find((kf) => kf.id === selectedKeyframeId);
-  const elements = selectedKeyframe?.keyElements || [];
+  const sharedElements = useEditorStore(s => s.sharedElements);
+  const elements = sharedElements;
   const selectedElement = elements.find((el) => el.id === selectedElementId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -2208,11 +2209,11 @@ export default function App() {
           </button>
           <button
             onClick={() => {
-              const kf = selectedKeyframe;
-              if (!kf) return;
+              if (!selectedKeyframe) return;
+              const els = useEditorStore.getState().sharedElements;
               let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${frameSize.width}" height="${frameSize.height}">`;
               svg += `<rect width="100%" height="100%" fill="${canvasBackground}"/>`;
-              kf.keyElements.forEach(el => {
+              els.forEach(el => {
                 if (el.shapeType === 'rectangle') {
                   svg += `<rect x="${el.position.x}" y="${el.position.y}" width="${el.size.width}" height="${el.size.height}" fill="${el.style?.fill || '#333'}" rx="${el.style?.borderRadius || 0}"/>`;
                 } else if (el.shapeType === 'ellipse') {
@@ -2709,8 +2710,8 @@ export default function App() {
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
           >⊙</button>
         </div>
-        <span>{selectedElementIds.length === 1 && selectedKeyframe?.keyElements.find(e => e.id === selectedElementIds[0]) 
-          ? `X: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(selectedKeyframe.keyElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
+        <span>{selectedElementIds.length === 1 && sharedElements.find(e => e.id === selectedElementIds[0]) 
+          ? `X: ${Math.round(sharedElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(sharedElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
         <span style={{ color: '#555', cursor: 'default' }} title="按 ? 查看所有快捷键">
           ⌨️ 按 <kbd style={{ padding: '0 4px', background: '#0d0d0e', border: '1px solid #333', borderRadius: 3, fontSize: 10, color: '#888' }}>?</kbd> 查看快捷键
