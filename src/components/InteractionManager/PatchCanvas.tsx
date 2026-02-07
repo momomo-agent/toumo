@@ -371,6 +371,24 @@ export function PatchCanvas() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedPatchId, selectedConnectionId, removePatch, removePatchConnection]);
 
+  // Fit all nodes into view
+  const handleFitAll = useCallback(() => {
+    if (!containerRef.current || patches.length === 0) return;
+    const minX = Math.min(...patches.map(p => p.position.x));
+    const minY = Math.min(...patches.map(p => p.position.y));
+    const offsetX = Math.max(0, 60 - minX);
+    const offsetY = Math.max(0, 60 - minY);
+    if (offsetX > 0 || offsetY > 0) {
+      patches.forEach(p => {
+        updatePatchPosition(p.id, {
+          x: p.position.x + offsetX,
+          y: p.position.y + offsetY,
+        });
+      });
+    }
+    containerRef.current.scrollTo(0, 0);
+  }, [patches, updatePatchPosition]);
+
   // Compute connection positions
   const connectionLines = connections.map(conn => {
     const fromPos = getPortPosition(conn.fromPatchId, conn.fromPortId, true);
@@ -395,6 +413,17 @@ export function PatchCanvas() {
         backgroundSize: '20px 20px',
       }}
     >
+      {/* Fit All button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); handleFitAll(); }}
+        style={{
+          position: 'absolute', top: 8, right: 8, zIndex: 20,
+          padding: '4px 8px', background: '#333', border: '1px solid #555',
+          borderRadius: 4, color: '#ccc', fontSize: 10, cursor: 'pointer',
+        }}
+      >
+        ⊞ Fit All
+      </button>
       {/* SVG layer for connections */}
       <svg
         style={{
