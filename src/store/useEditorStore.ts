@@ -85,6 +85,7 @@ interface EditorState {
   patches: Patch[];
   patchConnections: PatchConnection[];
   selectedPatchId: string | null;
+  activePatchIds: Set<string>;
   selectedConnectionId: string | null;
   // Shared layer tree — single source of truth for all keyframes
   sharedElements: KeyElement[];
@@ -344,6 +345,7 @@ interface EditorActions {
   addPatchConnection: (connection: PatchConnection) => void;
   removePatchConnection: (id: string) => void;
   setSelectedPatchId: (id: string | null) => void;
+  flashPatch: (id: string) => void;
   setSelectedConnectionId: (id: string | null) => void;
   // DisplayState actions (PRD v2 - shared layer tree)
   addDisplayState: (name: string) => void;
@@ -508,6 +510,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     },
   ],
   selectedPatchId: null,
+  activePatchIds: new Set<string>(),
   selectedConnectionId: null,
   // Shared layer tree + display states (PRD v2)
   displayStates: [
@@ -3842,6 +3845,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   setSelectedPatchId: (id) => {
     set({ selectedPatchId: id });
+  },
+
+  flashPatch: (id) => {
+    const s = get();
+    const next = new Set(s.activePatchIds);
+    next.add(id);
+    set({ activePatchIds: next });
+    setTimeout(() => {
+      const s2 = get();
+      const after = new Set(s2.activePatchIds);
+      after.delete(id);
+      set({ activePatchIds: after });
+    }, 300);
   },
 
   setSelectedConnectionId: (id) => {
