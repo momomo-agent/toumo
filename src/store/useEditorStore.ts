@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
+import type { Keyframe, Transition, KeyElement, ToolType, Position, Size, Component, ComponentV2, FunctionalState, ShapeStyle, Variable, Interaction, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
 import { initialKeyframes, initialTransitions } from './initialData';
 import { DEFAULT_AUTO_LAYOUT, DEFAULT_CURVE_CONFIG } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
@@ -75,6 +75,8 @@ interface EditorState {
   selectedDisplayStateId: string | null;
   // Three-level curve override system (level 1: global)
   globalCurve: CurveConfig;
+  // Component V2 (PRD v2)
+  componentsV2: ComponentV2[];
 }
 
 interface EditorActions {
@@ -342,6 +344,12 @@ interface EditorActions {
   setPropertyCurve: (displayStateId: string, layerId: string, property: string, curve: CurveConfig) => void;
   removeElementCurve: (displayStateId: string, layerId: string) => void;
   removePropertyCurve: (displayStateId: string, layerId: string, property: string) => void;
+  // Component V2 actions
+  createComponentV2: (name: string) => void;
+  deleteComponentV2: (id: string) => void;
+  updateComponentV2: (id: string, updates: Partial<ComponentV2>) => void;
+  addComponentDisplayState: (componentId: string, name: string) => void;
+  removeComponentDisplayState: (componentId: string, stateId: string) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -372,6 +380,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectedDisplayStateId: 'ds-default',
   // Three-level curve override system (level 1: global)
   globalCurve: { ...DEFAULT_CURVE_CONFIG },
+  // Component V2 (PRD v2)
+  componentsV2: [],
   selectedKeyframeId: initialKeyframes[0].id,
   selectedElementId: null,
   selectedElementIds: [],
@@ -3950,6 +3960,59 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           delete newOverrides[property];
           return { ...o, propertyCurveOverrides: Object.keys(newOverrides).length > 0 ? newOverrides : undefined };
         }),
+      };
+    }),
+  })),
+
+  // ── Component V2 actions ──────────────────────────────────────────
+
+  createComponentV2: (name) => set((state) => {
+    const id = `compv2-${Date.now()}`;
+    const defaultDisplayState: DisplayState = {
+      id: `ds-${Date.now()}`,
+      name: 'Default',
+      layerOverrides: [],
+    };
+    const newComponent: ComponentV2 = {
+      id,
+      name,
+      layers: [],
+      displayStates: [defaultDisplayState],
+      variables: [],
+      rules: [],
+      createdAt: Date.now(),
+    };
+    return { componentsV2: [...state.componentsV2, newComponent] };
+  }),
+
+  deleteComponentV2: (id) => set((state) => ({
+    componentsV2: state.componentsV2.filter((c) => c.id !== id),
+  })),
+
+  updateComponentV2: (id, updates) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) =>
+      c.id === id ? { ...c, ...updates } : c
+    ),
+  })),
+
+  addComponentDisplayState: (componentId, name) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) => {
+      if (c.id !== componentId) return c;
+      const newState: DisplayState = {
+        id: `ds-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        layerOverrides: [],
+      };
+      return { ...c, displayStates: [...c.displayStates, newState] };
+    }),
+  })),
+
+  removeComponentDisplayState: (componentId, stateId) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) => {
+      if (c.id !== componentId) return c;
+      return {
+        ...c,
+        displayStates: c.displayStates.filter((ds) => ds.id !== stateId),
       };
     }),
   })),
