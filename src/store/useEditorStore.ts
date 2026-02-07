@@ -368,6 +368,10 @@ interface EditorActions {
   updateComponentV2: (id: string, updates: Partial<ComponentV2>) => void;
   addComponentDisplayState: (componentId: string, name: string) => void;
   removeComponentDisplayState: (componentId: string, stateId: string) => void;
+  addComponentPatch: (componentId: string, patch: Patch) => void;
+  removeComponentPatch: (componentId: string, patchId: string) => void;
+  addComponentConnection: (componentId: string, conn: PatchConnection) => void;
+  removeComponentConnection: (componentId: string, connId: string) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -4089,6 +4093,40 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         displayStates: c.displayStates.filter((ds) => ds.id !== stateId),
       };
     }),
+  })),
+
+  // Component Patch management
+  addComponentPatch: (componentId: string, patch: Patch) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) =>
+      c.id === componentId ? { ...c, patches: [...(c.patches || []), patch] } : c
+    ),
+  })),
+
+  removeComponentPatch: (componentId: string, patchId: string) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) =>
+      c.id === componentId ? {
+        ...c,
+        patches: (c.patches || []).filter(p => p.id !== patchId),
+        connections: (c.connections || []).filter(cn =>
+          cn.fromPatchId !== patchId && cn.toPatchId !== patchId
+        ),
+      } : c
+    ),
+  })),
+
+  addComponentConnection: (componentId: string, conn: PatchConnection) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) =>
+      c.id === componentId ? { ...c, connections: [...(c.connections || []), conn] } : c
+    ),
+  })),
+
+  removeComponentConnection: (componentId: string, connId: string) => set((state) => ({
+    componentsV2: state.componentsV2.map((c) =>
+      c.id === componentId ? {
+        ...c,
+        connections: (c.connections || []).filter(cn => cn.id !== connId),
+      } : c
+    ),
   })),
 
 }));
