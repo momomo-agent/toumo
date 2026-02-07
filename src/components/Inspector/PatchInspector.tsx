@@ -65,6 +65,62 @@ export function PatchInspector() {
         </div>
       )}
 
+      {/* Tap trigger config */}
+      {patch.type === 'tap' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Long Press Delay (ms)</label>
+          <input type="number" value={patch.config?.longPressDelay ?? 500}
+            onChange={e => updatePatchConfig(patch.id, { longPressDelay: Number(e.target.value) })}
+            style={inputStyle} min={100} step={100} />
+        </div>
+      )}
+
+      {/* Drag trigger config */}
+      {patch.type === 'drag' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Drag Threshold (px)</label>
+          <input type="number" value={patch.config?.dragThreshold ?? 10}
+            onChange={e => updatePatchConfig(patch.id, { dragThreshold: Number(e.target.value) })}
+            style={inputStyle} min={1} step={1} />
+          <label style={{ ...labelStyle, marginTop: 8 }}>Axis Lock</label>
+          <select value={patch.config?.axisLock || 'none'}
+            onChange={e => updatePatchConfig(patch.id, { axisLock: e.target.value })}
+            style={inputStyle}>
+            <option value="none">None</option>
+            <option value="x">Horizontal</option>
+            <option value="y">Vertical</option>
+          </select>
+        </div>
+      )}
+
+      {/* Scroll trigger config */}
+      {patch.type === 'scroll' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Scroll Direction</label>
+          <select value={patch.config?.scrollDirection || 'vertical'}
+            onChange={e => updatePatchConfig(patch.id, { scrollDirection: e.target.value })}
+            style={inputStyle}>
+            <option value="vertical">Vertical</option>
+            <option value="horizontal">Horizontal</option>
+          </select>
+        </div>
+      )}
+
+      {/* Variable Change trigger config */}
+      {patch.type === 'variableChange' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Watch Variable</label>
+          <select value={patch.config?.variableId || ''}
+            onChange={e => updatePatchConfig(patch.id, { variableId: e.target.value })}
+            style={inputStyle}>
+            <option value="">— Any Variable —</option>
+            {variables.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Target display state (for switchDisplayState) */}
       {patch.type === 'switchDisplayState' && (
         <div style={{ marginBottom: 12 }}>
