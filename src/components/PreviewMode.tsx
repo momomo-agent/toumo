@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import type { Transition, KeyElement, TriggerType, Size, InteractionAction, PrototypeLink, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../types';
+import type { KeyElement, Size, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../types';
 import { clearPreviewHash, type ProjectData } from '../utils/shareUtils';
 import { useGestureHandler } from '../hooks/useGestureHandler';
 import { useEditorStore } from '../store/useEditorStore';
+
+// Legacy type aliases (deprecated — will be removed when Patch system fully replaces these)
+type Transition = any;
+type PrototypeLink = any;
+type TriggerType = string;
+type InteractionAction = any;
 
 // ─── Device Frame Definitions ─────────────────────────────────────────
 type DeviceCategory = 'none' | 'iphone' | 'android' | 'ipad' | 'desktop';
@@ -653,9 +659,9 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
           const isText = el.shapeType === 'text' || (el.text != null && el.text !== '');
 
           const handleElClick = (e: React.MouseEvent) => {
-            if (el.prototypeLink?.enabled) {
+            if (el?.prototypeLink?.enabled) {
               e.stopPropagation();
-              onPrototypeNavigation(el.prototypeLink, currentFrameId);
+              onPrototypeNavigation(el?.prototypeLink, currentFrameId);
             }
           };
 

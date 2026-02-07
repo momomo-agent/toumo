@@ -102,7 +102,7 @@ export class InteractionExecutor {
   /**
    * 执行单个动作
    */
-  private executeAction(action: InteractionAction): void {
+  private executeAction(action: any): void {
     switch (action.type) {
       case 'goToState':
         this.executeGoToState(action);
@@ -141,7 +141,7 @@ export class InteractionExecutor {
   /**
    * 切换到指定状态
    */
-  private executeGoToState(action: InteractionAction): void {
+  private executeGoToState(action: any): void {
     if (!action.targetElementId || !action.targetStateId) return;
     this.context.onGoToState?.(
       action.targetElementId,
@@ -153,7 +153,7 @@ export class InteractionExecutor {
   /**
    * 在两个状态间切换
    */
-  private executeToggleState(action: InteractionAction): void {
+  private executeToggleState(action: any): void {
     if (!action.targetElementId || !action.toggleStates) return;
     // 需要知道当前状态才能切换，这里简化处理
     // 实际实现需要从 context 获取当前状态
@@ -167,7 +167,7 @@ export class InteractionExecutor {
   /**
    * 设置变量
    */
-  private executeSetVariable(action: InteractionAction): void {
+  private executeSetVariable(action: any): void {
     if (!action.variableId) return;
 
     const variable = this.context.variables.get(action.variableId);
@@ -198,7 +198,7 @@ export class InteractionExecutor {
   /**
    * 页面导航
    */
-  private executeNavigate(action: InteractionAction): void {
+  private executeNavigate(action: any): void {
     if (!action.targetFrameId) return;
     this.context.onNavigate?.(action.targetFrameId);
   }
@@ -206,7 +206,7 @@ export class InteractionExecutor {
   /**
    * 打开弹层
    */
-  private executeOpenOverlay(action: InteractionAction): void {
+  private executeOpenOverlay(action: any): void {
     if (!action.overlayId) return;
     this.context.onOpenOverlay?.(
       action.overlayId,
@@ -217,7 +217,7 @@ export class InteractionExecutor {
   /**
    * 关闭弹层
    */
-  private executeCloseOverlay(action: InteractionAction): void {
+  private executeCloseOverlay(action: any): void {
     if (!action.overlayId) return;
     this.context.onCloseOverlay?.(action.overlayId);
   }
@@ -225,7 +225,7 @@ export class InteractionExecutor {
   /**
    * 滚动到位置
    */
-  private executeScrollTo(action: InteractionAction): void {
+  private executeScrollTo(action: any): void {
     if (!action.scrollTargetId) return;
     this.context.onScrollTo?.(
       action.scrollTargetId,
@@ -236,7 +236,7 @@ export class InteractionExecutor {
   /**
    * 触觉反馈
    */
-  private executeHaptic(action: InteractionAction): void {
+  private executeHaptic(action: any): void {
     if (!action.hapticType) return;
     this.triggerHaptic(action.hapticType);
   }
@@ -266,7 +266,7 @@ export class InteractionExecutor {
   /**
    * 打开链接
    */
-  private executeOpenUrl(action: InteractionAction): void {
+  private executeOpenUrl(action: any): void {
     if (!action.url) return;
     this.context.onOpenUrl?.(action.url, action.openInNewTab ?? true);
   }

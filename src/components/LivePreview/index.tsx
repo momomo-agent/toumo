@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useEditorStore } from '../../store';
 import type { KeyElement, PrototypeTransitionType, PrototypeTransitionDirection, PrototypeTransitionEasing } from '../../types';
+// Legacy types removed from types/index.ts — define locally
+type Transition = any;
+type PrototypeLink = any;
+type TriggerType = string;
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
 import { solveSpringRK4 } from '../../data/curvePresets';
@@ -160,7 +164,7 @@ export function LivePreview() {
     const target = keyframes.find(kf => kf.id === targetId);
     if (!target) return;
     const { type, direction, duration, easing } = link.transition;
-    const easingCss = prototypeEasings[easing] || 'ease-out';
+    const easingCss = prototypeEasings[easing as PrototypeTransitionEasing] || 'ease-out';
     if (type === 'instant') { setCurrentKeyframeId(targetId); return; }
     setPrototypeTransition({ active: true, type, direction, duration, easing: easingCss, phase: 'out' });
     setTimeout(() => {
@@ -332,8 +336,8 @@ export function LivePreview() {
 
   // ─── Trigger handler ──────────────────────────────────────────────
   const handleTrigger = useCallback((triggerType: TriggerType, _elementId?: string) => {
-    const match = availableTransitions.find(t => {
-      if (t.triggers?.length) return t.triggers.some(tr => tr.type === triggerType);
+    const match = availableTransitions.find((t: any) => {
+      if (t.triggers?.length) return t.triggers.some((tr: any) => tr.type === triggerType);
       return t.trigger === triggerType;
     });
     if (match) executeTransition(match);
@@ -341,10 +345,10 @@ export function LivePreview() {
 
   // ─── Timer triggers ───────────────────────────────────────────────
   useEffect(() => {
-    timerRefs.current.forEach(t => clearTimeout(t));
+    timerRefs.current.forEach((t: any) => clearTimeout(t));
     timerRefs.current.clear();
     availableTransitions.forEach(transition => {
-      const timerTrigger = transition.triggers?.find(t => t.type === 'timer');
+      const timerTrigger = transition.triggers?.find((t: any) => t.type === 'timer');
       if (timerTrigger?.timerDelay) {
         timerRefs.current.set(transition.id, setTimeout(() => executeTransition(transition), timerTrigger.timerDelay));
       } else if (transition.trigger === 'timer') {
@@ -387,8 +391,8 @@ export function LivePreview() {
   // ─── Trigger hints ────────────────────────────────────────────────
   const triggerHints = useMemo(() => {
     const hints: string[] = [];
-    availableTransitions.forEach(t => {
-      if (t.triggers?.length) t.triggers.forEach(tr => hints.push(tr.type));
+    availableTransitions.forEach((t: any) => {
+      if (t.triggers?.length) t.triggers.forEach((tr: any) => hints.push(tr.type));
       else if (t.trigger) hints.push(t.trigger);
     });
     return [...new Set(hints)];
@@ -860,11 +864,11 @@ function PreviewContent({
     <div style={{ width: '100%', height: '100%', position: 'relative', ...contentStyle }} onWheel={handleWheel}>
       {elements.map(el => {
         if (el.visible === false) return null;
-        const hasProtoLink = el?.prototypeLink?.enabled && el?.prototypeLink?.targetFrameId;
+        const hasProtoLink = (el as any)?.prototypeLink?.enabled && (el as any)?.prototypeLink?.targetFrameId;
         const handleElClick = (e: React.MouseEvent) => {
           if (hasProtoLink && onPrototypeNavigation && currentFrameId) {
             e.stopPropagation();
-            onPrototypeNavigation(el?.prototypeLink!, currentFrameId);
+            onPrototypeNavigation((el as any)?.prototypeLink!, currentFrameId);
           }
         };
 
