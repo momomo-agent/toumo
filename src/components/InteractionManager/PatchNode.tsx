@@ -29,6 +29,7 @@ const PORT_TYPE_COLORS: Record<string, string> = {
 interface PatchNodeProps {
   patch: Patch;
   selected: boolean;
+  isActive?: boolean;
   onSelect: (id: string) => void;
   onDragStart: (id: string, e: React.MouseEvent) => void;
   onPortDragStart: (patchId: string, portId: string, isOutput: boolean, e: React.MouseEvent) => void;
@@ -39,6 +40,7 @@ interface PatchNodeProps {
 export const PatchNode = React.memo(function PatchNode({
   patch,
   selected,
+  isActive,
   onSelect,
   onDragStart,
   onPortDragStart,
@@ -65,11 +67,13 @@ export const PatchNode = React.memo(function PatchNode({
         top: patch.position.y,
         width: nodeWidth,
         background: colors.bg,
-        border: `1px solid ${selected ? '#fff' : colors.border}`,
+        border: `1px solid ${isActive ? '#fbbf24' : selected ? '#fff' : colors.border}`,
         borderRadius: 8,
         cursor: 'grab',
         userSelect: 'none',
-        boxShadow: selected
+        boxShadow: isActive
+          ? `0 0 12px ${colors.border}88, 0 0 24px #fbbf2444`
+          : selected
           ? `0 0 0 1px #fff, 0 4px 12px rgba(0,0,0,0.4)`
           : '0 2px 8px rgba(0,0,0,0.3)',
         zIndex: selected ? 10 : 1,

@@ -184,6 +184,7 @@ export function PatchCanvas() {
   const patches = useEditorStore((s) => s.patches);
   const connections = useEditorStore((s) => s.patchConnections);
   const selectedPatchId = useEditorStore((s) => s.selectedPatchId);
+  const activePatchIds = useEditorStore((s) => s.activePatchIds);
   const selectedConnectionId = useEditorStore((s) => s.selectedConnectionId);
   const updatePatchPosition = useEditorStore((s) => s.updatePatchPosition);
   const removePatch = useEditorStore((s) => s.removePatch);
@@ -421,6 +422,7 @@ export function PatchCanvas() {
           key={patch.id}
           patch={patch}
           selected={selectedPatchId === patch.id}
+          isActive={activePatchIds.has(patch.id)}
           onSelect={setSelectedPatchId}
           onDragStart={handleNodeDragStart}
           onPortDragStart={handlePortDragStart}
