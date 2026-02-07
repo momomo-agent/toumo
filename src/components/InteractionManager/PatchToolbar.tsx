@@ -1,9 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { PatchType } from '../../types';
-
-interface PatchToolbarProps {
-  onAddPatch: (type: PatchType) => void;
-}
+import { useEditorStore } from '../../store/useEditorStore';
+import { createPatch } from './PatchCanvas';
 
 interface PatchCategory {
   label: string;
@@ -45,8 +43,22 @@ const CATEGORIES: PatchCategory[] = [
   },
 ];
 
-export function PatchToolbar({ onAddPatch }: PatchToolbarProps) {
+export function PatchToolbar() {
+  const addPatch = useEditorStore((s) => s.addPatch);
+  const setSelectedPatchId = useEditorStore((s) => s.setSelectedPatchId);
+  const nextPositionRef = useRef({ x: 40, y: 40 });
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  const handleAddPatch = (type: PatchType) => {
+    const pos = nextPositionRef.current;
+    const patch = createPatch(type, pos);
+    addPatch(patch);
+    setSelectedPatchId(patch.id);
+    nextPositionRef.current = {
+      x: pos.x + 30 > 400 ? 40 : pos.x + 30,
+      y: pos.y + 30 > 300 ? 40 : pos.y + 30,
+    };
+  };
 
   return (
     <div
@@ -102,7 +114,7 @@ export function PatchToolbar({ onAddPatch }: PatchToolbarProps) {
                 <button
                   key={item.type}
                   onClick={() => {
-                    onAddPatch(item.type);
+                    handleAddPatch(item.type);
                     setExpanded(null);
                   }}
                   style={{

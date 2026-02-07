@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { Patch, PatchConnection as PatchConnectionType, PatchType, PatchPort } from '../../types';
 import { PatchNode } from './PatchNode';
 import { PatchConnection, DragConnection } from './PatchConnection';
+import { useEditorStore } from '../../store/useEditorStore';
 
 // Default ports for each patch type
 function getDefaultPorts(type: PatchType): { inputs: PatchPort[]; outputs: PatchPort[] } {
@@ -161,27 +162,17 @@ interface DragState {
   origY: number;
 }
 
-interface PatchCanvasProps {
-  patches: Patch[];
-  connections: PatchConnectionType[];
-  onPatchesChange: (patches: Patch[]) => void;
-  onConnectionsChange: (connections: PatchConnectionType[]) => void;
-  selectedPatchId: string | null;
-  onSelectPatch: (id: string | null) => void;
-  selectedConnectionId: string | null;
-  onSelectConnection: (id: string | null) => void;
-}
-
-export function PatchCanvas({
-  patches,
-  connections,
-  onPatchesChange,
-  onConnectionsChange,
-  selectedPatchId,
-  onSelectPatch,
-  selectedConnectionId,
-  onSelectConnection,
-}: PatchCanvasProps) {
+export function PatchCanvas() {
+  const patches = useEditorStore((s) => s.patches);
+  const connections = useEditorStore((s) => s.patchConnections);
+  const selectedPatchId = useEditorStore((s) => s.selectedPatchId);
+  const selectedConnectionId = useEditorStore((s) => s.selectedConnectionId);
+  const updatePatchPosition = useEditorStore((s) => s.updatePatchPosition);
+  const removePatch = useEditorStore((s) => s.removePatch);
+  const addPatchConnection = useEditorStore((s) => s.addPatchConnection);
+  const removePatchConnection = useEditorStore((s) => s.removePatchConnection);
+  const setSelectedPatchId = useEditorStore((s) => s.setSelectedPatchId);
+  const setSelectedConnectionId = useEditorStore((s) => s.setSelectedConnectionId);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [dragLine, setDragLine] = useState<{ fromX: number; fromY: number; toX: number; toY: number } | null>(null);
@@ -241,12 +232,10 @@ export function PatchCanvas({
       if (drag.type === 'node') {
         const dx = e.clientX - drag.startX;
         const dy = e.clientY - drag.startY;
-        const newPatches = patches.map(p =>
-          p.id === drag.patchId
-            ? { ...p, position: { x: Math.max(0, drag.origX + dx), y: Math.max(0, drag.origY + dy) } }
-            : p
-        );
-        onPatchesChange(newPatches);
+        updatePatchPosition(drag.patchId, {
+          x: Math.max(0, drag.origX + dx),
+          y: Math.max(0, drag.origY + dy),
+        });
       } else if (drag.type === 'port' && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
         setDragLine({
@@ -283,14 +272,13 @@ export function PatchCanvas({
                   && c.toPatchId === targetPatchId && c.toPortId === targetPortId
               );
               if (!exists) {
-                const newConn: PatchConnectionType = {
+                addPatchConnection({
                   id: `conn_${Date.now()}`,
                   fromPatchId,
                   fromPortId,
                   toPatchId: targetPatchId,
                   toPortId: targetPortId,
-                };
-                onConnectionsChange([...connections, newConn]);
+                });
               }
             }
           }
@@ -306,7 +294,7 @@ export function PatchCanvas({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [patches, connections, onPatchesChange, onConnectionsChange, getPortPosition]);
+  }, [patches, connections, updatePatchPosition, addPatchConnection, getPortPosition]);
 
   // Handle delete key
   useEffect(() => {
@@ -314,20 +302,15 @@ export function PatchCanvas({
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (document.activeElement?.tagName === 'INPUT') return;
         if (selectedPatchId) {
-          onPatchesChange(patches.filter(p => p.id !== selectedPatchId));
-          onConnectionsChange(connections.filter(
-            c => c.fromPatchId !== selectedPatchId && c.toPatchId !== selectedPatchId
-          ));
-          onSelectPatch(null);
+          removePatch(selectedPatchId);
         } else if (selectedConnectionId) {
-          onConnectionsChange(connections.filter(c => c.id !== selectedConnectionId));
-          onSelectConnection(null);
+          removePatchConnection(selectedConnectionId);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPatchId, selectedConnectionId, patches, connections, onPatchesChange, onConnectionsChange, onSelectPatch, onSelectConnection]);
+  }, [selectedPatchId, selectedConnectionId, removePatch, removePatchConnection]);
 
   // Compute connection positions
   const connectionLines = connections.map(conn => {
@@ -343,7 +326,7 @@ export function PatchCanvas({
   return (
     <div
       ref={containerRef}
-      onClick={() => { onSelectPatch(null); onSelectConnection(null); }}
+      onClick={() => { setSelectedPatchId(null); setSelectedConnectionId(null); }}
       style={{
         flex: 1,
         position: 'relative',
@@ -376,7 +359,7 @@ export function PatchCanvas({
               toY={toPos.y}
               dataType={dataType}
               selected={selectedConnectionId === conn.id}
-              onSelect={onSelectConnection}
+              onSelect={setSelectedConnectionId}
             />
           ))}
           {dragLine && (
@@ -396,7 +379,7 @@ export function PatchCanvas({
           key={patch.id}
           patch={patch}
           selected={selectedPatchId === patch.id}
-          onSelect={onSelectPatch}
+          onSelect={setSelectedPatchId}
           onDragStart={handleNodeDragStart}
           onPortDragStart={handlePortDragStart}
           getPortPosition={getPortPosition}

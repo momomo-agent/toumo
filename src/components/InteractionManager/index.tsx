@@ -1,30 +1,13 @@
-import { useState, useCallback } from 'react';
-import { PatchCanvas, createPatch } from './PatchCanvas';
+import { useState } from 'react';
+import { PatchCanvas } from './PatchCanvas';
 import { PatchToolbar } from './PatchToolbar';
 import { ComponentPanel } from './ComponentPanel';
 import { VariablePanel } from './VariablePanel';
-import type { Patch, PatchConnection, PatchType } from '../../types';
 
 type Tab = 'patches' | 'components' | 'variables';
 
 export function InteractionManager() {
   const [activeTab, setActiveTab] = useState<Tab>('patches');
-  const [patches, setPatches] = useState<Patch[]>([]);
-  const [connections, setConnections] = useState<PatchConnection[]>([]);
-  const [selectedPatchId, setSelectedPatchId] = useState<string | null>(null);
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
-  const [nextPosition, setNextPosition] = useState({ x: 40, y: 40 });
-
-  const handleAddPatch = useCallback((type: PatchType) => {
-    const patch = createPatch(type, nextPosition);
-    setPatches(prev => [...prev, patch]);
-    setSelectedPatchId(patch.id);
-    // Stagger next position
-    setNextPosition(prev => ({
-      x: prev.x + 30 > 400 ? 40 : prev.x + 30,
-      y: prev.y + 30 > 300 ? 40 : prev.y + 30,
-    }));
-  }, [nextPosition]);
 
   return (
     <div
@@ -60,17 +43,8 @@ export function InteractionManager() {
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {activeTab === 'patches' && (
           <>
-            <PatchToolbar onAddPatch={handleAddPatch} />
-            <PatchCanvas
-              patches={patches}
-              connections={connections}
-              onPatchesChange={setPatches}
-              onConnectionsChange={setConnections}
-              selectedPatchId={selectedPatchId}
-              onSelectPatch={setSelectedPatchId}
-              selectedConnectionId={selectedConnectionId}
-              onSelectConnection={setSelectedConnectionId}
-            />
+            <PatchToolbar />
+            <PatchCanvas />
           </>
         )}
         {activeTab === 'components' && <ComponentPanel />}
