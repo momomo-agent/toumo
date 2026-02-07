@@ -74,7 +74,7 @@ export function LivePreview() {
     setSelectedDisplayStateId,
   } = useEditorStore();
 
-  const [deviceFrame, setDeviceFrame] = useState('iphone15pro');
+  const [deviceFrame, setDeviceFrame] = useState('none');
   const [zoom, setZoom] = useState(100);
   const [isZoomLocked, setIsZoomLocked] = useState(false);
 
@@ -860,163 +860,253 @@ function PreviewContent({
     return base;
   })();
 
+  // Separate top-level elements and children for group rendering
+  const topLevelElements = elements.filter(el => !el.parentId);
+  const getChildren = (parentId: string) => elements.filter(el => el.parentId === parentId);
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', ...contentStyle }} onWheel={handleWheel}>
-      {elements.map(el => {
+      {topLevelElements.map(el => {
         if (el.visible === false) return null;
-        const hasProtoLink = (el as any)?.prototypeLink?.enabled && (el as any)?.prototypeLink?.targetFrameId;
-        const handleElClick = (e: React.MouseEvent) => {
-          if (hasProtoLink && onPrototypeNavigation && currentFrameId) {
-            e.stopPropagation();
-            onPrototypeNavigation((el as any)?.prototypeLink!, currentFrameId);
-          }
-        };
-
-        const isText = el.shapeType === 'text';
-        const isImage = el.shapeType === 'image';
-        const isLine = el.shapeType === 'line';
-        const isPath = el.shapeType === 'path';
-        const bg = computeElementBackground(el);
-        const br = computeBorderRadius(el);
-        const shadow = computeBoxShadow(el);
-        const transformStr = computeTransform(el);
-        const filterStr = computeFilter(el);
-        const strokeBorder = computeStroke(el);
+        const children = getChildren(el.id);
+        const isGroupEl = children.length > 0;
 
         return (
-          <div
+          <PreviewElement
             key={el.id}
-            onMouseDown={(e) => handleMouseDown(e, el.id)}
-            onMouseUp={(e) => handleMouseUp(e, el.id)}
-            onMouseEnter={() => handleMouseEnter(el.id)}
-            onMouseLeave={() => handleMouseLeave(el.id)}
-            onMouseMove={(e) => {
-              if (dragStartRef.current && dragStartRef.current.elementId === el.id) {
-                const dx = e.clientX - dragStartRef.current.x;
-                const dy = e.clientY - dragStartRef.current.y;
-                if (Math.sqrt(dx * dx + dy * dy) > 10 && onPatchDrag) {
-                  onPatchDrag(el.id, 'move', { dx, dy });
-                }
-              }
-            }}
-            onClick={handleElClick}
-            style={{
-              position: 'absolute',
-              left: el.position.x,
-              top: el.position.y,
-              width: el.size.width,
-              height: el.size.height,
-              background: bg,
-              opacity: el.style?.fillOpacity ?? 1,
-              borderRadius: br,
-              border: strokeBorder,
-              transform: transformStr,
-              transformOrigin: el.style?.transformOrigin || 'center',
-              boxShadow: shadow,
-              filter: filterStr,
-              backdropFilter: el.style?.backdropFilter || (el.style?.backdropBlur ? `blur(${el.style.backdropBlur}px)` : undefined),
-              mixBlendMode: el.style?.blendMode as React.CSSProperties['mixBlendMode'],
-              clipPath: el.style?.clipPath || undefined,
-              maskImage: el.style?.maskImage || undefined,
-              transition: `all ${transitionDuration}ms ${transitionCurve}`,
-              cursor: hasProtoLink ? 'pointer' : hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: isText ? undefined : 'center',
-              justifyContent: isText ? undefined : 'center',
-              color: el.style?.textColor || '#fff',
-              fontSize: el.style?.fontSize || 14,
-              fontWeight: el.style?.fontWeight || 'normal',
-              fontStyle: el.style?.fontStyle || 'normal',
-              textDecoration: el.style?.textDecoration || 'none',
-              fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
-              letterSpacing: el.style?.letterSpacing ?? 0,
-              lineHeight: el.style?.lineHeight ?? 1.4,
-              overflow: el.style?.overflow || 'hidden',
-              userSelect: 'none',
-            }}
+            el={el}
+            isGroupEl={isGroupEl}
+            transitionDuration={transitionDuration}
+            transitionCurve={transitionCurve}
+            hasDrag={hasDrag}
+            hasTap={hasTap}
+            hasHover={hasHover}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onPatchDrag={onPatchDrag}
+            onPrototypeNavigation={onPrototypeNavigation}
+            currentFrameId={currentFrameId}
+            dragStartRef={dragStartRef}
           >
-            {/* Image element */}
-            {isImage && el.style?.imageSrc && (
-              <img
-                src={el.style.imageSrc}
-                alt=""
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: el.style.objectFit || 'cover',
-                  objectPosition: el.style.objectPosition || 'center',
-                  borderRadius: br,
-                  pointerEvents: 'none',
-                }}
-                draggable={false}
-              />
-            )}
-            {/* Line element */}
-            {isLine && (
-              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-                <line
-                  x1="0" y1="0"
-                  x2={el.size.width} y2={el.size.height}
-                  stroke={el.style?.stroke || '#ffffff'}
-                  strokeWidth={el.style?.strokeWidth || 2}
-                  strokeLinecap="round"
+            {isGroupEl && children.map(child => {
+              if (child.visible === false) return null;
+              return (
+                <PreviewElement
+                  key={child.id}
+                  el={child}
+                  isGroupEl={false}
+                  transitionDuration={transitionDuration}
+                  transitionCurve={transitionCurve}
+                  hasDrag={hasDrag}
+                  hasTap={hasTap}
+                  hasHover={hasHover}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onPatchDrag={onPatchDrag}
+                  onPrototypeNavigation={onPrototypeNavigation}
+                  currentFrameId={currentFrameId}
+                  dragStartRef={dragStartRef}
                 />
-              </svg>
-            )}
-            {/* Path element */}
-            {isPath && el.style?.pathData && (
-              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-                <path
-                  d={el.style.pathData}
-                  fill={el.style?.pathClosed ? (el.style?.fill || 'transparent') : 'none'}
-                  stroke={el.style?.stroke || '#ffffff'}
-                  strokeWidth={el.style?.strokeWidth || 2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-            {/* Text element */}
-            {isText && (
-              <div
-                style={{
-                  padding: el.style?.padding ? `${el.style.padding}px` : '0 8px',
-                  width: '100%',
-                  textAlign: el.style?.textAlign || 'center',
-                  display: 'flex',
-                  alignItems: el.style?.verticalAlign === 'top' ? 'flex-start' : el.style?.verticalAlign === 'bottom' ? 'flex-end' : 'center',
-                  justifyContent: el.style?.textAlign || 'center',
-                  height: '100%',
-                  whiteSpace: el.style?.whiteSpace || 'normal',
-                  textTransform: el.style?.textTransform as React.CSSProperties['textTransform'],
-                  textShadow: el.style?.textShadow || undefined,
-                }}
-                dangerouslySetInnerHTML={
-                  (el.style as any)?.richTextHtml
-                    ? { __html: (el.style as any).richTextHtml }
-                    : undefined
-                }
-              >
-                {!(el.style as any)?.richTextHtml && (el.text ?? 'Text')}
-              </div>
-            )}
-            {/* Non-text element with text content */}
-            {!isText && el.text && (
-              <span style={{
-                color: el.style?.textColor || '#fff',
-                fontSize: el.style?.fontSize || 14,
-                fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
-                fontWeight: el.style?.fontWeight || 'normal',
-                textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
-                padding: 4,
-                userSelect: 'none',
-              }}>
-                {el.text}
-              </span>
-            )}
-          </div>
+              );
+            })}
+          </PreviewElement>
         );
       })}
+    </div>
+  );
+}
+
+// ─── PreviewElement ───────────────────────────────────────────────────
+function PreviewElement({
+  el,
+  isGroupEl,
+  transitionDuration,
+  transitionCurve,
+  hasDrag,
+  hasTap,
+  hasHover,
+  onMouseDown,
+  onMouseUp,
+  onMouseEnter,
+  onMouseLeave,
+  onPatchDrag,
+  onPrototypeNavigation,
+  currentFrameId,
+  dragStartRef,
+  children,
+}: {
+  el: KeyElement;
+  isGroupEl: boolean;
+  transitionDuration: number;
+  transitionCurve: string;
+  hasDrag: boolean;
+  hasTap: boolean;
+  hasHover: boolean;
+  onMouseDown: (e: React.MouseEvent, id?: string) => void;
+  onMouseUp: (e: React.MouseEvent, id?: string) => void;
+  onMouseEnter: (id: string) => void;
+  onMouseLeave: (id: string) => void;
+  onPatchDrag?: (id: string, phase: 'start' | 'move' | 'end', delta: { dx: number; dy: number }) => boolean;
+  onPrototypeNavigation?: (link: any, fromFrameId: string) => void;
+  currentFrameId?: string;
+  dragStartRef: React.MutableRefObject<{ x: number; y: number; elementId?: string } | null>;
+  children?: React.ReactNode;
+}) {
+  const hasProtoLink = (el as any)?.prototypeLink?.enabled && (el as any)?.prototypeLink?.targetFrameId;
+  const handleElClick = (e: React.MouseEvent) => {
+    if (hasProtoLink && onPrototypeNavigation && currentFrameId) {
+      e.stopPropagation();
+      onPrototypeNavigation((el as any)?.prototypeLink!, currentFrameId);
+    }
+  };
+
+  const isText = el.shapeType === 'text';
+  const isImage = el.shapeType === 'image';
+  const isLine = el.shapeType === 'line';
+  const isPath = el.shapeType === 'path';
+  const bg = isGroupEl ? 'transparent' : computeElementBackground(el);
+  const br = isGroupEl ? 0 : computeBorderRadius(el);
+  const shadow = isGroupEl ? 'none' : computeBoxShadow(el);
+  const transformStr = computeTransform(el);
+  const filterStr = isGroupEl ? undefined : computeFilter(el);
+  const strokeBorder = isGroupEl ? undefined : computeStroke(el);
+
+  return (
+    <div
+      onMouseDown={(e) => onMouseDown(e, el.id)}
+      onMouseUp={(e) => onMouseUp(e, el.id)}
+      onMouseEnter={() => onMouseEnter(el.id)}
+      onMouseLeave={() => onMouseLeave(el.id)}
+      onMouseMove={(e) => {
+        if (dragStartRef.current && dragStartRef.current.elementId === el.id) {
+          const dx = e.clientX - dragStartRef.current.x;
+          const dy = e.clientY - dragStartRef.current.y;
+          if (Math.sqrt(dx * dx + dy * dy) > 10 && onPatchDrag) {
+            onPatchDrag(el.id, 'move', { dx, dy });
+          }
+        }
+      }}
+      onClick={handleElClick}
+      style={{
+        position: 'absolute',
+        left: el.position.x,
+        top: el.position.y,
+        width: el.size.width,
+        height: el.size.height,
+        background: bg,
+        opacity: isGroupEl ? 1 : (el.style?.fillOpacity ?? 1),
+        borderRadius: br,
+        border: strokeBorder,
+        transform: transformStr,
+        transformOrigin: el.style?.transformOrigin || 'center',
+        boxShadow: shadow,
+        filter: filterStr,
+        backdropFilter: isGroupEl ? undefined : (el.style?.backdropFilter || (el.style?.backdropBlur ? `blur(${el.style.backdropBlur}px)` : undefined)),
+        mixBlendMode: el.style?.blendMode as React.CSSProperties['mixBlendMode'],
+        clipPath: isGroupEl ? undefined : (el.style?.clipPath || undefined),
+        maskImage: isGroupEl ? undefined : (el.style?.maskImage || undefined),
+        transition: `all ${transitionDuration}ms ${transitionCurve}`,
+        cursor: hasProtoLink ? 'pointer' : hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
+        display: 'flex',
+        alignItems: isText ? undefined : 'center',
+        justifyContent: isText ? undefined : 'center',
+        color: el.style?.textColor || '#fff',
+        fontSize: el.style?.fontSize || 14,
+        fontWeight: el.style?.fontWeight || 'normal',
+        fontStyle: el.style?.fontStyle || 'normal',
+        textDecoration: el.style?.textDecoration || 'none',
+        fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
+        letterSpacing: el.style?.letterSpacing ?? 0,
+        lineHeight: el.style?.lineHeight ?? 1.4,
+        overflow: isGroupEl ? 'visible' : (el.style?.overflow || 'hidden'),
+        userSelect: 'none',
+      }}
+    >
+      {/* Image element */}
+      {isImage && el.style?.imageSrc && (
+        <img
+          src={el.style.imageSrc}
+          alt=""
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: el.style.objectFit || 'cover',
+            objectPosition: el.style.objectPosition || 'center',
+            borderRadius: br,
+            pointerEvents: 'none',
+          }}
+          draggable={false}
+        />
+      )}
+      {/* Line element */}
+      {isLine && (
+        <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+          <line
+            x1="0" y1="0"
+            x2={el.size.width} y2={el.size.height}
+            stroke={el.style?.stroke || '#ffffff'}
+            strokeWidth={el.style?.strokeWidth || 2}
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+      {/* Path element */}
+      {isPath && el.style?.pathData && (
+        <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+          <path
+            d={el.style.pathData}
+            fill={el.style?.pathClosed ? (el.style?.fill || 'transparent') : 'none'}
+            stroke={el.style?.stroke || '#ffffff'}
+            strokeWidth={el.style?.strokeWidth || 2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+      {/* Text element */}
+      {isText && (
+        <div
+          style={{
+            padding: el.style?.padding ? `${el.style.padding}px` : '0 8px',
+            width: '100%',
+            textAlign: el.style?.textAlign || 'center',
+            display: 'flex',
+            alignItems: el.style?.verticalAlign === 'top' ? 'flex-start' : el.style?.verticalAlign === 'bottom' ? 'flex-end' : 'center',
+            justifyContent: el.style?.textAlign || 'center',
+            height: '100%',
+            whiteSpace: el.style?.whiteSpace || 'normal',
+            textTransform: el.style?.textTransform as React.CSSProperties['textTransform'],
+            textShadow: el.style?.textShadow || undefined,
+          }}
+          dangerouslySetInnerHTML={
+            (el.style as any)?.richTextHtml
+              ? { __html: (el.style as any).richTextHtml }
+              : undefined
+          }
+        >
+          {!(el.style as any)?.richTextHtml && (el.text ?? 'Text')}
+        </div>
+      )}
+      {/* Non-text element with text content */}
+      {!isText && !isGroupEl && el.text && (
+        <span style={{
+          color: el.style?.textColor || '#fff',
+          fontSize: el.style?.fontSize || 14,
+          fontFamily: el.style?.fontFamily || 'Inter, sans-serif',
+          fontWeight: el.style?.fontWeight || 'normal',
+          textAlign: (el.style?.textAlign as React.CSSProperties['textAlign']) || 'center',
+          padding: 4,
+          userSelect: 'none',
+        }}>
+          {el.text}
+        </span>
+      )}
+      {/* Group children */}
+      {children}
     </div>
   );
 }

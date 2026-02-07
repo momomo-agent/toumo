@@ -645,9 +645,21 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   updateElementPosition: (id, position) => set((state) => {
     if (isDefaultDisplayState(state)) {
-      const newShared = state.sharedElements.map((el) =>
-        el.id === id ? clampElementToFrame({ ...el, position }, state.frameSize) : el
-      );
+      // Find the element being moved to calculate delta for group children
+      const movingEl = state.sharedElements.find(el => el.id === id);
+      const dx = movingEl ? position.x - movingEl.position.x : 0;
+      const dy = movingEl ? position.y - movingEl.position.y : 0;
+      
+      const newShared = state.sharedElements.map((el) => {
+        if (el.id === id) {
+          return clampElementToFrame({ ...el, position }, state.frameSize);
+        }
+        // Move children of group along with parent
+        if (el.parentId === id && (dx !== 0 || dy !== 0)) {
+          return { ...el, position: { x: el.position.x + dx, y: el.position.y + dy } };
+        }
+        return el;
+      });
       return {
         sharedElements: newShared,
         keyframes: syncToAllKeyframes(newShared, state.keyframes),
