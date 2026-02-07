@@ -31,6 +31,7 @@ interface CanvasElementProps {
   groupOffset?: Position; // 编组的位置偏移，用于子元素位置转换
   isInEditingGroup?: boolean;
   onDoubleClick?: () => void;
+  children?: React.ReactNode;
 }
 
 export const CanvasElement = memo(function CanvasElement({
@@ -43,6 +44,7 @@ export const CanvasElement = memo(function CanvasElement({
   groupOffset,
   isInEditingGroup = false,
   onDoubleClick,
+  children,
 }: CanvasElementProps) {
   // Only subscribe to reactive state we actually need for rendering
   const { currentTool, selectedElementIds, hoveredElementId } = useEditorStore(useShallow((s) => ({
@@ -902,6 +904,9 @@ export const CanvasElement = memo(function CanvasElement({
           </div>
         </div>
       )}
+      
+      {/* Group children (rendered inside group's transform context) */}
+      {isGroup && children}
       
       {/* Hover highlight overlay (from LayerPanel or Canvas hover) */}
       {hoveredElementId === element.id && !isSelected && currentTool === 'select' && (

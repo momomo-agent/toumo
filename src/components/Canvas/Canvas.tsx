@@ -1306,39 +1306,52 @@ export function Canvas() {
                         const isEditingThisGroup = editingGroupId === element.id;
                         
                         if (isGroupElement) {
-                          // 渲染编组 - 使用 Fragment 包裹编组元素和子元素
+                          if (!isEditingThisGroup) {
+                            // 非编辑模式：用 CanvasElement 渲染编组，子元素作为 children 传入
+                            // 这样子元素在编组的 CSS transform 上下文内，跟随旋转/移动
+                            return (
+                              <CanvasElement
+                                key={element.id}
+                                element={element}
+                                allElements={frameElements}
+                                scale={canvasScale}
+                                isSelected={selectedElementIds.includes(element.id)}
+                                onAlignmentCheck={checkAlignment}
+                                isGroup={true}
+                                onDoubleClick={() => enterGroupEditMode(element.id)}
+                              >
+                                {children.map((child) => (
+                                  <CanvasElement
+                                    key={child.id}
+                                    element={child}
+                                    allElements={frameElements}
+                                    scale={canvasScale}
+                                    isSelected={false}
+                                    onAlignmentCheck={checkAlignment}
+                                    isInEditingGroup={false}
+                                  />
+                                ))}
+                              </CanvasElement>
+                            );
+                          }
+                          // 编辑模式：子元素用绝对位置独立渲染，可单独选择和拖拽
                           return (
                             <div key={element.id}>
-                              {/* 编组本身 - 用于选择和拖拽 */}
-                              {!isEditingThisGroup && (
-                                <CanvasElement
-                                  element={element}
-                                  allElements={frameElements}
-                                  scale={canvasScale}
-                                  isSelected={selectedElementIds.includes(element.id)}
-                                  onAlignmentCheck={checkAlignment}
-                                  isGroup={true}
-                                  onDoubleClick={() => enterGroupEditMode(element.id)}
-                                />
-                              )}
                               {/* 编辑模式边框 */}
-                              {isEditingThisGroup && (
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    left: element.position.x - 1,
-                                    top: element.position.y - 1,
-                                    width: element.size.width + 2,
-                                    height: element.size.height + 2,
-                                    border: '2px dashed #3b82f6',
-                                    borderRadius: 4,
-                                    pointerEvents: 'none',
-                                  }}
-                                />
-                              )}
-                              {/* 子元素 - 使用绝对位置（相对于编组） */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  left: element.position.x - 1,
+                                  top: element.position.y - 1,
+                                  width: element.size.width + 2,
+                                  height: element.size.height + 2,
+                                  border: '2px dashed #3b82f6',
+                                  borderRadius: 4,
+                                  pointerEvents: 'none',
+                                }}
+                              />
+                              {/* 子元素 - 使用绝对位置（相对于画布） */}
                               {children.map((child) => {
-                                // 计算子元素的绝对位置
                                 const absoluteChild = {
                                   ...child,
                                   position: {
@@ -1352,9 +1365,9 @@ export function Canvas() {
                                     element={absoluteChild}
                                     allElements={frameElements}
                                     scale={canvasScale}
-                                    isSelected={isEditingThisGroup && selectedElementIds.includes(child.id)}
+                                    isSelected={selectedElementIds.includes(child.id)}
                                     onAlignmentCheck={checkAlignment}
-                                    isInEditingGroup={isEditingThisGroup}
+                                    isInEditingGroup={true}
                                     groupOffset={element.position}
                                   />
                                 );
@@ -1383,6 +1396,7 @@ export function Canvas() {
 
                       return topLevelElements.map((element) => {
                         const children = getChildren(element.id);
+                        const isGroupEl = children.length > 0;
                         return (
                           <div key={element.id} style={{ pointerEvents: 'none' }}>
                             <CanvasElement
@@ -1391,24 +1405,19 @@ export function Canvas() {
                               scale={canvasScale}
                               isSelected={false}
                               onAlignmentCheck={() => ({ snappedPosition: null, snappedSize: null })}
-                              isGroup={children.length > 0}
-                            />
-                            {children.map((child) => (
-                              <CanvasElement
-                                key={child.id}
-                                element={{
-                                  ...child,
-                                  position: {
-                                    x: child.position.x + element.position.x,
-                                    y: child.position.y + element.position.y,
-                                  },
-                                }}
-                                allElements={frameElements}
-                                scale={canvasScale}
-                                isSelected={false}
-                                onAlignmentCheck={() => ({ snappedPosition: null, snappedSize: null })}
-                              />
-                            ))}
+                              isGroup={isGroupEl}
+                            >
+                              {isGroupEl && children.map((child) => (
+                                <CanvasElement
+                                  key={child.id}
+                                  element={child}
+                                  allElements={frameElements}
+                                  scale={canvasScale}
+                                  isSelected={false}
+                                  onAlignmentCheck={() => ({ snappedPosition: null, snappedSize: null })}
+                                />
+                              ))}
+                            </CanvasElement>
                           </div>
                         );
                       });
