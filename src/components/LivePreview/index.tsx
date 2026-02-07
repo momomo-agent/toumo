@@ -8,7 +8,7 @@ type TriggerType = string;
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
 import { solveSpringRK4 } from '../../data/curvePresets';
-import { handleElementTap, handleElementHover, handleElementDrag, startAllTimerTriggers } from '../../engine/PatchRuntime';
+import { handleElementTap, handleElementHover, handleElementDrag, startAllTimerTriggers, handleVariableChange, handleScroll } from '../../engine/PatchRuntime';
 import type { DragPhase } from '../../engine/PatchRuntime';
 import { resolveElementsForState } from '../../hooks/useResolvedElements';
 
@@ -96,7 +96,6 @@ export function LivePreview() {
       const { setVariableValue } = useEditorStore.getState();
       setVariableValue(variableId, value);
       // Fire variableChange triggers
-      const { handleVariableChange } = require('../../engine/PatchRuntime');
       const state = useEditorStore.getState();
       handleVariableChange(variableId, value, state.patches, state.patchConnections, patchHandlersRef.current);
     },
@@ -117,6 +116,10 @@ export function LivePreview() {
   // Patch runtime: handle drag on element → onDragStart / onDragMove / onDragEnd
   const handlePatchDrag = useCallback((elementId: string, phase: DragPhase, delta: { dx: number; dy: number }) => {
     return handleElementDrag(elementId, phase, delta, patches, patchConnections, patchHandlers);
+  }, [patches, patchConnections, patchHandlers]);
+
+  const handlePatchScroll = useCallback(() => {
+    return handleScroll(patches, patchConnections, patchHandlers);
   }, [patches, patchConnections, patchHandlers]);
 
   // Smart Animate
@@ -439,6 +442,7 @@ export function LivePreview() {
               onPatchTap={handlePatchTap}
               onPatchHover={handlePatchHover}
               onPatchDrag={handlePatchDrag}
+              onPatchScroll={handlePatchScroll}
               displayStateId={previewDisplayStateId}
             />
           </div>
@@ -551,6 +555,7 @@ function PreviewContent({
   onPatchTap,
   onPatchHover,
   onPatchDrag,
+  onPatchScroll: _onPatchScroll,
   displayStateId: _displayStateId,
 }: {
   elements: KeyElement[];
@@ -571,6 +576,7 @@ function PreviewContent({
   onPatchTap?: (elementId: string) => boolean;
   onPatchHover?: (elementId: string, phase: 'in' | 'out') => boolean;
   onPatchDrag?: (elementId: string, phase: 'start' | 'move' | 'end', delta: { dx: number; dy: number }) => boolean;
+  onPatchScroll?: () => boolean;
   displayStateId?: string | null;
 }) {
   const dragStartRef = useRef<{ x: number; y: number; elementId?: string } | null>(null);
@@ -631,15 +637,11 @@ function PreviewContent({
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleWheel = useCallback((_e: React.WheelEvent) => {
     if (scrollTimerRef.current) return; // debounce
-    // Try Patch-driven scroll first
-    const { handleScroll } = require('../../engine/PatchRuntime');
-    const patchHandled = handleScroll(patches, patchConnections, patchHandlers);
-    // Fall back to legacy trigger
-    if (!patchHandled && availableTriggers.includes('scroll')) {
+    if (availableTriggers.includes('scroll')) {
       onTrigger('scroll');
     }
     scrollTimerRef.current = setTimeout(() => { scrollTimerRef.current = null; }, 500);
-  }, [availableTriggers, onTrigger, patches, patchConnections, patchHandlers]);
+  }, [availableTriggers, onTrigger]);
 
   const hasDrag = availableTriggers.includes('drag');
   const hasTap = availableTriggers.includes('tap');

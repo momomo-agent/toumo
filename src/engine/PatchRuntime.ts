@@ -85,7 +85,6 @@ export function executeActionPatch(
       const operator = actionPatch.config?.operator || '==';
       const expected = actionPatch.config?.value;
       if (varId !== undefined && expected !== undefined) {
-        const { variables } = require('../types');
         // Get current variable value from store (caller should pass context)
         const currentVal = actionPatch.config?._currentValue;
         const result = evaluateCondition(currentVal, operator, expected);
