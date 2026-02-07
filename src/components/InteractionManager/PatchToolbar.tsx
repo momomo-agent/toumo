@@ -48,6 +48,8 @@ const CATEGORIES: PatchCategory[] = [
 
 export function PatchToolbar() {
   const addPatch = useEditorStore((s) => s.addPatch);
+  const addComponentPatch = useEditorStore((s) => s.addComponentPatch);
+  const editingComponentId = useEditorStore((s) => s.editingComponentId);
   const setSelectedPatchId = useEditorStore((s) => s.setSelectedPatchId);
   const sharedElements = useEditorStore((s) => s.sharedElements);
   const nextPositionRef = useRef({ x: 40, y: 40 });
@@ -66,7 +68,11 @@ export function PatchToolbar() {
   const handleAddPatch = (type: PatchType) => {
     const pos = nextPositionRef.current;
     const patch = createPatch(type, pos);
-    addPatch(patch);
+    if (editingComponentId) {
+      addComponentPatch(editingComponentId, patch);
+    } else {
+      addPatch(patch);
+    }
     setSelectedPatchId(patch.id);
     advancePosition();
   };
