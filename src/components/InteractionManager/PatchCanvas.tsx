@@ -413,6 +413,24 @@ export function PatchCanvas() {
   }).filter(Boolean) as { conn: PatchConnectionType; fromPos: { x: number; y: number }; toPos: { x: number; y: number }; dataType: string }[];
 
   return (
+    <>
+    {/* Breadcrumb navigation for component editing context */}
+    {editingComponentId && editingComp && (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px',
+        background: '#1a1a2e', borderBottom: '1px solid #2a2a2a', fontSize: 11,
+      }}>
+        <button
+          onClick={() => useEditorStore.setState({ editingComponentId: null })}
+          style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: 11 }}
+        >Canvas</button>
+        <span style={{ color: '#555' }}>›</span>
+        <span style={{ color: '#a78bfa' }}>{editingComp.name}</span>
+        <span style={{ color: '#666', marginLeft: 'auto', fontSize: 10 }}>
+          {patches.length} patches · {connections.length} connections
+        </span>
+      </div>
+    )}
     <div
       ref={containerRef}
       onClick={(e) => {
@@ -606,6 +624,7 @@ export function PatchCanvas() {
         </>
       )}
     </div>
+    </>
   );
 }
 
