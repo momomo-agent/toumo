@@ -663,6 +663,11 @@ function PreviewContent({
   }, [onPatchDrag]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent, elementId?: string) => {
+    // Clear longPress timer
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
     if (dragStartRef.current) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
