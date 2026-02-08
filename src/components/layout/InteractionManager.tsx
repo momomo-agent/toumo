@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../store';
+import { FolmeManager } from '../../engine/folme/FolmeManager';
+import { Spring } from '../../engine/folme/forces/Spring';
 import './InteractionManager.css';
 
 type Tab = 'states' | 'timeline';
@@ -83,6 +85,86 @@ interface StateGraphProps {
   onSelectKeyframe: (id: string) => void;
   onSelectTransition: (id: string | null) => void;
   onUpdateTransition: (id: string, updates: { trigger?: string; duration?: number; curve?: string }) => void;
+}
+
+/** 单个节点 — folme 驱动 hover/selected 动画 */
+function StateGraphNode({
+  kf,
+  pos,
+  isSelected,
+  nodeRadius,
+  onClick,
+}: {
+  kf: { id: string; name: string };
+  pos: { x: number; y: number };
+  isSelected: boolean;
+  nodeRadius: number;
+  onClick: () => void;
+}) {
+  const circleRef = useRef<SVGCircleElement>(null);
+  const textRef = useRef<SVGTextElement>(null);
+  const folmeRef = useRef<FolmeManager | null>(null);
+
+  const getFolme = useCallback(() => {
+    if (!folmeRef.current) {
+      folmeRef.current = new FolmeManager((vals) => {
+        const circle = circleRef.current;
+        const text = textRef.current;
+        if (!circle || !text) return;
+        // stroke color: lerp #444 → #3b82f6
+        const sr = Math.round(0x44 + (0x3b - 0x44) * vals.sel);
+        const sg = Math.round(0x44 + (0x82 - 0x44) * vals.sel);
+        const sb = Math.round(0x44 + (0xf6 - 0x44) * vals.sel);
+        circle.setAttribute('stroke', `rgb(${sr},${sg},${sb})`);
+        // fill: lerp #1a1a1a → #1e3a5f
+        const fr = Math.round(0x1a + (0x1e - 0x1a) * vals.sel);
+        const fg = Math.round(0x1a + (0x3a - 0x1a) * vals.sel);
+        const fb = Math.round(0x1a + (0x5f - 0x1a) * vals.sel);
+        circle.setAttribute('fill', `rgb(${fr},${fg},${fb})`);
+        // scale
+        circle.setAttribute('r', String(nodeRadius * vals.scale));
+        // text color: lerp #999 → #e5e5e5
+        const tc = Math.round(0x99 + (0xe5 - 0x99) * vals.sel);
+        text.setAttribute('fill', `rgb(${tc},${tc},${tc})`);
+      });
+      folmeRef.current.setTo({ sel: 0, scale: 1 });
+    }
+    return folmeRef.current;
+  }, [nodeRadius]);
+
+  useEffect(() => {
+    const spring = new Spring(0.75, 0.25);
+    getFolme().to({ sel: isSelected ? 1 : 0 }, spring);
+  }, [isSelected, getFolme]);
+
+  useEffect(() => {
+    return () => { folmeRef.current?.destroy(); };
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    if (!isSelected) {
+      getFolme().to({ scale: 1.08 }, new Spring(0.7, 0.2));
+    }
+  }, [isSelected, getFolme]);
+
+  const handleMouseLeave = useCallback(() => {
+    getFolme().to({ scale: 1 }, new Spring(0.8, 0.25));
+  }, [getFolme]);
+
+  return (
+    <g
+      className="node"
+      onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{ cursor: 'pointer' }}
+    >
+      <circle ref={circleRef} cx={pos.x} cy={pos.y} r={nodeRadius} />
+      <text ref={textRef} x={pos.x} y={pos.y + 4} textAnchor="middle">
+        {kf.name.length > 8 ? kf.name.slice(0, 7) + '…' : kf.name}
+      </text>
+    </g>
+  );
 }
 
 function StateGraph({
@@ -169,20 +251,17 @@ function StateGraph({
         const isSelected = selectedKeyframeId === kf.id;
 
         return (
-          <g
+          <StateGraphNode
             key={kf.id}
-            className={`node ${isSelected ? 'selected' : ''}`}
+            kf={kf}
+            pos={pos}
+            isSelected={isSelected}
+            nodeRadius={nodeRadius}
             onClick={() => {
               onSelectKeyframe(kf.id);
               onSelectTransition(null);
             }}
-            style={{ cursor: 'pointer' }}
-          >
-            <circle cx={pos.x} cy={pos.y} r={nodeRadius} />
-            <text x={pos.x} y={pos.y + 4} textAnchor="middle">
-              {kf.name.length > 8 ? kf.name.slice(0, 7) + '…' : kf.name}
-            </text>
-          </g>
+          />
         );
       })}
     </svg>
