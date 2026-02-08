@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import type { Keyframe, KeyElement, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, CurveConfig } from '../types';
+import type { Keyframe, KeyElement, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState } from '../types';
 import { createCanvasSlice, type CanvasSlice } from './canvasSlice';
 import { createSelectionSlice, type SelectionSlice } from './selectionSlice';
 import { createPatchSlice, type PatchSlice } from './patchSlice';
 import { createDisplayStateSlice, type DisplayStateSlice, isDefaultDisplayState, updatesToLayerProperties, writeToLayerOverride } from './displayStateSlice';
+import { createCurveSlice, type CurveSlice } from './curveSlice';
 // Legacy types removed — using any temporarily
 type Transition = any;
 type Component = any;
@@ -18,7 +19,7 @@ export const DEVICE_PRESETS = [
 ] as const;
 type Interaction = any;
 import { initialKeyframes, initialTransitions, initialSharedElements } from './initialData';
-import { DEFAULT_AUTO_LAYOUT, DEFAULT_CURVE_CONFIG } from '../types';
+import { DEFAULT_AUTO_LAYOUT } from '../types';
 import { applyConstraints } from '../utils/constraintsUtils';
 import { performBooleanOperation, canPerformBooleanOperation } from '../utils/booleanOperations';
 import { SUGAR_PRESETS, type SugarResult } from '../engine/SugarPresets';
@@ -71,8 +72,6 @@ interface EditorState {
   // Shared layer tree + display states (PRD v2)
   displayStates: DisplayState[];
   selectedDisplayStateId: string | null;
-  // Three-level curve override system (level 1: global)
-  globalCurve: CurveConfig;
   // Component V2 (PRD v2)
   componentsV2: ComponentV2[];
 }
@@ -292,8 +291,6 @@ interface EditorActions {
   booleanExclude: () => void;
   // Patch editor actions (applySugar stays — cross-slice dependency)
   applySugar: (elementId: string, presetId: string) => void;
-  // Three-level curve override actions (global level stays in main store)
-  setGlobalCurve: (curve: CurveConfig) => void;
   // Component V2 actions
   createComponentV2: (name: string) => void;
   deleteComponentV2: (id: string) => void;
@@ -306,7 +303,7 @@ interface EditorActions {
   removeComponentConnection: (componentId: string, connId: string) => void;
 }
 
-export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice & PatchSlice & DisplayStateSlice;
+export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice & PatchSlice & DisplayStateSlice & CurveSlice;
 
 /**
  * Adapter layer: sync sharedElements → all keyframes.keyElements
@@ -333,8 +330,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   ...createPatchSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // DisplayState slice (PRD v2 - shared layer tree)
   ...createDisplayStateSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
-  // Three-level curve override system (level 1: global)
-  globalCurve: { ...DEFAULT_CURVE_CONFIG },
+  // Curve slice (three-level curve override system - global level)
+  ...createCurveSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // Component V2 (PRD v2)
   componentsV2: [],
   selectedKeyframeId: initialKeyframes[0].id,
@@ -3621,83 +3618,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           ...ds.layerOverrides,
           { layerId, properties: {}, isKey: true, keyProperties: [property] },
         ],
-      };
-    }),
-  })),
-
-  // === Three-level curve override actions ===
-
-  setGlobalCurve: (curve) => set({ globalCurve: curve }),
-
-  setElementCurve: (displayStateId, layerId, curve) => set((state) => ({
-    displayStates: state.displayStates.map((ds) => {
-      if (ds.id !== displayStateId) return ds;
-      const existing = ds.layerOverrides.find((o) => o.layerId === layerId);
-      if (existing) {
-        return {
-          ...ds,
-          layerOverrides: ds.layerOverrides.map((o) =>
-            o.layerId === layerId ? { ...o, curveOverride: curve } : o
-          ),
-        };
-      }
-      return {
-        ...ds,
-        layerOverrides: [
-          ...ds.layerOverrides,
-          { layerId, properties: {}, isKey: false, curveOverride: curve },
-        ],
-      };
-    }),
-  })),
-
-  setPropertyCurve: (displayStateId, layerId, property, curve) => set((state) => ({
-    displayStates: state.displayStates.map((ds) => {
-      if (ds.id !== displayStateId) return ds;
-      const existing = ds.layerOverrides.find((o) => o.layerId === layerId);
-      if (existing) {
-        return {
-          ...ds,
-          layerOverrides: ds.layerOverrides.map((o) =>
-            o.layerId === layerId
-              ? { ...o, propertyCurveOverrides: { ...o.propertyCurveOverrides, [property]: curve } }
-              : o
-          ),
-        };
-      }
-      return {
-        ...ds,
-        layerOverrides: [
-          ...ds.layerOverrides,
-          { layerId, properties: {}, isKey: false, propertyCurveOverrides: { [property]: curve } },
-        ],
-      };
-    }),
-  })),
-
-  removeElementCurve: (displayStateId, layerId) => set((state) => ({
-    displayStates: state.displayStates.map((ds) => {
-      if (ds.id !== displayStateId) return ds;
-      return {
-        ...ds,
-        layerOverrides: ds.layerOverrides.map((o) =>
-          o.layerId === layerId ? { ...o, curveOverride: undefined } : o
-        ),
-      };
-    }),
-  })),
-
-  removePropertyCurve: (displayStateId, layerId, property) => set((state) => ({
-    displayStates: state.displayStates.map((ds) => {
-      if (ds.id !== displayStateId) return ds;
-      return {
-        ...ds,
-        layerOverrides: ds.layerOverrides.map((o) => {
-          if (o.layerId !== layerId) return o;
-          const newOverrides = { ...o.propertyCurveOverrides };
-          delete newOverrides[property];
-          return { ...o, propertyCurveOverrides: Object.keys(newOverrides).length > 0 ? newOverrides : undefined };
-        }),
       };
     }),
   })),
