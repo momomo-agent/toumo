@@ -11,6 +11,7 @@ import { PreviewMode } from './components/PreviewMode';
 import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
 import { EmptyState } from './components/EmptyState';
 import { LayerPanel } from './components/LayerPanel';
+import { FilesPanel } from './components/FilesPanel';
 import { ContextMenu } from './components/ContextMenu';
 import type { ContextMenuProps } from './components/ContextMenu';
 import { useEditorStore } from './store';
@@ -826,6 +827,10 @@ export default function App() {
             >
               <CollapseToggle collapsed={leftPanel.collapsed} onToggle={leftPanel.toggleCollapse} side="left" label="图层" />
               
+              {/* Files Panel (top) */}
+              <div style={{ height: 200, borderBottom: '1px solid #2a2a2a', overflow: 'hidden' }}>
+                <FilesPanel />
+              </div>
 
               {/* Variants (top) */}
               <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
