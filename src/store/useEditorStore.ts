@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import type { Keyframe, KeyElement, ToolType, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
+import type { Keyframe, KeyElement, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
 import { createCanvasSlice, type CanvasSlice } from './canvasSlice';
+import { createSelectionSlice, type SelectionSlice } from './selectionSlice';
 // Legacy types removed — using any temporarily
 type Transition = any;
 type Component = any;
@@ -49,27 +50,16 @@ interface EditorState {
   transitions: Transition[];
   components: Component[];
   selectedKeyframeId: string;
-  selectedElementId: string | null;
-  selectedElementIds: string[];
-  selectedTransitionId: string | null;
-  previewTransitionId: string | null;
-  currentTool: ToolType;
   clipboard: KeyElement[];
   copiedStyle: ShapeStyle | null;
   frameSize: Size;
   history: HistoryEntry[];
   historyIndex: number;
-  isDragging: boolean;
-  isResizing: boolean;
-  isSelecting: boolean;
-  selectionBox: { start: Position; end: Position } | null;
   // Component edit mode
   editingComponentId: string | null;
   editingInstanceId: string | null;
   // Group edit mode
   editingGroupId: string | null;
-  // Hover state (synced between Canvas and LayerPanel)
-  hoveredElementId: string | null;
   // Variables for state machine logic
   variables: Variable[];
   interactions: Interaction[];
@@ -97,9 +87,6 @@ interface EditorActions {
   addKeyframe: () => void;
   deleteKeyframe: (id: string) => void;
   removeKeyframe: (id: string) => void;
-  setSelectedElementId: (id: string | null) => void;
-  setSelectedElementIds: (ids: string[]) => void;
-  setHoveredElementId: (id: string | null) => void;
   addElement: (element: KeyElement) => void;
   deleteElement: (id: string) => void;
   deleteSelectedElements: () => void;
@@ -108,13 +95,8 @@ interface EditorActions {
   updateElementSize: (id: string, size: Size) => void;
   updateElementName: (id: string, name: string) => void;
   nudgeSelectedElements: (dx: number, dy: number) => void;
-  setCurrentTool: (tool: ToolType) => void;
   duplicateSelectedElements: () => void;
   selectAllElements: () => void;
-  setIsDragging: (isDragging: boolean) => void;
-  setIsResizing: (isResizing: boolean) => void;
-  setIsSelecting: (isSelecting: boolean) => void;
-  setSelectionBox: (box: { start: Position; end: Position } | null) => void;
   setFrameSize: (size: Size) => void;
   copySelectedElements: () => void;
   cutSelectedElements: () => void;
@@ -122,8 +104,6 @@ interface EditorActions {
   undo: () => void;
   redo: () => void;
   pushHistory: (description?: string) => void;
-  setSelectedTransitionId: (id: string | null) => void;
-  setPreviewTransitionId: (id: string | null) => void;
   updateTransition: (id: string, updates: Partial<Transition>) => void;
   addTransition: (from: string, to: string) => void;
   deleteTransition: (id: string) => void;
@@ -358,7 +338,7 @@ interface EditorActions {
   removeComponentConnection: (componentId: string, connId: string) => void;
 }
 
-export type EditorStore = EditorState & EditorActions & CanvasSlice;
+export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice;
 
 /**
  * Adapter layer: sync sharedElements → all keyframes.keyElements
@@ -458,6 +438,8 @@ const writeToLayerOverride = (
 export const useEditorStore = create<EditorStore>((set, get) => ({
   // Canvas slice (canvasOffset, canvasScale, guides, etc.)
   ...createCanvasSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
+  // Selection slice (selectedElementId, currentTool, isDragging, etc.)
+  ...createSelectionSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // Initial state — sharedElements is the single source of truth
   sharedElements: [...initialSharedElements],
   keyframes: initialKeyframes,
@@ -518,25 +500,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   // Component V2 (PRD v2)
   componentsV2: [],
   selectedKeyframeId: initialKeyframes[0].id,
-  selectedElementId: null,
-  selectedElementIds: [],
-  selectedTransitionId: null,
-  previewTransitionId: null,
-  currentTool: 'select',
   clipboard: [],
   copiedStyle: null,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
   history: [{ keyframes: initialKeyframes, sharedElements: initialSharedElements, displayStates: [], patches: [], patchConnections: [], componentsV2: [], description: '初始状态' }],
   historyIndex: 0,
-  isDragging: false,
-  isResizing: false,
-  isSelecting: false,
-  selectionBox: null,
   editingComponentId: null,
   editingInstanceId: null,
   // Group editing mode
   editingGroupId: null as string | null,
-  hoveredElementId: null as string | null,
 
   // Actions
   setSelectedKeyframeId: (id) => set((state) => {
@@ -603,18 +575,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedDisplayStateId: nextDsId,
     };
   }),
-
-  setSelectedElementId: (id) => set({ 
-    selectedElementId: id,
-    selectedElementIds: id ? [id] : [],
-  }),
-  
-  setSelectedElementIds: (ids) => set({ 
-    selectedElementIds: ids,
-    selectedElementId: ids.length === 1 ? ids[0] : null,
-  }),
-
-  setHoveredElementId: (id) => set({ hoveredElementId: id }),
 
   addElement: (element) => {
     get().pushHistory();
@@ -813,8 +773,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 
-  setCurrentTool: (tool) => set({ currentTool: tool }),
-  
   duplicateSelectedElements: () => {
     const state = get();
     if (state.selectedElementIds.length === 0) return;
@@ -857,10 +815,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     });
   },
   
-  setIsDragging: (isDragging) => set({ isDragging }),
-  setIsResizing: (isResizing) => set({ isResizing }),
-  setIsSelecting: (isSelecting) => set({ isSelecting }),
-  setSelectionBox: (selectionBox) => set({ selectionBox }),
   setFrameSize: (frameSize) => set((state) => {
     const oldFrameSize = state.frameSize;
     const newShared = state.sharedElements.map((el) => {
@@ -981,15 +935,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       historyIndex: newIndex,
     };
   }),
-
-  setSelectedTransitionId: (id) => set({ 
-    selectedTransitionId: id,
-    // Clear element selection when selecting a transition
-    selectedElementId: id ? null : undefined,
-    selectedElementIds: id ? [] : undefined,
-  }),
-
-  setPreviewTransitionId: (id) => set({ previewTransitionId: id }),
 
   updateTransition: (id, updates) => set((state) => ({
     transitions: state.transitions.map((tr) =>
