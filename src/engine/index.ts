@@ -4,10 +4,8 @@ export {
   SpringAnimationEngine,
   springEngine,
   animateSpring,
-  AnimationStatus,
   SpringPresets,
   type SpringConfig,
-  type Animation,
 } from './SpringAnimation';
 export {
   lerp,
