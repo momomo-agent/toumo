@@ -53,7 +53,12 @@ function getSpringConfigFromCurve(curve: string) {
 // ═══════════════════════════════════════════════════════════════════════
 // Main LivePreview Component
 // ═══════════════════════════════════════════════════════════════════════
-export function LivePreview() {
+interface LivePreviewProps {
+  /** When true, hides editor-specific UI (header, device selector). Parent handles chrome. */
+  fullscreen?: boolean;
+}
+
+export function LivePreview({ fullscreen = false }: LivePreviewProps = {}) {
   const {
     keyframes, transitions, selectedKeyframeId, frameSize,
     previewTransitionId, setPreviewTransitionId,
@@ -440,8 +445,9 @@ export function LivePreview() {
   // Render
   // ═════════════════════════════════════════════════════════════════════
   return (
-    <div style={styles.container}>
-      {/* ── Header ─────────────────────────────────────────────────── */}
+    <div style={fullscreen ? styles.containerFullscreen : styles.container}>
+      {/* ── Header (hidden in fullscreen — parent handles chrome) ── */}
+      {!fullscreen && (
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <div style={styles.headerDot} />
@@ -466,42 +472,73 @@ export function LivePreview() {
           {statusText}
         </span>
       </div>
+      )}
 
       {/* ── Preview Area (fit to container) ─────────────────────────── */}
       <div
         id="live-preview-container"
         ref={containerRef}
-        style={styles.previewArea}
+        style={fullscreen ? styles.previewAreaFullscreen : styles.previewArea}
       >
         <div style={{
-          transform: `scale(${fitScale})`,
+          transform: fullscreen ? undefined : `scale(${fitScale})`,
           transformOrigin: 'center center',
+          width: fullscreen ? '100%' : undefined,
+          height: fullscreen ? '100%' : undefined,
         }}>
-          <DeviceFrame type={deviceFrame} width={frameSize.width} height={frameSize.height}>
-          <div style={{
-            width: frameSize.width,
-            height: frameSize.height,
-            background: '#050506',
-            position: 'relative',
-            overflow: 'hidden',
-          }}>
-            <PreviewContent
-              elements={elements}
-              onTrigger={handleTrigger}
-              transitionDuration={transitionDuration}
-              transitionCurve={transitionCurve}
-              availableTriggers={triggerHints}
-              onPrototypeNavigation={handlePrototypeNavigation}
-              currentFrameId={currentKeyframeId}
-              prototypeTransition={prototypeTransition}
-              onPatchTap={handlePatchTap}
-              onPatchHover={handlePatchHover}
-              onPatchDrag={handlePatchDrag}
-              onPatchScroll={handlePatchScroll}
-              displayStateId={previewDisplayStateId}
-            />
-          </div>
-          </DeviceFrame>
+          {fullscreen ? (
+            /* Fullscreen: no DeviceFrame wrapper — parent handles device shell */
+            <div style={{
+              width: frameSize.width,
+              height: frameSize.height,
+              background: '#050506',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <PreviewContent
+                elements={elements}
+                onTrigger={handleTrigger}
+                transitionDuration={transitionDuration}
+                transitionCurve={transitionCurve}
+                availableTriggers={triggerHints}
+                onPrototypeNavigation={handlePrototypeNavigation}
+                currentFrameId={currentKeyframeId}
+                prototypeTransition={prototypeTransition}
+                onPatchTap={handlePatchTap}
+                onPatchHover={handlePatchHover}
+                onPatchDrag={handlePatchDrag}
+                onPatchScroll={handlePatchScroll}
+                displayStateId={previewDisplayStateId}
+              />
+            </div>
+          ) : (
+            /* Editor sidebar: with DeviceFrame wrapper */
+            <DeviceFrame type={deviceFrame} width={frameSize.width} height={frameSize.height}>
+            <div style={{
+              width: frameSize.width,
+              height: frameSize.height,
+              background: '#050506',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <PreviewContent
+                elements={elements}
+                onTrigger={handleTrigger}
+                transitionDuration={transitionDuration}
+                transitionCurve={transitionCurve}
+                availableTriggers={triggerHints}
+                onPrototypeNavigation={handlePrototypeNavigation}
+                currentFrameId={currentKeyframeId}
+                prototypeTransition={prototypeTransition}
+                onPatchTap={handlePatchTap}
+                onPatchHover={handlePatchHover}
+                onPatchDrag={handlePatchDrag}
+                onPatchScroll={handlePatchScroll}
+                displayStateId={previewDisplayStateId}
+              />
+            </div>
+            </DeviceFrame>
+          )}
         </div>
       </div>
     </div>
@@ -1005,6 +1042,14 @@ const styles: Record<string, React.CSSProperties> = {
     borderLeft: '1px solid rgba(255,255,255,0.06)',
     overflow: 'hidden',
   },
+  containerFullscreen: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    height: '100%',
+    background: '#0a0a0b',
+    overflow: 'hidden',
+  },
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -1086,6 +1131,17 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'relative' as const,
     overflow: 'hidden',
     background: '#050506',
+  },
+  previewAreaFullscreen: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    background: 'transparent',
+    width: '100%',
+    height: '100%',
   },
   dotGrid: {
     position: 'absolute' as const,
