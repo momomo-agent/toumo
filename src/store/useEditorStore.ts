@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Keyframe, KeyElement, ToolType, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
+import { createCanvasSlice, type CanvasSlice } from './canvasSlice';
 // Legacy types removed — using any temporarily
 type Transition = any;
 type Component = any;
@@ -55,18 +56,7 @@ interface EditorState {
   currentTool: ToolType;
   clipboard: KeyElement[];
   copiedStyle: ShapeStyle | null;
-  canvasOffset: Position;
-  canvasScale: number;
-  recentColors: string[];
-  canvasBackground: string;
-  deviceFrame: 'none' | 'iphone-14-pro' | 'iphone-14' | 'iphone-se' | 'android' | 'ipad';
-  showRulers: boolean;
-  guides: Array<{ id: string; orientation: 'horizontal' | 'vertical'; position: number }>;
-  snapToGuides: boolean;
-  snapToGrid: boolean;
-  gridSize: number;
   frameSize: Size;
-  frameBackground: string;
   history: HistoryEntry[];
   historyIndex: number;
   isDragging: boolean;
@@ -119,23 +109,8 @@ interface EditorActions {
   updateElementName: (id: string, name: string) => void;
   nudgeSelectedElements: (dx: number, dy: number) => void;
   setCurrentTool: (tool: ToolType) => void;
-  setCanvasOffset: (offset: Position) => void;
-  setCanvasScale: (scale: number) => void;
-  zoomToFit: () => void;
-  zoomTo100: () => void;
   duplicateSelectedElements: () => void;
   selectAllElements: () => void;
-  addRecentColor: (color: string) => void;
-  setCanvasBackground: (color: string) => void;
-  setDeviceFrame: (frame: 'none' | 'iphone-14-pro' | 'iphone-14' | 'iphone-se' | 'android' | 'ipad') => void;
-  toggleRulers: () => void;
-  addGuide: (orientation: 'horizontal' | 'vertical', position: number) => void;
-  updateGuide: (id: string, position: number) => void;
-  removeGuide: (id: string) => void;
-  clearGuides: () => void;
-  toggleSnapToGuides: () => void;
-  toggleSnapToGrid: () => void;
-  setGridSize: (size: number) => void;
   setIsDragging: (isDragging: boolean) => void;
   setIsResizing: (isResizing: boolean) => void;
   setIsSelecting: (isSelecting: boolean) => void;
@@ -209,7 +184,6 @@ interface EditorActions {
   reorderKeyframes: (fromIndex: number, toIndex: number) => void;
   clearCanvas: () => void;
   resetProject: () => void;
-  setFrameBackground: (color: string) => void;
   setCornerRadius: (radius: number) => void;
   setStrokeWidth: (width: number) => void;
   setFillColor: (color: string) => void;
@@ -384,7 +358,7 @@ interface EditorActions {
   removeComponentConnection: (componentId: string, connId: string) => void;
 }
 
-export type EditorStore = EditorState & EditorActions;
+export type EditorStore = EditorState & EditorActions & CanvasSlice;
 
 /**
  * Adapter layer: sync sharedElements → all keyframes.keyElements
@@ -482,6 +456,8 @@ const writeToLayerOverride = (
 };
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
+  // Canvas slice (canvasOffset, canvasScale, guides, etc.)
+  ...createCanvasSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // Initial state — sharedElements is the single source of truth
   sharedElements: [...initialSharedElements],
   keyframes: initialKeyframes,
@@ -549,18 +525,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   currentTool: 'select',
   clipboard: [],
   copiedStyle: null,
-  canvasOffset: { x: 0, y: 0 },
-  canvasScale: 1,
-  recentColors: [],
-  canvasBackground: '#0d0d0e',
-  deviceFrame: 'iphone-14-pro' as const,
-  showRulers: false,
-  guides: [],
-  snapToGuides: true,
-  snapToGrid: false,
-  gridSize: 10,
   frameSize: { width: 390, height: 844 }, // iPhone 14 默认尺寸
-  frameBackground: '#1a1a1a',
   history: [{ keyframes: initialKeyframes, sharedElements: initialSharedElements, displayStates: [], patches: [], patchConnections: [], componentsV2: [], description: '初始状态' }],
   historyIndex: 0,
   isDragging: false,
@@ -849,33 +814,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   setCurrentTool: (tool) => set({ currentTool: tool }),
-  setCanvasOffset: (offset) => set({ canvasOffset: offset }),
-  setCanvasScale: (scale) => set({ canvasScale: scale }),
-  
-  zoomToFit: () => {
-    // This will be called with actual container dimensions from Canvas component
-    // For now, use reasonable defaults
-    const containerWidth = window.innerWidth - 560; // Approximate canvas area
-    const containerHeight = window.innerHeight - 100;
-    set((state) => {
-      const frameWidth = state.frameSize.width + 200; // Include margins
-      const frameHeight = state.frameSize.height + 200;
-      const scale = Math.min(
-        containerWidth / frameWidth,
-        containerHeight / frameHeight,
-        1
-      ) * 0.85;
-      // Center the canvas
-      const offsetX = (containerWidth - state.frameSize.width * scale) / 2 - 100 * scale;
-      const offsetY = (containerHeight - state.frameSize.height * scale) / 2 - 60 * scale;
-      return { 
-        canvasScale: scale,
-        canvasOffset: { x: offsetX, y: offsetY }
-      };
-    });
-  },
-  
-  zoomTo100: () => set({ canvasScale: 1 }),
   
   duplicateSelectedElements: () => {
     const state = get();
@@ -919,25 +857,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     });
   },
   
-  addRecentColor: (color: string) => set((state) => ({
-    recentColors: [color, ...state.recentColors.filter(c => c !== color)].slice(0, 10)
-  })),
-  setCanvasBackground: (color: string) => set({ canvasBackground: color }),
-  setDeviceFrame: (frame: 'none' | 'iphone-14-pro' | 'iphone-14' | 'iphone-se' | 'android' | 'ipad') => set({ deviceFrame: frame }),
-  toggleRulers: () => set((state) => ({ showRulers: !state.showRulers })),
-  addGuide: (orientation, position) => set((state) => ({
-    guides: [...state.guides, { id: `guide-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, orientation, position }],
-  })),
-  updateGuide: (id, position) => set((state) => ({
-    guides: state.guides.map(g => g.id === id ? { ...g, position } : g),
-  })),
-  removeGuide: (id) => set((state) => ({
-    guides: state.guides.filter(g => g.id !== id),
-  })),
-  clearGuides: () => set({ guides: [] }),
-  toggleSnapToGuides: () => set((state) => ({ snapToGuides: !state.snapToGuides })),
-  toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
-  setGridSize: (size: number) => set({ gridSize: size }),
   setIsDragging: (isDragging) => set({ isDragging }),
   setIsResizing: (isResizing) => set({ isResizing }),
   setIsSelecting: (isSelecting) => set({ isSelecting }),
@@ -2128,10 +2047,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       history: [],
       historyIndex: -1,
     });
-  },
-
-  setFrameBackground: (color: string) => {
-    set({ frameBackground: color });
   },
 
   setCornerRadius: (radius: number) => {
