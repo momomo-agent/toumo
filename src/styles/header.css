@@ -44,7 +44,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   font-size: var(--text-lg);
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .tool-btn:hover {

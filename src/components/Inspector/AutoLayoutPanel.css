@@ -32,7 +32,7 @@
   background: transparent;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .auto-layout-toggle:hover {
@@ -103,7 +103,7 @@
   border-radius: 4px;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .direction-btn:hover {
@@ -133,7 +133,7 @@
   border: none;
   cursor: pointer;
   opacity: 0.6;
-  /* folme */
+  transition: opacity 0.15s ease;
 }
 
 .padding-link-btn:hover {
@@ -205,7 +205,7 @@
   border-radius: 3px;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .align-btn:hover,
@@ -248,7 +248,7 @@
   border-radius: 4px;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .sizing-btn:hover {
@@ -333,7 +333,7 @@
   border-radius: 4px;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .child-sizing-btn:hover {

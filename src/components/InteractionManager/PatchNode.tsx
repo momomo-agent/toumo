@@ -242,7 +242,7 @@ function PortRow({
           // folme
         }}
       />
-      <span style={{ fontSize: 10, color: hovered ? '#fff' : '#aaa', /* folme */ }}>
+      <span style={{ fontSize: 10, color: hovered ? '#fff' : '#aaa', transition: 'color 0.15s ease' }}>
         {port.name}
       </span>
     </div>

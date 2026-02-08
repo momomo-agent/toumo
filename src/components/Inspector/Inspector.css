@@ -162,7 +162,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--accent);
   border: 2px solid var(--bg-surface);
   cursor: pointer;
-  /* folme */
+  transition: transform 0.1s ease, background 0.15s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {

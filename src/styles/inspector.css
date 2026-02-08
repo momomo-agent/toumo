@@ -51,7 +51,7 @@
 
 .section-toggle {
   color: var(--text-muted);
-  /* folme */
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .section-toggle.collapsed {
@@ -60,7 +60,7 @@
 
 .section-content {
   overflow: hidden;
-  /* folme */
+  transition: opacity 0.2s ease, height 0.2s ease;
 }
 
 .section-content.collapsed {

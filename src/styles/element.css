@@ -1,6 +1,6 @@
 /* Canvas Element */
 .canvas-element {
-  /* folme */
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .canvas-element.selected {

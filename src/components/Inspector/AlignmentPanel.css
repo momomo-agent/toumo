@@ -39,7 +39,7 @@
   border-radius: 4px;
   color: var(--text-primary, #e0e0e0);
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .alignment-btn:hover:not(:disabled) {

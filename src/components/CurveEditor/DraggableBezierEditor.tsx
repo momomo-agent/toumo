@@ -107,14 +107,14 @@ export function DraggableBezierEditor({ value, onChange, size = 160, padding = 1
       <circle
         cx={sx(x1)} cy={sy(y1)} r={dragging === 'p1' ? 7 : 5.5}
         fill="#3b82f6" stroke="#fff" strokeWidth="1.5"
-        style={{ cursor: 'grab', /* folme */ }}
+        style={{ cursor: 'grab', transition: 'r 0.15s ease' }}
         onPointerDown={handlePointerDown('p1')}
       />
       {/* Draggable P2 */}
       <circle
         cx={sx(x2)} cy={sy(y2)} r={dragging === 'p2' ? 7 : 5.5}
         fill="#3b82f6" stroke="#fff" strokeWidth="1.5"
-        style={{ cursor: 'grab', /* folme */ }}
+        style={{ cursor: 'grab', transition: 'r 0.15s ease' }}
         onPointerDown={handlePointerDown('p2')}
       />
     </svg>

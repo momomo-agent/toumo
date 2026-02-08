@@ -83,7 +83,7 @@ const MinusIcon = () => (
 );
 
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
-  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', /* folme */ }}>
+  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s ease' }}>
     <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.2" fill="none" />
   </svg>
 );

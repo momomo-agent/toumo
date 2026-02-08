@@ -40,7 +40,7 @@
 }
 
 .constraint-line {
-  /* folme */
+  transition: stroke 0.15s ease, opacity 0.15s ease;
 }
 
 .constraint-hit-area {
@@ -86,7 +86,7 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   outline: none;
-  /* folme */
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .constraint-select:hover {

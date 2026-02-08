@@ -34,7 +34,7 @@
 
 .preview-element {
   position: absolute;
-  /* folme */
+  transition: all 0.15s ease;
 }
 
 .preview-state {

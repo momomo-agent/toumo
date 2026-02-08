@@ -30,7 +30,7 @@
   border-radius: 9px;
   border: none;
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease;
   padding: 0;
 }
 
@@ -47,7 +47,7 @@
   height: 14px;
   background: #fff;
   border-radius: 50%;
-  /* folme */
+  transition: transform 0.15s ease;
 }
 
 .overflow-toggle-switch.active::after {
@@ -69,7 +69,7 @@
   border: 1px solid transparent;
   border-radius: 6px;
   cursor: pointer;
-  /* folme */
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
