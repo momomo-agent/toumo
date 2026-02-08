@@ -3432,24 +3432,38 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const result: SugarResult = preset.create(elementId, element.name || 'Element');
 
     // Add display states (use preset's IDs directly so Patch references match)
-    // Also create matching keyframes for each display state
+    // Also create matching keyframes + apply layerOverrides
     set((s) => {
-      const newDisplayStates = result.displayStates
-        ? [...s.displayStates, ...result.displayStates]
-        : s.displayStates;
-      // Create keyframes for new display states so switchDisplayState can find them
-      const newKeyframes = result.displayStates
-        ? [
-            ...s.keyframes,
-            ...result.displayStates.map((ds) => ({
-              id: `kf-${ds.id}`,
-              name: ds.name,
-              summary: `Sugar: ${ds.name}`,
-              displayStateId: ds.id,
-              keyElements: s.sharedElements,
-            })),
-          ]
-        : s.keyframes;
+      let newDisplayStates = s.displayStates;
+      let newKeyframes = s.keyframes;
+
+      if (result.displayStates) {
+        // Merge overrides into display states
+        const dsWithOverrides = result.displayStates.map((ds) => {
+          const overridesForDs = result.overrides?.[ds.id];
+          if (!overridesForDs) return ds;
+          const layerOverrides = Object.entries(overridesForDs).map(
+            ([elId, props]) => ({
+              layerId: elId,
+              properties: props,
+              isKey: true,
+            })
+          );
+          return { ...ds, layerOverrides };
+        });
+        newDisplayStates = [...s.displayStates, ...dsWithOverrides];
+        newKeyframes = [
+          ...s.keyframes,
+          ...dsWithOverrides.map((ds) => ({
+            id: `kf-${ds.id}`,
+            name: ds.name,
+            summary: `Sugar: ${ds.name}`,
+            displayStateId: ds.id,
+            keyElements: s.sharedElements,
+          })),
+        ];
+      }
+
       return {
         displayStates: newDisplayStates,
         keyframes: newKeyframes,
