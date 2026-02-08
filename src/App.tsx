@@ -103,6 +103,13 @@ export default function App() {
 
   // Resizable & collapsible panels
   const { isSmall } = useResponsiveLayout();
+  const filesPanel = useResizablePanel({
+    defaultWidth: 200,
+    minWidth: 140,
+    maxWidth: 320,
+    storageKey: 'toumo-files-panel-width',
+    side: 'left',
+  });
   const leftPanel = useResizablePanel({
     defaultWidth: 220,
     minWidth: 160,
@@ -121,6 +128,7 @@ export default function App() {
   // Auto-collapse on small screens
   useEffect(() => {
     if (isSmall) {
+      filesPanel.setCollapsed(true);
       leftPanel.setCollapsed(true);
       rightPanel.setCollapsed(true);
     }
@@ -646,6 +654,26 @@ export default function App() {
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
+        {/* Files Panel (leftmost column) */}
+        <aside
+          style={{
+            width: filesPanel.collapsed ? 0 : filesPanel.width,
+            minWidth: filesPanel.collapsed ? 0 : undefined,
+            borderRight: filesPanel.collapsed ? 'none' : '1px solid #2a2a2a',
+            background: '#151515',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          <CollapseToggle collapsed={filesPanel.collapsed} onToggle={filesPanel.toggleCollapse} side="left" label="文件" />
+          <FilesPanel />
+        </aside>
+        {!filesPanel.collapsed && (
+          <ResizeHandle onMouseDown={filesPanel.handleMouseDown} isDragging={filesPanel.isDragging} side="left" />
+        )}
+
         {/* Live Preview Panel */}
         <div
           style={{
@@ -826,11 +854,6 @@ export default function App() {
               }}
             >
               <CollapseToggle collapsed={leftPanel.collapsed} onToggle={leftPanel.toggleCollapse} side="left" label="图层" />
-              
-              {/* Files Panel (top) */}
-              <div style={{ height: 200, borderBottom: '1px solid #2a2a2a', overflow: 'hidden' }}>
-                <FilesPanel />
-              </div>
 
               {/* Variants (top) */}
               <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
