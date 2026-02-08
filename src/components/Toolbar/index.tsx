@@ -1,8 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useEditorStore } from '../../store';
 import type { ToolType } from '../../types';
-import { ExportModal } from '../ExportModal';
-import { ImportModal } from '../ImportModal';
 import { Tooltip } from './Tooltip';
 
 // Undo/Redo icons
@@ -129,8 +127,6 @@ export function Toolbar() {
   
   const hasMultipleSelected = selectedElementIds.length >= 2;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showExportModal, setShowExportModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -292,38 +288,6 @@ export function Toolbar() {
         </Tooltip>
       </div>
       
-      <ToolDivider />
-      
-      {/* Export/Import buttons */}
-      <div className="toolbar-group">
-        <Tooltip label="Export Project" shortcut="">
-          <button
-            className="tool-btn"
-            onClick={() => setShowExportModal(true)}
-            style={{ fontSize: 14 }}
-          >
-            📤
-          </button>
-        </Tooltip>
-        
-        <Tooltip label="Import Project" shortcut="">
-          <button
-            className="tool-btn"
-            onClick={() => setShowImportModal(true)}
-            style={{ fontSize: 14 }}
-          >
-            📥
-          </button>
-        </Tooltip>
-      </div>
-      
-      {showExportModal && (
-        <ExportModal onClose={() => setShowExportModal(false)} />
-      )}
-      
-      {showImportModal && (
-        <ImportModal onClose={() => setShowImportModal(false)} />
-      )}
     </div>
   );
 }

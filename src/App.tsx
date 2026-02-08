@@ -7,21 +7,12 @@ import { StateInspector } from './components/Inspector/StateInspector';
 import { ElementInspector } from './components/Inspector/ElementInspector';
 import { TransitionInspector } from './components/Inspector/TransitionInspector';
 import { LivePreview } from './components/LivePreview';
-import { ShortcutsPanel } from './components/ShortcutsPanel';
-import { ShareModal } from './components/ShareModal';
-import { HelpPanel } from './components/HelpPanel';
 import { PreviewMode } from './components/PreviewMode';
 import { isPreviewUrl, getProjectFromUrl, type ProjectData } from './utils/shareUtils';
-import { WelcomeModal } from './components/WelcomeModal/index';
 import { EmptyState } from './components/EmptyState';
 import { LayerPanel } from './components/LayerPanel';
-import { FilesPanel } from './components/FilesPanel';
-import { ExportPanel } from './components/ExportPanel';
-import { ImportModal } from './components/ImportModal';
 import { ContextMenu } from './components/ContextMenu';
 import type { ContextMenuProps } from './components/ContextMenu';
-import { TutorialPage } from './components/TutorialPage';
-import { HistoryPanel } from './components/HistoryPanel';
 import { useEditorStore } from './store';
 import type { ShapeStyle } from './types';
 import { useResizablePanel } from './hooks/useResizablePanel';
@@ -51,18 +42,11 @@ export default function App() {
     handleExportPNG,
     handleSaveProject,
     handleLoadProject,
-    handleLoadExampleProject,
   } = useFileOperations();
   // Preview mode state
   const [isPreviewMode, setIsPreviewMode] = useState(() => isPreviewUrl());
   const [previewData, setPreviewData] = useState<ProjectData | null>(() => getProjectFromUrl());
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isExportPanelOpen, setIsExportPanelOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [contextMenu, _setContextMenu] = useState<ContextMenuProps | null>(null);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
 
   const {
     keyframes,
@@ -642,73 +626,6 @@ export default function App() {
             Export SVG
           </button>
           <button
-            onClick={() => setIsShareModalOpen(true)}
-            style={{
-              padding: '6px 12px',
-              background: '#22c55e',
-              border: 'none',
-              borderRadius: 6,
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            🔗 Share
-          </button>
-          <button
-            onClick={() => setIsExportPanelOpen(true)}
-            style={{
-              padding: '6px 12px',
-              background: '#22c55e',
-              border: 'none',
-              borderRadius: 6,
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            📦 Export
-          </button>
-          <button
-            onClick={() => setIsImportModalOpen(true)}
-            style={{
-              padding: '6px 12px',
-              background: '#3b82f6',
-              border: 'none',
-              borderRadius: 6,
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            📥 Import
-          </button>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            style={{
-              padding: '6px 12px',
-              background: showHistory ? '#f59e0b' : 'transparent',
-              border: '1px solid #f59e0b44',
-              borderRadius: 6, color: '#f59e0b', fontSize: 12, cursor: 'pointer',
-            }}
-          >
-            📜 History
-          </button>
-          <button
-            onClick={() => setShowTutorial(!showTutorial)}
-            style={{
-              padding: '6px 12px',
-              background: showTutorial ? '#06b6d4' : 'transparent',
-              border: '1px solid #06b6d444',
-              borderRadius: 6, color: '#06b6d4', fontSize: 12, cursor: 'pointer',
-            }}
-          >
-            📖 Tutorial
-          </button>
-          <button
             onClick={handleEnterPreviewMode}
             style={{
               padding: '6px 12px',
@@ -909,10 +826,6 @@ export default function App() {
             >
               <CollapseToggle collapsed={leftPanel.collapsed} onToggle={leftPanel.toggleCollapse} side="left" label="图层" />
               
-              {/* Files Panel (top) */}
-              <div style={{ height: 200, borderBottom: '1px solid #2a2a2a', overflow: 'hidden' }}>
-                <FilesPanel />
-              </div>
 
               {/* Variants (top) */}
               <div style={{ padding: 12, borderBottom: '1px solid #2a2a2a' }}>
@@ -1152,19 +1065,8 @@ export default function App() {
         <span>{selectedElementIds.length === 1 && sharedElements.find(e => e.id === selectedElementIds[0]) 
           ? `X: ${Math.round(sharedElements.find(e => e.id === selectedElementIds[0])!.position.x)} Y: ${Math.round(sharedElements.find(e => e.id === selectedElementIds[0])!.position.y)}`
           : selectedElementIds.length > 0 ? `${selectedElementIds.length} selected` : 'No selection'}</span>
-        <span style={{ color: '#555', cursor: 'pointer' }} title="按 ? 查看所有快捷键" onClick={() => setIsHelpOpen(true)}>
-          ⌨️ 按 <kbd style={{ padding: '0 4px', background: '#0d0d0e', border: '1px solid #333', borderRadius: 3, fontSize: 10, color: '#888' }}>?</kbd> 查看快捷键
-        </span>
       </div>
-      <ShortcutsPanel />
-      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
-      <HelpPanel isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <ExportPanel isOpen={isExportPanelOpen} onClose={() => setIsExportPanelOpen(false)} />
-      {isImportModalOpen && <ImportModal onClose={() => setIsImportModalOpen(false)} />}
       {contextMenu && <ContextMenu {...contextMenu} />}
-      {showTutorial && <TutorialPage />}
-      {showHistory && <HistoryPanel />}
-      <WelcomeModal onLoadExample={handleLoadExampleProject} />
     </div>
   );
 }
