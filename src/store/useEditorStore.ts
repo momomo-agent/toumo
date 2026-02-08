@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { Keyframe, KeyElement, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, LayerProperties, CurveConfig } from '../types';
+import type { Keyframe, KeyElement, Position, Size, ComponentV2, ShapeStyle, Variable, AutoLayoutConfig, ChildLayoutConfig, AutoLayoutDirection, AutoLayoutAlign, AutoLayoutJustify, SizingMode, ConditionRule, VariableBinding, Patch, PatchConnection, DisplayState, CurveConfig } from '../types';
 import { createCanvasSlice, type CanvasSlice } from './canvasSlice';
 import { createSelectionSlice, type SelectionSlice } from './selectionSlice';
 import { createPatchSlice, type PatchSlice } from './patchSlice';
+import { createDisplayStateSlice, type DisplayStateSlice, isDefaultDisplayState, updatesToLayerProperties, writeToLayerOverride } from './displayStateSlice';
 // Legacy types removed — using any temporarily
 type Transition = any;
 type Component = any;
@@ -291,20 +292,8 @@ interface EditorActions {
   booleanExclude: () => void;
   // Patch editor actions (applySugar stays — cross-slice dependency)
   applySugar: (elementId: string, presetId: string) => void;
-  // DisplayState actions (PRD v2 - shared layer tree)
-  addDisplayState: (name: string) => void;
-  removeDisplayState: (id: string) => void;
-  renameDisplayState: (id: string, name: string) => void;
-  setSelectedDisplayStateId: (id: string | null) => void;
-  setLayerOverride: (displayStateId: string, layerId: string, properties: Partial<LayerProperties>, isKey: boolean) => void;
-  removeLayerOverride: (displayStateId: string, layerId: string) => void;
-  toggleKeyProperty: (displayStateId: string, layerId: string, property: string) => void;
-  // Three-level curve override actions
+  // Three-level curve override actions (global level stays in main store)
   setGlobalCurve: (curve: CurveConfig) => void;
-  setElementCurve: (displayStateId: string, layerId: string, curve: CurveConfig) => void;
-  setPropertyCurve: (displayStateId: string, layerId: string, property: string, curve: CurveConfig) => void;
-  removeElementCurve: (displayStateId: string, layerId: string) => void;
-  removePropertyCurve: (displayStateId: string, layerId: string, property: string) => void;
   // Component V2 actions
   createComponentV2: (name: string) => void;
   deleteComponentV2: (id: string) => void;
@@ -317,7 +306,7 @@ interface EditorActions {
   removeComponentConnection: (componentId: string, connId: string) => void;
 }
 
-export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice & PatchSlice;
+export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice & PatchSlice & DisplayStateSlice;
 
 /**
  * Adapter layer: sync sharedElements → all keyframes.keyElements
@@ -326,93 +315,6 @@ export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionS
  */
 const syncToAllKeyframes = (sharedElements: KeyElement[], keyframes: Keyframe[]): Keyframe[] =>
   keyframes.map(kf => ({ ...kf, keyElements: sharedElements }));
-
-/**
- * Check if the current display state is the default (first) one.
- * Returns true if we should write to sharedElements directly.
- */
-const isDefaultDisplayState = (state: EditorState): boolean => {
-  const defaultDsId = state.displayStates[0]?.id;
-  return !state.selectedDisplayStateId || state.selectedDisplayStateId === defaultDsId;
-};
-
-/**
- * Convert KeyElement updates (position/size/style/rotation) into flat LayerProperties.
- * Used when writing to layerOverrides for non-default display states.
- */
-const updatesToLayerProperties = (updates: Partial<KeyElement>): Partial<LayerProperties> => {
-  const props: Partial<LayerProperties> = {};
-  if (updates.position) {
-    props.x = updates.position.x;
-    props.y = updates.position.y;
-  }
-  if (updates.size) {
-    props.width = updates.size.width;
-    props.height = updates.size.height;
-  }
-  if (updates.style) {
-    const s = updates.style;
-    if (s.opacity !== undefined) props.opacity = s.opacity;
-    if (s.fill !== undefined) props.fill = s.fill;
-    if (s.fillOpacity !== undefined) props.fillOpacity = s.fillOpacity;
-    if (s.stroke !== undefined) props.stroke = s.stroke;
-    if (s.strokeWidth !== undefined) props.strokeWidth = s.strokeWidth;
-    if (s.borderRadius !== undefined) props.borderRadius = s.borderRadius;
-    if (s.fontSize !== undefined) props.fontSize = s.fontSize;
-    if (s.fontWeight !== undefined) props.fontWeight = s.fontWeight;
-    if (s.color !== undefined) props.color = s.color;
-    if (s.letterSpacing !== undefined) props.letterSpacing = s.letterSpacing;
-    if (s.lineHeight !== undefined) props.lineHeight = s.lineHeight;
-    if (s.shadowColor !== undefined) props.shadowColor = s.shadowColor;
-    if (s.shadowX !== undefined) props.shadowX = s.shadowX;
-    if (s.shadowY !== undefined) props.shadowY = s.shadowY;
-    if (s.shadowBlur !== undefined) props.shadowBlur = s.shadowBlur;
-    if (s.blur !== undefined) props.blur = s.blur;
-    if (s.brightness !== undefined) props.brightness = s.brightness;
-    if (s.contrast !== undefined) props.contrast = s.contrast;
-    if (s.saturate !== undefined) props.saturate = s.saturate;
-    if (s.rotation !== undefined) props.rotation = s.rotation;
-    if (s.scale !== undefined) props.scale = s.scale;
-    if (s.visibility !== undefined) props.visible = s.visibility !== 'hidden';
-  }
-  return props;
-};
-
-/**
- * Write properties to a display state's layerOverrides for a given layer.
- * Merges with existing override and auto-tracks keyProperties.
- */
-const writeToLayerOverride = (
-  displayStates: DisplayState[],
-  displayStateId: string,
-  layerId: string,
-  newProperties: Partial<LayerProperties>,
-): DisplayState[] => {
-  if (Object.keys(newProperties).length === 0) return displayStates;
-
-  return displayStates.map(ds => {
-    if (ds.id !== displayStateId) return ds;
-    const existing = ds.layerOverrides.find(o => o.layerId === layerId);
-    const mergedProps = { ...(existing?.properties || {}), ...newProperties };
-    const mergedKeys = [...new Set([
-      ...(existing?.keyProperties || []),
-      ...Object.keys(newProperties),
-    ])];
-    const newOverride: import('../types').LayerOverride = {
-      layerId,
-      isKey: true,
-      properties: mergedProps,
-      keyProperties: mergedKeys,
-    };
-    return {
-      ...ds,
-      layerOverrides: [
-        ...ds.layerOverrides.filter(o => o.layerId !== layerId),
-        newOverride,
-      ],
-    };
-  });
-};
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
   // Canvas slice (canvasOffset, canvasScale, guides, etc.)
@@ -429,15 +331,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   conditionRules: [],
   // Patch slice
   ...createPatchSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
-  // Shared layer tree + display states (PRD v2)
-  displayStates: [
-    { id: 'ds-default', name: 'Default', layerOverrides: [] },
-    { id: 'ds-active', name: 'Active', layerOverrides: [
-      { layerId: 'el-card', properties: { y: 20, fillColor: '#3b82f6' }, isKey: true },
-      { layerId: 'el-button', properties: { fillColor: '#22c55e', fillOpacity: 0.9 }, isKey: true },
-    ] },
-  ],
-  selectedDisplayStateId: 'ds-default',
+  // DisplayState slice (PRD v2 - shared layer tree)
+  ...createDisplayStateSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // Three-level curve override system (level 1: global)
   globalCurve: { ...DEFAULT_CURVE_CONFIG },
   // Component V2 (PRD v2)
