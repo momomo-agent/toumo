@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import type { PatchType } from '../../types';
 import { useEditorStore } from '../../store/useEditorStore';
 import { createPatch } from './PatchCanvas';
-import { createHoverScale, createTapToggle, createPressRelease, createDragToDismiss, createHoverColor, createTapNavigate, createAutoPlay } from '../../engine/SugarPresets';
+import { createTabSwitch, createCardExpand, createButtonFeedback, createPageNavigation, createDropdownMenu, createHoverHighlight } from '../../engine/SugarPresets';
 
 interface PatchCategory {
   label: string;
@@ -93,16 +93,15 @@ export function PatchToolbar() {
   const [sugarElementId, setSugarElementId] = useState<string | null>(null);
 
   const SUGAR_PRESETS = [
-    { label: '✨ Hover Scale', fn: createHoverScale },
-    { label: '🔄 Tap Toggle', fn: createTapToggle },
-    { label: '👇 Press Release', fn: createPressRelease },
-    { label: '↓ Drag Dismiss', fn: createDragToDismiss },
-    { label: '🎨 Hover Color', fn: createHoverColor },
-    { label: '➡️ Tap Navigate', fn: createTapNavigate },
-    { label: '⏱ Auto Play', fn: createAutoPlay },
+    { label: '📑 Tab 切换', fn: createTabSwitch },
+    { label: '🃏 卡片展开/收起', fn: createCardExpand },
+    { label: '👆 按钮点击反馈', fn: createButtonFeedback },
+    { label: '➡️ 页面导航', fn: createPageNavigation },
+    { label: '📋 下拉菜单', fn: createDropdownMenu },
+    { label: '🖱️ Hover 高亮', fn: createHoverHighlight },
   ];
 
-  const applySugar = (fn: typeof createHoverScale, elementId: string, elementName: string) => {
+  const applySugar = (fn: typeof createTabSwitch, elementId: string, elementName: string) => {
     const result = fn(elementId, elementName);
     const store = useEditorStore.getState();
     // Add patches
