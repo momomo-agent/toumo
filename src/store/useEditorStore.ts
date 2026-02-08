@@ -5,6 +5,7 @@ import { createSelectionSlice, type SelectionSlice } from './selectionSlice';
 import { createPatchSlice, type PatchSlice } from './patchSlice';
 import { createDisplayStateSlice, type DisplayStateSlice, isDefaultDisplayState, updatesToLayerProperties, writeToLayerOverride } from './displayStateSlice';
 import { createCurveSlice, type CurveSlice } from './curveSlice';
+import { createVariableSlice, type VariableSlice } from './variableSlice';
 // Legacy types removed — using any temporarily
 type Transition = any;
 type Component = any;
@@ -63,10 +64,6 @@ interface EditorState {
   editingInstanceId: string | null;
   // Group edit mode
   editingGroupId: string | null;
-  // Variables for state machine logic
-  variables: Variable[];
-  interactions: Interaction[];
-  conditionRules: ConditionRule[];
   // Shared layer tree — single source of truth for all keyframes
   sharedElements: KeyElement[];
   // Shared layer tree + display states (PRD v2)
@@ -248,22 +245,7 @@ interface EditorActions {
   setOutlineOffset: (offset: number) => void;
   setTransition: (property: string, duration: number, easing: string) => void;
   setTransitionDelay: (delay: number) => void;
-  // Variable actions
-  addVariable: (variable: Variable) => void;
-  updateVariable: (id: string, updates: Partial<Variable>) => void;
-  deleteVariable: (id: string) => void;
-  setVariableValue: (id: string, value: string | number | boolean) => void;
-  // Interaction actions
-  addInteraction: (interaction: Interaction) => void;
-  updateInteraction: (id: string, updates: Partial<Interaction>) => void;
-  deleteInteraction: (id: string) => void;
-  duplicateInteraction: (id: string) => void;
-  getInteractionsForElement: (elementId: string) => Interaction[];
-  // Condition rules actions
-  addConditionRule: (rule: ConditionRule) => void;
-  updateConditionRule: (id: string, updates: Partial<ConditionRule>) => void;
-  deleteConditionRule: (id: string) => void;
-  // Variable binding actions
+  // Variable binding actions (cross-slice: stays in main store)
   addVariableBinding: (elementId: string, binding: VariableBinding) => void;
   removeVariableBinding: (elementId: string, variableId: string, property: string) => void;
   // Project actions
@@ -303,7 +285,7 @@ interface EditorActions {
   removeComponentConnection: (componentId: string, connId: string) => void;
 }
 
-export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice & PatchSlice & DisplayStateSlice & CurveSlice;
+export type EditorStore = EditorState & EditorActions & CanvasSlice & SelectionSlice & PatchSlice & DisplayStateSlice & CurveSlice & VariableSlice;
 
 /**
  * Adapter layer: sync sharedElements → all keyframes.keyElements
@@ -323,9 +305,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   keyframes: initialKeyframes,
   transitions: initialTransitions,
   components: [],
-  variables: [],
-  interactions: [],
-  conditionRules: [],
+  // Variable slice (variables, interactions, conditionRules)
+  ...createVariableSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // Patch slice
   ...createPatchSlice(set, get, { setState: set, getState: get, getInitialState: get, subscribe: () => () => {} } as any),
   // DisplayState slice (PRD v2 - shared layer tree)
@@ -2956,73 +2937,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 
-  // Variable actions
-  addVariable: (variable: Variable) => set((state) => ({
-    variables: [...state.variables, variable],
-  })),
-
-  updateVariable: (id: string, updates: Partial<Variable>) => set((state) => ({
-    variables: state.variables.map(v => 
-      v.id === id ? { ...v, ...updates } : v
-    ),
-  })),
-
-  deleteVariable: (id: string) => set((state) => ({
-    variables: state.variables.filter(v => v.id !== id),
-  })),
-
-  setVariableValue: (id: string, value: string | number | boolean) => set((state) => ({
-    variables: state.variables.map(v =>
-      v.id === id ? { ...v, currentValue: value } : v
-    ),
-  })),
-
-  // Interaction actions
-  addInteraction: (interaction: Interaction) => set((state) => ({
-    interactions: [...state.interactions, interaction],
-  })),
-
-  updateInteraction: (id: string, updates: Partial<Interaction>) => set((state) => ({
-    interactions: state.interactions.map(i => 
-      i.id === id ? { ...i, ...updates } : i
-    ),
-  })),
-
-  deleteInteraction: (id: string) => set((state) => ({
-    interactions: state.interactions.filter(i => i.id !== id),
-  })),
-
-  duplicateInteraction: (id: string) => set((state) => {
-    const interaction = state.interactions.find(i => i.id === id);
-    if (!interaction) return state;
-    const newInteraction = {
-      ...interaction,
-      id: `interaction-${Date.now()}`,
-      name: interaction.name ? `${interaction.name} (copy)` : undefined,
-    };
-    return { interactions: [...state.interactions, newInteraction] };
-  }),
-
-  getInteractionsForElement: (elementId: string) => {
-    return get().interactions.filter(i => i.elementId === elementId);
-  },
-
-  // Condition rules actions
-  addConditionRule: (rule: ConditionRule) => set((state) => ({
-    conditionRules: [...state.conditionRules, rule],
-  })),
-
-  updateConditionRule: (id: string, updates: Partial<ConditionRule>) => set((state) => ({
-    conditionRules: state.conditionRules.map(r =>
-      r.id === id ? { ...r, ...updates } : r
-    ),
-  })),
-
-  deleteConditionRule: (id: string) => set((state) => ({
-    conditionRules: state.conditionRules.filter(r => r.id !== id),
-  })),
-
-  // Variable binding actions
+  // Variable binding actions (cross-slice: depends on sharedElements + syncToAllKeyframes)
   addVariableBinding: (elementId: string, binding: VariableBinding) => set((state) => {
     const newShared = state.sharedElements.map(el =>
       el.id === elementId
