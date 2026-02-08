@@ -3431,18 +3431,32 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (!element) return;
     const result: SugarResult = preset.create(elementId, element.name || 'Element');
 
-    // Add display states
-    if (result.displayStates) {
-      for (const ds of result.displayStates) {
-        state.addDisplayState(ds.name);
-      }
-    }
-
-    // Add patches + connections
-    set((s) => ({
-      patches: [...s.patches, ...result.patches],
-      patchConnections: [...s.patchConnections, ...result.connections],
-    }));
+    // Add display states (use preset's IDs directly so Patch references match)
+    // Also create matching keyframes for each display state
+    set((s) => {
+      const newDisplayStates = result.displayStates
+        ? [...s.displayStates, ...result.displayStates]
+        : s.displayStates;
+      // Create keyframes for new display states so switchDisplayState can find them
+      const newKeyframes = result.displayStates
+        ? [
+            ...s.keyframes,
+            ...result.displayStates.map((ds) => ({
+              id: `kf-${ds.id}`,
+              name: ds.name,
+              summary: `Sugar: ${ds.name}`,
+              displayStateId: ds.id,
+              keyElements: s.sharedElements,
+            })),
+          ]
+        : s.keyframes;
+      return {
+        displayStates: newDisplayStates,
+        keyframes: newKeyframes,
+        patches: [...s.patches, ...result.patches],
+        patchConnections: [...s.patchConnections, ...result.connections],
+      };
+    });
 
     get().pushHistory(`Sugar: ${preset.name}`);
   },
