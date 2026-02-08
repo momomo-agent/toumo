@@ -38,7 +38,6 @@ export default defineConfig({
             './src/components/Inspector/StateInspector.tsx',
             './src/components/Inspector/MultiSelectPanel.tsx',
             './src/components/LayerPanel/index.tsx',
-            './src/components/LayerManager/index.tsx',
           ],
           // Engine chunk: runtime, animation, and export utilities
           engine: [
