@@ -2398,7 +2398,7 @@ export default function App() {
                   borderRadius: 6,
                   color: currentTool === tool.id ? '#fff' : '#888',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  // folme
                   outline: 'none',
                 }}
                 onFocus={(e) => {
@@ -2490,7 +2490,7 @@ export default function App() {
                   background: 'transparent', 
                   color: historyIndex <= 0 ? '#444' : '#888', 
                   cursor: historyIndex <= 0 ? 'not-allowed' : 'pointer', 
-                  transition: 'all 0.15s ease',
+                  // folme
                   opacity: historyIndex <= 0 ? 0.5 : 1,
                 }} 
                 onClick={undo}
@@ -2505,7 +2505,7 @@ export default function App() {
                   background: 'transparent', 
                   color: historyIndex >= history.length - 1 ? '#444' : '#888', 
                   cursor: historyIndex >= history.length - 1 ? 'not-allowed' : 'pointer', 
-                  transition: 'all 0.15s ease',
+                  // folme
                   opacity: historyIndex >= history.length - 1 ? 0.5 : 1,
                 }} 
                 onClick={redo}
@@ -2527,7 +2527,7 @@ export default function App() {
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
-                transition: leftPanel.isDragging ? 'none' : 'width 200ms ease',
+                // folme
                 position: 'relative',
               }}
             >
@@ -2554,7 +2554,7 @@ export default function App() {
                         color: '#fff',
                         textAlign: 'left',
                         cursor: 'pointer',
-                        transition: 'all 0.15s',
+                        // folme
                       }}
                       onMouseEnter={(e) => {
                         if (selectedKeyframeId !== kf.id) {
@@ -2675,7 +2675,7 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            transition: rightPanel.isDragging ? 'none' : 'width 200ms ease',
+            // folme
             position: 'relative',
           }}
         >
@@ -2742,7 +2742,7 @@ export default function App() {
                 color: canvasScale === scale ? '#3b82f6' : '#888',
                 fontSize: 10,
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                // folme
               }}
               onMouseEnter={(e) => {
                 if (canvasScale !== scale) {
@@ -2762,13 +2762,13 @@ export default function App() {
           ))}
           <button
             onClick={() => setCanvasScale(Math.min(0.8, 600 / frameSize.width))}
-            style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer', transition: 'all 0.15s ease' }}
+            style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
           >Fit</button>
           <button
             onClick={() => setCanvasOffset({ x: 0, y: 0 })}
-            style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer', transition: 'all 0.15s ease' }}
+            style={{ padding: '2px 6px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 4, color: '#888', fontSize: 10, cursor: 'pointer' }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
           >⊙</button>
