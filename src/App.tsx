@@ -720,7 +720,6 @@ export default function App() {
                   borderRadius: 6,
                   color: currentTool === tool.id ? '#fff' : '#888',
                   cursor: 'pointer',
-                  // folme
                   outline: 'none',
                 }}
                 onFocus={(e) => {
@@ -812,7 +811,6 @@ export default function App() {
                   background: 'transparent', 
                   color: historyIndex <= 0 ? '#444' : '#888', 
                   cursor: historyIndex <= 0 ? 'not-allowed' : 'pointer', 
-                  // folme
                   opacity: historyIndex <= 0 ? 0.5 : 1,
                 }} 
                 onClick={undo}
@@ -827,7 +825,6 @@ export default function App() {
                   background: 'transparent', 
                   color: historyIndex >= history.length - 1 ? '#444' : '#888', 
                   cursor: historyIndex >= history.length - 1 ? 'not-allowed' : 'pointer', 
-                  // folme
                   opacity: historyIndex >= history.length - 1 ? 0.5 : 1,
                 }} 
                 onClick={redo}
@@ -849,7 +846,6 @@ export default function App() {
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
-                // folme
                 position: 'relative',
               }}
             >
@@ -871,7 +867,6 @@ export default function App() {
                         color: '#fff',
                         textAlign: 'left',
                         cursor: 'pointer',
-                        // folme
                       }}
                       onMouseEnter={(e) => {
                         if (selectedKeyframeId !== kf.id) {
@@ -992,7 +987,6 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            // folme
             position: 'relative',
           }}
         >
@@ -1059,7 +1053,6 @@ export default function App() {
                 color: canvasScale === scale ? '#3b82f6' : '#888',
                 fontSize: 10,
                 cursor: 'pointer',
-                // folme
               }}
               onMouseEnter={(e) => {
                 if (canvasScale !== scale) {

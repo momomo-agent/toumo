@@ -480,7 +480,6 @@ export const LayerPanel = memo(function LayerPanel() {
             outlineOffset: -1,
             cursor: isLocked ? 'not-allowed' : 'grab',
             fontSize: 12,
-            // folme
             userSelect: 'none',
             borderRadius: '0 4px 4px 0',
             marginRight: 2,
@@ -494,7 +493,6 @@ export const LayerPanel = memo(function LayerPanel() {
                 cursor: 'pointer', width: 14, fontSize: 8,
                 color: isNestTarget ? '#8b5cf6' : '#666',
                 textAlign: 'center', lineHeight: '14px',
-                borderRadius: 3, // folme
               }}
               onMouseEnter={(e) => { (e.target as HTMLElement).style.color = '#aaa'; }}
               onMouseLeave={(e) => { (e.target as HTMLElement).style.color = '#666'; }}
@@ -535,7 +533,6 @@ export const LayerPanel = memo(function LayerPanel() {
               <span style={{
                 color: isNestTarget ? '#c4b5fd' : isSelected ? '#e0e7ff' : isHidden ? '#555' : '#ccc',
                 fontWeight: isSelected || isNestTarget ? 500 : 400,
-                // folme
               }}>
                 {el.name}
                 {isNestTarget && (
@@ -561,7 +558,6 @@ export const LayerPanel = memo(function LayerPanel() {
               padding: '2px 3px', borderRadius: 3,
               fontSize: 11, lineHeight: 1, flexShrink: 0,
               color: hasLayerOverride(el.id) ? '#a855f7' : '#4a4a6a',
-              // folme
             }}
           >
             {hasLayerOverride(el.id) ? '◆' : '◇'}
@@ -571,7 +567,6 @@ export const LayerPanel = memo(function LayerPanel() {
           <div style={{
             display: 'flex', gap: 2, alignItems: 'center',
             opacity: isHovered || isSelected || isLocked || isHidden ? 1 : 0,
-            // folme
           }}>
             {/* Lock */}
             <button
@@ -625,7 +620,6 @@ export const LayerPanel = memo(function LayerPanel() {
           <div style={{
             borderLeft: isNestTarget ? '1px solid rgba(139,92,246,0.4)' : '1px solid #2a2a2a',
             marginLeft: 15 + depth * 16,
-            // folme
           }}>
             {children.map(child => renderLayer(child, depth + 1))}
           </div>

@@ -337,7 +337,6 @@ function MenuItem({ label, shortcut, icon, onClick, danger, disabled }: MenuItem
         textAlign: 'left',
         cursor: disabled ? 'default' : 'pointer',
         borderRadius: 6,
-        // folme
         lineHeight: '20px',
       }}
     >
@@ -427,7 +426,6 @@ function SubMenu({ label, icon, children }: SubMenuProps) {
           textAlign: 'left',
           cursor: 'pointer',
           borderRadius: 6,
-          // folme
           lineHeight: '20px',
         }}
       >

@@ -131,7 +131,6 @@ export function DisplayStateBar() {
                 background: isSelected ? '#2a2a4a' : 'transparent',
                 whiteSpace: 'nowrap',
                 userSelect: 'none',
-                // folme
               }}
               onMouseEnter={(e) => {
                 if (!isSelected) e.currentTarget.style.background = '#2a2a4a';
@@ -199,7 +198,6 @@ export function DisplayStateBar() {
           color: '#94a3b8',
           fontSize: 16,
           flexShrink: 0,
-          // folme
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = '#2a2a4a';

@@ -36,7 +36,6 @@ export function ResizeHandle({ onMouseDown, isDragging, side }: ResizeHandleProp
           width: 2,
           borderRadius: 1,
           background: active ? 'var(--accent, #6366f1)' : 'transparent',
-          // folme
         }}
       />
     </div>

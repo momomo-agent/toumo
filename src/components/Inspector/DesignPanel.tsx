@@ -1251,7 +1251,6 @@ export function DesignPanel() {
                       border: 'none',
                       cursor: 'pointer',
                       textTransform: 'capitalize',
-                      // folme
                     }}
                   >
                     {mode}
@@ -1288,7 +1287,6 @@ export function DesignPanel() {
                       cursor: 'pointer',
                       background: (element.style?.objectPosition || 'center') === pos
                         ? '#3b82f6' : '#444',
-                      // folme
                     }}
                   />
                 ))}

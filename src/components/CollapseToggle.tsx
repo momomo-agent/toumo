@@ -32,7 +32,6 @@ export function CollapseToggle({ collapsed, onToggle, side, label }: CollapseTog
         cursor: 'pointer',
         zIndex: 20,
         padding: 0,
-        // folme
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.color = 'var(--text-primary, #fafafa)';

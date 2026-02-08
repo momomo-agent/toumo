@@ -138,7 +138,6 @@ function ComponentV2Row({ component, isSelected, onClick }: {
       background: isSelected ? '#1e3a5f' : '#1a1a1b',
       border: `1px solid ${isSelected ? '#2563eb' : '#2a2a2a'}`,
       borderRadius: 8, cursor: 'pointer',
-      // folme
     }}>
       <div style={{
         width: 28, height: 28, background: '#0d0d0e',

@@ -88,7 +88,6 @@ export function EmptyState() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 4,
-                // folme
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#3b82f6';
