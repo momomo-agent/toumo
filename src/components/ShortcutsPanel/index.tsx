@@ -111,7 +111,7 @@ export function ShortcutsPanel() {
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          transition: 'all 0.2s ease',
+          // folme
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = '#444';
@@ -171,7 +171,7 @@ export function ShortcutsPanel() {
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 14,
-            transition: 'all 0.2s ease',
+            // folme
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = '#444';
@@ -210,7 +210,7 @@ export function ShortcutsPanel() {
               fontWeight: 500,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              transition: 'all 0.15s ease',
+              // folme
             }}
           >
             {group.title}

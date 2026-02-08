@@ -156,7 +156,7 @@ export function WelcomeModal() {
                   border: 'none',
                   background: index === currentStep ? '#3b82f6' : '#333',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  // folme
                 }}
               />
             ))}
@@ -229,7 +229,7 @@ export function WelcomeModal() {
                 fontSize: 14,
                 fontWeight: 500,
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                // folme
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#555';
@@ -254,7 +254,7 @@ export function WelcomeModal() {
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              // folme
               boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
             }}
             onMouseEnter={(e) => {
@@ -280,7 +280,7 @@ export function WelcomeModal() {
               color: '#555',
               fontSize: 12,
               cursor: 'pointer',
-              transition: 'color 0.2s ease',
+              // folme
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = '#888')}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#555')}

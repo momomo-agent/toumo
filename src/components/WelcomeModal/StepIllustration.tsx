@@ -41,7 +41,7 @@ function CreateElementAnim() {
           position: 'absolute',
           left: phase >= 1 ? 40 : 20,
           top: phase >= 1 ? 30 : 20,
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          // folme
           zIndex: 10,
         }}>
           <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
@@ -61,7 +61,7 @@ function CreateElementAnim() {
               : 'rgba(59, 130, 246, 0.15)',
             border: `2px ${phase >= 3 ? 'solid' : 'dashed'} #3b82f6`,
             borderRadius: phase >= 3 ? 12 : 0,
-            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            // folme
           }} />
         )}
 
@@ -109,7 +109,7 @@ function AddStateAnim() {
           border: active === 0 ? '2px solid #3b82f6' : '1px solid #333',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 4,
-          transition: 'all 0.4s ease',
+          // folme
           transform: active === 0 ? 'scale(1.05)' : 'scale(0.95)',
         }}>
           <span style={{ fontSize: 20 }}>🟦</span>
@@ -131,7 +131,7 @@ function AddStateAnim() {
           border: active === 1 ? '2px solid #22c55e' : '1px solid #333',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 4,
-          transition: 'all 0.4s ease',
+          // folme
           transform: active === 1 ? 'scale(1.05)' : 'scale(0.95)',
         }}>
           <span style={{ fontSize: 20 }}>🟩</span>
@@ -167,7 +167,7 @@ function SetInteractionAnim() {
             : 'linear-gradient(135deg, #3b82f6, #2563eb)',
           borderRadius: 12,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          // folme
           transform: tapped ? 'scale(0.95)' : 'scale(1)',
           boxShadow: tapped
             ? '0 2px 8px rgba(34, 197, 94, 0.4)'
@@ -175,7 +175,7 @@ function SetInteractionAnim() {
         }}>
           <span style={{
             color: '#fff', fontSize: 14, fontWeight: 600,
-            transition: 'opacity 0.3s',
+            // folme
           }}>
             {tapped ? '✓ 已完成' : '点击我'}
           </span>
@@ -196,7 +196,7 @@ function SetInteractionAnim() {
         <div style={{
           position: 'absolute', bottom: 20, right: 40,
           fontSize: 24,
-          transition: 'all 0.3s ease',
+          // folme
           transform: tapped ? 'translateY(2px) scale(0.9)' : 'translateY(0) scale(1)',
           opacity: 0.8,
         }}>
@@ -253,7 +253,7 @@ function PreviewAnim() {
           <div style={{
             position: 'absolute', top: -scrollY, left: 0, right: 0,
             padding: 6, paddingTop: 12,
-            transition: 'top 0.08s linear',
+            // folme
           }}>
             {/* Header bar */}
             <div style={{

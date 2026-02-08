@@ -740,7 +740,7 @@ const gifProgressBarFillStyle: React.CSSProperties = {
   height: '100%',
   background: '#3b82f6',
   borderRadius: 3,
-  transition: 'width 0.2s ease',
+  // folme
 };
 
 const gifPreviewContainerStyle: React.CSSProperties = {

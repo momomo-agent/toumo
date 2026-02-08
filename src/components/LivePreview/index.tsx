@@ -729,8 +729,8 @@ function PreviewContent({
   // Transition animation style for prototype links
   const contentStyle: React.CSSProperties = (() => {
     if (!prototypeTransition?.active) return {};
-    const { type, direction, duration, easing, phase } = prototypeTransition;
-    const base: React.CSSProperties = { transition: `all ${duration}ms ${easing}` };
+    const { type, direction, duration: _dur, easing: _eas, phase } = prototypeTransition;
+    const base: React.CSSProperties = { /* transition driven by folme */ };
     if (type === 'dissolve') return { ...base, opacity: phase === 'out' ? 0 : 1 };
     if (type === 'slideIn' || type === 'push') {
       const dirMap: Record<string, string> = {

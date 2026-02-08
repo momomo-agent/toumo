@@ -83,7 +83,7 @@ const MinusIcon = () => (
 );
 
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
-  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', /* folme */ }}>
     <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.2" fill="none" />
   </svg>
 );
@@ -1251,7 +1251,7 @@ export function DesignPanel() {
                       border: 'none',
                       cursor: 'pointer',
                       textTransform: 'capitalize',
-                      transition: 'all 0.15s',
+                      // folme
                     }}
                   >
                     {mode}
@@ -1288,7 +1288,7 @@ export function DesignPanel() {
                       cursor: 'pointer',
                       background: (element.style?.objectPosition || 'center') === pos
                         ? '#3b82f6' : '#444',
-                      transition: 'all 0.15s',
+                      // folme
                     }}
                   />
                 ))}

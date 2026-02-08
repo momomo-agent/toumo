@@ -444,7 +444,7 @@ export function TutorialPage() {
               padding: '6px 14px',
               fontSize: 13,
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              // transition removed — folme
             }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#aaa'; }}
@@ -466,7 +466,7 @@ export function TutorialPage() {
                 color: activeChapter === c.id ? c.color : '#666',
                 background: activeChapter === c.id ? `${c.color}15` : 'transparent',
                 textDecoration: 'none',
-                transition: 'all 0.2s',
+                // transition removed — folme
                 whiteSpace: 'nowrap',
               }}
             >
@@ -523,7 +523,7 @@ export function TutorialPage() {
               color: '#ccc',
               textDecoration: 'none',
               fontSize: 13,
-              transition: 'all 0.2s',
+              // transition removed — folme
             }}
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = c.color;
@@ -703,7 +703,7 @@ function ContentCard({ heading, text, color, index }: {
     <div style={{
       padding: 24,
       background: '#111',
-      transition: 'background 0.2s',
+      // transition removed — folme
     }}
       onMouseEnter={e => { e.currentTarget.style.background = '#161617'; }}
       onMouseLeave={e => { e.currentTarget.style.background = '#111'; }}

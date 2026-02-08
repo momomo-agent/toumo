@@ -239,10 +239,10 @@ function PortRow({
           flexShrink: 0,
           marginLeft: isOutput ? 0 : (hovered ? -15 : -14),
           marginRight: isOutput ? (hovered ? -15 : -14) : 0,
-          transition: 'all 0.15s ease',
+          // folme
         }}
       />
-      <span style={{ fontSize: 10, color: hovered ? '#fff' : '#aaa', transition: 'color 0.15s ease' }}>
+      <span style={{ fontSize: 10, color: hovered ? '#fff' : '#aaa', /* folme */ }}>
         {port.name}
       </span>
     </div>

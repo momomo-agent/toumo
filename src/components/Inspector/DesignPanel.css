@@ -53,8 +53,7 @@
 /* Collapse animation wrapper */
 .figma-section-collapse {
   overflow: hidden;
-  transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* folme */
 }
 
 /* Icon Button */
@@ -89,7 +88,7 @@
 
 .figma-icon-btn.remove-btn {
   opacity: 0;
-  transition: opacity 0.15s;
+  /* folme */
 }
 
 /* Input Group */
@@ -120,7 +119,7 @@
 .figma-input-label.draggable {
   cursor: ew-resize;
   user-select: none;
-  transition: color 0.15s;
+  /* folme */
 }
 
 .figma-input-label.draggable:hover {
@@ -457,7 +456,7 @@
   font-size: 10px;
   padding: 3px 8px;
   cursor: pointer;
-  transition: all 0.15s;
+  /* folme */
 }
 
 .figma-preset-toggle:hover {
@@ -670,7 +669,7 @@
   color: #e5e5e5;
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.15s;
+  /* folme */
 }
 
 .interaction-item:hover {
@@ -734,7 +733,7 @@
   right: 0;
   bottom: 0;
   background-color: #333;
-  transition: 0.2s;
+  /* folme */
   border-radius: 16px;
 }
 
@@ -746,7 +745,7 @@
   left: 2px;
   bottom: 2px;
   background-color: #888;
-  transition: 0.2s;
+  /* folme */
   border-radius: 50%;
 }
 
@@ -788,7 +787,7 @@
   color: #4a4a6a;
   flex-shrink: 0;
   border-radius: 2px;
-  transition: color 0.15s, background-color 0.15s;
+  /* folme */
 }
 
 .key-property-btn:hover {

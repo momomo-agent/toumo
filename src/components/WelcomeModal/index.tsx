@@ -53,7 +53,7 @@ export function WelcomeModal({ onLoadExample }: WelcomeModalProps) {
     <div onClick={close} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9999 }}>
       <div onClick={e=>e.stopPropagation()} style={{ width:420,background:'linear-gradient(180deg,#1a1a1a,#0d0d0d)',borderRadius:20,border:'1px solid #2a2a2a',boxShadow:'0 40px 100px rgba(0,0,0,0.5)',overflow:'hidden' }}>
         <div style={{ height:3,background:'#1a1a1a' }}>
-          <div style={{ height:3,width:`${pct}%`,background:'linear-gradient(90deg,#3b82f6,#8b5cf6)',transition:'width 0.3s' }} />
+          <div style={{ height:3,width:`${pct}%`,background:'linear-gradient(90deg,#3b82f6,#8b5cf6)' }} />
         </div>
         <div style={{ padding:'24px 24px 12px',textAlign:'center' }}>
           <div style={{ width:48,height:48,margin:'0 auto 8px',background:'#1f1f1f',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid #333' }}>
@@ -67,7 +67,7 @@ export function WelcomeModal({ onLoadExample }: WelcomeModalProps) {
           <StepIllustration step={step} />
         </div>
         <div style={{ display:'flex',justifyContent:'center',gap:6,padding:'4px 0 12px' }}>
-          {STEPS.map((_,i) => <div key={i} style={{ width:i===step?16:6,height:6,borderRadius:3,background:i===step?'#3b82f6':'#333',transition:'all 0.3s' }} />)}
+          {STEPS.map((_,i) => <div key={i} style={{ width:i===step?16:6,height:6,borderRadius:3,background:i===step?'#3b82f6':'#333' }} />)}
         </div>
         <div style={{ padding:'0 28px 12px' }}>
           {s.tips.map(([k,d],i) => (

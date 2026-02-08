@@ -198,7 +198,7 @@ function TabButton({ active, onClick, children }: {
         fontSize: 11,
         fontWeight: 500,
         cursor: 'pointer',
-        transition: 'all 0.15s ease',
+        // folme
       }}
     >
       {children}
@@ -224,7 +224,7 @@ function PresetChip({ label, active, onMouseEnter, onMouseLeave, onClick }: {
         color: active ? '#fff' : '#999',
         fontSize: 10,
         cursor: 'pointer',
-        transition: 'all 0.12s ease',
+        // folme
         whiteSpace: 'nowrap',
       }}
     >
@@ -251,7 +251,7 @@ function SpringChip({ preset, active, onMouseEnter, onMouseLeave, onClick }: {
         color: active ? '#fff' : '#999',
         fontSize: 10,
         cursor: 'pointer',
-        transition: 'all 0.12s ease',
+        // folme
         textAlign: 'left' as const,
         display: 'flex',
         flexDirection: 'column' as const,

@@ -47,7 +47,7 @@
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: all 0.2s;
+  /* folme */
 }
 
 .close-btn:hover {
@@ -91,7 +91,7 @@
   color: #aaa;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  /* folme */
 }
 
 .format-btn:hover,
@@ -146,7 +146,7 @@
   color: #aaa;
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.2s;
+  /* folme */
 }
 
 .copy-btn:hover {

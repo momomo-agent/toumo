@@ -241,7 +241,7 @@
   border-radius: 3px;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.1s, border-color 0.1s;
+  /* folme */
 }
 
 .figma-cp-preset:hover {
@@ -267,7 +267,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  /* folme */
 }
 
 .figma-cp-eyedropper:hover {
@@ -289,7 +289,7 @@
   padding: 4px 6px;
   height: 24px;
   min-width: 32px;
-  transition: background 0.15s, color 0.15s;
+  /* folme */
 }
 
 .figma-cp-format-btn:hover {

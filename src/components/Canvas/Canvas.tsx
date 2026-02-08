@@ -1702,7 +1702,7 @@ export function Canvas() {
             zIndex: 200,
             letterSpacing: '-0.5px',
             opacity: zoomToastFading ? 0 : 1,
-            transition: 'opacity 0.3s ease-out',
+            // folme
           }}
         >
           {Math.round(canvasScale * 100)}%
