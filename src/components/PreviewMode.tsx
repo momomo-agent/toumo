@@ -551,7 +551,7 @@ interface PreviewContentProps {
 
 const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
   function PreviewContent(
-    { elements, frameSize, canvasBackground, onTrigger, transitionDuration, transitionCurve,
+    { elements, frameSize, canvasBackground, onTrigger, transitionDuration: _td, transitionCurve: _tc,
       availableTriggers, elementStates: _elementStates, hasInteractions, onPrototypeNavigation,
       currentFrameId, prototypeTransition },
     ref,
@@ -588,8 +588,8 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
     // Transition animation style
     const contentStyle: React.CSSProperties = (() => {
       if (!prototypeTransition?.active) return {};
-      const { type, direction, duration, easing, phase } = prototypeTransition;
-      const base: React.CSSProperties = { transition: `all ${duration}ms ${easing}` };
+      const { type, direction, duration: _dur, easing: _eas, phase } = prototypeTransition;
+      const base: React.CSSProperties = { /* transition driven by folme */ };
       if (type === 'dissolve') return { ...base, opacity: phase === 'out' ? 0 : 1 };
       if (type === 'slideIn' || type === 'push') {
         const dirMap: Record<string, string> = {
@@ -631,7 +631,7 @@ const PreviewContent = React.forwardRef<HTMLDivElement, PreviewContentProps>(
             opacity: s?.opacity ?? 1,
             borderRadius: s?.borderRadius ?? 0,
             backgroundColor: s?.fill || 'transparent',
-            transition: `all ${transitionDuration}ms ${transitionCurve}`,
+            // transition removed — driven by folme physics engine
             overflow: s?.overflow || 'hidden',
           };
           // Apply overflow scroll config in preview
@@ -700,7 +700,7 @@ const S: Record<string, React.CSSProperties> = {
   },
   controls: {
     position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-    transition: 'opacity 0.3s ease',
+    // transition removed — driven by folme
     zIndex: 10000,
   },
   controlsInner: {
@@ -797,7 +797,7 @@ const S: Record<string, React.CSSProperties> = {
     border: 'none', borderBottom: '2px solid transparent',
     cursor: 'pointer', textAlign: 'center' as const,
     borderRadius: '6px 6px 0 0',
-    transition: 'all 0.15s ease',
+    transition: 'none', // driven by folme
   },
   pickerTabActive: {
     color: '#60a5fa',
@@ -814,7 +814,7 @@ const S: Record<string, React.CSSProperties> = {
     background: 'transparent', color: '#ccc',
     border: 'none', borderRadius: 8,
     cursor: 'pointer', textAlign: 'left' as const,
-    transition: 'background 0.12s ease',
+    transition: 'none', // driven by folme
   },
   pickerItemActive: {
     background: 'rgba(37,99,235,0.18)', color: '#93bbfc',
