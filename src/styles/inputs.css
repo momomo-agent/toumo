@@ -31,7 +31,7 @@
   color: var(--text-primary);
   font-size: var(--text-sm);
   font-family: var(--font-mono);
-  transition: all var(--transition-fast);
+  /* folme */
 }
 
 .number-input:hover {

@@ -100,7 +100,7 @@ input, select, textarea {
   padding: 6px 10px;
   font-size: var(--text-sm);
   color: var(--text-primary);
-  transition: border-color var(--transition-fast);
+  /* folme */
 }
 
 input:hover, select:hover, textarea:hover {

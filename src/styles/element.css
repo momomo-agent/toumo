@@ -1,6 +1,6 @@
 /* Canvas Element */
 .canvas-element {
-  transition: box-shadow var(--transition-fast);
+  /* folme */
 }
 
 .canvas-element.selected {

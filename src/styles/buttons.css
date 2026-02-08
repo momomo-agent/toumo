@@ -11,7 +11,7 @@
   font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  /* folme */
 }
 
 .btn-primary {
@@ -54,7 +54,7 @@
   border-radius: var(--radius-md);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  /* folme */
 }
 
 .btn-icon:hover {

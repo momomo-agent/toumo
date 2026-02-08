@@ -51,7 +51,7 @@
 
 .section-toggle {
   color: var(--text-muted);
-  transition: transform var(--transition-fast);
+  /* folme */
 }
 
 .section-toggle.collapsed {
@@ -60,7 +60,7 @@
 
 .section-content {
   overflow: hidden;
-  transition: all var(--transition-normal);
+  /* folme */
 }
 
 .section-content.collapsed {

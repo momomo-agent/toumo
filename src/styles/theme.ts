@@ -64,7 +64,7 @@ export const buttonStyles = {
     border: 'none',
     cursor: 'pointer',
     fontWeight: 500,
-    transition: 'all 100ms ease-out',
+    /* folme */
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -105,7 +105,7 @@ export const inputStyles = {
     borderRadius: radius.md,
     color: colors.text.primary,
     fontSize: 12,
-    transition: 'border-color 100ms ease-out',
+    /* folme */
     outline: 'none',
   } as React.CSSProperties,
 };

@@ -53,8 +53,7 @@
 
 /* Inspector section collapse/expand */
 .section-content {
-  transition: max-height 200ms cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 150ms ease;
+  /* folme */
 }
 
 .section-content.collapsed {
@@ -72,57 +71,51 @@
 
 /* 工具按钮 active 状态切换 */
 .tool-btn {
-  transition: background 150ms ease, color 150ms ease,
-              transform 100ms ease, box-shadow 150ms ease;
+  /* folme */
 }
 
 .tool-btn.active {
-  transition: background 120ms ease, color 120ms ease,
-              box-shadow 200ms ease;
+  /* folme */
 }
 
 /* 图层面板行 - 选中/悬停状态平滑过渡 */
 .layer-row {
-  transition: background 120ms ease,
-              border-color 120ms ease,
-              opacity 150ms ease;
+  /* folme */
 }
 
 /* 画布元素选中边框平滑出现 */
 .canvas-element-selection-border {
-  transition: opacity 100ms ease, border-color 120ms ease;
+  /* folme */
 }
 
 /* 关键帧卡片 active 状态 */
 .keyframe-card {
-  transition: border-color 180ms ease,
-              box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
-              transform 150ms ease;
+  /* folme */
 }
 
 /* Inspector section 折叠箭头旋转 */
 .section-toggle {
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* folme */
 }
 
 /* 面板 resize handle 出现 */
 .panel-resize-handle {
-  transition: opacity 150ms ease, background 150ms ease;
+  /* folme */
 }
 
 /* 可见性/锁定图标状态切换 */
 .layer-action-icon {
-  transition: color 120ms ease, opacity 120ms ease;
+  /* folme */
 }
 
 /* 画布缩放控件 */
 .zoom-controls {
-  transition: opacity 200ms ease;
+  /* folme */
 }
 
 /* 颜色选择器色块 hover */
 .color-swatch {
-  transition: transform 100ms ease, box-shadow 150ms ease;
+  /* folme */
 }
 
 .color-swatch:hover {
