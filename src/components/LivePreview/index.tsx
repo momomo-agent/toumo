@@ -808,8 +808,8 @@ function PreviewContent({
 function PreviewElement({
   el,
   isGroupEl,
-  transitionDuration,
-  transitionCurve,
+  transitionDuration: _td,
+  transitionCurve: _tc,
   hasDrag,
   hasTap,
   hasHover,
@@ -893,7 +893,7 @@ function PreviewElement({
         mixBlendMode: el.style?.blendMode as React.CSSProperties['mixBlendMode'],
         clipPath: isGroupEl ? undefined : (el.style?.clipPath || undefined),
         maskImage: isGroupEl ? undefined : (el.style?.maskImage || undefined),
-        transition: `all ${transitionDuration}ms ${transitionCurve}`,
+        // transition removed — now driven by folme physics engine
         cursor: hasProtoLink ? 'pointer' : hasDrag ? 'grab' : hasTap ? 'pointer' : hasHover ? 'pointer' : 'default',
         display: 'flex',
         alignItems: isText ? undefined : 'center',
