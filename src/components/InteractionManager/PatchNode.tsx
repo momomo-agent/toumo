@@ -27,6 +27,18 @@ const PORT_TYPE_COLORS: Record<string, string> = {
   any: '#888',
 };
 
+const selectStyle: React.CSSProperties = {
+  width: '100%',
+  background: '#111820',
+  color: '#ccc',
+  border: '1px solid #333',
+  borderRadius: 4,
+  fontSize: 9,
+  padding: '2px 4px',
+  outline: 'none',
+  cursor: 'pointer',
+};
+
 interface PatchNodeProps {
   patch: Patch;
   selected: boolean;
@@ -55,14 +67,11 @@ export const PatchNode = React.memo(function PatchNode({
   const [collapsed, setCollapsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const renamePatch = useEditorStore(s => s.renamePatch);
+  const updatePatchConfig = useEditorStore(s => s.updatePatchConfig);
   const displayStates = useEditorStore(s => s.displayStates);
   const sharedElements = useEditorStore(s => s.sharedElements);
-  const targetDs = patch.config?.targetDisplayStateId
-    ? displayStates.find(ds => ds.id === patch.config?.targetDisplayStateId)
-    : null;
-  const targetEl = patch.config?.targetElementId
-    ? sharedElements.find(e => e.id === patch.config?.targetElementId)
-    : null;
+  const variables = useEditorStore(s => s.variables);
+  // targetDs/targetEl removed — now using <select> dropdowns
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -146,15 +155,53 @@ export const PatchNode = React.memo(function PatchNode({
         </button>
       </div>
 
-      {/* Config summary */}
-      {patch.config?.targetElementId && (
-        <div style={{ padding: '2px 10px', fontSize: 9, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          🎯 {targetEl?.name || patch.config.targetElementId.slice(0, 12)}
+      {/* Config selectors */}
+      {TRIGGER_TYPES.includes(patch.type) && (
+        <div style={{ padding: '3px 10px', fontSize: 9 }}>
+          <div style={{ color: '#888', marginBottom: 2 }}>🎯 目标元素</div>
+          <select
+            value={patch.config?.targetElementId || ''}
+            onChange={e => updatePatchConfig(patch.id, { targetElementId: e.target.value || undefined })}
+            onMouseDown={e => e.stopPropagation()}
+            style={selectStyle}
+          >
+            <option value="">（未选择）</option>
+            {sharedElements.map(el => (
+              <option key={el.id} value={el.id}>{el.name}</option>
+            ))}
+          </select>
         </div>
       )}
-      {patch.config?.targetDisplayStateId && (
-        <div style={{ padding: '2px 10px', fontSize: 9, color: '#a855f7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          📍 {targetDs?.name || (patch.config.targetDisplayStateId === 'default' ? 'Default' : patch.config.targetDisplayStateId.slice(0, 12))}
+      {patch.type === 'switchDisplayState' && (
+        <div style={{ padding: '3px 10px', fontSize: 9 }}>
+          <div style={{ color: '#a855f7', marginBottom: 2 }}>📍 目标状态</div>
+          <select
+            value={patch.config?.targetDisplayStateId || ''}
+            onChange={e => updatePatchConfig(patch.id, { targetDisplayStateId: e.target.value || undefined })}
+            onMouseDown={e => e.stopPropagation()}
+            style={selectStyle}
+          >
+            <option value="">（未选择）</option>
+            {displayStates.map(ds => (
+              <option key={ds.id} value={ds.id}>{ds.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {patch.type === 'setVariable' && (
+        <div style={{ padding: '3px 10px', fontSize: 9 }}>
+          <div style={{ color: '#eab308', marginBottom: 2 }}>📦 变量</div>
+          <select
+            value={patch.config?.variableId || ''}
+            onChange={e => updatePatchConfig(patch.id, { variableId: e.target.value || undefined })}
+            onMouseDown={e => e.stopPropagation()}
+            style={selectStyle}
+          >
+            <option value="">（未选择）</option>
+            {variables.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
         </div>
       )}
       {patch.config?.duration && (
