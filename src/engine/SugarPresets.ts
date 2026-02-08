@@ -3,7 +3,7 @@
  * 实用交互模板：Tab切换、卡片展开、按钮反馈、页面导航、下拉菜单、Hover高亮
  */
 
-import type { Patch, PatchConnection, DisplayState } from '../types';
+import type { Patch, PatchConnection, DisplayState, KeyElement } from '../types';
 
 let _uid = 0;
 const uid = (prefix: string) => `${prefix}-sugar-${Date.now()}-${++_uid}`;
@@ -14,6 +14,8 @@ export interface SugarResult {
   displayStates?: DisplayState[];
   /** layerOverrides to apply keyed by displayStateId → elementId → props */
   overrides?: Record<string, Record<string, Record<string, any>>>;
+  /** 要创建的视觉元素 */
+  elements?: KeyElement[];
 }
 
 // ─── Tab 切换 ────────────────────────────────────────────────────────
@@ -113,20 +115,42 @@ export function createTabSwitch(elementId: string, elementName: string): SugarRe
 }
 
 // ─── 卡片展开/收起 ──────────────────────────────────────────────────
-// 点击卡片展开详情，再点收起
-export function createCardExpand(elementId: string, elementName: string): SugarResult {
+// 点击卡片展开详情，再点收起（含完整视觉元素）
+export function createCardExpand(_elementId: string, _elementName: string): SugarResult {
+  const cardId = uid('el-card');
   const tapId = uid('tap');
   const toggleId = uid('toggle');
   const switchExpandId = uid('switch-expand');
   const switchCollapseId = uid('switch-collapse');
   const dsExpandedId = uid('ds-expanded');
 
+  // 创建卡片元素
+  const cardElement: KeyElement = {
+    id: cardId,
+    name: 'Card',
+    category: 'component',
+    isKeyElement: true,
+    attributes: [],
+    position: { x: 96, y: 200 },
+    size: { width: 120, height: 80 },
+    shapeType: 'rectangle',
+    text: 'Tap to expand',
+    style: {
+      fill: '#1e293b',
+      fillOpacity: 1,
+      stroke: '',
+      strokeWidth: 0,
+      strokeOpacity: 1,
+      borderRadius: 12,
+    },
+  };
+
   const patches: Patch[] = [
     {
       id: tapId,
       type: 'tap',
-      name: `点击 ${elementName}`,
-      config: { targetElementId: elementId },
+      name: `点击 ${cardElement.name}`,
+      config: { targetElementId: cardId },
       position: { x: 100, y: 100 },
       inputs: [],
       outputs: [{ id: `${tapId}-onTap`, name: 'onTap', dataType: 'pulse' }],
@@ -181,30 +205,53 @@ export function createCardExpand(elementId: string, elementName: string): SugarR
   return {
     patches,
     connections,
+    elements: [cardElement],
     displayStates: [{ id: dsExpandedId, name: '展开', layerOverrides: [] }],
     overrides: {
       [dsExpandedId]: {
-        [elementId]: { height: 300, fillOpacity: 1 },
+        [cardId]: { height: 200, fill: '#334155', fillOpacity: 1 },
       },
     },
   };
 }
 
 // ─── 按钮点击反馈 ───────────────────────────────────────────────────
-// 按下缩小、自动恢复（原 PressRelease 改名）
-export function createButtonFeedback(elementId: string, elementName: string): SugarResult {
+// 按下缩小+透明、自动恢复（含完整视觉元素）
+export function createButtonFeedback(_elementId: string, _elementName: string): SugarResult {
+  const btnId = uid('el-feedback-btn');
   const tapId = uid('tap');
   const switchToPressedId = uid('switch-pressed');
   const delayId = uid('delay');
   const switchToDefaultId = uid('switch-default');
   const dsPressedId = uid('ds-pressed');
 
+  // 创建按钮元素
+  const btnElement: KeyElement = {
+    id: btnId,
+    name: 'Button',
+    category: 'component',
+    isKeyElement: true,
+    attributes: [],
+    position: { x: 96, y: 200 },
+    size: { width: 200, height: 48 },
+    shapeType: 'rectangle',
+    text: 'Press Me',
+    style: {
+      fill: '#3b82f6',
+      fillOpacity: 1,
+      stroke: '',
+      strokeWidth: 0,
+      strokeOpacity: 1,
+      borderRadius: 12,
+    },
+  };
+
   const patches: Patch[] = [
     {
       id: tapId,
       type: 'tap',
-      name: `点击 ${elementName}`,
-      config: { targetElementId: elementId },
+      name: `点击 ${btnElement.name}`,
+      config: { targetElementId: btnId },
       position: { x: 100, y: 100 },
       inputs: [],
       outputs: [{ id: `${tapId}-onTap`, name: 'onTap', dataType: 'pulse' }],
@@ -256,28 +303,51 @@ export function createButtonFeedback(elementId: string, elementName: string): Su
   return {
     patches,
     connections,
+    elements: [btnElement],
     displayStates: [{ id: dsPressedId, name: '按下', layerOverrides: [] }],
     overrides: {
       [dsPressedId]: {
-        [elementId]: { scale: 0.92, fillOpacity: 0.8 },
+        [btnId]: { scale: 0.95, fillOpacity: 0.8 },
       },
     },
   };
 }
 
 // ─── 页面导航 ────────────────────────────────────────────────────────
-// 点击按钮切换到另一个页面
-export function createPageNavigation(elementId: string, elementName: string): SugarResult {
+// 点击按钮切换到另一个页面（含完整视觉元素）
+export function createPageNavigation(_elementId: string, _elementName: string): SugarResult {
+  const btnId = uid('el-nav-btn');
   const tapId = uid('tap');
   const switchId = uid('switch-page');
   const dsPageId = uid('ds-page2');
+
+  // 创建按钮元素
+  const btnElement: KeyElement = {
+    id: btnId,
+    name: 'Go to Page 2',
+    category: 'component',
+    isKeyElement: true,
+    attributes: [],
+    position: { x: 96, y: 200 },
+    size: { width: 200, height: 48 },
+    shapeType: 'rectangle',
+    text: 'Go to Page 2',
+    style: {
+      fill: '#3b82f6',
+      fillOpacity: 1,
+      stroke: '',
+      strokeWidth: 0,
+      strokeOpacity: 1,
+      borderRadius: 12,
+    },
+  };
 
   const patches: Patch[] = [
     {
       id: tapId,
       type: 'tap',
-      name: `点击 ${elementName}`,
-      config: { targetElementId: elementId },
+      name: `点击 ${btnElement.name}`,
+      config: { targetElementId: btnId },
       position: { x: 100, y: 100 },
       inputs: [],
       outputs: [{ id: `${tapId}-onTap`, name: 'onTap', dataType: 'pulse' }],
@@ -303,7 +373,13 @@ export function createPageNavigation(elementId: string, elementName: string): Su
   return {
     patches,
     connections,
+    elements: [btnElement],
     displayStates: [{ id: dsPageId, name: '页面 2', layerOverrides: [] }],
+    overrides: {
+      [dsPageId]: {
+        [btnId]: { fill: '#22c55e', text: 'Page 2 Active' },
+      },
+    },
   };
 }
 

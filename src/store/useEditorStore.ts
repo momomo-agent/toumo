@@ -3464,7 +3464,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         ];
       }
 
+      // Add sugar-created elements to sharedElements
+      const newSharedElements = result.elements
+        ? [...s.sharedElements, ...result.elements]
+        : s.sharedElements;
+
       return {
+        sharedElements: newSharedElements,
         displayStates: newDisplayStates,
         keyframes: newKeyframes,
         patches: [...s.patches, ...result.patches],
