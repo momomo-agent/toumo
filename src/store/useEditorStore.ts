@@ -1333,6 +1333,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       patchConnections: data.patchConnections || get().patchConnections,
       componentsV2: data.componentsV2 || get().componentsV2,
       selectedKeyframeId: data.keyframes[0]?.id || '',
+      selectedDisplayStateId: (data.displayStates || get().displayStates)[0]?.id || null,
       selectedElementId: null,
       selectedElementIds: [],
       history: [{ keyframes: data.keyframes, sharedElements: data.sharedElements || get().sharedElements, displayStates: data.displayStates || get().displayStates, patches: data.patches || get().patches, patchConnections: data.patchConnections || get().patchConnections, componentsV2: data.componentsV2 || get().componentsV2, description: '项目加载' }],
