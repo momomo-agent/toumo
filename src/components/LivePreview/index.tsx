@@ -104,6 +104,13 @@ export function LivePreview({ fullscreen = false }: LivePreviewProps = {}) {
     switchDisplayState: (targetId: string) => {
       const targetKf = keyframes.find(kf => kf.displayStateId === targetId);
       if (targetKf) {
+        // Ensure fromElements is current before animating
+        const currentDs = displayStates.find(ds => ds.id === previewDisplayStateId);
+        const fromElements = resolveElementsForState(
+          useEditorStore.getState().sharedElements, currentDs || null
+        );
+        smartAnimateRef.current.setElements(fromElements);
+
         const targetDs = displayStates.find(ds => ds.id === targetId);
         const toElements = resolveElementsForState(
           useEditorStore.getState().sharedElements, targetDs || null
@@ -143,7 +150,18 @@ export function LivePreview({ fullscreen = false }: LivePreviewProps = {}) {
     // Flash triggered patches
     const { flashPatch } = useEditorStore.getState();
     patches.filter(p => p.type === 'tap' && p.config?.targetElementId === elementId).forEach(p => flashPatch(p.id));
-    return handleElementTap(elementId, patches, patchConnections, patchHandlers);
+    // Try direct match first
+    let handled = handleElementTap(elementId, patches, patchConnections, patchHandlers);
+    // Bubble up to parent if no direct match
+    if (!handled) {
+      const currentElements = useEditorStore.getState().sharedElements;
+      const el = currentElements.find((e: any) => e.id === elementId);
+      if (el?.parentId) {
+        patches.filter(p => p.type === 'tap' && p.config?.targetElementId === el.parentId).forEach(p => flashPatch(p.id));
+        handled = handleElementTap(el.parentId, patches, patchConnections, patchHandlers);
+      }
+    }
+    return handled;
   }, [patches, patchConnections, patchHandlers]);
 
   // Patch runtime: handle hover on element → onHoverIn / onHoverOut

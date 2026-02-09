@@ -121,9 +121,24 @@ export function executeActionPatch(
       const currentState = actionPatch.config?._toggleState ?? false;
       const newState = !currentState;
       actionPatch.config = { ...actionPatch.config, _toggleState: newState };
-      // Fire downstream connections after toggle
+      // Fire only the matching output port (on/off)
       if (_context?._patches && _context?._connections) {
-        executeTrigger(actionPatch.id, _context._patches, _context._connections, handlers);
+        const portSuffix = newState ? 'on' : 'off';
+        const outConns = _context._connections.filter(
+          c => c.fromPatchId === actionPatch.id &&
+               (c.fromPortId.endsWith('-' + portSuffix) || c.fromPortId.endsWith('On') || c.fromPortId.endsWith('Off'))
+        );
+        // More robust: match by port name from outputs
+        const matchPort = actionPatch.outputs?.find(o => o.name === (newState ? 'on' : 'off'));
+        const filtered = matchPort
+          ? _context._connections.filter(c => c.fromPatchId === actionPatch.id && c.fromPortId === matchPort.id)
+          : outConns;
+        for (const conn of filtered) {
+          const target = _context._patches.find(p => p.id === conn.toPatchId);
+          if (target) {
+            executeActionPatch(target, handlers, _context);
+          }
+        }
       }
       break;
     }
