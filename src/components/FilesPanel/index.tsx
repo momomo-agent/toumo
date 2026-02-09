@@ -55,13 +55,13 @@ function createButtonPreset() {
       {
         id: 'el-bg', name: 'Background', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 844 },
-        shapeType: 'rectangle', style: { backgroundColor: '#0f172a' },
+        shapeType: 'rectangle', style: { fill: '#0f172a' },
       },
       // Status bar area
       {
         id: 'el-statusbar', name: 'Status Bar', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 54 },
-        shapeType: 'rectangle', style: { backgroundColor: '#0f172a' },
+        shapeType: 'rectangle', style: { fill: '#0f172a' },
       },
       {
         id: 'el-time', name: 'Time', category: 'text' as const, isKeyElement: true,
@@ -87,7 +87,7 @@ function createButtonPreset() {
       {
         id: 'el-card', name: 'Card', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 180 }, size: { width: 350, height: 280 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 20 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 20 },
       },
       // Card inner label
       {
@@ -100,13 +100,13 @@ function createButtonPreset() {
       {
         id: 'el-divider', name: 'Divider', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 40, y: 228 }, size: { width: 310, height: 1 },
-        shapeType: 'rectangle', style: { backgroundColor: '#334155' },
+        shapeType: 'rectangle', style: { fill: '#334155' },
       },
       // Main button
       {
         id: 'el-btn', name: 'Button', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 55, y: 280 }, size: { width: 280, height: 56 },
-        shapeType: 'rectangle', style: { backgroundColor: '#3b82f6', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#3b82f6', borderRadius: 16 },
       },
       // Button text
       {
@@ -126,7 +126,7 @@ function createButtonPreset() {
       {
         id: 'el-btn2', name: 'Secondary Button', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 55, y: 400 }, size: { width: 280, height: 44 },
-        shapeType: 'rectangle', style: { backgroundColor: 'transparent', borderRadius: 12, stroke: '#334155', strokeWidth: 1 },
+        shapeType: 'rectangle', style: { fill: 'transparent', borderRadius: 12, stroke: '#334155', strokeWidth: 1 },
       },
       {
         id: 'el-btn2-text', name: 'Cancel', category: 'text' as const, isKeyElement: true,
@@ -138,7 +138,7 @@ function createButtonPreset() {
     displayStates: [
       { id: 'ds-default', name: 'Default', layerOverrides: [] },
       { id: 'ds-hover', name: 'Pressed', layerOverrides: [
-        { layerId: 'el-btn', properties: { style: { backgroundColor: '#1d4ed8', transform: 'scale(0.95)' } }, isKey: true },
+        { layerId: 'el-btn', properties: { style: { fill: '#1d4ed8', transform: 'scale(0.95)' } }, isKey: true },
         { layerId: 'el-btn-text', properties: { style: { textColor: '#dbeafe' } }, isKey: true },
       ]},
     ],
@@ -177,7 +177,7 @@ function createCardExpandPreset() {
       {
         id: 'el-bg', name: 'Background', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 844 },
-        shapeType: 'rectangle', style: { backgroundColor: '#0f172a' },
+        shapeType: 'rectangle', style: { fill: '#0f172a' },
       },
       // Status bar
       {
@@ -204,13 +204,13 @@ function createCardExpandPreset() {
       {
         id: 'el-card', name: 'Card', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 160 }, size: { width: 350, height: 100 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       // Avatar circle
       {
         id: 'el-avatar', name: 'Avatar', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 180 }, size: { width: 44, height: 44 },
-        shapeType: 'ellipse', style: { backgroundColor: '#3b82f6' },
+        shapeType: 'ellipse', style: { fill: '#3b82f6' },
       },
       // Avatar initial
       {
@@ -258,12 +258,12 @@ function createCardExpandPreset() {
       {
         id: 'el-card2', name: 'Card 2', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 280 }, size: { width: 350, height: 80 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       {
         id: 'el-avatar2', name: 'Avatar 2', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 296 }, size: { width: 44, height: 44 },
-        shapeType: 'ellipse', style: { backgroundColor: '#8b5cf6' },
+        shapeType: 'ellipse', style: { fill: '#8b5cf6' },
       },
       {
         id: 'el-avatar2-text', name: 'Avatar 2 Initial', category: 'text' as const, isKeyElement: true,
@@ -337,7 +337,7 @@ function createTabSwitchPreset() {
       {
         id: 'el-bg', name: 'Background', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 844 },
-        shapeType: 'rectangle', style: { backgroundColor: '#0f172a' },
+        shapeType: 'rectangle', style: { fill: '#0f172a' },
       },
       // Status bar time
       {
@@ -357,7 +357,7 @@ function createTabSwitchPreset() {
       {
         id: 'el-nav-divider', name: 'Nav Divider', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 94 }, size: { width: 390, height: 1 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b' },
+        shapeType: 'rectangle', style: { fill: '#1e293b' },
       },
       // Content area - Tab 1 content
       {
@@ -376,7 +376,7 @@ function createTabSwitchPreset() {
       {
         id: 'el-content-card', name: 'Content Card', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 210 }, size: { width: 350, height: 160 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       {
         id: 'el-content-card-title', name: 'Card Title', category: 'text' as const, isKeyElement: true,
@@ -394,13 +394,13 @@ function createTabSwitchPreset() {
       {
         id: 'el-tab-bar', name: 'Tab Bar', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 780 }, size: { width: 390, height: 64 },
-        shapeType: 'rectangle', style: { backgroundColor: '#111827' },
+        shapeType: 'rectangle', style: { fill: '#111827' },
       },
       // Tab bar top border
       {
         id: 'el-tab-border', name: 'Tab Border', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 780 }, size: { width: 390, height: 1 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b' },
+        shapeType: 'rectangle', style: { fill: '#1e293b' },
       },
       // Tab labels
       {
@@ -425,23 +425,23 @@ function createTabSwitchPreset() {
       {
         id: 'el-icon1', name: 'Icon 1', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 55, y: 788 }, size: { width: 8, height: 8 },
-        shapeType: 'ellipse', style: { backgroundColor: '#3b82f6' },
+        shapeType: 'ellipse', style: { fill: '#3b82f6' },
       },
       {
         id: 'el-icon2', name: 'Icon 2', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 170, y: 788 }, size: { width: 8, height: 8 },
-        shapeType: 'ellipse', style: { backgroundColor: '#6b7280' },
+        shapeType: 'ellipse', style: { fill: '#6b7280' },
       },
       {
         id: 'el-icon3', name: 'Icon 3', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 285, y: 788 }, size: { width: 8, height: 8 },
-        shapeType: 'ellipse', style: { backgroundColor: '#6b7280' },
+        shapeType: 'ellipse', style: { fill: '#6b7280' },
       },
       // Indicator bar
       {
         id: 'el-indicator', name: 'Indicator', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 30, y: 822 }, size: { width: 100, height: 3 },
-        shapeType: 'rectangle', style: { backgroundColor: '#3b82f6', borderRadius: 2 },
+        shapeType: 'rectangle', style: { fill: '#3b82f6', borderRadius: 2 },
       },
     ],
     displayStates: [
@@ -454,8 +454,8 @@ function createTabSwitchPreset() {
         { layerId: 'el-content-card-body', properties: { text: 'Browse popular topics and creators.' }, isKey: true },
         { layerId: 'el-tab1', properties: { style: { textColor: '#6b7280', fontWeight: '400' } }, isKey: true },
         { layerId: 'el-tab2', properties: { style: { textColor: '#3b82f6', fontWeight: '600' } }, isKey: true },
-        { layerId: 'el-icon1', properties: { style: { backgroundColor: '#6b7280' } }, isKey: true },
-        { layerId: 'el-icon2', properties: { style: { backgroundColor: '#3b82f6' } }, isKey: true },
+        { layerId: 'el-icon1', properties: { style: { fill: '#6b7280' } }, isKey: true },
+        { layerId: 'el-icon2', properties: { style: { fill: '#3b82f6' } }, isKey: true },
         { layerId: 'el-indicator', properties: { position: { x: 145, y: 822 } }, isKey: true },
       ]},
       { id: 'ds-tab3', name: 'Tab 3', layerOverrides: [
@@ -466,8 +466,8 @@ function createTabSwitchPreset() {
         { layerId: 'el-content-card-body', properties: { text: 'Update your profile and preferences.' }, isKey: true },
         { layerId: 'el-tab1', properties: { style: { textColor: '#6b7280', fontWeight: '400' } }, isKey: true },
         { layerId: 'el-tab3', properties: { style: { textColor: '#3b82f6', fontWeight: '600' } }, isKey: true },
-        { layerId: 'el-icon1', properties: { style: { backgroundColor: '#6b7280' } }, isKey: true },
-        { layerId: 'el-icon3', properties: { style: { backgroundColor: '#3b82f6' } }, isKey: true },
+        { layerId: 'el-icon1', properties: { style: { fill: '#6b7280' } }, isKey: true },
+        { layerId: 'el-icon3', properties: { style: { fill: '#3b82f6' } }, isKey: true },
         { layerId: 'el-indicator', properties: { position: { x: 260, y: 822 } }, isKey: true },
       ]},
     ],
@@ -491,7 +491,7 @@ function createTogglePreset() {
       {
         id: 'el-bg', name: 'Background', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 844 },
-        shapeType: 'rectangle', style: { backgroundColor: '#0f172a' },
+        shapeType: 'rectangle', style: { fill: '#0f172a' },
       },
       // Status bar time
       {
@@ -511,7 +511,7 @@ function createTogglePreset() {
       {
         id: 'el-group', name: 'Settings Group', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 140 }, size: { width: 350, height: 240 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       // Group label
       {
@@ -531,19 +531,19 @@ function createTogglePreset() {
       {
         id: 'el-track', name: 'Track', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 298, y: 182 }, size: { width: 52, height: 30 },
-        shapeType: 'rectangle', style: { backgroundColor: '#374151', borderRadius: 15 },
+        shapeType: 'rectangle', style: { fill: '#374151', borderRadius: 15 },
       },
       // Toggle thumb
       {
         id: 'el-thumb', name: 'Thumb', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 301, y: 185 }, size: { width: 24, height: 24 },
-        shapeType: 'ellipse', style: { backgroundColor: '#ffffff' },
+        shapeType: 'ellipse', style: { fill: '#ffffff' },
       },
       // Divider 1
       {
         id: 'el-div1', name: 'Divider 1', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 220 }, size: { width: 318, height: 1 },
-        shapeType: 'rectangle', style: { backgroundColor: '#334155' },
+        shapeType: 'rectangle', style: { fill: '#334155' },
       },
       // Row 2: Notifications (static)
       {
@@ -562,7 +562,7 @@ function createTogglePreset() {
       {
         id: 'el-div2', name: 'Divider 2', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 274 }, size: { width: 318, height: 1 },
-        shapeType: 'rectangle', style: { backgroundColor: '#334155' },
+        shapeType: 'rectangle', style: { fill: '#334155' },
       },
       // Row 3: Language (static)
       {
@@ -581,7 +581,7 @@ function createTogglePreset() {
       {
         id: 'el-div3', name: 'Divider 3', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 328 }, size: { width: 318, height: 1 },
-        shapeType: 'rectangle', style: { backgroundColor: '#334155' },
+        shapeType: 'rectangle', style: { fill: '#334155' },
       },
       // Row 4: Sound (static)
       {
@@ -600,7 +600,7 @@ function createTogglePreset() {
     displayStates: [
       { id: 'ds-off', name: 'Off', layerOverrides: [] },
       { id: 'ds-on', name: 'On', layerOverrides: [
-        { layerId: 'el-track', properties: { style: { backgroundColor: '#22c55e' } }, isKey: true },
+        { layerId: 'el-track', properties: { style: { fill: '#22c55e' } }, isKey: true },
         { layerId: 'el-thumb', properties: { position: { x: 323, y: 185 } }, isKey: true },
       ]},
     ],
@@ -643,7 +643,7 @@ function createDragDismissPreset() {
       {
         id: 'el-bg', name: 'Background', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 0, y: 0 }, size: { width: 390, height: 844 },
-        shapeType: 'rectangle', style: { backgroundColor: '#0f172a' },
+        shapeType: 'rectangle', style: { fill: '#0f172a' },
       },
       // Status bar time
       {
@@ -670,13 +670,13 @@ function createDragDismissPreset() {
       {
         id: 'el-card', name: 'Notification Card', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 170 }, size: { width: 350, height: 100 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       // Notification icon circle
       {
         id: 'el-icon', name: 'Icon', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 192 }, size: { width: 40, height: 40 },
-        shapeType: 'ellipse', style: { backgroundColor: '#ef4444' },
+        shapeType: 'ellipse', style: { fill: '#ef4444' },
       },
       // Icon letter
       {
@@ -710,12 +710,12 @@ function createDragDismissPreset() {
       {
         id: 'el-card2', name: 'Card 2', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 290 }, size: { width: 350, height: 80 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       {
         id: 'el-icon2', name: 'Icon 2', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 306 }, size: { width: 40, height: 40 },
-        shapeType: 'ellipse', style: { backgroundColor: '#3b82f6' },
+        shapeType: 'ellipse', style: { fill: '#3b82f6' },
       },
       {
         id: 'el-icon2-text', name: 'Icon 2 Text', category: 'text' as const, isKeyElement: true,
@@ -739,12 +739,12 @@ function createDragDismissPreset() {
       {
         id: 'el-card3', name: 'Card 3', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 390 }, size: { width: 350, height: 80 },
-        shapeType: 'rectangle', style: { backgroundColor: '#1e293b', borderRadius: 16 },
+        shapeType: 'rectangle', style: { fill: '#1e293b', borderRadius: 16 },
       },
       {
         id: 'el-icon3', name: 'Icon 3', category: 'shape' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 406 }, size: { width: 40, height: 40 },
-        shapeType: 'ellipse', style: { backgroundColor: '#8b5cf6' },
+        shapeType: 'ellipse', style: { fill: '#8b5cf6' },
       },
       {
         id: 'el-icon3-text', name: 'Icon 3 Text', category: 'text' as const, isKeyElement: true,
