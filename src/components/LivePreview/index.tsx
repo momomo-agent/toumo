@@ -946,6 +946,7 @@ function PreviewElement({
         transformOrigin: el.style?.transformOrigin || 'center',
         boxShadow: shadow,
         filter: filterStr,
+        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
         backdropFilter: isGroupEl ? undefined : (el.style?.backdropFilter || (el.style?.backdropBlur ? `blur(${el.style.backdropBlur}px)` : undefined)),
         mixBlendMode: el.style?.blendMode as React.CSSProperties['mixBlendMode'],
         clipPath: isGroupEl ? undefined : (el.style?.clipPath || undefined),
