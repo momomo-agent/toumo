@@ -271,8 +271,10 @@ export function LivePreview({ fullscreen = false }: LivePreviewProps = {}) {
   // (respects isKey flag, consistent with Canvas and Inspector)
   const currentDisplayState = displayStates.find(ds => ds.id === previewDisplayStateId);
   const elements = useMemo(() => {
+    // During smart animate, baseElements already contains interpolated values — skip resolve
+    if (smartAnimateState.isAnimating) return baseElements;
     return resolveElementsForState(baseElements, currentDisplayState);
-  }, [baseElements, currentDisplayState]);
+  }, [baseElements, currentDisplayState, smartAnimateState.isAnimating]);
 
   const availableTransitions = useMemo(() => transitions.filter(t => t.from === currentKeyframeId), [transitions, currentKeyframeId]);
 
