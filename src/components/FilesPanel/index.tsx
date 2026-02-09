@@ -302,7 +302,8 @@ function createCardExpandPreset() {
         id: 'p-tap', type: 'tap', name: 'Tap Card',
         position: { x: 50, y: 50 },
         config: { targetElementId: 'el-card' },
-        inputs: [], outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }],
+        inputs: [],
+        outputs: [{ id: 'p-tap-out', name: 'onTap', dataType: 'pulse' }],
       },
       {
         id: 'p-toggle', type: 'toggle', name: 'Toggle',
@@ -314,9 +315,25 @@ function createCardExpandPreset() {
           { id: 'p-toggle-off', name: 'off', dataType: 'pulse' },
         ],
       },
+      {
+        id: 'p-switch-expand', type: 'switchDisplayState', name: 'Switch → Expanded',
+        position: { x: 400, y: 20 },
+        config: { targetDisplayStateId: 'ds-expanded' },
+        inputs: [{ id: 'p-switch-expand-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch-expand-out', name: 'done', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-switch-collapse', type: 'switchDisplayState', name: 'Switch → Collapsed',
+        position: { x: 400, y: 100 },
+        config: { targetDisplayStateId: 'ds-collapsed' },
+        inputs: [{ id: 'p-switch-collapse-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch-collapse-out', name: 'done', dataType: 'pulse' }],
+      },
     ],
     patchConnections: [
       { id: 'conn-1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-toggle', toPortId: 'p-toggle-in' },
+      { id: 'conn-2', fromPatchId: 'p-toggle', fromPortId: 'p-toggle-on', toPatchId: 'p-switch-expand', toPortId: 'p-switch-expand-in' },
+      { id: 'conn-3', fromPatchId: 'p-toggle', fromPortId: 'p-toggle-off', toPatchId: 'p-switch-collapse', toPortId: 'p-switch-collapse-in' },
     ],
   };
 }
@@ -471,8 +488,55 @@ function createTabSwitchPreset() {
         { layerId: 'el-indicator', properties: { x: 260, y: 822 }, isKey: true },
       ]},
     ],
-    patches: [],
-    patchConnections: [],
+    patches: [
+      {
+        id: 'p-tap1', type: 'tap', name: 'Tap Tab 1',
+        position: { x: 50, y: 50 },
+        config: { targetElementId: 'el-tab1' },
+        inputs: [],
+        outputs: [{ id: 'p-tap1-out', name: 'onTap', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-tap2', type: 'tap', name: 'Tap Tab 2',
+        position: { x: 50, y: 150 },
+        config: { targetElementId: 'el-tab2' },
+        inputs: [],
+        outputs: [{ id: 'p-tap2-out', name: 'onTap', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-tap3', type: 'tap', name: 'Tap Tab 3',
+        position: { x: 50, y: 250 },
+        config: { targetElementId: 'el-tab3' },
+        inputs: [],
+        outputs: [{ id: 'p-tap3-out', name: 'onTap', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-switch1', type: 'switchDisplayState', name: 'Switch → Tab 1',
+        position: { x: 300, y: 50 },
+        config: { targetDisplayStateId: 'ds-tab1' },
+        inputs: [{ id: 'p-switch1-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch1-out', name: 'done', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-switch2', type: 'switchDisplayState', name: 'Switch → Tab 2',
+        position: { x: 300, y: 150 },
+        config: { targetDisplayStateId: 'ds-tab2' },
+        inputs: [{ id: 'p-switch2-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch2-out', name: 'done', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-switch3', type: 'switchDisplayState', name: 'Switch → Tab 3',
+        position: { x: 300, y: 250 },
+        config: { targetDisplayStateId: 'ds-tab3' },
+        inputs: [{ id: 'p-switch3-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch3-out', name: 'done', dataType: 'pulse' }],
+      },
+    ],
+    patchConnections: [
+      { id: 'conn-1', fromPatchId: 'p-tap1', fromPortId: 'p-tap1-out', toPatchId: 'p-switch1', toPortId: 'p-switch1-in' },
+      { id: 'conn-2', fromPatchId: 'p-tap2', fromPortId: 'p-tap2-out', toPatchId: 'p-switch2', toPortId: 'p-switch2-in' },
+      { id: 'conn-3', fromPatchId: 'p-tap3', fromPortId: 'p-tap3-out', toPatchId: 'p-switch3', toPortId: 'p-switch3-in' },
+    ],
   };
 }
 
@@ -622,9 +686,25 @@ function createTogglePreset() {
           { id: 'p-toggle-off', name: 'off', dataType: 'pulse' },
         ],
       },
+      {
+        id: 'p-switch-on', type: 'switchDisplayState', name: 'Switch → On',
+        position: { x: 450, y: 20 },
+        config: { targetDisplayStateId: 'ds-on' },
+        inputs: [{ id: 'p-switch-on-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch-on-out', name: 'done', dataType: 'pulse' }],
+      },
+      {
+        id: 'p-switch-off', type: 'switchDisplayState', name: 'Switch → Off',
+        position: { x: 450, y: 100 },
+        config: { targetDisplayStateId: 'ds-off' },
+        inputs: [{ id: 'p-switch-off-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch-off-out', name: 'done', dataType: 'pulse' }],
+      },
     ],
     patchConnections: [
       { id: 'conn-1', fromPatchId: 'p-tap', fromPortId: 'p-tap-out', toPatchId: 'p-toggle', toPortId: 'p-toggle-in' },
+      { id: 'conn-2', fromPatchId: 'p-toggle', fromPortId: 'p-toggle-on', toPatchId: 'p-switch-on', toPortId: 'p-switch-on-in' },
+      { id: 'conn-3', fromPatchId: 'p-toggle', fromPortId: 'p-toggle-off', toPatchId: 'p-switch-off', toPortId: 'p-switch-off-in' },
     ],
   };
 }
@@ -794,8 +874,17 @@ function createDragDismissPreset() {
         inputs: [],
         outputs: [{ id: 'p-drag-end', name: 'endMove', dataType: 'pulse' }],
       },
+      {
+        id: 'p-switch-dismiss', type: 'switchDisplayState', name: 'Switch → Dismissed',
+        position: { x: 300, y: 50 },
+        config: { targetDisplayStateId: 'ds-dismissed' },
+        inputs: [{ id: 'p-switch-dismiss-in', name: 'trigger', dataType: 'pulse' }],
+        outputs: [{ id: 'p-switch-dismiss-out', name: 'done', dataType: 'pulse' }],
+      },
     ],
-    patchConnections: [],
+    patchConnections: [
+      { id: 'conn-1', fromPatchId: 'p-drag', fromPortId: 'p-drag-end', toPatchId: 'p-switch-dismiss', toPortId: 'p-switch-dismiss-in' },
+    ],
   };
 }
 
