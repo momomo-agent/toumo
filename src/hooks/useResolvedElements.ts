@@ -51,8 +51,10 @@ export function resolveElementsForState(
         saturate: props.saturate ?? el.style?.saturate,
         rotation: props.rotation ?? el.style?.rotation,
         scale: props.scale ?? el.style?.scale,
+        textColor: props.textColor ?? el.style?.textColor,
         visibility: props.visible === false ? 'hidden' : (props.visible === true ? 'visible' : el.style?.visibility),
       },
+      text: props.text ?? el.text,
     } as KeyElement;
   });
 }

@@ -532,6 +532,8 @@ export type LayerProperties = {
   fontSize: number;
   fontWeight: string;
   color: string;
+  textColor: string;
+  text: string;
   letterSpacing: number;
   lineHeight: number;
   // 阴影
