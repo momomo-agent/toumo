@@ -1339,6 +1339,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       history: [{ keyframes: data.keyframes, sharedElements: data.sharedElements || get().sharedElements, displayStates: data.displayStates || get().displayStates, patches: data.patches || get().patches, patchConnections: data.patchConnections || get().patchConnections, componentsV2: data.componentsV2 || get().componentsV2, description: '项目加载' }],
       historyIndex: 0,
     });
+    // Auto fit canvas after loading project
+    setTimeout(() => get().zoomToFit(), 50);
   },
 
   exportProject: () => {
