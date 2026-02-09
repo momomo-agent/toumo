@@ -66,21 +66,21 @@ function createButtonPreset() {
       {
         id: 'el-time', name: 'Time', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 16 }, size: { width: 60, height: 20 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
         text: '9:41',
       },
       // Page title
       {
         id: 'el-page-title', name: 'Page Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 80 }, size: { width: 350, height: 36 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 28, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 28, fontWeight: '700' },
         text: 'Button States',
       },
       // Subtitle
       {
         id: 'el-subtitle', name: 'Subtitle', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 120 }, size: { width: 350, height: 20 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: 'Interactive button with press feedback',
       },
       // Card container
@@ -93,7 +93,7 @@ function createButtonPreset() {
       {
         id: 'el-card-label', name: 'Card Label', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 40, y: 200 }, size: { width: 200, height: 20 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 12, fontWeight: '500' },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 12, fontWeight: '500' },
         text: 'PRIMARY ACTION',
       },
       // Divider line
@@ -112,14 +112,14 @@ function createButtonPreset() {
       {
         id: 'el-btn-text', name: 'Submit', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 130, y: 296 }, size: { width: 130, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 17, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 17, fontWeight: '600' },
         text: 'Submit',
       },
       // Hint text below button
       {
         id: 'el-hint', name: 'Hint', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 105, y: 350 }, size: { width: 180, height: 20 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 13 },
         text: 'Tap to see feedback',
       },
       // Secondary outline button
@@ -131,7 +131,7 @@ function createButtonPreset() {
       {
         id: 'el-btn2-text', name: 'Cancel', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 150, y: 410 }, size: { width: 90, height: 24 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 15, fontWeight: '500' },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 15, fontWeight: '500' },
         text: 'Cancel',
       },
     ],
@@ -139,7 +139,7 @@ function createButtonPreset() {
       { id: 'ds-default', name: 'Default', layerOverrides: [] },
       { id: 'ds-hover', name: 'Pressed', layerOverrides: [
         { layerId: 'el-btn', properties: { style: { backgroundColor: '#1d4ed8', transform: 'scale(0.95)' } }, isKey: true },
-        { layerId: 'el-btn-text', properties: { style: { color: '#dbeafe' } }, isKey: true },
+        { layerId: 'el-btn-text', properties: { style: { textColor: '#dbeafe' } }, isKey: true },
       ]},
     ],
     patches: [
@@ -183,21 +183,21 @@ function createCardExpandPreset() {
       {
         id: 'el-time', name: 'Time', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 16 }, size: { width: 60, height: 20 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
         text: '9:41',
       },
       // Page title
       {
         id: 'el-page-title', name: 'Page Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 70 }, size: { width: 350, height: 36 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 28, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 28, fontWeight: '700' },
         text: 'Notifications',
       },
       // Subtitle
       {
         id: 'el-page-sub', name: 'Subtitle', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 110 }, size: { width: 350, height: 20 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: '3 unread messages',
       },
       // Notification card
@@ -216,42 +216,42 @@ function createCardExpandPreset() {
       {
         id: 'el-avatar-text', name: 'Avatar Initial', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 48, y: 190 }, size: { width: 20, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
         text: 'A',
       },
       // Card title
       {
         id: 'el-title', name: 'Card Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 96, y: 178 }, size: { width: 240, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 15, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 15, fontWeight: '600' },
         text: 'Alex Johnson',
       },
       // Card description
       {
         id: 'el-desc', name: 'Description', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 96, y: 202 }, size: { width: 250, height: 18 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 13 },
         text: 'Hey! Check out the new design...',
       },
       // Timestamp
       {
         id: 'el-timestamp', name: 'Timestamp', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 96, y: 224 }, size: { width: 100, height: 16 },
-        shapeType: 'text', style: { color: '#475569', fontSize: 11 },
+        shapeType: 'text', style: { textColor: '#475569', fontSize: 11 },
         text: '2 min ago',
       },
       // Expanded content area (hidden by default via opacity)
       {
         id: 'el-expand-body', name: 'Expand Body', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 260 }, size: { width: 310, height: 60 },
-        shapeType: 'text', style: { color: '#cbd5e1', fontSize: 13, opacity: 0 },
+        shapeType: 'text', style: { textColor: '#cbd5e1', fontSize: 13, opacity: 0 },
         text: 'I just finished the prototype for the new dashboard. Let me know what you think about the layout and color scheme.',
       },
       // Expand hint
       {
         id: 'el-expand-hint', name: 'Expand Hint', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 140, y: 244 }, size: { width: 120, height: 16 },
-        shapeType: 'text', style: { color: '#3b82f6', fontSize: 11 },
+        shapeType: 'text', style: { textColor: '#3b82f6', fontSize: 11 },
         text: 'Tap to expand',
       },
       // Second card (static, for visual depth)
@@ -268,19 +268,19 @@ function createCardExpandPreset() {
       {
         id: 'el-avatar2-text', name: 'Avatar 2 Initial', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 48, y: 306 }, size: { width: 20, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
         text: 'M',
       },
       {
         id: 'el-title2', name: 'Card 2 Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 96, y: 298 }, size: { width: 240, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 15, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 15, fontWeight: '600' },
         text: 'Maria Chen',
       },
       {
         id: 'el-desc2', name: 'Card 2 Desc', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 96, y: 320 }, size: { width: 250, height: 18 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 13 },
         text: 'Meeting moved to 3pm tomorrow',
       },
     ],
@@ -343,14 +343,14 @@ function createTabSwitchPreset() {
       {
         id: 'el-time', name: 'Time', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 16 }, size: { width: 60, height: 20 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
         text: '9:41',
       },
       // Nav bar title
       {
         id: 'el-nav-title', name: 'Nav Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 140, y: 60 }, size: { width: 110, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 17, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 17, fontWeight: '600' },
         text: 'Home',
       },
       // Nav bar divider
@@ -363,13 +363,13 @@ function createTabSwitchPreset() {
       {
         id: 'el-content1', name: 'Content 1', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 130 }, size: { width: 350, height: 30 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 22, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 22, fontWeight: '700' },
         text: 'Welcome Home',
       },
       {
         id: 'el-content1-sub', name: 'Content 1 Sub', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 168 }, size: { width: 350, height: 20 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: 'Your personalized feed',
       },
       // Content card for Tab 1
@@ -381,13 +381,13 @@ function createTabSwitchPreset() {
       {
         id: 'el-content-card-title', name: 'Card Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 40, y: 230 }, size: { width: 200, height: 22 },
-        shapeType: 'text', style: { color: '#e2e8f0', fontSize: 15, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#e2e8f0', fontSize: 15, fontWeight: '600' },
         text: 'Featured Story',
       },
       {
         id: 'el-content-card-body', name: 'Card Body', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 40, y: 260 }, size: { width: 290, height: 40 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 13 },
         text: 'Discover the latest trends in design and technology.',
       },
       // Tab bar background
@@ -406,19 +406,19 @@ function createTabSwitchPreset() {
       {
         id: 'el-tab1', name: 'Tab 1', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 30, y: 798 }, size: { width: 100, height: 20 },
-        shapeType: 'text', style: { color: '#3b82f6', fontSize: 11, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#3b82f6', fontSize: 11, fontWeight: '600' },
         text: 'Home',
       },
       {
         id: 'el-tab2', name: 'Tab 2', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 145, y: 798 }, size: { width: 100, height: 20 },
-        shapeType: 'text', style: { color: '#6b7280', fontSize: 11 },
+        shapeType: 'text', style: { textColor: '#6b7280', fontSize: 11 },
         text: 'Search',
       },
       {
         id: 'el-tab3', name: 'Tab 3', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 260, y: 798 }, size: { width: 100, height: 20 },
-        shapeType: 'text', style: { color: '#6b7280', fontSize: 11 },
+        shapeType: 'text', style: { textColor: '#6b7280', fontSize: 11 },
         text: 'Profile',
       },
       // Tab icons (circles as icon placeholders)
@@ -452,8 +452,8 @@ function createTabSwitchPreset() {
         { layerId: 'el-content1-sub', properties: { text: 'Find what you\'re looking for' }, isKey: true },
         { layerId: 'el-content-card-title', properties: { text: 'Trending Now' }, isKey: true },
         { layerId: 'el-content-card-body', properties: { text: 'Browse popular topics and creators.' }, isKey: true },
-        { layerId: 'el-tab1', properties: { style: { color: '#6b7280', fontWeight: '400' } }, isKey: true },
-        { layerId: 'el-tab2', properties: { style: { color: '#3b82f6', fontWeight: '600' } }, isKey: true },
+        { layerId: 'el-tab1', properties: { style: { textColor: '#6b7280', fontWeight: '400' } }, isKey: true },
+        { layerId: 'el-tab2', properties: { style: { textColor: '#3b82f6', fontWeight: '600' } }, isKey: true },
         { layerId: 'el-icon1', properties: { style: { backgroundColor: '#6b7280' } }, isKey: true },
         { layerId: 'el-icon2', properties: { style: { backgroundColor: '#3b82f6' } }, isKey: true },
         { layerId: 'el-indicator', properties: { position: { x: 145, y: 822 } }, isKey: true },
@@ -464,8 +464,8 @@ function createTabSwitchPreset() {
         { layerId: 'el-content1-sub', properties: { text: 'Manage your account settings' }, isKey: true },
         { layerId: 'el-content-card-title', properties: { text: 'Account Info' }, isKey: true },
         { layerId: 'el-content-card-body', properties: { text: 'Update your profile and preferences.' }, isKey: true },
-        { layerId: 'el-tab1', properties: { style: { color: '#6b7280', fontWeight: '400' } }, isKey: true },
-        { layerId: 'el-tab3', properties: { style: { color: '#3b82f6', fontWeight: '600' } }, isKey: true },
+        { layerId: 'el-tab1', properties: { style: { textColor: '#6b7280', fontWeight: '400' } }, isKey: true },
+        { layerId: 'el-tab3', properties: { style: { textColor: '#3b82f6', fontWeight: '600' } }, isKey: true },
         { layerId: 'el-icon1', properties: { style: { backgroundColor: '#6b7280' } }, isKey: true },
         { layerId: 'el-icon3', properties: { style: { backgroundColor: '#3b82f6' } }, isKey: true },
         { layerId: 'el-indicator', properties: { position: { x: 260, y: 822 } }, isKey: true },
@@ -497,14 +497,14 @@ function createTogglePreset() {
       {
         id: 'el-time', name: 'Time', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 16 }, size: { width: 60, height: 20 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
         text: '9:41',
       },
       // Page title
       {
         id: 'el-page-title', name: 'Settings Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 70 }, size: { width: 350, height: 36 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 28, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 28, fontWeight: '700' },
         text: 'Settings',
       },
       // Settings group card
@@ -517,14 +517,14 @@ function createTogglePreset() {
       {
         id: 'el-group-label', name: 'Group Label', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 152 }, size: { width: 200, height: 16 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 11, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 11, fontWeight: '600' },
         text: 'APPEARANCE',
       },
       // Row 1: Dark Mode toggle
       {
         id: 'el-row1-label', name: 'Dark Mode Label', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 186 }, size: { width: 200, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 16 },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 16 },
         text: 'Dark Mode',
       },
       // Toggle track
@@ -549,13 +549,13 @@ function createTogglePreset() {
       {
         id: 'el-row2-label', name: 'Notifications Label', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 240 }, size: { width: 200, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 16 },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 16 },
         text: 'Notifications',
       },
       {
         id: 'el-row2-value', name: 'Notifications Value', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 280, y: 240 }, size: { width: 70, height: 22 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: 'On',
       },
       // Divider 2
@@ -568,13 +568,13 @@ function createTogglePreset() {
       {
         id: 'el-row3-label', name: 'Language Label', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 294 }, size: { width: 200, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 16 },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 16 },
         text: 'Language',
       },
       {
         id: 'el-row3-value', name: 'Language Value', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 260, y: 294 }, size: { width: 90, height: 22 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: 'English',
       },
       // Divider 3
@@ -587,13 +587,13 @@ function createTogglePreset() {
       {
         id: 'el-row4-label', name: 'Sound Label', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 36, y: 348 }, size: { width: 200, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 16 },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 16 },
         text: 'Sound',
       },
       {
         id: 'el-row4-value', name: 'Sound Value', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 280, y: 348 }, size: { width: 70, height: 22 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: 'Default',
       },
     ],
@@ -649,21 +649,21 @@ function createDragDismissPreset() {
       {
         id: 'el-time', name: 'Time', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 16 }, size: { width: 60, height: 20 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
         text: '9:41',
       },
       // Page title
       {
         id: 'el-page-title', name: 'Page Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 70 }, size: { width: 350, height: 36 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 28, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 28, fontWeight: '700' },
         text: 'Inbox',
       },
       // Subtitle
       {
         id: 'el-page-sub', name: 'Subtitle', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 20, y: 110 }, size: { width: 350, height: 20 },
-        shapeType: 'text', style: { color: '#64748b', fontSize: 14 },
+        shapeType: 'text', style: { textColor: '#64748b', fontSize: 14 },
         text: 'Swipe notifications to dismiss',
       },
       // Notification card (draggable)
@@ -682,28 +682,28 @@ function createDragDismissPreset() {
       {
         id: 'el-icon-text', name: 'Icon Text', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 48, y: 200 }, size: { width: 20, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
         text: '!',
       },
       // Notification title
       {
         id: 'el-notif-title', name: 'Notif Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 188 }, size: { width: 240, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 15, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 15, fontWeight: '600' },
         text: 'System Alert',
       },
       // Notification description
       {
         id: 'el-notif-desc', name: 'Notif Desc', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 212 }, size: { width: 250, height: 18 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 13 },
         text: 'Your storage is almost full. Free up space.',
       },
       // Timestamp
       {
         id: 'el-notif-time', name: 'Notif Time', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 236 }, size: { width: 100, height: 16 },
-        shapeType: 'text', style: { color: '#475569', fontSize: 11 },
+        shapeType: 'text', style: { textColor: '#475569', fontSize: 11 },
         text: 'Just now',
       },
       // Second notification (static, for depth)
@@ -720,19 +720,19 @@ function createDragDismissPreset() {
       {
         id: 'el-icon2-text', name: 'Icon 2 Text', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 48, y: 314 }, size: { width: 20, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
         text: '✓',
       },
       {
         id: 'el-title2', name: 'Card 2 Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 308 }, size: { width: 240, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 15, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 15, fontWeight: '600' },
         text: 'Update Complete',
       },
       {
         id: 'el-desc2', name: 'Card 2 Desc', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 330 }, size: { width: 250, height: 18 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 13 },
         text: 'App has been updated to v2.4.1',
       },
       // Third notification (static)
@@ -749,19 +749,19 @@ function createDragDismissPreset() {
       {
         id: 'el-icon3-text', name: 'Icon 3 Text', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 48, y: 414 }, size: { width: 20, height: 24 },
-        shapeType: 'text', style: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+        shapeType: 'text', style: { textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
         text: '★',
       },
       {
         id: 'el-title3', name: 'Card 3 Title', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 408 }, size: { width: 240, height: 22 },
-        shapeType: 'text', style: { color: '#f1f5f9', fontSize: 15, fontWeight: '600' },
+        shapeType: 'text', style: { textColor: '#f1f5f9', fontSize: 15, fontWeight: '600' },
         text: 'New Feature',
       },
       {
         id: 'el-desc3', name: 'Card 3 Desc', category: 'text' as const, isKeyElement: true,
         attributes: [], position: { x: 92, y: 430 }, size: { width: 250, height: 18 },
-        shapeType: 'text', style: { color: '#94a3b8', fontSize: 13 },
+        shapeType: 'text', style: { textColor: '#94a3b8', fontSize: 13 },
         text: 'Try the new gesture controls',
       },
     ],
