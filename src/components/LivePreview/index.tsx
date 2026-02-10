@@ -7,6 +7,7 @@ type PrototypeLink = any;
 type TriggerType = string;
 import { useSmartAnimate } from '../../hooks/useSmartAnimate';
 import { SpringPresets } from '../../engine/SpringAnimation';
+import { useFolme } from '../../hooks/useFolme';
 import { solveSpringRK4 } from '../../data/curvePresets';
 import { handleElementTap, handleElementHover, handleElementDrag, startAllTimerTriggers, handleVariableChange, handleScroll } from '../../engine/PatchRuntime';
 import type { DragPhase } from '../../engine/PatchRuntime';
@@ -99,23 +100,37 @@ export function LivePreview({ fullscreen = false }: LivePreviewProps = {}) {
     setPreviewDisplayStateId(selectedDisplayStateId);
   }, [selectedDisplayStateId]);
 
+  // ─── Folme-driven animation state ──────────────────────────────────
+  const [folmeProgress, setFolmeProgress] = useState(1); // 1 = idle, 0→1 = animating
+  const folmeFromRef = useRef<KeyElement[]>([]);
+  const folmeToRef = useRef<KeyElement[]>([]);
+  const folme = useFolme(useCallback((vals: Record<string, number>) => {
+    setFolmeProgress(vals.p ?? 1);
+  }, []));
+
   // Shared Patch action handlers
   const patchHandlers = useMemo(() => ({
     switchDisplayState: (targetId: string) => {
       const targetKf = keyframes.find(kf => kf.displayStateId === targetId);
       if (targetKf) {
-        // Ensure fromElements is current before animating
+        // Resolve from & to elements
         const currentDs = displayStates.find(ds => ds.id === previewDisplayStateId);
-        const fromElements = resolveElementsForState(
+        const fromEls = resolveElementsForState(
           useEditorStore.getState().sharedElements, currentDs || null
         );
-        smartAnimateRef.current.setElements(fromElements);
-
         const targetDs = displayStates.find(ds => ds.id === targetId);
-        const toElements = resolveElementsForState(
+        const toEls = resolveElementsForState(
           useEditorStore.getState().sharedElements, targetDs || null
         );
-        smartAnimateRef.current.animateTo(toElements);
+
+        // Store from/to for interpolation
+        folmeFromRef.current = fromEls;
+        folmeToRef.current = toEls;
+
+        // Drive animation with folme spring
+        folme.setTo({ p: 0 });
+        folme.animateTo({ p: 1 }, { type: 'spring', duration: 400, delay: 0, damping: 0.75, stiffness: 200, mass: 1 });
+
         setCurrentKeyframeId(targetKf.id);
       }
       setPreviewDisplayStateId(targetId);
@@ -271,10 +286,39 @@ export function LivePreview({ fullscreen = false }: LivePreviewProps = {}) {
   // (respects isKey flag, consistent with Canvas and Inspector)
   const currentDisplayState = displayStates.find(ds => ds.id === previewDisplayStateId);
   const elements = useMemo(() => {
+    // During folme animation, interpolate between from/to elements
+    if (folmeProgress < 1 && folmeFromRef.current.length > 0 && folmeToRef.current.length > 0) {
+      const p = folmeProgress;
+      return folmeToRef.current.map(toEl => {
+        const fromEl = folmeFromRef.current.find(f => f.id === toEl.id);
+        if (!fromEl) return toEl;
+        const lerp = (a: number, b: number) => a + (b - a) * p;
+        return {
+          ...toEl,
+          position: {
+            x: lerp(fromEl.position.x, toEl.position.x),
+            y: lerp(fromEl.position.y, toEl.position.y),
+          },
+          size: {
+            width: lerp(fromEl.size.width, toEl.size.width),
+            height: lerp(fromEl.size.height, toEl.size.height),
+          },
+          style: {
+            ...toEl.style,
+            opacity: lerp(fromEl.style?.opacity ?? 1, toEl.style?.opacity ?? 1),
+            fillOpacity: lerp(fromEl.style?.fillOpacity ?? 1, toEl.style?.fillOpacity ?? 1),
+            borderRadius: lerp(fromEl.style?.borderRadius ?? 0, toEl.style?.borderRadius ?? 0),
+            fontSize: lerp(fromEl.style?.fontSize ?? 14, toEl.style?.fontSize ?? 14),
+            scale: lerp(fromEl.style?.scale ?? 1, toEl.style?.scale ?? 1),
+            rotation: lerp(fromEl.style?.rotation ?? 0, toEl.style?.rotation ?? 0),
+          },
+        } as KeyElement;
+      });
+    }
     // During smart animate, baseElements already contains interpolated values — skip resolve
     if (smartAnimateState.isAnimating) return baseElements;
     return resolveElementsForState(baseElements, currentDisplayState);
-  }, [baseElements, currentDisplayState, smartAnimateState.isAnimating]);
+  }, [baseElements, currentDisplayState, smartAnimateState.isAnimating, folmeProgress]);
 
   const availableTransitions = useMemo(() => transitions.filter(t => t.from === currentKeyframeId), [transitions, currentKeyframeId]);
 
@@ -946,7 +990,7 @@ function PreviewElement({
         transformOrigin: el.style?.transformOrigin || 'center',
         boxShadow: shadow,
         filter: filterStr,
-        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+        /* folme-driven animation, no CSS transition */
         backdropFilter: isGroupEl ? undefined : (el.style?.backdropFilter || (el.style?.backdropBlur ? `blur(${el.style.backdropBlur}px)` : undefined)),
         mixBlendMode: el.style?.blendMode as React.CSSProperties['mixBlendMode'],
         clipPath: isGroupEl ? undefined : (el.style?.clipPath || undefined),
